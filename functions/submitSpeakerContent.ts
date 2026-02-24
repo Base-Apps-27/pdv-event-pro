@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        const { segment_id, content, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = await req.json();
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = await req.json();
 
         // Validate Input First
         if (!segment_id) {
@@ -101,14 +101,19 @@ Deno.serve(async (req) => {
         // We do this lightweight update so the admin sees "Pending" immediately, 
         // even if the automation takes a few seconds to process and mark it "Processed".
         // We DO NOT parse content here.
-        await base44.asServiceRole.entities.Segment.update(segment_id, {
+        const segmentUpdates = {
             submission_status: 'pending',
             // We temporarily update content here too so admins can see raw text if they open it before processing finishes
             submitted_content: content,
             presentation_url: presentation_url || "",
             notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only
-        });
+        };
+        if (title && title.trim() !== '') {
+            segmentUpdates.message_title = title;
+        }
+
+        await base44.asServiceRole.entities.Segment.update(segment_id, segmentUpdates);
 
         const responsePayload = { success: true };
 

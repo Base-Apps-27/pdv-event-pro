@@ -444,20 +444,28 @@ Deno.serve(async (req) => {
             ${optionsHtml}
           </select>
         </div>
+        <div class="form-group" style="margin-top: 16px;">
+          <label for="title">Título del Mensaje (Opcional)</label>
+          <input type="text" id="title" placeholder="Título de la predicación">
+        </div>
       </div>
 
       <!-- Section 2 -->
       <div class="form-section">
-        <h3>Material Visual</h3>
+        <h3>Material Visual y Notas</h3>
         <div class="form-group">
           <label for="presentationUrl">Enlace a Presentación / Imágenes (Opcional)</label>
-          <input type="url" id="presentationUrl" placeholder="https://drive.google.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white);">
+          <input type="url" id="presentationUrl" placeholder="https://drive.google.com/..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white); margin-bottom: 8px;">
         </div>
-        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
             <input type="checkbox" id="slidesOnly" style="width: 18px; height: 18px;">
             <label for="slidesOnly" style="margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); text-transform: none;">
                 Este material contiene todo el contenido (No se requieren versículos aparte)
             </label>
+        </div>
+        <div class="form-group" id="notesFieldContainer" style="display: none;">
+            <label for="notesUrl">Link de Bosquejo / Notas (PDF o Doc)</label>
+            <input type="url" id="notesUrl" placeholder="Enlace a notas para el equipo de medios (Opcional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 1rem; background: var(--bg-white);">
         </div>
       </div>
 
@@ -511,15 +519,18 @@ Deno.serve(async (req) => {
     const contentInput = document.getElementById('content');
     const slidesOnlyCheckbox = document.getElementById('slidesOnly');
     const contentLabelStar = document.querySelector('label[for="content"] .required');
+    const notesContainer = document.getElementById('notesFieldContainer');
 
     // Toggle content requirement based on slidesOnly
     if (slidesOnlyCheckbox) {
         slidesOnlyCheckbox.addEventListener('change', (e) => {
             if (e.target.checked) {
+                if (notesContainer) notesContainer.style.display = 'block';
                 contentInput.removeAttribute('required');
                 if (contentLabelStar) contentLabelStar.style.display = 'none';
                 contentInput.placeholder = "Si marcó 'Solo Slides', este campo es opcional. Puede dejarlo vacío o agregar notas para el equipo de proyección.";
             } else {
+                if (notesContainer) notesContainer.style.display = 'none';
                 contentInput.setAttribute('required', 'true');
                 if (contentLabelStar) contentLabelStar.style.display = 'inline';
                 contentInput.placeholder = "No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto.";
@@ -535,7 +546,9 @@ Deno.serve(async (req) => {
         
         const segmentId = document.getElementById('segmentId').value;
         const content = document.getElementById('content').value;
+        const title = document.getElementById('title')?.value || '';
         const presentationUrl = document.getElementById('presentationUrl').value;
+        const notesUrl = document.getElementById('notesUrl')?.value || '';
         const slidesOnly = document.getElementById('slidesOnly').checked;
 
         // Validation: Content is required ONLY if not slidesOnly
@@ -555,7 +568,9 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                     segment_id: segmentId,
                     content: content,
+                    title: title,
                     presentation_url: presentationUrl,
+                    notes_url: notesUrl,
                     content_is_slides_only: slidesOnly,
                     idempotencyKey: IDEMPOTENCY_KEY
                 })

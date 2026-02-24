@@ -8,6 +8,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 
@@ -24,7 +25,35 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
           placeholder="Conquistando nuevas alturas"
         />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3 pt-2 border-t border-orange-200">
+        <div className="space-y-2">
+          <Label>Presentación / Slides (URL)</Label>
+          <Input
+            value={formData.presentation_url || ''}
+            onChange={(e) => setFormData({...formData, presentation_url: e.target.value})}
+            placeholder="https://..."
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Bosquejo / Notas (URL)</Label>
+          <Input
+            value={formData.notes_url || ''}
+            onChange={(e) => setFormData({...formData, notes_url: e.target.value})}
+            placeholder="https://..."
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="content_is_slides_only" 
+            checked={formData.content_is_slides_only || false} 
+            onCheckedChange={(checked) => setFormData({...formData, content_is_slides_only: checked})} 
+          />
+          <Label htmlFor="content_is_slides_only" className="cursor-pointer normal-case text-sm font-normal">
+            El contenido son solo slides (no extraer versículos)
+          </Label>
+        </div>
+      </div>
+      <div className="space-y-2 pt-2 border-t border-orange-200">
         <div className="flex items-center justify-between">
           <Label>Citas Bíblicas</Label>
           <Button
