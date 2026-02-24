@@ -33,14 +33,21 @@ export default function CoordinatorActionsDisplay({
 
     // Helper to process segment actions
     const processSegment = (segment, isNext = false) => {
-      if (!segment || !segment.start_time) return;
+      const effectiveStart = segment?.actual_start_time || segment?.start_time;
+      if (!segment || !effectiveStart) return;
 
-      const segStart = parseDateTime(serviceDate, segment.start_time);
+      const segStart = parseDateTime(serviceDate, effectiveStart);
       if (!segStart) return;
 
-      const duration = segment.duration_min || 0;
-      const segEnd = new Date(segStart);
-      segEnd.setMinutes(segStart.getMinutes() + duration);
+      const effectiveEnd = segment.actual_end_time || segment.end_time;
+      let segEnd;
+      if (effectiveEnd) {
+        segEnd = parseDateTime(serviceDate, effectiveEnd);
+      }
+      if (!segEnd) {
+        segEnd = new Date(segStart);
+        segEnd.setMinutes(segStart.getMinutes() + (segment.duration_min || 0));
+      }
 
       const segActions = segment.segment_actions || segment.actions || [];
 

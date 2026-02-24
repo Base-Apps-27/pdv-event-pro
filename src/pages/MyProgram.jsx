@@ -17,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { formatDateET } from '@/components/utils/timeFormat';
 
 import useActiveProgramCache from '@/components/myprogram/useActiveProgramCache';
-import { normalizeEventSegments, normalizeServiceSegments, getSessionLabels } from '@/components/myprogram/normalizeSession';
+import { getSessionLabels } from '@/components/myprogram/normalizeSession';
+import { normalizeProgramData } from '@/components/utils/normalizeProgram';
 import DepartmentPicker, { useDepartment } from '@/components/myprogram/DepartmentPicker';
 import SessionPicker from '@/components/myprogram/SessionPicker';
 import MyProgramTimeline from '@/components/myprogram/MyProgramTimeline';
@@ -62,17 +63,34 @@ export default function MyProgram() {
   // Normalize segments based on context type
   const segments = useMemo(() => {
     if (!programData) return [];
-    if (contextType === 'event') {
-      return normalizeEventSegments(programData);
-    }
-    if (contextType === 'service') {
-      // Pass full programData (cache snapshot) — normalizeServiceSegments checks
-      // for entity-sourced sessions+segments at root first, then falls back to
-      // JSON path using programData.program (the raw Service entity).
-      return normalizeServiceSegments(programData);
-    }
-    return [];
-  }, [programData, contextType]);
+    const normalized = normalizeProgramData(programData);
+    
+    const sessionMap = {};
+    (normalized.sessions || []).forEach(s => { sessionMap[s.id] = s.name; });
+    
+    const roomMap = {};
+    (normalized.rooms || []).forEach(r => { roomMap[r.id] = r.name; });
+
+    return normalized.segments.map(seg => {
+      // Enrich breakout rooms with room names
+      const enrichedBreakouts = (seg.breakout_rooms || []).map(br => ({
+        ...br,
+        _roomName: br.room_id ? (roomMap[br.room_id] || '') : ''
+      }));
+
+      return {
+        ...seg,
+        breakout_rooms: enrichedBreakouts,
+        _sessionId: seg.session_id || 'custom',
+        _sessionDate: seg.date || '',
+        _sessionName: sessionMap[seg.session_id] || seg.session_id || 'Program',
+        _roomName: seg.room_id ? (roomMap[seg.room_id] || '') : '',
+        // Ensure effective start times are used for MyProgram timelines (Event Director Mode)
+        start_time: seg.actual_start_time || seg.start_time,
+        end_time: seg.actual_end_time || seg.end_time,
+      };
+    });
+  }, [programData]);
 
   // Session labels for picker (with auto-abbreviated labels)
   const sessionLabels = useMemo(() => getSessionLabels(segments, language), [segments, language]);

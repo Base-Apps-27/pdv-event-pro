@@ -44,13 +44,15 @@ export default function CountdownBlock({
   };
 
   const { countdownText, isLiveAdjusted, progressPercent } = useMemo(() => {
-    if (!segment || !segment.start_time) {
+    const effectiveStart = segment?.actual_start_time || segment?.start_time;
+    if (!segment || !effectiveStart) {
       return { countdownText: '--:--:--', isLiveAdjusted: false, progressPercent: 0 };
     }
 
-    const startAt = parseTime(segment.start_time);
-    const endAt = segment.end_time
-      ? parseTime(segment.end_time)
+    const effectiveEnd = segment.actual_end_time || segment.end_time;
+    const startAt = parseTime(effectiveStart);
+    const endAt = effectiveEnd
+      ? parseTime(effectiveEnd)
       : (startAt ? new Date(startAt.getTime() + (segment.duration_min || 0) * 60000) : null);
 
     const now = currentTime.getTime();
@@ -187,9 +189,9 @@ export default function CountdownBlock({
             {displayMode === 'in-progress' ? (language === 'es' ? 'TERMINA' : 'ENDS') : t('live.start')}
           </div>
           <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
-            {displayMode === 'in-progress' && segment.end_time
-              ? formatTimeToEST(segment.end_time)
-              : formatTimeToEST(segment.start_time)}
+            {displayMode === 'in-progress' && (segment.actual_end_time || segment.end_time)
+              ? formatTimeToEST(segment.actual_end_time || segment.end_time)
+              : formatTimeToEST(segment.actual_start_time || segment.start_time)}
           </div>
         </div>
 

@@ -204,17 +204,21 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
             </div>
           )}
           {/* Sub-assignments (e.g. Ministración, Cierre) — purple to match PublicProgramSegment */}
-          {(segment.sub_assignments || []).filter(sa => sa.label && sa._resolvedPerson).map((sa, idx) => (
-            <div key={`sa-${idx}`} className="flex items-center gap-2.5 text-sm text-purple-600 font-medium">
-              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
+          {(segment.sub_assignments || segment.ui_sub_assignments || []).map((sa, idx) => {
+            const person = sa._resolvedPerson || getData(sa.person_field_name);
+            if (!sa.label || !person) return null;
+            return (
+              <div key={`sa-${idx}`} className="flex items-center gap-2.5 text-sm text-purple-600 font-medium">
+                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <span>{sa.label}: {normalizeName(person)}</span>
+                {sa.duration_min > 0 && (
+                  <span className="text-purple-500 text-[10px]">({sa.duration_min} min)</span>
+                )}
               </div>
-              <span>{sa.label}: {normalizeName(sa._resolvedPerson)}</span>
-              {sa.duration_min > 0 && (
-                <span className="text-purple-500 text-[10px]">({sa.duration_min} min)</span>
-              )}
-            </div>
-          ))}
+            );
+          })}
           {/* Translator: InPerson (All) OR Remote (Translation Dept only) */}
           {(() => {
             const transName = getData('translator_name') || getData('translator');
