@@ -50,8 +50,18 @@ const DAY_INDEX = {
 };
 
 /**
- * Calculate the next occurrence of a given day_of_week from a reference date.
- * If today IS that day, returns today.
+ * Calculate the NEXT upcoming occurrence of a given day_of_week from a reference date.
+ * 
+ * "Next" means strictly in the future:
+ *   - If today is Wednesday and we want Tuesday → returns next Tuesday (6 days away)
+ *   - If today is Monday and we want Sunday → returns next Sunday (6 days away)
+ *   - If today IS the target day → returns NEXT WEEK's occurrence (7 days away)
+ * 
+ * This ensures the job always creates the upcoming service, not today's.
+ * The job runs nightly, so there is no risk of missing a same-day service.
+ * 
+ * Decision: 2026-02-24 — Changed from "today or next" to "strictly next week"
+ * to avoid creating services for today when the job runs at midnight.
  */
 function getNextOccurrence(nowET, dayOfWeek) {
   const targetIdx = DAY_INDEX[dayOfWeek];
@@ -59,8 +69,8 @@ function getNextOccurrence(nowET, dayOfWeek) {
 
   const currentIdx = nowET.getDay();
   let daysUntil = targetIdx - currentIdx;
-  if (daysUntil < 0) daysUntil += 7;
-  // If daysUntil === 0, it's today — that's fine, we want to ensure today's service exists
+  // Always go forward: if today is the target day, we want next week's occurrence
+  if (daysUntil <= 0) daysUntil += 7;
 
   const target = new Date(nowET);
   target.setDate(nowET.getDate() + daysUntil);
