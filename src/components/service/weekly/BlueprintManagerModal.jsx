@@ -60,13 +60,19 @@ export default function BlueprintManagerModal({ open, onClose }) {
     setShowCreateForm(false);
   };
 
-  const handleRename = async (bp) => {
-    const newName = window.prompt("Nuevo nombre:", bp.name);
-    if (newName && newName !== bp.name) {
-      await base44.entities.Service.update(bp.id, { name: newName });
-      queryClient.invalidateQueries({ queryKey: ['serviceBlueprintsList'] });
-      toast.success("Renombrado");
-    }
+  const handleRenameConfirm = async () => {
+    if (!renameValue.trim() || !renamingId) return;
+    await base44.entities.Service.update(renamingId, { name: renameValue.trim() });
+    queryClient.invalidateQueries({ queryKey: ['serviceBlueprintsList'] });
+    toast.success("Renombrado");
+    setRenamingId(null);
+    setRenameValue("");
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deletingId) return;
+    deleteMutation.mutate(deletingId);
+    setDeletingId(null);
   };
 
   const handleClose = () => {
