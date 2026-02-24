@@ -36,7 +36,7 @@ export function useServiceSchedules() {
   const { data: rawSchedules = [], isLoading } = useQuery({
     queryKey: ['serviceSchedules'],
     queryFn: () => base44.entities.ServiceSchedule.list('day_of_week'),
-    staleTime: 5 * 60 * 1000, // Cache 5 min — schedules rarely change
+    staleTime: 0, // Always refetch — blueprint assignments must be fresh for service creation
   });
 
   // Only active schedules
