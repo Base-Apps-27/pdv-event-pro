@@ -97,33 +97,43 @@ export default function BlueprintManager() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blueprints.map(bp => {
-            // Check legacy slots for migration info
+            // Count segments: prefer new .segments array, fallback to legacy named slot keys
             const legacySlots = Object.keys(bp).filter(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
-            const segmentsCount = bp.segments?.length || (legacySlots.length > 0 ? bp[legacySlots[0]]?.length : 0);
-            
+            const segmentsCount = bp.segments?.length ?? legacySlots.reduce((sum, k) => sum + (bp[k]?.length || 0), 0);
+            const isLegacy = !bp.segments && legacySlots.length > 0;
+
             return (
-              <Card key={bp.id} className="hover:shadow-md transition-shadow relative group">
+              <Card key={bp.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start pr-8">
+                  <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg text-gray-800">{bp.name || 'Sin nombre'}</CardTitle>
                       <p className="text-xs text-gray-500 mt-1">ID: {bp.id.slice(-6)}</p>
                     </div>
-                  </div>
-                  <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); handleRename(bp); }}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); if (window.confirm('¿Eliminar blueprint?')) deleteMutation.mutate(bp.id); }}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {/* Inline actions — no absolute positioning to avoid flash */}
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); handleRename(bp); }}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-red-600" onClick={(e) => { e.stopPropagation(); if (window.confirm('¿Eliminar blueprint?')) deleteMutation.mutate(bp.id); }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant="secondary" className="text-xs font-normal bg-gray-100 text-gray-600 border-gray-200">
-                      Segmentos ({segmentsCount || 0})
-                    </Badge>
+                    {isLegacy ? (
+                      legacySlots.map(slot => (
+                        <Badge key={slot} variant="secondary" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200">
+                          {slot} ({bp[slot]?.length || 0}) — legado
+                        </Badge>
+                      ))
+                    ) : (
+                      <Badge variant="secondary" className="text-xs font-normal bg-gray-100 text-gray-600 border-gray-200">
+                        Segmentos ({segmentsCount})
+                      </Badge>
+                    )}
                   </div>
                   <Button variant="outline" className="w-full text-pdv-teal border-pdv-teal hover:bg-pdv-teal hover:text-white" onClick={() => setEditingBlueprintId(bp.id)}>
                     <LayoutTemplate className="w-4 h-4 mr-2" />
