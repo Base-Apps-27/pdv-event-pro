@@ -207,10 +207,19 @@ export default function ServiceScheduleManager() {
         </div>
       )}
 
-      {/* Blueprint Manager */}
-      <div className="border-t border-gray-200 pt-6 mt-6">
-        <BlueprintManager />
+      {/* Blueprint Manager — opens as separate modal to avoid nesting issues */}
+      <div className="border-t border-gray-200 pt-6 mt-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 uppercase">Blueprints (Plantillas)</h2>
+          <p className="text-sm text-gray-500">Administra las plantillas independientes que puedes asignar a tus sesiones</p>
+        </div>
+        <Button onClick={() => setShowBlueprintModal(true)} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="hover:opacity-90">
+          <LayoutTemplate className="w-4 h-4 mr-2" />
+          Gestionar Plantillas
+        </Button>
       </div>
+
+      <BlueprintManagerModal open={showBlueprintModal} onClose={() => setShowBlueprintModal(false)} />
 
       {/* Edit/Create Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) { setShowDialog(false); setEditingSchedule(null); } }}>
