@@ -414,7 +414,7 @@ export default function DayServiceEditor({
         dayOfWeek={dayOfWeek}
         date={date}
         slotNames={slotNames}
-        blueprintData={null}
+        blueprintData={resolvedBlueprint}
         onServiceCreated={() => {
           localStateInitializedRef.current = false;
           queryClient.invalidateQueries({ queryKey: ['dayService', date, dayOfWeek] });
