@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, LayoutTemplate, Trash2, Edit, ArrowLeft, Check, X } from "lucide-react";
+import { Plus, LayoutTemplate, Trash2, Edit, ArrowLeft, Check, X, Copy } from "lucide-react";
 import BlueprintEditor from "./BlueprintEditor";
 import { toast } from "sonner";
 
