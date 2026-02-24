@@ -84,6 +84,14 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
       <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
       <p className="text-gray-600 mb-1 font-medium">No hay servicio para {dayLabel}</p>
       <p className="text-gray-400 text-sm mb-4">Fecha: {date}</p>
+      {blueprintData ? (
+        <p className="text-xs text-[#1F8A70] font-medium mb-4">
+          Se usará el blueprint: <span className="font-bold">{blueprintData.name}</span>
+          {' '}({(blueprintData.segments || []).length} segmentos)
+        </p>
+      ) : (
+        <p className="text-xs text-amber-600 mb-4">Sin blueprint configurado — se creará vacío</p>
+      )}
       <Button
         onClick={handleCreate}
         disabled={creating}
