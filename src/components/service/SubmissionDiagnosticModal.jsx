@@ -157,11 +157,11 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
                                                 </div>
                                             )}
 
-                                            {/* Raw content hidden per policy: "Only the parsed data should ever be accessible" */}
+                                            {/* Raw content displayed for Admin Verification/Diagnostics ONLY */}
                                             <div>
-                                                <p className="text-sm text-gray-600 font-medium mb-2">Contenido Enviado</p>
-                                                <div className="bg-gray-100 border border-gray-200 rounded p-3 text-xs text-gray-500 italic">
-                                                    (Contenido original archivado y oculto. Solo datos procesados disponibles.)
+                                                <p className="text-sm text-gray-600 font-medium mb-2">Contenido Enviado (Original)</p>
+                                                <div className="bg-white border border-gray-200 rounded p-3 text-sm text-gray-800 font-mono whitespace-pre-wrap max-h-80 overflow-y-auto shadow-inner">
+                                                    {version.content || <span className="text-gray-400 italic">Sin contenido de texto (posiblemente slides-only)</span>}
                                                 </div>
                                             </div>
 
