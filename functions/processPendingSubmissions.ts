@@ -175,23 +175,17 @@ async function processSubmission(base44, submission) {
       return { success: false, id: submission.id, error: 'Invalid segment type' };
     }
 
-    // If Slides Only and content exists, append to projection notes
-    let projectionNotes = currentSegment.projection_notes || "";
-    if (isSlidesOnly && submission.content && submission.content.trim()) {
-        if (!projectionNotes.includes(submission.content.trim())) {
-            projectionNotes = (projectionNotes ? projectionNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
-        }
-    }
-
+    // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES OR SUBMITTED_CONTENT
+    
     const updatedSegment = {
       ...currentSegment,
-      submitted_content: submission.content,
+      // submitted_content removed
       parsed_verse_data: parsedData,
       submission_status: 'processed',
       presentation_url: submission.presentation_url || "",
       notes_url: submission.notes_url || "",
       content_is_slides_only: isSlidesOnly,
-      projection_notes: projectionNotes
+      // projection_notes removed from update (preserve existing)
     };
 
     if (submission.title && submission.title.trim() !== "") {
@@ -229,13 +223,7 @@ async function processSubmission(base44, submission) {
         content_is_slides_only: isSlidesOnly
       };
 
-      // If Slides Only and content exists, append to projection notes
-      if (isSlidesOnly && submission.content && submission.content.trim()) {
-        const currentNotes = currentSegment.projection_notes || "";
-        if (!currentNotes.includes(submission.content.trim())) {
-            updateData.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
-        }
-      }
+      // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES
 
       await base44.asServiceRole.entities.Segment.update(segmentId, updateData);
       console.log(`[PROCESS] Updated Segment ${segmentId} for submission ${submission.id}`);
