@@ -323,86 +323,169 @@ export function useWeeklyServiceHandlers({
    * executeResetToBlueprint — RESET-SLOT-FIX (2026-02-20)
    * Now accepts an optional array of slot names to reset.
    * If omitted or empty, resets ALL slots (backward-compatible).
+   * 
+   * RELIABILITY FIX (2026-02-24):
+   * This function now performs a FULL synchronous reset:
+   * 1. Deletes old segments in the session
+   * 2. Creates NEW segments from blueprint immediately in DB
+   * 3. Updates local state with the new structure AND the new entity IDs
+   * This ensures subsequent field edits have a valid _entityId to write to.
    */
-  const executeResetToBlueprint = (slotsToReset) => {
+  const executeResetToBlueprint = async (slotsToReset) => {
     setShowResetConfirm(false);
+    const toastId = toast.loading("Restableciendo estructura...");
 
-    // Helper to get default fields if blueprint is corrupted/missing them
-    const getDefaultFields = (type) => {
-      const t = type?.toLowerCase() || '';
-      if (t === 'worship') return ["leader", "songs", "ministry_leader"];
-      if (t === 'welcome') return ["presenter"];
-      if (t === 'offering') return ["presenter", "verse"];
-      if (t === 'message') return ["preacher", "title", "verse"];
-      return [];
-    };
-
-    const mapBpSegments = (bpSegments) => (bpSegments || []).map(seg => {
-      const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
-      const segmentCopy = {
-        type: seg.type,
-        title: seg.title,
-        duration: seg.duration,
-        fields: [...fields],
-        data: {},
-        actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
-        sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
-        requires_translation: seg.requires_translation || false,
-        default_translator_source: seg.default_translator_source || "manual"
+    try {
+      // Helper to get default fields if blueprint is corrupted/missing them
+      const getDefaultFields = (type) => {
+        const t = type?.toLowerCase() || '';
+        if (t === 'worship') return ["leader", "songs", "ministry_leader"];
+        if (t === 'welcome') return ["presenter"];
+        if (t === 'offering') return ["presenter", "verse"];
+        if (t === 'message') return ["preacher", "title", "verse"];
+        return [];
       };
-      if (seg.type === "worship") {
-        const songCount = seg.number_of_songs || 4;
-        segmentCopy.songs = Array.from({ length: songCount }, () => ({ title: "", lead: "", key: "" }));
-        segmentCopy.number_of_songs = songCount;
-      }
-      return segmentCopy;
-    });
 
-    const initialData = { ...serviceData };
-
-    // RESET-SLOT-FIX: Only reset the selected slots (or all if not specified)
-    const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
-    targetSlots.forEach(name => {
-      const sessionDef = sessions?.find(s => s.name === name);
-      const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
-      let bpSegments = bp?.segments || [];
-      
-      // Legacy migration fallback: if blueprint has old slot-based keys instead of segments
-      if (bp && bpSegments.length === 0) {
-        const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
-        if (firstKey) bpSegments = bp[firstKey];
-      }
-
-      if (!bpSegments || bpSegments.length === 0) {
-        toast.info(`Blueprint para "${name}" no configurado o vacío. Quedará en blanco.`);
-        bpSegments = [];
-      }
-      initialData[name] = mapBpSegments(bpSegments);
-    });
-
-    setServiceData(initialData);
-
-    // Entity write: delete old segments and create new ones from blueprint
-    if (segmentMutation) {
-      targetSlots.forEach(async (slotName) => {
-        const sessionId = serviceData?._sessionIds?.[slotName];
-        if (!sessionId) return;
-        try {
-          // Delete all existing segments in this session
-          await segmentMutation.deleteAllSegmentsInSession(sessionId);
-          // Note: new blueprint segments don't have entity IDs yet.
-          // The blob save pipeline (syncWeeklyToSessions) will create them
-          // on the next 5s debounce cycle and inject _entityId back.
-        } catch (err) {
-          console.error(`[executeResetToBlueprint] Entity cleanup failed for ${slotName}:`, err.message);
+      const mapBpSegments = (bpSegments) => (bpSegments || []).map(seg => {
+        const fields = seg.fields && seg.fields.length > 0 ? seg.fields : getDefaultFields(seg.type);
+        const segmentCopy = {
+          type: seg.type,
+          title: seg.title,
+          duration: seg.duration,
+          fields: [...fields],
+          data: {},
+          actions: seg.actions ? seg.actions.map(a => ({ ...a })) : [],
+          sub_assignments: seg.sub_assignments ? seg.sub_assignments.map(sa => ({ ...sa })) : [],
+          requires_translation: seg.requires_translation || false,
+          default_translator_source: seg.default_translator_source || "manual"
+        };
+        if (seg.type === "worship") {
+          const songCount = seg.number_of_songs || 4;
+          segmentCopy.songs = Array.from({ length: songCount }, () => ({ title: "", lead: "", key: "" }));
+          segmentCopy.number_of_songs = songCount;
         }
+        return segmentCopy;
       });
-    }
 
-    const resetLabel = targetSlots.length < slotNames.length
-      ? `Horarios restablecidos: ${targetSlots.join(', ')}`
-      : "Servicio restablecido al diseño original";
-    toast.success(resetLabel);
+      // We'll build the new state here
+      let nextState = { ...serviceDataRef.current }; // Use ref to get latest
+      const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
+      
+      // Ensure Service exists (sanity check, DayServiceEditor should have handled it)
+      if (!nextState.id) throw new Error("Service ID missing. Cannot reset.");
+
+      for (const slotName of targetSlots) {
+        // 1. Resolve Blueprint
+        const sessionDef = sessions?.find(s => s.name === slotName);
+        const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
+        let bpSegments = bp?.segments || [];
+        
+        // Legacy migration fallback
+        if (bp && bpSegments.length === 0) {
+          const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+          if (firstKey) bpSegments = bp[firstKey];
+        }
+
+        if (!bpSegments || bpSegments.length === 0) {
+          console.warn(`Blueprint for "${slotName}" empty/missing. using empty list.`);
+          bpSegments = [];
+        }
+
+        const newSegmentsData = mapBpSegments(bpSegments);
+        
+        // 2. Ensure Session exists
+        let sessionId = nextState._sessionIds?.[slotName];
+        if (!sessionId) {
+          // Create Session on the fly
+          const newSession = await base44.entities.Session.create({
+            service_id: nextState.id,
+            name: slotName,
+            // Assuming default date/order logic is handled by backend or we accept defaults
+            date: nextState.date
+          });
+          sessionId = newSession.id;
+          nextState = { 
+            ...nextState, 
+            _sessionIds: { ...nextState._sessionIds, [slotName]: sessionId } 
+          };
+        }
+
+        // 3. Delete Old Segments
+        if (segmentMutation) {
+          await segmentMutation.deleteAllSegmentsInSession(sessionId);
+        }
+
+        // 4. Create New Segments in DB & Inject IDs
+        const createdSegments = [];
+        for (let i = 0; i < newSegmentsData.length; i++) {
+          const segData = newSegmentsData[i];
+          
+          // Map to entity structure
+          const entityPayload = {
+            session_id: sessionId,
+            service_id: nextState.id,
+            order: i + 1,
+            title: segData.title || "Untitled",
+            segment_type: segData.type, // Map 'worship' -> 'Alabanza' done by backend or kept as is? segment_type enum has 'Alabanza' etc.
+            // We need to map internal type to enum if possible, or trust strict string matching
+            // Segment entity enum: Alabanza, Bienvenida, etc.
+            // Blueprint types might be lowercase.
+            duration_min: segData.duration || 0,
+            show_in_general: true,
+            ui_fields: segData.fields || [],
+            ui_sub_assignments: segData.sub_assignments || [],
+            requires_translation: segData.requires_translation,
+            default_translator_source: segData.default_translator_source,
+            number_of_songs: segData.number_of_songs,
+          };
+
+          // Enum normalization for segment_type
+          const typeMap = {
+            'worship': 'Alabanza', 'alabanza': 'Alabanza',
+            'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
+            'offering': 'Ofrenda', 'ofrenda': 'Ofrenda',
+            'message': 'Plenaria', 'plenaria': 'Plenaria',
+            'video': 'Video',
+            'anuncio': 'Anuncio',
+            'dinamica': 'Dinámica',
+            'break': 'Break',
+            'techonly': 'TechOnly',
+            'prayer': 'Oración', 'oracion': 'Oración',
+            'special': 'Especial', 'especial': 'Especial',
+            'closing': 'Cierre', 'cierre': 'Cierre',
+            'ministry': 'Ministración', 'ministracion': 'Ministración'
+          };
+          if (typeMap[segData.type?.toLowerCase()]) {
+            entityPayload.segment_type = typeMap[segData.type?.toLowerCase()];
+          }
+
+          let created = null;
+          if (segmentMutation) {
+             created = await segmentMutation.createSegment(entityPayload);
+          }
+
+          // Merge ID back into local state object
+          createdSegments.push({
+            ...segData,
+            _entityId: created?.id,
+            _sessionId: sessionId
+          });
+        }
+
+        nextState[slotName] = createdSegments;
+      }
+
+      setServiceData(nextState);
+
+      const resetLabel = targetSlots.length < slotNames.length
+        ? `Horarios restablecidos: ${targetSlots.join(', ')}`
+        : "Servicio restablecido al diseño original";
+      toast.success(resetLabel, { id: toastId });
+
+    } catch (error) {
+      console.error("Reset failed:", error);
+      toast.error("Error al restablecer: " + error.message, { id: toastId });
+    }
   };
 
   const addSpecialSegment = () => {
