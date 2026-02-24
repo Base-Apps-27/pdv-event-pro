@@ -300,13 +300,9 @@ ${submission.content.substring(0, 15000)}
                             message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
                         };
 
-                        // If Slides Only and content exists, append to projection notes
-                        if (isSlidesOnly && submission.content && submission.content.trim()) {
-                            const currentNotes = targetSegmentEntity.projection_notes || "";
-                            if (!currentNotes.includes(submission.content.trim())) {
-                                entityUpdate.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
-                            }
-                        }
+                        // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES
+                        // Raw content must only live in submitted_content or parsed_verse_data.
+                        // We never want large blobs of text leaking into the projection notes field which is visible in Live View.
 
                         await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
                     }
@@ -330,13 +326,9 @@ ${submission.content.substring(0, 15000)}
                     content_is_slides_only: !!submission.content_is_slides_only
                 };
 
-                // If Slides Only and content exists, append to projection notes
-                if (isSlidesOnly && submission.content && submission.content.trim()) {
-                    const currentNotes = currentSegment.projection_notes || "";
-                    if (!currentNotes.includes(submission.content.trim())) {
-                        updateData.projection_notes = (currentNotes ? currentNotes + "\n\n" : "") + `[Nota del Orador]: ${submission.content.trim()}`;
-                    }
-                }
+                // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES
+                // Raw content must only live in submitted_content or parsed_verse_data.
+                // We never want large blobs of text leaking into the projection notes field which is visible in Live View.
 
                 await base44.asServiceRole.entities.Segment.update(segmentId, updateData);
             } else {
