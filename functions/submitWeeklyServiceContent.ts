@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
 
         // Shared update payload for both entity and JSON paths
         const commonFields = {
-            submitted_content: content || "",
+            // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data.
             parsed_verse_data: parsedData,
             submission_status: 'processed',
             scripture_references: scriptureReferences,

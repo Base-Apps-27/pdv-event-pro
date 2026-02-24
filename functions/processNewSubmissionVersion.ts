@@ -262,7 +262,7 @@ ${submission.content.substring(0, 15000)}
 
             const updatedSegment = {
                 ...currentSegment,
-                submitted_content: submission.content,
+                // DO NOT SAVE RAW CONTENT TO SEGMENT.
                 parsed_verse_data: parsedData,
                 submission_status: 'processed',
                 scripture_references: scriptureReferences
@@ -316,7 +316,8 @@ ${submission.content.substring(0, 15000)}
             console.log(`[EVENT] Processing event submission ${submissionId} for segment ${segmentId}`);
             const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
             
-            if (currentSegment && currentSegment.submitted_content === submission.content) {
+            // We no longer check submitted_content equality because we stopped syncing it to the segment.
+            if (currentSegment) {
                 const updateData = {
                     submission_status: 'processed', 
                     parsed_verse_data: parsedData,

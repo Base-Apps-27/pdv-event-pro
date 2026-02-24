@@ -103,8 +103,8 @@ Deno.serve(async (req) => {
         // We DO NOT parse content here.
         const segmentUpdates = {
             submission_status: 'pending',
-            // We temporarily update content here too so admins can see raw text if they open it before processing finishes
-            submitted_content: content,
+            // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data lives on the segment.
+            // Raw content is archived in SpeakerSubmissionVersion only.
             presentation_url: presentation_url || "",
             notes_url: notes_url || "",
             content_is_slides_only: !!content_is_slides_only
