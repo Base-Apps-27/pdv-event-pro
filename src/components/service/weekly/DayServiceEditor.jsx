@@ -473,36 +473,36 @@ export default function DayServiceEditor({
 
           {/* Per-day action bar: PDF download + Reset to Blueprint */}
           <div className="flex gap-1.5 items-center flex-wrap">
-            <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2.5">
-              <Download className="w-3 h-3 mr-1" /><span className="hidden sm:inline">PDF </span>Programa
+            <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Programa">
+              <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Prog.</span>
             </Button>
-            <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2.5">
-              <Download className="w-3 h-3 mr-1" /><span className="hidden sm:inline">PDF </span>Anuncios
+            <Button onClick={handlers.handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Anuncios">
+              <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
             </Button>
-            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs h-8 px-2.5">
-              <Eye className="w-3 h-3 mr-1" />Live
+            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs h-8 px-2" title="Live View">
+              <Eye className="w-4 h-4" />
             </Button>
             {resolvedBlueprint && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowResetConfirm(true)}
-                className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2.5"
+                className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2"
                 title={`Restablecer a blueprint: ${resolvedBlueprint.name}`}
               >
-                <RotateCcw className="w-3 h-3 mr-1" />Reset
+                <RotateCcw className="w-4 h-4" />
               </Button>
             )}
           </div>
 
           {/* Reset-to-blueprint confirmation inline */}
           {showResetConfirm && resolvedBlueprint && (
-            <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 flex items-center justify-between">
+            <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-amber-800">¿Restablecer estructura del servicio al blueprint "{resolvedBlueprint.name}"?</p>
-                <p className="text-xs text-amber-700 mt-0.5">El contenido ya ingresado (predicadores, canciones, etc.) se borrará de las sesiones restablecidas.</p>
+                <p className="text-sm font-semibold text-amber-800">¿Restablecer a blueprint "{resolvedBlueprint.name}"?</p>
+                <p className="text-xs text-amber-700 mt-0.5">El contenido ingresado se borrará.</p>
               </div>
-              <div className="flex gap-2 ml-4 shrink-0">
+              <div className="flex flex-wrap gap-2 sm:ml-4 shrink-0">
                 {slotNames.length > 1 && slotNames.map(slot => (
                   <Button key={slot} size="sm" variant="outline" className="border-amber-400 text-amber-800 text-xs h-7 px-2 hover:bg-amber-100" onClick={() => handlers.executeResetToBlueprint([slot])}>
                     Solo {slot}
