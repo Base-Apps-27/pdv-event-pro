@@ -383,79 +383,9 @@ export default function PublicProgramView() {
   const actualServiceData = React.useMemo(() => {
     if (!rawServiceData) return null;
     
-    // Only process if it's a weekly service structure (has 9:30am/11:30am arrays)
-    // Custom services usually have 'segments' with explicit times, but we can process those too if needed
-    
-    const calculateTimedSegments = (segments, startStr) => {
-      if (!segments || !Array.isArray(segments)) return [];
-      
-      let currentH = 0;
-      let currentM = 0;
-
-      if (startStr) {
-        currentH = parseInt(startStr.split(':')[0]);
-        currentM = parseInt(startStr.split(':')[1]);
-      }
-      
-      return segments.map(seg => {
-        // If already has time, use it to update current pointer
-        if (seg.start_time) {
-          const [h, m] = seg.start_time.split(':').map(Number);
-          currentH = h;
-          currentM = m;
-        }
-        
-        const startH = String(currentH).padStart(2, '0');
-        const startM = String(currentM).padStart(2, '0');
-        const startTime = `${startH}:${startM}`;
-        
-        // Add duration
-        const duration = seg.duration || 0;
-        const date = new Date();
-        date.setHours(currentH, currentM + duration, 0, 0);
-        
-        currentH = date.getHours();
-        currentM = date.getMinutes();
-        
-        const endH = String(currentH).padStart(2, '0');
-        const endM = String(currentM).padStart(2, '0');
-        const endTime = `${endH}:${endM}`;
-        
-        // Use calculated time if not present, but prefer existing if valid
-        return {
-          ...seg,
-          start_time: seg.start_time || startTime,
-          end_time: seg.end_time || endTime
-        };
-      });
-    };
-
-    const newData = { ...rawServiceData };
-    
-    // BUG FIX (audit): Calculate timed segments for ALL dynamic slot keys,
-    // not just hardcoded "9:30am"/"11:30am". Parse start time from slot name.
-    const slotKeys = Object.keys(newData).filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(newData[k]));
-    slotKeys.forEach(slotKey => {
-      // Parse "9:30am" → "09:30", "11:30am" → "11:30", "7:00pm" → "19:00"
-      const match = slotKey.match(/^(\d+):(\d+)(am|pm)$/i);
-      if (match) {
-        let h = parseInt(match[1]);
-        const m = match[2];
-        const period = match[3].toLowerCase();
-        if (period === 'pm' && h < 12) h += 12;
-        if (period === 'am' && h === 12) h = 0;
-        const startStr = `${String(h).padStart(2, '0')}:${m}`;
-        newData[slotKey] = calculateTimedSegments(newData[slotKey], startStr);
-      }
-    });
-    // Calculate times for Custom Services (segments array)
-    if (newData.segments && newData.segments.length > 0) {
-      // Use service time as start, default to 10:00 if missing
-      const serviceTime = newData.time || "10:00"; 
-      newData.segments = calculateTimedSegments(newData.segments, serviceTime);
-    }
-    
-    return newData;
+    // STRICT ENTITY MODE: No longer calculating segment times for JSON fallbacks.
+    // Entities have their times calculated correctly during sync/save.
+    return { ...rawServiceData };
   }, [rawServiceData]);
 
   const eventSessions = sessions;
