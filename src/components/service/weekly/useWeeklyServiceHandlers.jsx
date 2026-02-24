@@ -367,23 +367,20 @@ export function useWeeklyServiceHandlers({
         return segmentCopy;
       });
 
-      // We'll build the new state here
-      // 2026-02-24 Fix: The handlers hook takes `serviceData` from its props, which is a closure over the render.
-      // If we use `serviceData` here it might be stale. We MUST use a functional state update later,
-      // or at least grab the latest via ref if possible. Since we removed the ref earlier, let's just 
-      // rely on the setter.
-      // Wait, we need the `nextState.id`. We will use a functional state update instead of async await
-      // mixing with state, but since we have to do async DB calls, we need the current serviceData.
+      // We need to ensure we have the absolute latest serviceData ID because this function is async
+      // and state closures can get stale. We'll fetch the latest from the setter function callback.
+      let currentState;
+      setServiceData(prev => {
+        currentState = prev;
+        return prev;
+      });
       
-      // The safest way is to use the `serviceDataRef` we removed. Let me put it back or just use the current serviceData from props but warn if missing.
-      let nextState = { ...(serviceData || {}) }; 
-      const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
-      
-      // Ensure Service exists (sanity check, DayServiceEditor should have handled it)
-      if (!nextState.id) {
-         // Fallback to getting it from the URL or somehow? No, if it's missing, we are completely detached.
+      if (!currentState || !currentState.id) {
          throw new Error("Service ID missing. Cannot reset. Please refresh the page.");
       }
+
+      let nextState = { ...currentState };
+      const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
 
       for (const slotName of targetSlots) {
         // 1. Resolve Blueprint
