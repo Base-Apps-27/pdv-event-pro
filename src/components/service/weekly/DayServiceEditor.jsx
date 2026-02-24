@@ -377,26 +377,43 @@ export default function DayServiceEditor({
     return () => clearTimeout(timer);
   }, [serviceData, date, dayOfWeek]);
 
-  // ── Metadata auto-save ──
+  // ── Metadata & Legacy Auto-save ──
   useEffect(() => {
     if (!existingData?.id || !serviceData) return;
     const timer = setTimeout(() => {
+      const metadata = {
+        selected_announcements: selectedAnnouncements,
+        print_settings_page1: printSettingsPage1,
+        print_settings_page2: printSettingsPage2,
+        receso_notes: serviceData.receso_notes || {},
+        day_of_week: dayOfWeek,
+        name: `${dayLabel} - ${date}`,
+        status: 'active',
+        service_type: 'weekly',
+      };
+      
+      // LEGACY FALLBACK: If _fromEntities is missing, we are in legacy blob mode.
+      // We must save the segments to the blob to prevent data loss.
+      // (New segments or reset ones use useSegmentMutation directly).
+      if (!serviceData._fromEntities) {
+        slotNames.forEach(slot => {
+           if (serviceData[slot]) metadata[slot] = serviceData[slot];
+        });
+        if (serviceData.pre_service_notes) metadata.pre_service_notes = serviceData.pre_service_notes;
+        if (serviceData.coordinators) metadata.coordinators = serviceData.coordinators;
+        if (serviceData.ujieres) metadata.ujieres = serviceData.ujieres;
+        if (serviceData.sound) metadata.sound = serviceData.sound;
+        if (serviceData.luces) metadata.luces = serviceData.luces;
+        if (serviceData.fotografia) metadata.fotografia = serviceData.fotografia;
+      }
+      
       saveMetadataMutation.mutate({
         serviceId: existingData.id,
-        metadata: {
-          selected_announcements: selectedAnnouncements,
-          print_settings_page1: printSettingsPage1,
-          print_settings_page2: printSettingsPage2,
-          receso_notes: serviceData.receso_notes || {},
-          day_of_week: dayOfWeek,
-          name: `${dayLabel} - ${date}`,
-          status: 'active',
-          service_type: 'weekly',
-        }
+        metadata
       });
     }, 3000);
     return () => clearTimeout(timer);
-  }, [selectedAnnouncements, printSettingsPage1, printSettingsPage2, date, dayOfWeek]);
+  }, [serviceData, selectedAnnouncements, printSettingsPage1, printSettingsPage2, date, dayOfWeek]);
 
   // ── Segment expand toggle ──
   const toggleSegmentExpanded = (timeSlot, idx) => {
