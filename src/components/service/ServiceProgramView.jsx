@@ -49,14 +49,7 @@ function parseSlotName(name) {
   return { h: h24, m: parseInt(m), display, base24, totalMinutes };
 }
 
-// Team fields to show in header (label + icon)
-const TEAM_FIELDS = [
-  { key: 'coordinators', icon: '👤', label: 'Coord' },
-  { key: 'ujieres', icon: '🚪', label: 'Ujieres' },
-  { key: 'sound', icon: '🔊', label: 'Sonido' },
-  { key: 'luces', icon: '💡', label: 'Luces' },
-  { key: 'fotografia', icon: '📸', label: 'Foto' },
-];
+// Legacy TEAM_FIELDS removed
 
 export default function ServiceProgramView({
   actualServiceData,
