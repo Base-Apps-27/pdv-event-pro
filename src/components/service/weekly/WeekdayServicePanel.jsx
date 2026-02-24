@@ -66,18 +66,12 @@ export default function WeekdayServicePanel({ service }) {
     staleTime: 30000,
   });
 
-  // ── L1.4 Fallback: Service.segments[] JSON ──
-  // Used when no Session/Segment entities exist (pre-sync or failed sync).
-  const jsonSegments = useMemo(() => {
-    if (!service.segments || !Array.isArray(service.segments)) return [];
-    return service.segments;
-  }, [service.segments]);
-
-  // FIX (2026-02-18): Sessions can exist (from sync) but have zero entity segments.
-  // In that case, fall through to JSON fallback if the Service has embedded segments.
+  // STRICT ENTITY MODE: No JSON fallback.
+  // We ignore `service.segments` completely. If entities are missing, 
+  // we show the empty/edit state to force a proper entity-based save.
   const hasEntitySegments = allSegments.length > 0;
   const hasEntityData = sessions.length > 0 && hasEntitySegments;
-  const hasJsonFallback = !hasEntityData && jsonSegments.length > 0;
+  const hasJsonFallback = false; // DISABLED: No more JSON fallback.
   const isLoading = sessionsLoading || (hasEntityData && segsLoading);
 
   if (isLoading) {

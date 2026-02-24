@@ -146,21 +146,15 @@ export default function DayServiceEditor({
       if (!services || services.length === 0) return null;
 
       // Find weekly service for this specific day
+      // STRICT MODE (2026-02-24): We explicitly filter by service_type='weekly'.
+      // Legacy fallback logic is REMOVED to prevent loading stale JSON services.
+      // If no entity-based service exists, we return null to trigger fresh creation
+      // (which now uses the robust entity creation flow).
       let candidates = services.filter(s =>
         s.status !== 'blueprint' &&
         s.service_type === 'weekly' &&
         s.day_of_week === dayOfWeek
       );
-
-      // Legacy fallback: services without explicit day_of_week
-      if (candidates.length === 0 && dayOfWeek === 'Sunday') {
-        candidates = services.filter(s =>
-          s.status !== 'blueprint' &&
-          !s.service_type &&
-          Object.keys(s).some(key => /^\d{1,2}:\d{2}(am|pm)$/i.test(key) && Array.isArray(s[key]) && s[key].length > 0) &&
-          (!s.segments || s.segments.length === 0)
-        );
-      }
 
       if (candidates.length === 0) return null;
       const service = candidates.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0))[0];

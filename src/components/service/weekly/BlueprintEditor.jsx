@@ -43,9 +43,11 @@ export default function BlueprintEditor({ blueprintId }) {
     const currentId = blueprint.id;
     if (initializedRef.current === currentId) return;
 
-    // Always use only the canonical `segments` array — never fall back to legacy named-slot keys.
-    // Legacy blueprints (e.g. "Servicios Dominicales") store data in "9:30am"/"11:30am" keys;
-    // those are intentionally ignored here. Edit via "Nuevo Blueprint" to start fresh.
+    // STRICT ENTITY MODE: 
+    // Always use only the canonical `segments` array.
+    // We intentionally do not support legacy JSON blob blueprints anymore.
+    // If a blueprint has no segments array but has legacy keys, we treat it as empty
+    // to force a migration to the new structure.
     const initialSegments = Array.isArray(blueprint.segments) ? blueprint.segments : [];
 
     setSegments(JSON.parse(JSON.stringify(initialSegments)));

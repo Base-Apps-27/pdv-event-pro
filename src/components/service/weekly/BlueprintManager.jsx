@@ -97,10 +97,13 @@ export default function BlueprintManager() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blueprints.map(bp => {
-            // Count segments: prefer new .segments array, fallback to legacy named slot keys
-            const legacySlots = Object.keys(bp).filter(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
-            const segmentsCount = bp.segments?.length ?? legacySlots.reduce((sum, k) => sum + (bp[k]?.length || 0), 0);
-            const isLegacy = !bp.segments && legacySlots.length > 0;
+            // Count segments: only count the canonical .segments array.
+            // Legacy slots are ignored to encourage migration.
+            const segmentsCount = bp.segments?.length || 0;
+            const hasLegacyKeys = Object.keys(bp).some(k => 
+              Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k)
+            );
+            const isLegacy = !bp.segments && hasLegacyKeys;
 
             return (
               <Card key={bp.id} className="hover:shadow-md transition-shadow">
@@ -124,11 +127,9 @@ export default function BlueprintManager() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {isLegacy ? (
-                      legacySlots.map(slot => (
-                        <Badge key={slot} variant="secondary" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200">
-                          {slot} ({bp[slot]?.length || 0}) — legado
-                        </Badge>
-                      ))
+                      <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-300">
+                        Formato Antiguo (Migrar)
+                      </Badge>
                     ) : (
                       <Badge variant="secondary" className="text-xs font-normal bg-gray-100 text-gray-600 border-gray-200">
                         Segmentos ({segmentsCount})
@@ -137,7 +138,7 @@ export default function BlueprintManager() {
                   </div>
                   <Button variant="outline" className="w-full text-pdv-teal border-pdv-teal hover:bg-pdv-teal hover:text-white" onClick={() => setEditingBlueprintId(bp.id)}>
                     <LayoutTemplate className="w-4 h-4 mr-2" />
-                    Editar Plantilla
+                    {isLegacy ? 'Migrar Plantilla' : 'Editar Plantilla'}
                   </Button>
                 </CardContent>
               </Card>

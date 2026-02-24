@@ -178,11 +178,11 @@ export default function BlueprintManagerModal({ open, onClose }) {
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
                 {blueprints.map(bp => {
-                  const count = getSegmentCount(bp);
-                  const legacySlots = Object.keys(bp).filter(
-                    k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k)
+                  const count = bp.segments?.length || 0;
+                  const hasLegacyKeys = Object.keys(bp).some(k => 
+                    Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k)
                   );
-                  const isLegacy = !bp.segments && legacySlots.length > 0;
+                  const isLegacy = !bp.segments && hasLegacyKeys;
 
                   const isRenaming = renamingId === bp.id;
                   const isDeleting = deletingId === bp.id;
@@ -236,11 +236,9 @@ export default function BlueprintManagerModal({ open, onClose }) {
                       <CardContent className="pt-0">
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {isLegacy ? (
-                            legacySlots.map(slot => (
-                              <Badge key={slot} variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-300">
-                                {slot} ({bp[slot]?.length || 0})
-                              </Badge>
-                            ))
+                            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-300">
+                              Formato Antiguo (Migrar)
+                            </Badge>
                           ) : (
                             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
                               {count} segmento{count !== 1 ? 's' : ''}
@@ -253,7 +251,7 @@ export default function BlueprintManagerModal({ open, onClose }) {
                           onClick={() => setEditingBlueprintId(bp.id)}
                         >
                           <LayoutTemplate className="w-4 h-4 mr-2" />
-                          Editar Plantilla
+                          {isLegacy ? 'Migrar Plantilla' : 'Editar Plantilla'}
                         </Button>
                       </CardContent>
                     </Card>
