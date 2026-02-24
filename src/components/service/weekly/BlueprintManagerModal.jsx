@@ -52,6 +52,24 @@ export default function BlueprintManagerModal({ open, onClose }) {
     onError: (err) => toast.error("Error al crear: " + err.message),
   });
 
+  const duplicateMutation = useMutation({
+    // Deep-copy segments array so the duplicate is fully independent of the source.
+    mutationFn: async (bp) =>
+      base44.entities.Service.create({
+        name: `${bp.name} (copia)`,
+        status: 'blueprint',
+        origin: 'duplicate',
+        day_of_week: 'Sunday',
+        segments: JSON.parse(JSON.stringify(bp.segments || [])),
+      }),
+    onSuccess: (newBp) => {
+      queryClient.invalidateQueries(['serviceBlueprintsList']);
+      toast.success("Blueprint duplicado");
+      setEditingBlueprintId(newBp.id);
+    },
+    onError: (err) => toast.error("Error al duplicar: " + err.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Service.delete(id),
     onSuccess: () => {
