@@ -165,17 +165,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 5. Resolve blueprint: schedule-specific > shared > fallback
-      let blueprint = sharedBlueprint;
-      if (schedule.blueprint_id) {
-        try {
-          const specific = await base44.asServiceRole.entities.Service.filter({ id: schedule.blueprint_id });
-          if (specific.length > 0) blueprint = specific[0];
-        } catch (err) {
-          console.warn(`[ENSURE_RECURRING] Failed to load schedule blueprint ${schedule.blueprint_id}:`, err.message);
-        }
-      }
-
       // Derive slot names from schedule sessions
       let slotNames = ["9:30am"];
       if (schedule.sessions?.length > 0) {
@@ -208,10 +197,27 @@ Deno.serve(async (req) => {
       servicePayload.pre_service_notes = { ...emptySlotObj };
 
       slotNames.forEach(name => {
-        // Fallback resolution order: exact slot match -> first 9:30am slot -> first available blueprint slot -> empty array
-        const bpSlots = blueprint ? Object.keys(blueprint).filter(k => Array.isArray(blueprint[k]) && blueprint[k].length > 0) : [];
-        const source = blueprint?.[name] || FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"] || (bpSlots.length > 0 ? blueprint[bpSlots[0]] : []);
-        servicePayload[name] = cloneSegments(source);
+        const sessionDef = schedule.sessions?.find(s => s.name === name);
+        let bpSegments = [];
+        
+        if (sessionDef?.blueprint_id) {
+          // Resolve blueprint per session
+          const bp = blueprints.find(b => b.id === sessionDef.blueprint_id);
+          if (bp) {
+            bpSegments = bp.segments || [];
+            if (bpSegments.length === 0) {
+              const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+              if (firstKey) bpSegments = bp[firstKey];
+            }
+          }
+        }
+        
+        // If still empty, use legacy fallback
+        if (!bpSegments || bpSegments.length === 0) {
+          bpSegments = FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"] || [];
+        }
+
+        servicePayload[name] = cloneSegments(bpSegments);
       });
 
       const newService = await base44.asServiceRole.entities.Service.create(servicePayload);
@@ -221,7 +227,7 @@ Deno.serve(async (req) => {
         date: dateStr,
         status: 'created',
         service_id: newService.id,
-        blueprint_source: schedule.blueprint_id ? 'schedule-specific' : (sharedBlueprint ? 'shared' : 'fallback')
+        blueprint_source: 'per-session-resolved'
       });
     }
 
