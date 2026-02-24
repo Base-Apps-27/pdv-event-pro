@@ -107,6 +107,20 @@ export default function DayServiceEditor({
 
   const slotNames = (sessions || []).map(s => s.name);
 
+  // Resolve blueprint for this day's schedule.
+  // Priority: first session's blueprint_id → any blueprint in the list → null
+  const resolvedBlueprint = useMemo(() => {
+    // Try per-session blueprint first (sessions can have individual blueprint_id)
+    for (const session of (sessions || [])) {
+      if (session.blueprint_id && blueprints?.length) {
+        const found = blueprints.find(b => b.id === session.blueprint_id);
+        if (found) return found;
+      }
+    }
+    // Fall back to first available blueprint
+    return blueprints?.[0] || null;
+  }, [sessions, blueprints]);
+
   // ── Service query: find existing service for this day + date ──
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['dayService', date, dayOfWeek],
