@@ -213,10 +213,13 @@ export default function BlueprintManagerModal({ open, onClose }) {
                           </div>
                           {!isRenaming && (
                             <div className="flex gap-1 shrink-0">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-blue-600" onClick={() => { setRenamingId(bp.id); setRenameValue(bp.name || ""); }}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-blue-600" title="Renombrar" onClick={() => { setRenamingId(bp.id); setRenameValue(bp.name || ""); }}>
                                 <Edit className="w-3.5 h-3.5" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-red-600" onClick={() => setDeletingId(bp.id)}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-[#1F8A70]" title="Duplicar" disabled={duplicateMutation.isPending} onClick={() => duplicateMutation.mutate(bp)}>
+                                <Copy className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400 hover:text-red-600" title="Eliminar" onClick={() => setDeletingId(bp.id)}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
