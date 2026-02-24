@@ -472,7 +472,7 @@ export default function DayServiceEditor({
             </div>
           )}
 
-          {/* Per-day action bar: PDF download + Live View */}
+          {/* Per-day action bar: PDF download + Live View + Reset to Blueprint */}
           <div className="flex gap-2 items-center flex-wrap">
             <Button onClick={handlers.handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} className="font-semibold text-xs px-3 py-1.5">
               <Download className="w-3 h-3 mr-1" />PDF Programa
@@ -483,7 +483,40 @@ export default function DayServiceEditor({
             <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-3 py-1.5">
               <Eye className="w-3 h-3 mr-1" />Live View
             </Button>
+            {resolvedBlueprint && (
+              <Button
+                variant="outline"
+                onClick={() => setShowResetConfirm(true)}
+                className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs px-3 py-1.5"
+                title={`Restablecer a blueprint: ${resolvedBlueprint.name}`}
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />Restablecer
+              </Button>
+            )}
           </div>
+
+          {/* Reset-to-blueprint confirmation inline */}
+          {showResetConfirm && resolvedBlueprint && (
+            <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-800">¿Restablecer estructura del servicio al blueprint "{resolvedBlueprint.name}"?</p>
+                <p className="text-xs text-amber-700 mt-0.5">El contenido ya ingresado (predicadores, canciones, etc.) se borrará de las sesiones restablecidas.</p>
+              </div>
+              <div className="flex gap-2 ml-4 shrink-0">
+                {slotNames.length > 1 && slotNames.map(slot => (
+                  <Button key={slot} size="sm" variant="outline" className="border-amber-400 text-amber-800 text-xs h-7 px-2 hover:bg-amber-100" onClick={() => handlers.executeResetToBlueprint([slot])}>
+                    Solo {slot}
+                  </Button>
+                ))}
+                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 px-3" onClick={() => handlers.executeResetToBlueprint(slotNames)}>
+                  Todos
+                </Button>
+                <Button size="sm" variant="ghost" className="text-xs h-7 px-2" onClick={() => setShowResetConfirm(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Slot columns */}
           <ServiceSlotColumns
