@@ -137,7 +137,7 @@ export default function DayServiceEditor({
       // Entity Lift: try loading from Session/Segment entities
       if (service?.id) {
         try {
-          const entityData = await loadWeeklyFromSessions(base44, service.id, effectiveBlueprint);
+          const entityData = await loadWeeklyFromSessions(base44, service.id, null);
           const hasSegments = entityData && Object.values(entityData).some(
             val => Array.isArray(val) && val.length > 0
           );
