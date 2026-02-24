@@ -470,17 +470,7 @@ function normalizeAction(action) {
 //   2. data.songs[] (custom services dual-write)
 //   3. song_N_title flat fields (event Segment entities)
 function normalizeSongs(seg) {
-  // 1. Root songs array (weekly services, custom services)
-  if (seg.songs && Array.isArray(seg.songs) && seg.songs.length > 0) {
-    return seg.songs.filter(s => s && (s.title || s.lead));
-  }
-
-  // 2. data.songs array (custom service dual-write)
-  if (seg.data?.songs && Array.isArray(seg.data.songs) && seg.data.songs.length > 0) {
-    return seg.data.songs.filter(s => s && (s.title || s.lead));
-  }
-
-  // 3. Flat fields (event Segment entities: song_1_title through song_6_title)
+  // Flat fields (event Segment entities: song_1_title through song_6_title)
   const songs = [];
   for (let i = 1; i <= 6; i++) {
     const title = seg[`song_${i}_title`];
@@ -660,22 +650,7 @@ function normalizeOneSegment(seg, source, defaults = {}) {
     submitted_content: getField(seg, 'submitted_content'),
     submission_status: getField(seg, 'submission_status'),
 
-    // ─── COMPATIBILITY: Preserve data sub-object for getSegmentData() ───
-    // PublicProgramSegment reads via getSegmentData() which checks data first
-    // for content fields. We preserve this so Phase 2 wiring is seamless.
-    // FIX: Entity segments have no data sub-object. Populate with reverse-mapped
-    // fields so getSegmentData() consumers (PublicProgramSegment, LiveStatusCard)
-    // find content fields in the expected location.
-    data: {
-      ...(seg.data || {}),
-      presenter: getField(seg, 'presenter') || (seg.data?.presenter || ''),
-      leader: getField(seg, 'leader') || (canonicalType === 'Alabanza' ? getField(seg, 'presenter') : '') || (seg.data?.leader || ''),
-      preacher: getField(seg, 'preacher') || (canonicalType === 'Plenaria' ? getField(seg, 'presenter') : '') || (seg.data?.preacher || ''),
-      messageTitle: getField(seg, 'message_title') || getField(seg, 'messageTitle') || (seg.data?.messageTitle || ''),
-      message_title: getField(seg, 'message_title') || getField(seg, 'messageTitle') || (seg.data?.message_title || ''),
-      verse: getField(seg, 'scripture_references') || getField(seg, 'verse') || (seg.data?.verse || ''),
-      translator: getField(seg, 'translator') || getField(seg, 'translator_name') || (seg.data?.translator || ''),
-    },
+    // Data sub-object purged (2026-02-24 Entity Lift Purge)
 
     // ─── COMPATIBILITY: Preserve type field for break detection ───
     // StickyOpsDeck and LiveStatusCard filter on seg.type === 'break'
