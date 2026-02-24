@@ -61,10 +61,11 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
         return clone;
       });
 
+      // blueprintData is the full Service blueprint object (status='blueprint').
+      // Use the canonical `segments` array — no slot keys, segments apply to all sessions.
+      const bpSegments = blueprintData?.segments || [];
       slotNames.forEach(name => {
-        // Try day-specific blueprint slot, fall back to first available slot, then empty
-        const bpSlot = blueprintData?.[name] || blueprintData?.[Object.keys(blueprintData || {}).find(k => Array.isArray(blueprintData[k]) && blueprintData[k].length > 0)] || [];
-        servicePayload[name] = cloneSegments(bpSlot);
+        servicePayload[name] = cloneSegments(bpSegments);
       });
 
       const created = await base44.entities.Service.create(servicePayload);
