@@ -20,6 +20,8 @@ import { toast } from "sonner";
 export default function BlueprintManagerModal({ open, onClose }) {
   const queryClient = useQueryClient();
   const [editingBlueprintId, setEditingBlueprintId] = useState(null);
+  const [newBlueprintName, setNewBlueprintName] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const { data: blueprints = [], isLoading } = useQuery({
     queryKey: ['serviceBlueprintsList'],
