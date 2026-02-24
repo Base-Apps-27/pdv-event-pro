@@ -122,7 +122,9 @@ export default function DayServiceEditor({
   }, [sessions, blueprints]);
 
   // ── Service query: find existing service for this day + date ──
-  const { data: existingData, isLoading } = useQuery({
+  // isFetching is needed to prevent initialization during background refetches
+  // (e.g., after EmptyDayPrompt creates entities and invalidates the query).
+  const { data: existingData, isLoading, isFetching } = useQuery({
     queryKey: ['dayService', date, dayOfWeek],
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date });
@@ -212,7 +214,11 @@ export default function DayServiceEditor({
 
   useEffect(() => {
     if (localStateInitializedRef.current) return;
-    if (isLoading) return;
+    // Guard: don't initialize during fetches. isLoading = initial load,
+    // isFetching = background refetch (e.g., after EmptyDayPrompt invalidation).
+    // Without isFetching, the effect runs with stale existingData=null during
+    // refetch, locks localStateInitializedRef, and blocks real initialization.
+    if (isLoading || isFetching) return;
 
     if (existingData) {
       // Merge with blueprint for fields/sub_assignments (same logic as original)
@@ -339,7 +345,7 @@ export default function DayServiceEditor({
       setServiceData(null);
       localStateInitializedRef.current = true;
     }
-  }, [existingData, date, dayOfWeek, isLoading, slotNames, sessions, blueprints]);
+  }, [existingData, date, dayOfWeek, isLoading, isFetching, slotNames, sessions, blueprints]);
 
   // ── External change subscription ──
   useEffect(() => {
@@ -451,7 +457,12 @@ export default function DayServiceEditor({
         blueprintData={resolvedBlueprint}
         onServiceCreated={() => {
           localStateInitializedRef.current = false;
-          queryClient.invalidateQueries({ queryKey: ['dayService', date, dayOfWeek] });
+          // Force a full refetch — the query has staleTime: Infinity, so we need
+          // to explicitly invalidate. refetchType: 'all' ensures active queries refetch.
+          queryClient.invalidateQueries({
+            queryKey: ['dayService', date, dayOfWeek],
+            refetchType: 'all',
+          });
         }}
       />
     );

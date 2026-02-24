@@ -159,7 +159,10 @@ export function useSegmentMutation() {
    * @param {*} value - The new value
    */
   const mutateSegmentField = useCallback((entityId, field, value) => {
-    if (!entityId) return; // No entity yet — skip (blob pipeline will handle)
+    if (!entityId) {
+      console.warn(`[useSegmentMutation] mutateSegmentField skipped: no entityId for field "${field}"`);
+      return;
+    }
 
     const column = SEGMENT_FIELD_MAP[field] || field;
     const key = `seg:${entityId}:${column}`;
@@ -179,7 +182,7 @@ export function useSegmentMutation() {
    * @param {Array} songs - Array of { title, lead, key }
    */
   const mutateSongs = useCallback((entityId, songs) => {
-    if (!entityId) return;
+    if (!entityId) { console.warn('[useSegmentMutation] mutateSongs skipped: no entityId'); return; }
 
     const key = `seg:${entityId}:songs`;
 
@@ -211,7 +214,7 @@ export function useSegmentMutation() {
    * @param {number} durationMin - The new duration in minutes
    */
   const mutateDuration = useCallback((entityId, durationMin) => {
-    if (!entityId) return;
+    if (!entityId) { console.warn('[useSegmentMutation] mutateDuration skipped: no entityId'); return; }
 
     const key = `seg:${entityId}:duration`;
 
@@ -230,7 +233,7 @@ export function useSegmentMutation() {
    * @param {string} value - The new value
    */
   const mutateTeam = useCallback((sessionId, field, value) => {
-    if (!sessionId) return;
+    if (!sessionId) { console.warn(`[useSegmentMutation] mutateTeam skipped: no sessionId for field "${field}"`); return; }
 
     const column = TEAM_FIELD_MAP[field] || field;
     const key = `sess:${sessionId}:${column}`;
@@ -250,7 +253,7 @@ export function useSegmentMutation() {
    * @param {string} value - The new general_notes value
    */
   const mutatePreServiceNotes = useCallback((sessionId, value) => {
-    if (!sessionId) return;
+    if (!sessionId) { console.warn('[useSegmentMutation] mutatePreServiceNotes skipped: no sessionId'); return; }
 
     const key = `psd:${sessionId}:general_notes`;
 
@@ -281,7 +284,7 @@ export function useSegmentMutation() {
    * @param {object} recesoNotes - The full receso_notes object
    */
   const mutateRecesoNotes = useCallback((serviceId, recesoNotes) => {
-    if (!serviceId) return;
+    if (!serviceId) { console.warn('[useSegmentMutation] mutateRecesoNotes skipped: no serviceId'); return; }
 
     const key = `svc:${serviceId}:receso_notes`;
 
@@ -305,7 +308,10 @@ export function useSegmentMutation() {
    * @param {string} value - The presenter name
    */
   const mutateSubAssignment = useCallback((parentEntityId, sessionId, serviceId, childIndex, subConfig, value) => {
-    if (!parentEntityId || !sessionId) return;
+    if (!parentEntityId || !sessionId) {
+      console.warn(`[useSegmentMutation] mutateSubAssignment skipped: parentEntityId=${parentEntityId}, sessionId=${sessionId}`);
+      return;
+    }
 
     const key = `sub:${parentEntityId}:${childIndex}`;
 
