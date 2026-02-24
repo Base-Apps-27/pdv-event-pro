@@ -103,6 +103,7 @@ export async function loadCustomFromSession(base44, serviceId) {
     const sub_asignaciones = children.length > 0
       ? children.map(child => ({
           _uiId: child.id, // Use entity ID as stable UI identifier
+          _entityId: child.id, // Store explicit entity ID for sync matching
           title: child.title || '',
           presenter: child.presenter || '',
           duration: child.duration_min || 5,

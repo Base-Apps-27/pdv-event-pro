@@ -46,7 +46,7 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
         pre_service_notes: { ...emptySlotObj },
         receso_notes: {},
         selected_announcements: [],
-        segments: [],
+        // segments: [], // REMOVED: Do not write legacy JSON segments
       };
 
       // Build receso notes for non-last slots
