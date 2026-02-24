@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { AlertTriangle, Plus, Trash2, Clock, Calendar, GripVertical } from "lucide-react";
 import { toast } from "sonner";
-import BlueprintEditor from "./BlueprintEditor";
+import BlueprintManager from "./BlueprintManager";
 // Universal log (2026-02-19): ServiceSchedule mutations now logged
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
@@ -206,7 +206,10 @@ export default function ServiceScheduleManager() {
         </div>
       )}
 
-      {/* Blueprint Editor removed — now handled by BlueprintManager in the parent page */}
+      {/* Blueprint Manager */}
+      <div className="border-t border-gray-300 pt-8 mt-8">
+        <BlueprintManager />
+      </div>
 
       {/* Edit/Create Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) { setShowDialog(false); setEditingSchedule(null); } }}>
