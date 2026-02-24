@@ -368,7 +368,10 @@ export function useWeeklyServiceHandlers({
       });
 
       // We'll build the new state here
-      let nextState = { ...serviceData }; // Use latest from closure
+      // 2026-02-24 Fix: Safely copy serviceData, and ensure it's not null before spreading.
+      // If serviceData is null, this means we're in an uninitialized state, but EmptyDayPrompt
+      // should prevent this function from being called.
+      let nextState = { ...(serviceData || {}) }; 
       const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
       
       // Ensure Service exists (sanity check, DayServiceEditor should have handled it)
