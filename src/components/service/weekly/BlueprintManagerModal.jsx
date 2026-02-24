@@ -23,6 +23,9 @@ export default function BlueprintManagerModal({ open, onClose }) {
   const [editingBlueprintId, setEditingBlueprintId] = useState(null);
   const [newBlueprintName, setNewBlueprintName] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const { data: blueprints = [], isLoading } = useQuery({
     queryKey: ['serviceBlueprintsList'],
