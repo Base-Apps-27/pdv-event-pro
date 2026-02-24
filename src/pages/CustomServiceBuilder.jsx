@@ -185,7 +185,12 @@ export default function CustomServiceBuilder() {
   // ── Mutation ──
   const saveServiceMutation = useMutation({
     mutationFn: async (data) => {
-      const sanitizedData = normalizeServiceTeams(data);
+      // ENTITY LIFT: Strip segments from Service entity payload.
+      // We do NOT want to persist the JSON blob anymore. 
+      // Content is persisted via syncToSession (entity upsert).
+      const { segments: _ignored, ...payloadWithoutSegments } = data;
+      
+      const sanitizedData = normalizeServiceTeams(payloadWithoutSegments);
       if (serviceId) return await base44.entities.Service.update(serviceId, sanitizedData);
       return await base44.entities.Service.create(sanitizedData);
     },

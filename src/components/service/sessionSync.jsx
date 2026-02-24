@@ -1,8 +1,10 @@
 /**
  * sessionSync.js
  * Phase 3C extraction: Syncs Service JSON to Session/Segment entities for Live Control.
- * CRITICAL: This function mutates backend data (deletes and recreates segments).
- * Extracted VERBATIM — zero logic changes.
+ * 
+ * REFACTOR (2026-02-24): Switched from "Destructive Sync" (Delete All/Create All) 
+ * to "Smart Upsert" (Update existing, Create new, Delete missing).
+ * This preserves entity IDs, preventing breaks in Live Control and other references.
  *
  * @param {object} base44 - The base44 SDK client instance
  * @param {object} serviceResult - The saved Service entity result
@@ -17,7 +19,7 @@ export async function syncToSession(base44, serviceResult, segments) {
   
   const serviceId = serviceResult.id;
   
-  // 1. Find or Create Session
+  // 1. Find or Create Session (UPSERT)
   let session = null;
   const existingSessions = await base44.entities.Session.filter({ service_id: serviceId });
   
@@ -43,48 +45,58 @@ export async function syncToSession(base44, serviceResult, segments) {
     });
   }
   
-  // 2. Sync Segments
-  // We delete all existing segments for this session and recreate them to ensure order and content match perfectly.
-  // NOTE: This resets "Live" status if it was active. This is a tradeoff for the Builder.
+  // 2. Fetch ALL existing segments for this session
   const existingSegments = await base44.entities.Segment.filter({ session_id: session.id });
-  if (existingSegments.length > 0) {
-    // Parallel delete
-    await Promise.all(existingSegments.map(s => base44.entities.Segment.delete(s.id)));
-  }
   
-  // 3. Create new Segments (including parent/child for sub-asignaciones)
-  const newSegments = [];
-  let currentTime = parse(serviceResult.time, "HH:mm", new Date());
+  // Separate into Parents and Children (by ID) for easier lookup
+  const dbParents = existingSegments.filter(s => !s.parent_segment_id);
+  const dbChildren = existingSegments.filter(s => s.parent_segment_id);
+  
+  // Map ID -> Segment for O(1) lookup
+  const dbParentMap = new Map(dbParents.map(s => [s.id, s]));
+  
+  // Track IDs processed to identify deletions
+  const processedParentIds = new Set();
+  
+  // 3. Process UI Segments (Parents)
+  // Default to 10:00 if time is missing/invalid
+  let currentTime = new Date();
+  try {
+    currentTime = parse(serviceResult.time || "10:00", "HH:mm", new Date());
+  } catch (e) {
+    currentTime = parse("10:00", "HH:mm", new Date());
+  }
   
   for (let i = 0; i < segments.length; i++) {
     const segData = segments[i];
     // Use helper to get data (prioritizes data object, falls back to root)
     const getData = (field) => getSegmentData(segData, field);
     
-    const duration = segData.duration || 0;
-    
+    // --- Calculate Timings ---
+    const duration = Number(segData.duration) || 0;
     const startTimeStr = format(currentTime, "HH:mm");
     currentTime = addMinutes(currentTime, duration);
     const endTimeStr = format(currentTime, "HH:mm");
     
+    // --- Prepare Entity Payload ---
     // Flatten songs
     const flatSongs = {};
     const songs = getData('songs');
     if (songs && Array.isArray(songs)) {
       songs.forEach((song, idx) => {
         if (idx < 6) {
-          flatSongs[`song_${idx+1}_title`] = song.title;
-          flatSongs[`song_${idx+1}_lead`] = song.lead;
-          flatSongs[`song_${idx+1}_key`] = song.key;
+          flatSongs[`song_${idx+1}_title`] = song.title || "";
+          flatSongs[`song_${idx+1}_lead`] = song.lead || "";
+          flatSongs[`song_${idx+1}_key`] = song.key || "";
         }
       });
     }
-
-    const parentSegmentData = {
+    
+    const parentPayload = {
       session_id: session.id,
       service_id: serviceId,
       order: i + 1,
-      title: segData.title,
+      title: segData.title || "Untitled",
       segment_type: segData.type || 'Especial',
       start_time: startTimeStr,
       end_time: endTimeStr,
@@ -101,6 +113,7 @@ export async function syncToSession(base44, serviceResult, segments) {
       message_title: getData('messageTitle') || getData('message_title'),
       scripture_references: getData('verse') || getData('scripture_references'),
       presentation_url: getData('presentation_url'),
+      notes_url: getData('notes_url'),
       content_is_slides_only: !!getData('content_is_slides_only'),
       parsed_verse_data: getData('parsed_verse_data'),
       ...flatSongs,
@@ -108,87 +121,101 @@ export async function syncToSession(base44, serviceResult, segments) {
       requires_translation: !!getData('translator'),
       show_in_general: true
     };
+
+    // --- UPSERT PARENT ---
+    let parentId = null;
+    const entityId = segData._entityId;
     
-    newSegments.push(parentSegmentData);
+    if (entityId && dbParentMap.has(entityId)) {
+      // UPDATE
+      await base44.entities.Segment.update(entityId, parentPayload);
+      parentId = entityId;
+      processedParentIds.add(entityId);
+    } else {
+      // CREATE
+      const created = await base44.entities.Segment.create(parentPayload);
+      parentId = created.id;
+      // Note: We don't update UI state here (it's a sync function), 
+      // but next load will pick up the new ID.
+    }
     
-    // If Alabanza with sub-asignaciones, add child Ministración segments
-    if (segData.type === 'Alabanza' && segData.sub_asignaciones && segData.sub_asignaciones.length > 0) {
-      let subStartTime = currentTime = parse(startTimeStr, "HH:mm", new Date());
+    // --- SYNC CHILDREN (Sub-asignaciones) ---
+    // If Alabanza with sub-asignaciones
+    if ((segData.type === 'Alabanza' || segData.type === 'Worship') && segData.sub_asignaciones && segData.sub_asignaciones.length > 0) {
+      // Get existing children for THIS parent
+      const myDbChildren = dbChildren.filter(c => c.parent_segment_id === parentId);
+      const myDbChildMap = new Map(myDbChildren.map(c => [c.id, c]));
+      const processedChildIds = new Set();
       
-      segData.sub_asignaciones.forEach((sub, subIdx) => {
-        const subDuration = sub.duration || 5;
+      let subStartTime = parse(startTimeStr, "HH:mm", new Date());
+      
+      for (let j = 0; j < segData.sub_asignaciones.length; j++) {
+        const sub = segData.sub_asignaciones[j];
+        const subDuration = Number(sub.duration) || 5;
         const subStartStr = format(subStartTime, "HH:mm");
         subStartTime = addMinutes(subStartTime, subDuration);
         const subEndStr = format(subStartTime, "HH:mm");
         
-        newSegments.push({
+        const childPayload = {
           session_id: session.id,
           service_id: serviceId,
-          parent_segment_id: "{PARENT_ID}", // Will be replaced after parent creation
-          order: subIdx + 1,
-          title: sub.title || `Ministración ${subIdx + 1}`,
+          parent_segment_id: parentId,
+          order: j + 1,
+          title: sub.title || `Ministración ${j + 1}`,
           segment_type: 'Ministración',
           start_time: subStartStr,
           end_time: subEndStr,
           duration_min: subDuration,
           presenter: sub.presenter || "",
-          show_in_general: false,
-          _isSubAsignacion: true // Temporary marker for post-processing
-        });
-      });
+          show_in_general: false
+        };
+        
+        const subEntityId = sub._entityId; // We added this in L1.1 fix
+        
+        if (subEntityId && myDbChildMap.has(subEntityId)) {
+          // UPDATE CHILD
+          await base44.entities.Segment.update(subEntityId, childPayload);
+          processedChildIds.add(subEntityId);
+        } else {
+          // CREATE CHILD
+          await base44.entities.Segment.create(childPayload);
+        }
+      }
       
-      // Update parent duration to sum of all sub-asignaciones
-      const totalSubDuration = segData.sub_asignaciones.reduce((sum, sub) => sum + (sub.duration || 5), 0);
+      // DELETE ORPHANED CHILDREN
+      const orphans = myDbChildren.filter(c => !processedChildIds.has(c.id));
+      if (orphans.length > 0) {
+        await Promise.all(orphans.map(c => base44.entities.Segment.delete(c.id)));
+      }
+      
+      // Update parent duration to match sum of children if mismatched
+      const totalSubDuration = segData.sub_asignaciones.reduce((sum, sub) => sum + (Number(sub.duration) || 5), 0);
       if (totalSubDuration !== duration) {
-        parentSegmentData.duration_min = totalSubDuration;
-        const newEndTime = addMinutes(parse(startTimeStr, "HH:mm", new Date()), totalSubDuration);
-        parentSegmentData.end_time = format(newEndTime, "HH:mm");
+         const newEndTime = addMinutes(parse(startTimeStr, "HH:mm", new Date()), totalSubDuration);
+         await base44.entities.Segment.update(parentId, {
+           duration_min: totalSubDuration,
+           end_time: format(newEndTime, "HH:mm")
+         });
+         currentTime = newEndTime;
+      }
+    } else {
+      // If parent has NO sub-asignaciones in UI, verify if it has orphans in DB (e.g. removed all subs)
+      const myDbChildren = dbChildren.filter(c => c.parent_segment_id === parentId);
+      if (myDbChildren.length > 0) {
+        await Promise.all(myDbChildren.map(c => base44.entities.Segment.delete(c.id)));
       }
     }
   }
   
-  // Batch create parent segments first, then update sub-segments with parent_segment_id
-  const parentSegments = newSegments.filter(s => !s._isSubAsignacion);
-  const subSegments = newSegments.filter(s => s._isSubAsignacion);
-  
-  const createdParents = await base44.entities.Segment.bulkCreate(parentSegments);
-  
-  // H-BUG-3 FIX (2026-02-20): parentIdx must only increment for parent segments,
-  // not for ALL original segments. Previously, non-Alabanza segments caused index
-  // drift between `segments[]` and `createdParents[]`, misassigning sub-segments.
-  let parentIdMap = {};
-  let parentIdx = 0;
-  for (let i = 0; i < segments.length; i++) {
-    // Every original segment produces exactly one parent in createdParents
-    parentIdMap[i] = createdParents[parentIdx]?.id;
-    parentIdx++;
-  }
-  
-  // Recreate sub-segments with correct parent_segment_id references
-  if (subSegments.length > 0) {
-    // Track which Alabanza parent each sub-segment belongs to
-    // Sub-segments in newSegments appear immediately after their parent's entry.
-    // Build a reverse map: for each sub-segment, find its originating Alabanza index.
-    let subToParentMap = [];
-    for (let i = 0; i < segments.length; i++) {
-      if (segments[i].type === 'Alabanza' && segments[i].sub_asignaciones?.length > 0) {
-        segments[i].sub_asignaciones.forEach(() => {
-          subToParentMap.push(i); // This sub belongs to Alabanza at original index i
-        });
-      }
-    }
+  // 4. Delete Removed Parents
+  const removedParents = dbParents.filter(p => !processedParentIds.has(p.id));
+  if (removedParents.length > 0) {
+    const removedParentIds = new Set(removedParents.map(p => p.id));
+    const childrenOfRemoved = dbChildren.filter(c => removedParentIds.has(c.parent_segment_id));
     
-    const subSegmentsWithParent = subSegments.map((sub, idx) => {
-      const originalParentIdx = subToParentMap[idx];
-      const parentId = originalParentIdx !== undefined ? parentIdMap[originalParentIdx] : null;
-      return {
-        ...sub,
-        parent_segment_id: parentId || sub.parent_segment_id,
-        _isSubAsignacion: undefined
-      };
-    });
-    
-    await base44.entities.Segment.bulkCreate(subSegmentsWithParent);
+    await Promise.all([
+      ...removedParents.map(p => base44.entities.Segment.delete(p.id)),
+      ...childrenOfRemoved.map(c => base44.entities.Segment.delete(c.id))
+    ]);
   }
-  
 }
