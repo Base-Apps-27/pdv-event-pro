@@ -283,7 +283,9 @@ export default function DayServiceEditor({
         if (existingSlotSegments.length > 0) {
           loadedData[name] = mergeSegmentsWithBlueprint(existingSlotSegments, name);
         } else {
-          const bpSegments = effectiveBlueprint?.[name] || effectiveBlueprint?.[slotNames[0]] || [];
+          // Find first available blueprint slot if exact match or 9:30am match is missing
+          const bpSlots = effectiveBlueprint ? Object.keys(effectiveBlueprint).filter(k => Array.isArray(effectiveBlueprint[k]) && effectiveBlueprint[k].length > 0) : [];
+          const bpSegments = effectiveBlueprint?.[name] || effectiveBlueprint?.[slotNames[0]] || (bpSlots.length > 0 ? effectiveBlueprint[bpSlots[0]] : []);
           loadedData[name] = bpSegments.map(seg => {
             const segmentCopy = {
               type: seg.type, title: seg.title, duration: seg.duration,
