@@ -63,6 +63,8 @@ export function applyTimeAdjustments(segments, liveAdjustments = [], sessions = 
 
     return {
       ...seg,
+      original_start_time: seg.start_time,
+      original_end_time: seg.end_time,
       start_time: addMinutes(seg.start_time, offsetMinutes),
       end_time: addMinutes(seg.end_time, offsetMinutes),
       _time_adjusted: true,
