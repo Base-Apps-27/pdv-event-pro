@@ -193,22 +193,15 @@ Deno.serve(async (req) => {
     .header-content .event-name { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
     .event-meta { font-size: 0.85rem; color: var(--text-tertiary); display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-weight: 500; }
 
-    /* Disclaimer */
-    .disclaimer {
-      background: #FFF7ED;
-      border: 1px solid #FED7AA;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
-      font-size: 0.85rem;
-      color: #9A3412;
-      line-height: 1.5;
+    /* Link hint — subtle inline helper text shown beneath URL fields */
+    .link-hint {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      line-height: 1.4;
     }
-    .disclaimer strong { display: block; margin-bottom: 4px; font-size: 0.9rem; }
-    .disclaimer-strict {
-      background: #FEF2F2;
-      border-color: #FECACA;
-      color: #991B1B;
+    .link-hint-strict {
+      color: #B45309;
     }
 
     /* Gate */
@@ -333,22 +326,7 @@ Deno.serve(async (req) => {
       </div>
     </div>
 
-    ${eventError ? `<div class="disclaimer disclaimer-strict">${escapeHtml(eventError)}</div>` : ''}
-
-    <!-- Media Policy Disclaimer -->
-    <div class="disclaimer ${isUnicaEvent ? 'disclaimer-strict' : ''}" id="mediaDisclaimer" style="${eventError ? 'display:none' : ''}">
-      <strong>📋 Política de Enlaces de Media / Media Link Policy</strong>
-      ${isUnicaEvent
-        ? `Para <strong>Única</strong>, NO se aceptan enlaces de Spotify, Apple Music, o YouTube para audio/video. 
-           Todos los archivos deben estar en Google Drive, OneDrive, o Dropbox con acceso público ("Cualquiera con el enlace").
-           <br/><em>For <strong>Única</strong>, Spotify, Apple Music, and YouTube links are NOT accepted for audio/video.
-           All files must be hosted on Google Drive, OneDrive, or Dropbox with public access ("Anyone with the link").</em>`
-        : `Recomendamos que todos los enlaces de audio y video sean de Google Drive, OneDrive, o Dropbox con acceso público. 
-           Los enlaces de Spotify, Apple Music, o YouTube no son ideales ya que dependen de conexión a internet estable durante la presentación.
-           <br/><em>We recommend all audio/video links be from Google Drive, OneDrive, or Dropbox with public access.
-           Spotify, Apple Music, or YouTube links are not ideal as they depend on stable internet during the presentation.</em>`
-      }
-    </div>
+    ${eventError ? `<p style="color:#991B1B;font-size:0.9rem;margin-bottom:16px;">${escapeHtml(eventError)}</p>` : ''}
 
     <!-- Gate: Name + Email -->
     <div id="gateSection" class="${eventError ? 'hidden' : ''}">
