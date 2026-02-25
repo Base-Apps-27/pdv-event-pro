@@ -353,7 +353,7 @@ export function useWeeklyServiceHandlers({
       // Helper to get default fields if blueprint is corrupted/missing them
       const getDefaultFields = (type) => {
         const t = type?.toLowerCase() || '';
-        if (t === 'worship') return ["leader", "songs", "ministry_leader"];
+        if (t === 'worship') return ["leader", "songs"];
         if (t === 'welcome') return ["presenter"];
         if (t === 'offering') return ["presenter", "verse"];
         if (t === 'message') return ["preacher", "title", "verse"];
