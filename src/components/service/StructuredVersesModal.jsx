@@ -14,20 +14,20 @@ export default function StructuredVersesModal({
 }) {
   const texts = {
     es: {
-      title: "Versos y Bosquejo del Mensaje",
+      title: "Versos y Puntos Clave",
       verseList: "Lista de Versos",
       outline: "Bosquejo del Mensaje",
       text: "Texto",
       close: "Cerrar",
-      noData: "No hay versos disponibles"
+      noData: "No hay datos disponibles"
     },
     en: {
-      title: "Message Verses and Outline",
+      title: "Verses and Key Points",
       verseList: "Verse List",
       outline: "Message Outline",
       text: "Text",
       close: "Close",
-      noData: "No verses available"
+      noData: "No data available"
     }
   };
 
@@ -137,8 +137,6 @@ export default function StructuredVersesModal({
   };
 
   const getTitle = () => {
-    if (parsedData?.type === 'verse_list') return t.verseList;
-    if (parsedData?.type === 'outline') return t.outline;
     return t.title;
   };
 

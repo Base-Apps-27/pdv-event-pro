@@ -53,7 +53,7 @@ const DEPT_LABEL_MAP = {
   livestream: 'Livestream',
 };
 
-export default function MyProgramSegmentCard({ segment, status, department, currentTime }) {
+export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
 
@@ -254,6 +254,24 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
                 {s.key && <span className="text-gray-400 font-mono ml-auto text-[10px] bg-white px-1 rounded border border-gray-200">{s.key}</span>}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* View Verses / Key Points Button */}
+        {getData('parsed_verse_data') && (
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 h-8"
+              onClick={() => onOpenVerses({
+                parsedData: getData('parsed_verse_data'),
+                rawText: getData('submitted_content')
+              })}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="text-xs">Versos y Puntos Clave</span>
+            </Button>
           </div>
         )}
 

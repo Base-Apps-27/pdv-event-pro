@@ -24,6 +24,7 @@ import SessionPicker from '@/components/myprogram/SessionPicker';
 import MyProgramTimeline from '@/components/myprogram/MyProgramTimeline';
 import MyProgramStandby from '@/components/myprogram/MyProgramStandby';
 import MyProgramStatusBar from '@/components/myprogram/MyProgramStatusBar';
+import StructuredVersesModal from '@/components/service/StructuredVersesModal';
 
 export default function MyProgram() {
   const { t, language } = useLanguage();
@@ -49,6 +50,7 @@ export default function MyProgram() {
   const [department, setDepartment] = useDepartment();
   const [selectedSession, setSelectedSession] = useState(null);
   const [userOverrodeSession, setUserOverrodeSession] = useState(false);
+  const [verseModalData, setVerseModalData] = useState(null);
 
   // Ref map for scrolling to specific segments
   const segmentRefs = React.useRef({});
@@ -269,9 +271,20 @@ export default function MyProgram() {
           preSessionDetails={programData?.preSessionDetails}
           preServiceNotes={contextType === 'service' ? (programData?.program?.pre_service_notes || null) : null}
           selectedSession={selectedSession}
+          onOpenVerses={setVerseModalData}
           segmentRefs={segmentRefs}
         />
       </div>
+
+      {/* Verses & Key Points Modal */}
+      {verseModalData && (
+        <StructuredVersesModal
+          open={!!verseModalData}
+          onOpenChange={(open) => { if (!open) setVerseModalData(null); }}
+          parsedData={verseModalData.parsedData}
+          rawText={verseModalData.rawText}
+        />
+      )}
     </div>
   );
 }
