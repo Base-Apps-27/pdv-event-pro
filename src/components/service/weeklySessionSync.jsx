@@ -111,7 +111,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   const data = {
     presenter: segment.presenter || "",
     leader: segment.presenter || "",
-    preacher: segment.presenter || "",
+    preacher: segment.preacher || "",
     message_title: segment.message_title || "",
     title: segment.message_title || "",
     verse: segment.scripture_references || "",
