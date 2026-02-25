@@ -168,14 +168,17 @@ Deno.serve(async (req) => {
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
       color: var(--text-primary);
       line-height: 1.6;
       min-height: 100vh;
       padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .page-container { max-width: 700px; margin: 0 auto; }
+    .page-container { width: 100%; max-width: 700px; }
 
     /* Header Card */
     .header-card {
@@ -184,14 +187,56 @@ Deno.serve(async (req) => {
       border: 1px solid var(--border-light);
       overflow: hidden;
       margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      position: relative;
     }
-    .gradient-bar { height: 6px; background: linear-gradient(90deg, var(--brand-pink) 0%, var(--brand-teal) 50%, var(--brand-green) 100%); }
-    .header-content { padding: 32px 24px; text-align: center; }
-    .header-content .org { font-size: 0.75rem; font-weight: 800; color: var(--brand-teal); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-    .header-content h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--brand-charcoal); letter-spacing: 0.02em; line-height: 1; margin-bottom: 8px; }
-    .header-content .event-name { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-    .event-meta { font-size: 0.85rem; color: var(--text-tertiary); display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-weight: 500; }
+    .gradient-bar { 
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px; 
+      background: linear-gradient(90deg, var(--brand-pink) 0%, var(--brand-teal) 50%, var(--brand-green) 100%); 
+    }
+    .header-content { 
+      padding: 40px 32px 32px 32px; 
+      text-align: center; 
+    }
+    .header-content .org { 
+      font-size: 0.75rem; 
+      font-weight: 800; 
+      color: var(--brand-teal); 
+      text-transform: uppercase; 
+      letter-spacing: 0.1em; 
+      margin-bottom: 4px; 
+    }
+    .header-content h1 { 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 3rem; 
+      color: var(--brand-charcoal); 
+      letter-spacing: 0.02em; 
+      line-height: 1; 
+      margin-bottom: 8px; 
+    }
+    .header-content .event-name { 
+      font-size: 1.1rem; 
+      font-weight: 600; 
+      color: var(--text-secondary); 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em; 
+    }
+    .event-meta { 
+      font-size: 0.85rem; 
+      color: var(--text-tertiary); 
+      display: flex; 
+      justify-content: center; 
+      flex-wrap: wrap; 
+      gap: 16px; 
+      margin-top: 16px; 
+      font-weight: 500; 
+    }
+    .meta-item { display: flex; align-items: center; gap: 6px; }
+    .meta-icon { width: 14px; height: 14px; color: var(--brand-green); }
 
     /* Link hint — subtle inline helper text shown beneath URL fields */
     .link-hint {
@@ -206,19 +251,41 @@ Deno.serve(async (req) => {
 
     /* Gate */
     .gate-card {
-      background: var(--bg-white);
-      border-radius: 12px;
-      border: 1px solid var(--border-light);
-      padding: 32px 24px;
+      background: var(--bg-light);
+      border-radius: 8px;
+      border-left: 4px solid var(--brand-pink);
+      padding: 24px;
       margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
-    .gate-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--brand-charcoal); margin-bottom: 16px; }
+    .gate-card h2 { 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 1.25rem; 
+      color: var(--brand-pink); 
+      margin-bottom: 12px; 
+      letter-spacing: 0.05em;
+    }
+    .gate-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
     .gate-card input {
-      width: 100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 6px;
-      font-family: inherit; font-size: 1rem; margin-bottom: 12px; background: var(--bg-white);
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border-light); 
+      border-radius: 6px;
+      font-family: inherit; 
+      font-size: 1rem; 
+      margin-bottom: 12px; 
+      background: var(--bg-white);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .gate-card input:focus { outline: none; border-color: var(--brand-teal); box-shadow: 0 0 0 3px rgba(31,138,112,0.1); }
+    .gate-card input:focus { 
+      outline: none; 
+      border-color: var(--brand-teal); 
+      box-shadow: 0 0 0 3px rgba(31,138,112,0.1); 
+    }
 
     /* Accordion */
     .accordion-item {
@@ -227,7 +294,11 @@ Deno.serve(async (req) => {
       border: 1px solid var(--border-light);
       margin-bottom: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      transition: box-shadow 0.2s;
+    }
+    .accordion-item:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
     .accordion-header {
       padding: 16px 20px;
@@ -254,16 +325,41 @@ Deno.serve(async (req) => {
     .accordion-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border-light); }
     .accordion-body.open { display: block; }
 
-    /* Form elements inside accordion */
+    /* Form sections inside accordion */
     .form-section { margin-top: 16px; }
-    .form-section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--brand-pink); margin-bottom: 12px; letter-spacing: 0.03em; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .form-group input, .form-group textarea {
-      width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px;
-      font-family: inherit; font-size: 0.9rem; background: var(--bg-white);
+    .form-section-title { 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 1.25rem; 
+      color: var(--brand-pink); 
+      margin-bottom: 12px; 
+      letter-spacing: 0.05em; 
     }
-    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--brand-teal); box-shadow: 0 0 0 3px rgba(31,138,112,0.1); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { 
+      display: block; 
+      font-size: 0.75rem; 
+      font-weight: 700; 
+      color: var(--text-secondary); 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em; 
+      margin-bottom: 8px; 
+    }
+    .form-group input, .form-group textarea {
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border-light); 
+      border-radius: 6px;
+      font-family: inherit; 
+      font-size: 1rem; 
+      background: var(--bg-white);
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus { 
+      outline: none; 
+      border-color: var(--brand-teal); 
+      box-shadow: 0 0 0 3px rgba(31,138,112,0.1); 
+    }
     .form-group textarea { min-height: 80px; resize: vertical; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
@@ -276,8 +372,22 @@ Deno.serve(async (req) => {
     .check-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand-pink); }
 
     /* Type-specific section */
-    .type-section { background: #FDF2F8; border: 1px solid #FBCFE8; border-radius: 8px; padding: 16px; margin-top: 12px; }
-    .type-section-title { font-size: 0.85rem; font-weight: 700; color: #9D174D; margin-bottom: 12px; }
+    .type-section { 
+      background: var(--bg-light); 
+      border-left: 3px solid var(--brand-pink); 
+      border-radius: 6px; 
+      padding: 20px; 
+      margin-top: 16px; 
+    }
+    .type-section-title { 
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem; 
+      font-weight: 700; 
+      color: var(--brand-pink); 
+      margin-bottom: 16px; 
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
 
     /* Song slot */
     .song-slot { border-top: 1px solid #FBCFE8; padding-top: 10px; margin-top: 10px; }
@@ -285,23 +395,64 @@ Deno.serve(async (req) => {
 
     /* Save button */
     .save-btn {
-      width: 100%; padding: 14px; margin-top: 16px;
+      width: 100%; 
+      padding: 16px; 
+      margin-top: 16px;
       background: linear-gradient(90deg, var(--brand-pink) 0%, var(--brand-teal) 100%);
-      color: white; font-weight: 700; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;
-      border: none; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+      color: white; 
+      font-family: inherit;
+      font-weight: 700; 
+      font-size: 1rem; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em;
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .save-btn:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: translateY(-1px); }
-    .save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .save-status { text-align: center; margin-top: 8px; font-size: 0.85rem; font-weight: 500; min-height: 20px; }
+    .save-btn:hover { 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+      transform: translateY(-1px); 
+    }
+    .save-btn:disabled { 
+      opacity: 0.7; 
+      cursor: not-allowed; 
+      transform: none; 
+    }
+    .save-status { 
+      text-align: center; 
+      margin-top: 12px; 
+      font-size: 0.95rem; 
+      font-weight: 500; 
+      min-height: 24px; 
+    }
     .save-success { color: #065F46; }
     .save-error { color: #991B1B; }
 
     .primary-btn {
-      padding: 14px; background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 100%);
-      color: white; font-weight: 700; font-size: 0.95rem; text-transform: uppercase;
-      border: none; border-radius: 6px; cursor: pointer; width: 100%;
+      width: 100%;
+      padding: 16px; 
+      background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 100%);
+      color: white; 
+      font-family: inherit;
+      font-weight: 700; 
+      font-size: 1rem; 
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .primary-btn:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transform: translateY(-1px);
+    }
+    .primary-btn:disabled { 
+      opacity: 0.7; 
+      cursor: not-allowed; 
+      transform: none;
+    }
 
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-tertiary); }
     .empty-state h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 8px; }
@@ -320,8 +471,21 @@ Deno.serve(async (req) => {
         <h1>FORMULARIO DE ARTES</h1>
         <p class="event-name">${escapeHtml(eventName)}</p>
         <div class="event-meta">
-          ${eventDate ? `<span>📅 ${escapeHtml(eventDate)}</span>` : ''}
-          ${eventLocation ? `<span>📍 ${escapeHtml(eventLocation)}</span>` : ''}
+          ${eventDate ? `
+            <div class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>${escapeHtml(eventDate)}</span>
+            </div>` : ''}
+          ${eventLocation ? `
+            <div class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" class="meta-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>${escapeHtml(eventLocation)}</span>
+            </div>` : ''}
         </div>
       </div>
     </div>
@@ -332,26 +496,28 @@ Deno.serve(async (req) => {
     <div id="gateSection" class="${eventError ? 'hidden' : ''}">
       <div class="gate-card">
         <h2>IDENTIFICACIÓN / IDENTIFICATION</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+        <p>
           Ingrese su nombre y correo para acceder al formulario. / Enter your name and email to access the form.
         </p>
         <input type="text" id="gateName" placeholder="Nombre completo / Full name" />
         <input type="email" id="gateEmail" placeholder="Correo electrónico / Email" />
         <button class="primary-btn" id="gateBtn" onclick="enterForm()">Continuar / Continue</button>
-        <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 8px; display: none;"></p>
+        <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
       </div>
     </div>
 
     <!-- Main Form (hidden until gate passed) -->
     <div id="formSection" class="hidden">
-      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
-        A continuación encontrará los segmentos de Artes para este evento. 
-        Abra cada uno para ingresar los detalles de su presentación. 
-        Puede guardar progreso parcial y regresar luego para completar.
-        <br/><em>Below you'll find the Arts segments for this event. 
-        Open each one to enter your presentation details. 
-        You can save partial progress and return later to complete.</em>
-      </p>
+      <div class="gate-card" style="border-left-color: var(--brand-green);">
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+          A continuación encontrará los segmentos de Artes para este evento. 
+          Abra cada uno para ingresar los detalles de su presentación. 
+          Puede guardar progreso parcial y regresar luego para completar.
+          <br/><em>Below you'll find the Arts segments for this event. 
+          Open each one to enter your presentation details. 
+          You can save partial progress and return later to complete.</em>
+        </p>
+      </div>
       <div id="accordionContainer"></div>
       <div id="emptyState" class="empty-state hidden">
         <h2>NO HAY SEGMENTOS DE ARTES</h2>
