@@ -57,10 +57,11 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
 
-  const isWorship = ['Alabanza', 'worship'].includes(segment.segment_type);
-  const isMessage = ['Plenaria', 'message', 'Message'].includes(segment.segment_type);
-  const isBreak = ['Break', 'Receso', 'Almuerzo'].includes(segment.segment_type);
-  const isSpecial = ['Especial', 'Special'].includes(segment.segment_type);
+  const segmentType = segment.segment_type || segment.type || 'Especial';
+  const isWorship = ['Alabanza', 'worship'].includes(segmentType);
+  const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
+  const isBreak = ['Break', 'Receso', 'Almuerzo'].includes(segmentType);
+  const isSpecial = ['Especial', 'Special'].includes(segmentType);
 
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   const countdown = getCountdown(segment, currentTime, status, t);
