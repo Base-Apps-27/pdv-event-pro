@@ -41,7 +41,6 @@ import { toast } from "sonner";
  */
 const SEGMENT_FIELD_MAP = {
   // Person fields → single `presenter` column (resolved by segment type)
-  leader: "presenter",
   preacher: "presenter",
   presenter: "presenter",
 
