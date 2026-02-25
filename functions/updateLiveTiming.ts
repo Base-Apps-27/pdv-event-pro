@@ -94,6 +94,18 @@ Deno.serve(async (req) => {
         existing[0].id, 
         { offset_minutes: offsetMinutes, authorized_by: user.email }
       );
+      
+      // Explicit cache refresh for immediate UI updates across displays
+      try {
+        await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+          trigger: 'live_timing_adjustment_update',
+          changedEntityType: 'LiveTimeAdjustment',
+          changedEntityId: existing[0].id
+        });
+      } catch (cacheErr) {
+        console.error('[updateLiveTiming] Cache refresh failed:', cacheErr.message);
+      }
+
       return Response.json({ 
         success: true, 
         action: 'updated',
@@ -102,6 +114,18 @@ Deno.serve(async (req) => {
     } else {
       // Create new adjustment
       const created = await base44.asServiceRole.entities.LiveTimeAdjustment.create(adjustmentData);
+      
+      // Explicit cache refresh for immediate UI updates across displays
+      try {
+        await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+          trigger: 'live_timing_adjustment_create',
+          changedEntityType: 'LiveTimeAdjustment',
+          changedEntityId: created.id
+        });
+      } catch (cacheErr) {
+        console.error('[updateLiveTiming] Cache refresh failed:', cacheErr.message);
+      }
+
       return Response.json({ 
         success: true, 
         action: 'created',
