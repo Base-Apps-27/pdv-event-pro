@@ -735,7 +735,16 @@ Deno.serve(async (req) => {
     };
 
     function t(key) { return i18n[currentLanguage][key] || key; }
-    function setLang(lang) { currentLanguage = lang; localStorage.setItem('artsFormLang', lang); location.reload(); }
+    function setLang(lang) { currentLanguage = lang; localStorage.setItem('artsFormLang', lang); renderLanguageToggle(); location.reload(); }
+    
+    function renderLanguageToggle() {
+      const container = document.getElementById('langToggle');
+      if (!container) return;
+      container.innerHTML = \`
+        <button onclick="setLang('es')" style="padding: 8px 12px; background: \${currentLanguage === 'es' ? 'var(--brand-teal)' : '#E5E7EB'}; color: \${currentLanguage === 'es' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">ES</button>
+        <button onclick="setLang('en')" style="padding: 8px 12px; background: \${currentLanguage === 'en' ? 'var(--brand-teal)' : '#E5E7EB'}; color: \${currentLanguage === 'en' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">EN</button>
+      \`;
+    }
 
     // ===== GATE =====
     function initGateLabels() {
