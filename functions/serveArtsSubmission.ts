@@ -534,7 +534,7 @@ Deno.serve(async (req) => {
           <div class="type-section">
             <div class="type-section-title">🎬 VIDEO</div>
             <div class="form-group"><label>Nombre del Video / Video Name</label><input type="text" value="\${esc(seg.video_name)}" onchange="updateField('\${seg.id}','video_name',this.value)"></div>
-            <div class="form-group"><label>Enlace / Link</label><input type="url" value="\${esc(seg.video_url)}" onchange="updateField('\${seg.id}','video_url',this.value)" placeholder="https://drive.google.com/..."></div>
+            <div class="form-group"><label>Enlace / Link</label><input type="url" value="\${esc(seg.video_url)}" onchange="updateField('\${seg.id}','video_url',this.value)" placeholder="https://drive.google.com/..."><div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente. No YouTube.' : 'Preferible: Google Drive, OneDrive, Dropbox.'}</div></div>
             <div class="form-row">
               <div class="form-group"><label>Duración (seg) / Length (sec)</label><input type="number" min="0" value="\${seg.video_length_sec}" onchange="updateField('\${seg.id}','video_length_sec',parseInt(this.value)||0)"></div>
               <div class="form-group"><label>Responsable / Owner</label><input type="text" value="\${esc(seg.video_owner)}" onchange="updateField('\${seg.id}','video_owner',this.value)"></div>
@@ -556,6 +556,7 @@ Deno.serve(async (req) => {
           <div class="form-group">
             <label>Enlace (PDF/Documento) / Link (PDF/Document)</label>
             <input type="url" value="\${esc(seg.arts_run_of_show_url)}" onchange="updateField('\${seg.id}','arts_run_of_show_url',this.value)" placeholder="https://drive.google.com/...">
+            <div class="link-hint">Enlace público (cualquiera con el enlace puede ver) / Public link (anyone with the link can view)</div>
           </div>
         </div>
 
@@ -593,19 +594,22 @@ Deno.serve(async (req) => {
         <div class="song-slot">
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 1 / Song 1</div>
           <input type="text" value="\${esc(s1Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_title',this.value)" style="margin-bottom:6px">
-          <input type="url" value="\${esc(s1Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_source',this.value)" style="margin-bottom:6px">
+          <input type="url" value="\${esc(s1Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_source',this.value)" style="margin-bottom:2px">
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente. No Spotify/YouTube.' : 'Preferible: Google Drive, OneDrive, Dropbox.'}</div>
           <input type="text" value="\${esc(s1Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_owner',this.value)">
         </div>
         <div class="song-slot">
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 2 / Song 2 (opcional)</div>
           <input type="text" value="\${esc(s2Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_2_title',this.value)" style="margin-bottom:6px">
-          <input type="url" value="\${esc(s2Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_2_url',this.value)" style="margin-bottom:6px">
+          <input type="url" value="\${esc(s2Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_2_url',this.value)" style="margin-bottom:2px">
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente.' : 'Preferible: Drive, OneDrive, Dropbox.'}</div>
           <input type="text" value="\${esc(s2Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_2_owner',this.value)">
         </div>
         <div class="song-slot">
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 3 / Song 3 (opcional)</div>
           <input type="text" value="\${esc(s3Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_3_title',this.value)" style="margin-bottom:6px">
-          <input type="url" value="\${esc(s3Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_3_url',this.value)" style="margin-bottom:6px">
+          <input type="url" value="\${esc(s3Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_3_url',this.value)" style="margin-bottom:2px">
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente.' : 'Preferible: Drive, OneDrive, Dropbox.'}</div>
           <input type="text" value="\${esc(s3Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_3_owner',this.value)">
         </div>
       \`;
