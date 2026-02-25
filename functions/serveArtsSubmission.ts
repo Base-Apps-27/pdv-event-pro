@@ -554,9 +554,9 @@ Deno.serve(async (req) => {
         <p id="gateDesc">
           Ingrese su nombre y correo para acceder al formulario.
         </p>
-        <input type="text" id="gateName" placeholder="Nombre completo / Full name" />
-        <input type="email" id="gateEmail" placeholder="Correo electrónico / Email" />
-        <button class="primary-btn" id="gateBtn" onclick="enterForm()">Continuar / Continue</button>
+        <input type="text" id="gateName" placeholder="" />
+        <input type="email" id="gateEmail" placeholder="" />
+        <button class="primary-btn" id="gateBtn" onclick="enterForm()"></button>
         <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
       </div>
     </div>
