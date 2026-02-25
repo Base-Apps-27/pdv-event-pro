@@ -1051,8 +1051,6 @@ Deno.serve(async (req) => {
       // Build payload with only arts-relevant fields
       const payload = {
         segment_id: segId,
-        submitter_name: submitterName,
-        submitter_email: submitterEmail,
         data: {
           art_types: seg.art_types || [],
           // Dance
