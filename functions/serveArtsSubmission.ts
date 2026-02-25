@@ -769,14 +769,6 @@ Deno.serve(async (req) => {
         return;
       }
 
-      // Validate segments loaded
-      if (!SEGMENTS || SEGMENTS.length === 0) {
-        errEl.textContent = 'Cargando segmentos... / Loading segments...';
-        errEl.style.display = 'block';
-        errEl.style.color = '#0369A1';
-        return;
-      }
-
       submitterName = name;
       submitterEmail = email;
       document.getElementById('gateSection').classList.add('hidden');
