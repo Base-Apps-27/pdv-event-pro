@@ -237,21 +237,41 @@ Deno.serve(async (req) => {
     .meta-item { display: flex; align-items: center; gap: 6px; }
     .meta-icon { width: 14px; height: 14px; color: var(--brand-green); }
 
-    /* Link hint — subtle inline helper text shown beneath URL fields */
-    .link-hint {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 6px;
+    /* Section-level policy banner — shown once at top of each type section */
+    .policy-banner {
+      font-size: 0.85rem;
       line-height: 1.5;
-      padding: 8px 12px;
+      padding: 12px 16px;
       background: #F0F9FF;
-      border-left: 3px solid var(--brand-teal);
-      border-radius: 4px;
+      border-left: 4px solid var(--brand-teal);
+      border-radius: 6px;
+      margin-bottom: 20px;
     }
-    .link-hint-strict {
+    .policy-banner-strict {
       background: #FFF7ED;
       border-left-color: #F59E0B;
       color: #92400E;
+    }
+    .policy-banner strong { font-weight: 700; }
+    .policy-banner em { font-style: italic; opacity: 0.9; }
+    
+    /* Song card — compact card for each song slot */
+    .song-card {
+      background: var(--bg-light);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .song-card-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand-teal);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
     }
 
     /* Gate */
@@ -416,9 +436,11 @@ Deno.serve(async (req) => {
       letter-spacing: 0.03em;
     }
 
-    /* Song slot */
-    .song-slot { border-top: 1px solid var(--border-light); padding-top: 10px; margin-top: 10px; }
-    .song-slot:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+    /* Compact field row for song cards */
+    .compact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    @media (max-width: 500px) { .compact-row { grid-template-columns: 1fr; } }
+    .compact-row .form-group { margin-bottom: 0; }
+    .compact-row .form-group:last-child { grid-column: 1 / -1; }
 
     /* Save button */
     .save-btn {
