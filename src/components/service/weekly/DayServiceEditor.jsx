@@ -47,6 +47,7 @@ import { useSegmentMutation } from "./useSegmentMutation";
 import useStaleGuard from "@/components/utils/useStaleGuard";
 import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import { normalizeSegmentType } from "@/components/utils/segmentTypeMap";
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
@@ -278,19 +279,11 @@ export default function DayServiceEditor({
 
     if (existingData) {
       // Merge with blueprint for fields/sub_assignments (same logic as original)
+      // DECISION-002 Contract 2: Shared type normalization replaces inline normalizeType
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
-        const normalizeType = (t) => {
-          if (!t) return "";
-          const lower = t.toLowerCase();
-          if (lower === 'alabanza' || lower === 'worship') return 'worship';
-          if (lower === 'bienvenida' || lower === 'welcome') return 'welcome';
-          if (lower === 'ofrenda' || lower === 'ofrendas' || lower === 'offering') return 'offering';
-          if (lower === 'plenaria' || lower === 'predica' || lower === 'mensaje' || lower === 'message') return 'message';
-          return lower;
-        };
         return existingSegments.map((savedSeg, idx) => {
           if (savedSeg.fields && savedSeg.fields.length > 0 && savedSeg._entityId) {
-            const savedType = normalizeType(savedSeg.type);
+            const savedType = normalizeSegmentType(savedSeg.type);
             let subAssignments = savedSeg.sub_assignments || [];
             if (subAssignments.length === 0) {
               if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
@@ -302,7 +295,7 @@ export default function DayServiceEditor({
             }
             return { ...savedSeg, sub_assignments: subAssignments, songs };
           }
-          const savedType = normalizeType(savedSeg.type);
+          const savedType = normalizeSegmentType(savedSeg.type);
           const sessionDef = sessions?.find(s => s.name === timeSlot);
           const bp = sessionDef?.blueprint_id ? blueprints?.find(b => b.id === sessionDef.blueprint_id) : null;
           let bpSegments = bp?.segments || [];
@@ -314,8 +307,8 @@ export default function DayServiceEditor({
 
           if (bpSegments.length > 0) {
             let blueprintSeg = bpSegments[idx];
-            if (!blueprintSeg || normalizeType(blueprintSeg.type) !== savedType) {
-              blueprintSeg = bpSegments.find(b => normalizeType(b.type) === savedType);
+            if (!blueprintSeg || normalizeSegmentType(blueprintSeg.type) !== savedType) {
+              blueprintSeg = bpSegments.find(b => normalizeSegmentType(b.type) === savedType);
             }
             if (blueprintSeg) {
               const mergedFields = (savedSeg.fields && savedSeg.fields.length > 0) ? savedSeg.fields : (blueprintSeg.fields || []);
