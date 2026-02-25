@@ -49,7 +49,6 @@ export default function MyProgram() {
   const [department, setDepartment] = useDepartment();
   const [selectedSession, setSelectedSession] = useState(null);
   const [userOverrodeSession, setUserOverrodeSession] = useState(false);
-  const [verseModalData, setVerseModalData] = useState(null);
 
   // Ref map for scrolling to specific segments
   const segmentRefs = React.useRef({});
