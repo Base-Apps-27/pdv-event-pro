@@ -823,8 +823,8 @@ Deno.serve(async (req) => {
       return \`
         <div class="policy-banner \${IS_UNICA ? 'policy-banner-strict' : ''}">
           \${IS_UNICA 
-            ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. No Spotify/YouTube. / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. No Spotify/YouTube.</em>' 
-            : '<strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). / <em>Recommended: Cloud storage with public access ("Anyone with the link").</em>'
+            ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). <em>Spotify/YouTube no permitido para Única únicamente.</em> / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. Spotify/YouTube not allowed for Única only.</em>' 
+            : '<strong>Recomendado:</strong> Google Drive, OneDrive, Dropbox o Spotify con acceso público ("Cualquiera con el enlace"). / <em>Recommended: Cloud storage or Spotify with public access ("Anyone with the link").</em>'
           }
         </div>
         <div class="song-card">
