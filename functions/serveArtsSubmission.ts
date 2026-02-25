@@ -877,7 +877,7 @@ Deno.serve(async (req) => {
             <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light)">
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary); margin:0">
                 <input type="checkbox" \${seg.dance_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','dance_has_song',this.checked); toggleSongs('\${seg.id}','dance',this.checked)" style="accent-color:var(--brand-teal); width:18px; height:18px; cursor:pointer">
-                Incluir canción(es) / Include song(s)
+                \${t('includeSongs')}
               </label>
             </div>
             <div id="dsongs-\${seg.id}" class="\${seg.dance_has_song ? '' : 'hidden'}" style="margin-top:16px">
