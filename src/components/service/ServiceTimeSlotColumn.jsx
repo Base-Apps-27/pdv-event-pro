@@ -448,10 +448,10 @@ function StandardSegmentCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 pt-3">
-        {/* Leader field */}
-        {segment.fields?.includes("leader") && (
+        {/* Director field (for worship segments, stored as presenter) */}
+        {segment.fields?.includes("presenter") && segment.type === "Alabanza" && (
           <div className="space-y-1">
-            <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="leader" type="worshipLeader" placeholder="Líder / Director" />
+            <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="presenter" type="worshipLeader" placeholder="Director" />
             <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
               💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
             </p>
