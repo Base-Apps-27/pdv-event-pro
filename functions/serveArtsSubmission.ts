@@ -568,10 +568,9 @@ Deno.serve(async (req) => {
       </div>
       <div id="accordionContainer"></div>
       <div id="emptyState" class="empty-state hidden">
-        <h2>NO HAY SEGMENTOS DE ARTES</h2>
-        <p>No se encontraron segmentos de tipo "Artes" para este evento.<br/>
-        <em>No "Artes" segments found for this event.</em></p>
-      </div>
+         <h2 id="emptyTitle"></h2>
+         <p id="emptyDesc"></p>
+       </div>
     </div>
   </div>
 
