@@ -257,21 +257,21 @@ Deno.serve(async (req) => {
     
     /* Song card — compact card for each song slot */
     .song-card {
-      background: var(--bg-white);
-      border: 1.5px solid var(--brand-green);
+      background: var(--bg-light);
+      border: 1px solid var(--border-light);
       border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
     .song-card-header {
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: var(--brand-green);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand-teal);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 10px;
-      padding-bottom: 0;
-      border-bottom: none;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
     }
 
     /* Gate */
@@ -541,241 +541,115 @@ Deno.serve(async (req) => {
 
     ${eventError ? `<p style="color:#991B1B;font-size:0.9rem;margin-bottom:16px;">${escapeHtml(eventError)}</p>` : ''}
 
-    <!-- Language Toggle -->
-    <div style="position: fixed; top: 20px; right: 20px; display: flex; gap: 6px; z-index: 1000;" id="langToggle"></div>
+    <!-- Gate: Name + Email -->
+    <div id="gateSection" class="${eventError ? 'hidden' : ''}">
+      <div class="gate-card">
+        <h2>IDENTIFICACIÓN / IDENTIFICATION</h2>
+        <p>
+          Ingrese su nombre y correo para acceder al formulario. / Enter your name and email to access the form.
+        </p>
+        <input type="text" id="gateName" placeholder="Nombre completo / Full name" />
+        <input type="email" id="gateEmail" placeholder="Correo electrónico / Email" />
+        <button class="primary-btn" id="gateBtn" onclick="enterForm()">Continuar / Continue</button>
+        <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
+      </div>
+    </div>
 
-    <!-- Main Form -->
-    <div id="formSection">
+    <!-- Main Form (hidden until gate passed) -->
+    <div id="formSection" class="hidden">
       <div class="gate-card" style="border-left-color: var(--brand-green);">
-        <p id="formIntroText" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+          A continuación encontrará los segmentos de Artes para este evento. 
+          Abra cada uno para ingresar los detalles de su presentación. 
+          Puede guardar progreso parcial y regresar luego para completar.
+          <br/><em>Below you'll find the Arts segments for this event. 
+          Open each one to enter your presentation details. 
+          You can save partial progress and return later to complete.</em>
+        </p>
       </div>
       <div id="accordionContainer"></div>
       <div id="emptyState" class="empty-state hidden">
-         <h2 id="emptyTitle"></h2>
-         <p id="emptyDesc"></p>
-       </div>
+        <h2>NO HAY SEGMENTOS DE ARTES</h2>
+        <p>No se encontraron segmentos de tipo "Artes" para este evento.<br/>
+        <em>No "Artes" segments found for this event.</em></p>
+      </div>
     </div>
   </div>
 
   <script>
-    // ===== LANGUAGE & DATA =====
+    // ===== DATA =====
     const SEGMENTS = ${segmentsJson};
     const IS_UNICA = ${isUnicaEvent};
-    let currentLanguage = localStorage.getItem('artsFormLang') || 'es';
+    let submitterName = '';
+    let submitterEmail = '';
 
-    const i18n = {
-      es: {
-        // Gate
-        gateTitle: 'IDENTIFICACIÓN / IDENTIFICATION',
-        gateDesc: 'Ingrese su nombre y correo para acceder al formulario.',
-        gatePlaceholderName: 'Nombre completo',
-        gatePlaceholderEmail: 'Correo electrónico',
-        gateBtn: 'Continuar',
-        gateErrorName: 'Por favor ingrese su nombre.',
-        gateErrorEmail: 'Por favor ingrese un correo válido.',
-        
-        // Form intro
-        formIntro: 'A continuación encontrará los segmentos de Artes para este evento. Abra cada uno para ingresar los detalles de su presentación. Puede guardar progreso parcial y regresar luego para completar.',
-        
-        // Status
-        statusIncomplete: '🔴 Incompleto',
-        statusMinimum: '🟡 Mínimo',
-        statusComplete: '🟢 Completo',
-        missingArtType: 'Tipo de arte',
-        missingAsset: 'Al menos un enlace (canción, video, o guía)',
-        missingDanceStart: 'Cue inicio danza',
-        missingDanceEnd: 'Cue fin danza',
-        missingDanceSong: 'Canción de danza',
-        missingDramaStart: 'Cue inicio drama',
-        missingDramaEnd: 'Cue fin drama',
-        missingDramaSong: 'Canción de drama',
-        missingVideo: 'Enlace de video',
-        missingRunOfShow: 'Guía de Artes',
-        
-        // Form sections
-        artType: 'TIPO DE ARTE',
-        danceTitle: '🩰 DANZA',
-        dramaTitle: '🎭 DRAMA',
-        videoTitle: '🎬 VIDEO',
-        otherTitle: '✨ OTRO',
-        
-        // Fields
-        handheldMics: 'Handheld Mics',
-        headsetMics: 'Headset Mics',
-        startCue: 'Cue de Inicio',
-        endCue: 'Cue de Fin',
-        includeSongs: 'Incluir canción(es)',
-        videoName: 'Nombre del Video',
-        videoLink: 'Enlace',
-        videoDuration: 'Duración (seg)',
-        videoOwner: 'Responsable',
-        description: 'Descripción',
-        
-        // Songs
-        song1: 'Canción 1',
-        song2: 'Canción 2 (Opcional)',
-        song3: 'Canción 3 (Opcional)',
-        title: 'Título',
-        owner: 'Responsable',
-        link: 'Enlace',
-        
-        // Policy banners
-        policyUnicaSongs: 'Política Única: Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. Spotify/YouTube no permitido para Única únicamente.',
-        policyOtherSongs: 'Recomendado: Google Drive, OneDrive, Dropbox o Spotify con acceso público.',
-        policyUnicaVideo: 'Política Única: Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. YouTube no permitido.',
-        policyOtherVideo: 'Recomendado: Google Drive, OneDrive o Dropbox con acceso público. Streaming puede depender de conexión estable.',
-        artsDirections: '📋 GUÍA DE ARTES',
-        artsDirectionsNote: 'Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc.',
-        additionalNotes: '📝 NOTAS ADICIONALES',
-        notesPlaceholder: 'Detalles o instrucciones especiales',
-        
-        // Buttons
-        saveBtn: '💾 GUARDAR PROGRESO',
-        savingBtn: '⏳ Guardando...',
-        saveSuccess: '✅ Guardado exitosamente',
-        saveError: '❌ Error: ',
-        
-        // Empty state
-        noSegments: 'NO HAY SEGMENTOS DE ARTES',
-        noSegmentsDesc: 'No se encontraron segmentos de tipo "Artes" para este evento.',
-      },
-      en: {
-        // Gate
-        gateTitle: 'IDENTIFICATION',
-        gateDesc: 'Enter your name and email to access the form.',
-        gatePlaceholderName: 'Full name',
-        gatePlaceholderEmail: 'Email',
-        gateBtn: 'Continue',
-        gateErrorName: 'Please enter your name.',
-        gateErrorEmail: 'Please enter a valid email.',
-        
-        // Form intro
-        formIntro: 'Below you\'ll find the Arts segments for this event. Open each one to enter your presentation details. You can save partial progress and return later to complete.',
-        
-        // Status
-        statusIncomplete: '🔴 Incomplete',
-        statusMinimum: '🟡 Minimum',
-        statusComplete: '🟢 Complete',
-        missingArtType: 'Art type',
-        missingAsset: 'At least one link (song, video, or guide)',
-        missingDanceStart: 'Dance start cue',
-        missingDanceEnd: 'Dance end cue',
-        missingDanceSong: 'Dance song',
-        missingDramaStart: 'Drama start cue',
-        missingDramaEnd: 'Drama end cue',
-        missingDramaSong: 'Drama song',
-        missingVideo: 'Video link',
-        missingRunOfShow: 'Arts Directions',
-        
-        // Form sections
-        artType: 'ART TYPE',
-        danceTitle: '🩰 DANCE',
-        dramaTitle: '🎭 DRAMA',
-        videoTitle: '🎬 VIDEO',
-        otherTitle: '✨ OTHER',
-        
-        // Fields
-        handheldMics: 'Handheld Mics',
-        headsetMics: 'Headset Mics',
-        startCue: 'Start Cue',
-        endCue: 'End Cue',
-        includeSongs: 'Include song(s)',
-        videoName: 'Video Name',
-        videoLink: 'Link',
-        videoDuration: 'Length (sec)',
-        videoOwner: 'Owner',
-        description: 'Description',
-        
-        // Songs
-        song1: 'Song 1',
-        song2: 'Song 2 (Optional)',
-        song3: 'Song 3 (Optional)',
-        title: 'Title',
-        owner: 'Owner',
-        link: 'Link',
-        
-        // Policy banners
-        policyUnicaSongs: 'Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. Spotify/YouTube not allowed for Única only.',
-        policyOtherSongs: 'Recommended: Cloud storage or Spotify with public access.',
-        policyUnicaVideo: 'Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. YouTube not allowed.',
-        policyOtherVideo: 'Recommended: Cloud storage with public access. Streaming may depend on stable internet.',
-        artsDirections: '📋 ARTS DIRECTIONS',
-        artsDirectionsNote: 'Ensure the link has public permissions. Preferred: PDF or Google Doc.',
-        additionalNotes: '📝 ADDITIONAL NOTES',
-        notesPlaceholder: 'Special details or instructions',
-        
-        // Buttons
-        saveBtn: '💾 SAVE PROGRESS',
-        savingBtn: '⏳ Saving...',
-        saveSuccess: '✅ Saved successfully',
-        saveError: '❌ Error: ',
-        
-        // Empty state
-        noSegments: 'NO ARTS SEGMENTS',
-        noSegmentsDesc: 'No "Artes" segments found for this event.',
+    // ===== GATE =====
+    function enterForm() {
+      const name = document.getElementById('gateName').value.trim();
+      const email = document.getElementById('gateEmail').value.trim();
+      const errEl = document.getElementById('gateError');
+
+      if (!name || name.length < 2) {
+        errEl.textContent = 'Por favor ingrese su nombre. / Please enter your name.';
+        errEl.style.display = 'block';
+        return;
       }
-    };
+      // Simple email format check (no real auth)
+      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+        errEl.textContent = 'Por favor ingrese un correo válido. / Please enter a valid email.';
+        errEl.style.display = 'block';
+        return;
+      }
 
-    function t(key) { return i18n[currentLanguage][key] || key; }
-    function setLang(lang) { currentLanguage = lang; localStorage.setItem('artsFormLang', lang); renderLanguageToggle(); location.reload(); }
-    
-    function renderLanguageToggle() {
-      const container = document.getElementById('langToggle');
-      if (!container) return;
-      container.innerHTML = \`
-        <button onclick="setLang('es')" style="padding: 8px 12px; background: \${currentLanguage === 'es' ? 'var(--brand-teal)' : '#E5E7EB'}; color: \${currentLanguage === 'es' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">ES</button>
-        <button onclick="setLang('en')" style="padding: 8px 12px; background: \${currentLanguage === 'en' ? 'var(--brand-teal)' : '#E5E7EB'}; color: \${currentLanguage === 'en' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">EN</button>
-      \`;
+      submitterName = name;
+      submitterEmail = email;
+      document.getElementById('gateSection').classList.add('hidden');
+      document.getElementById('formSection').classList.remove('hidden');
+      renderAccordions();
     }
 
     // ===== STATUS CALCULATION =====
     function calcStatus(seg) {
       const types = seg.art_types || [];
-      if (types.length === 0) return { level: 'incomplete', label: t('statusIncomplete'), missing: [t('missingArtType')] };
+      if (types.length === 0) return { level: 'incomplete', label: '🔴 Incompleto', missing: ['Tipo de arte / Art type'] };
 
       const missing = [];
       const hasDance = types.includes('DANCE');
       const hasDrama = types.includes('DRAMA');
       const hasVideo = types.includes('VIDEO');
 
+      // Check for at least one primary asset (Minimum)
       const hasAnySong = !!(seg.dance_song_source || seg.drama_song_source || seg.dance_song_title || seg.drama_song_title);
       const hasVideoLink = !!(seg.video_url);
       const hasRunOfShow = !!(seg.arts_run_of_show_url);
       const hasAnyAsset = hasAnySong || hasVideoLink || hasRunOfShow;
 
       if (!hasAnyAsset) {
-        missing.push(t('missingAsset'));
+        missing.push('Al menos un enlace (canción, video, o guía) / At least one link');
       }
 
+      // Complete checks
       if (hasDance) {
-        if (!seg.dance_start_cue) missing.push(t('missingDanceStart'));
-        if (!seg.dance_end_cue) missing.push(t('missingDanceEnd'));
-        if (seg.dance_has_song && !seg.dance_song_source && !seg.dance_song_title) missing.push(t('missingDanceSong'));
+        if (!seg.dance_start_cue) missing.push('Cue inicio danza / Dance start cue');
+        if (!seg.dance_end_cue) missing.push('Cue fin danza / Dance end cue');
+        if (seg.dance_has_song && !seg.dance_song_source && !seg.dance_song_title) missing.push('Canción de danza / Dance song');
       }
       if (hasDrama) {
-        if (!seg.drama_start_cue) missing.push(t('missingDramaStart'));
-        if (!seg.drama_end_cue) missing.push(t('missingDramaEnd'));
-        if (seg.drama_has_song && !seg.drama_song_source && !seg.drama_song_title) missing.push(t('missingDramaSong'));
+        if (!seg.drama_start_cue) missing.push('Cue inicio drama / Drama start cue');
+        if (!seg.drama_end_cue) missing.push('Cue fin drama / Drama end cue');
+        if (seg.drama_has_song && !seg.drama_song_source && !seg.drama_song_title) missing.push('Canción de drama / Drama song');
       }
       if (hasVideo) {
-        if (!seg.video_url) missing.push(t('missingVideo'));
+        if (!seg.video_url) missing.push('Enlace de video / Video link');
       }
-      if (!hasRunOfShow) missing.push(t('missingRunOfShow'));
+      if (!hasRunOfShow) missing.push('Guía de Artes / Arts Directions');
 
-      if (missing.length === 0) return { level: 'complete', label: t('statusComplete'), missing: [] };
-      if (hasAnyAsset) return { level: 'minimum', label: t('statusMinimum'), missing };
-      return { level: 'incomplete', label: t('statusIncomplete'), missing };
+      if (missing.length === 0) return { level: 'complete', label: '🟢 Completo', missing: [] };
+      if (hasAnyAsset) return { level: 'minimum', label: '🟡 Mínimo', missing };
+      return { level: 'incomplete', label: '🔴 Incompleto', missing };
     }
 
     // ===== RENDER =====
-    function initAllLabels() {
-      renderLanguageToggle();
-      document.getElementById('formIntroText').textContent = t('formIntro');
-      document.getElementById('emptyTitle').textContent = t('noSegments');
-      document.getElementById('emptyDesc').textContent = t('noSegmentsDesc');
-      renderAccordions();
-    }
-
     function renderAccordions() {
       const container = document.getElementById('accordionContainer');
       if (SEGMENTS.length === 0) {
@@ -817,7 +691,7 @@ Deno.serve(async (req) => {
       const types = seg.art_types || [];
       return \`
         <div class="form-section">
-          <div class="form-section-title">\${t('artType')}</div>
+          <div class="form-section-title">TIPO DE ARTE / ART TYPE</div>
           <div class="check-group">
             \${['DANCE','DRAMA','VIDEO','OTHER'].map(t => \`
               <label class="check-label \${types.includes(t) ? 'checked' : ''}" id="cl-\${seg.id}-\${t}">
@@ -831,22 +705,19 @@ Deno.serve(async (req) => {
         <!-- Dance Section -->
         <div id="dance-\${seg.id}" class="\${types.includes('DANCE') ? '' : 'hidden'}">
           <div class="type-section">
-            <div class="type-section-title">\${typeLabel('DANCE')}</div>
+            <div class="type-section-title">🩰 DANZA / DANCE</div>
             <div class="form-row">
-              <div class="form-group"><label>\${t('handheldMics')}</label><input type="number" min="0" value="\${seg.dance_handheld_mics}" onchange="updateField('\${seg.id}','dance_handheld_mics',parseInt(this.value)||0)"></div>
-              <div class="form-group"><label>\${t('headsetMics')}</label><input type="number" min="0" value="\${seg.dance_headset_mics}" onchange="updateField('\${seg.id}','dance_headset_mics',parseInt(this.value)||0)"></div>
+              <div class="form-group"><label>Handheld Mics</label><input type="number" min="0" value="\${seg.dance_handheld_mics}" onchange="updateField('\${seg.id}','dance_handheld_mics',parseInt(this.value)||0)"></div>
+              <div class="form-group"><label>Headset Mics</label><input type="number" min="0" value="\${seg.dance_headset_mics}" onchange="updateField('\${seg.id}','dance_headset_mics',parseInt(this.value)||0)"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>\${t('startCue')}</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_start_cue',this.value)">\${esc(seg.dance_start_cue)}</textarea></div>
-              <div class="form-group"><label>\${t('endCue')}</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_end_cue',this.value)">\${esc(seg.dance_end_cue)}</textarea></div>
+              <div class="form-group"><label>Cue de Inicio / Start Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_start_cue',this.value)">\${esc(seg.dance_start_cue)}</textarea></div>
+              <div class="form-group"><label>Cue de Fin / End Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_end_cue',this.value)">\${esc(seg.dance_end_cue)}</textarea></div>
             </div>
-            <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light)">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary); margin:0">
-                <input type="checkbox" \${seg.dance_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','dance_has_song',this.checked); toggleSongs('\${seg.id}','dance',this.checked)" style="accent-color:var(--brand-teal); width:18px; height:18px; cursor:pointer">
-                \${t('includeSongs')}
-              </label>
+            <div class="form-group" style="margin-top:8px">
+              <label><input type="checkbox" \${seg.dance_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','dance_has_song',this.checked); toggleSongs('\${seg.id}','dance',this.checked)"> Incluye playlist/canción(es) / Includes playlist/song(s)</label>
             </div>
-            <div id="dsongs-\${seg.id}" class="\${seg.dance_has_song ? '' : 'hidden'}" style="margin-top:16px">
+            <div id="dsongs-\${seg.id}" class="\${seg.dance_has_song ? '' : 'hidden'}">
               \${renderSongSlots(seg, 'dance')}
             </div>
           </div>
@@ -864,13 +735,10 @@ Deno.serve(async (req) => {
               <div class="form-group"><label>Cue de Inicio / Start Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','drama_start_cue',this.value)">\${esc(seg.drama_start_cue)}</textarea></div>
               <div class="form-group"><label>Cue de Fin / End Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','drama_end_cue',this.value)">\${esc(seg.drama_end_cue)}</textarea></div>
             </div>
-            <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light)">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary); margin:0">
-                <input type="checkbox" \${seg.drama_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','drama_has_song',this.checked); toggleSongs('\${seg.id}','drama',this.checked)" style="accent-color:var(--brand-teal); width:18px; height:18px; cursor:pointer">
-                Incluir canción(es) / Include song(s)
-              </label>
+            <div class="form-group" style="margin-top:8px">
+              <label><input type="checkbox" \${seg.drama_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','drama_has_song',this.checked); toggleSongs('\${seg.id}','drama',this.checked)"> Incluye playlist/canción(es) / Includes playlist/song(s)</label>
             </div>
-            <div id="dsongs-drama-\${seg.id}" class="\${seg.drama_has_song ? '' : 'hidden'}" style="margin-top:16px">
+            <div id="dsongs-drama-\${seg.id}" class="\${seg.drama_has_song ? '' : 'hidden'}">
               \${renderSongSlots(seg, 'drama')}
             </div>
           </div>
@@ -949,8 +817,8 @@ Deno.serve(async (req) => {
       return \`
         <div class="policy-banner \${IS_UNICA ? 'policy-banner-strict' : ''}">
           \${IS_UNICA 
-            ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). <em>Spotify/YouTube no permitido para Única únicamente.</em> / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. Spotify/YouTube not allowed for Única only.</em>' 
-            : '<strong>Recomendado:</strong> Google Drive, OneDrive, Dropbox o Spotify con acceso público ("Cualquiera con el enlace"). / <em>Recommended: Cloud storage or Spotify with public access ("Anyone with the link").</em>'
+            ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. No Spotify/YouTube. / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. No Spotify/YouTube.</em>' 
+            : '<strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). / <em>Recommended: Cloud storage with public access ("Anyone with the link").</em>'
           }
         </div>
         <div class="song-card">
@@ -982,15 +850,7 @@ Deno.serve(async (req) => {
 
     // ===== HELPERS =====
     function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
-    function typeLabel(t) { 
-      const labels = {
-        DANCE: currentLanguage === 'es' ? '🩰 Danza' : '🩰 Dance',
-        DRAMA: currentLanguage === 'es' ? '🎭 Drama' : '🎭 Drama',
-        VIDEO: currentLanguage === 'es' ? '🎬 Video' : '🎬 Video',
-        OTHER: currentLanguage === 'es' ? '✨ Otro' : '✨ Other'
-      };
-      return labels[t] || t;
-    }
+    function typeLabel(t) { return { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', OTHER: '✨ Otro' }[t] || t; }
     function formatTime(t) { if (!t) return ''; const [h,m] = t.split(':').map(Number); const p = h >= 12 ? 'PM' : 'AM'; return (h%12||12)+':'+String(m).padStart(2,'0')+' '+p; }
 
     function toggleAccordion(id) {
@@ -1051,6 +911,8 @@ Deno.serve(async (req) => {
       // Build payload with only arts-relevant fields
       const payload = {
         segment_id: segId,
+        submitter_name: submitterName,
+        submitter_email: submitterEmail,
         data: {
           art_types: seg.art_types || [],
           // Dance
@@ -1123,11 +985,6 @@ Deno.serve(async (req) => {
       btn.disabled = false;
       btn.textContent = '💾 GUARDAR PROGRESO / SAVE PROGRESS';
     }
-
-    // Initialize labels and UI on page load (after DOM is ready)
-    window.addEventListener('DOMContentLoaded', () => {
-      initAllLabels();
-    });
   </script>
 </body>
 </html>`;
