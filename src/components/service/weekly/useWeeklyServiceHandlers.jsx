@@ -279,9 +279,9 @@ export function useWeeklyServiceHandlers({
         updated[targetSlot][segmentIndex] = copyContentToTarget(sourceSeg, targetSeg);
         // Entity write: copy content fields to target entity
         if (segmentMutation && targetSeg._entityId) {
-          const textFields = ['leader', 'preacher', 'presenter', 'translator', 'verse',
-            'messageTitle', 'description_details', 'coordinator_notes', 'projection_notes',
-            'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes'];
+          const textFields = ['presenter', 'preacher', 'translator', 'verse',
+           'messageTitle', 'description_details', 'coordinator_notes', 'projection_notes',
+           'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes'];
           textFields.forEach(f => {
             const val = sourceSeg.data?.[f];
             if (val !== undefined) {
