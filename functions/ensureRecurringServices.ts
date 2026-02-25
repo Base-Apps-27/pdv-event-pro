@@ -1,7 +1,8 @@
 /**
  * ensureRecurringServices
  * 
- * Recurring Services Refactor (2026-02-23): Generalized from ensureNextSundayService.
+ * DECISION-002 Contract 1 (2026-02-25): Entity-First Data Path.
+ * This function MUST create Session + Segment entities — NOT JSON blobs.
  * 
  * Scheduled function that runs daily to guarantee a Service record exists
  * for EVERY active ServiceSchedule's next occurrence date.
@@ -13,31 +14,17 @@
  * 1. Load ALL active ServiceSchedule records
  * 2. For each: calculate the next occurrence date (in America/New_York)
  * 3. Check if a Service record already exists for that date + day_of_week
- * 4. If not, create from schedule's blueprint_id (or shared blueprint, or hardcoded fallback)
+ * 4. If not, create Service + Session + Segment entities from blueprint
  * 5. Mark with origin: 'auto_created' for traceability
  * 
- * Decision: "Recurring Services Refactor" (2026-02-23)
- * Predecessor: ensureNextSundayService v1.0
- * Constitution: No destructive ops. Additive only.
+ * P0 FIX (2026-02-25): Previously wrote JSON blobs to Service entity.
+ * DayServiceEditor STRICT MODE only reads Session/Segment entities.
+ * This caused auto-created services to appear empty in the editor.
+ * Now creates Session + Segment entities matching EmptyDayPrompt flow.
+ * See: SYSTEM_AUDIT_RECURRING_SERVICES.md §4
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-
-// Hardcoded fallback blueprint for Sunday (legacy safety net)
-const FALLBACK_BLUEPRINT = {
-  "9:30am": [
-    { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"], data: {}, actions: [], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], songs: [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }], requires_translation: false, default_translator_source: "manual" },
-    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
-    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"], data: {}, actions: [], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
-    { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse"], data: {}, actions: [{ label: "Pianista Sube", timing: "before_end", offset_min: 10, department: "Alabanza" }, { label: "Equipo de A&A sube para cerrar", timing: "before_end", offset_min: 5, department: "Alabanza" }], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: false, default_translator_source: "manual" }
-  ],
-  "11:30am": [
-    { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], data: {}, actions: [], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], songs: [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }], requires_translation: true, default_translator_source: "manual" },
-    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
-    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
-    { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [{ label: "Pianista Sube", timing: "before_end", offset_min: 10, department: "Alabanza" }, { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: true, default_translator_source: "manual" }
-  ]
-};
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
@@ -49,19 +36,40 @@ const DAY_INDEX = {
   Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6
 };
 
+// DECISION-002 Contract 2: Shared type normalization (inlined for Deno — no local imports).
+// This MUST stay in sync with components/utils/segmentTypeMap.js
+const TYPE_TO_ENUM = {
+  'worship': 'Alabanza', 'alabanza': 'Alabanza',
+  'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
+  'offering': 'Ofrenda', 'ofrenda': 'Ofrenda', 'ofrendas': 'Ofrenda',
+  'message': 'Plenaria', 'plenaria': 'Plenaria', 'predica': 'Plenaria', 'mensaje': 'Plenaria',
+  'video': 'Video', 'anuncio': 'Anuncio',
+  'dinamica': 'Dinámica', 'dinámica': 'Dinámica',
+  'break': 'Break', 'techonly': 'TechOnly',
+  'prayer': 'Oración', 'oracion': 'Oración', 'oración': 'Oración',
+  'special': 'Especial', 'especial': 'Especial',
+  'closing': 'Cierre', 'cierre': 'Cierre',
+  'ministry': 'Ministración', 'ministracion': 'Ministración', 'ministración': 'Ministración',
+  'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel',
+  'receso': 'Receso', 'almuerzo': 'Almuerzo',
+};
+
+function resolveSegmentEnum(rawType) {
+  if (!rawType) return 'Especial';
+  return TYPE_TO_ENUM[rawType.toLowerCase()] || rawType;
+}
+
+// Hardcoded fallback blueprint for Sunday (legacy safety net)
+const FALLBACK_BLUEPRINT_SEGMENTS = [
+  { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], requires_translation: false, default_translator_source: "manual", number_of_songs: 4 },
+  { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter"], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
+  { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse"], sub_assignments: [], requires_translation: false, default_translator_source: "manual" },
+  { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse"], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: false, default_translator_source: "manual" },
+];
+
 /**
- * Calculate the NEXT upcoming occurrence of a given day_of_week from a reference date.
- * 
- * "Next" means strictly in the future:
- *   - If today is Wednesday and we want Tuesday → returns next Tuesday (6 days away)
- *   - If today is Monday and we want Sunday → returns next Sunday (6 days away)
- *   - If today IS the target day → returns NEXT WEEK's occurrence (7 days away)
- * 
- * This ensures the job always creates the upcoming service, not today's.
- * The job runs nightly, so there is no risk of missing a same-day service.
- * 
- * Decision: 2026-02-24 — Changed from "today or next" to "strictly next week"
- * to avoid creating services for today when the job runs at midnight.
+ * Calculate the NEXT upcoming occurrence of a given day_of_week.
+ * "Next" means strictly in the future (if today IS the target, returns next week).
  */
 function getNextOccurrence(nowET, dayOfWeek) {
   const targetIdx = DAY_INDEX[dayOfWeek];
@@ -69,7 +77,6 @@ function getNextOccurrence(nowET, dayOfWeek) {
 
   const currentIdx = nowET.getDay();
   let daysUntil = targetIdx - currentIdx;
-  // Always go forward: if today is the target day, we want next week's occurrence
   if (daysUntil <= 0) daysUntil += 7;
 
   const target = new Date(nowET);
@@ -79,31 +86,6 @@ function getNextOccurrence(nowET, dayOfWeek) {
 
 function formatDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-/**
- * Deep-clone blueprint segments, clearing person-specific data but keeping structure.
- */
-function cloneSegments(segments) {
-  return (segments || []).map(seg => {
-    const clone = JSON.parse(JSON.stringify(seg));
-    if (clone.data) {
-      const persisted = {};
-      const structuralKeys = ['message_title', 'title'];
-      for (const key of structuralKeys) {
-        if (clone.data[key]) persisted[key] = clone.data[key];
-      }
-      clone.data = persisted;
-    }
-    clone.submitted_content = null;
-    clone.parsed_verse_data = null;
-    clone.submission_status = 'ignored';
-    clone.scripture_references = null;
-    clone.presentation_url = null;
-    clone.notes_url = null;
-    clone.content_is_slides_only = false;
-    return clone;
-  });
 }
 
 Deno.serve(async (req) => {
@@ -120,14 +102,13 @@ Deno.serve(async (req) => {
     const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
     console.log(`[ENSURE_RECURRING] Running at ET: ${nowET.toISOString()}`);
 
-    // 2. Load all active ServiceSchedules and shared blueprint
+    // 2. Load all active ServiceSchedules and shared blueprints
     const [schedules, blueprints] = await Promise.all([
       base44.asServiceRole.entities.ServiceSchedule.filter({ is_active: true }),
       base44.asServiceRole.entities.Service.filter({ status: 'blueprint' }),
     ]);
 
-    const sharedBlueprint = blueprints[0] || null;
-    console.log(`[ENSURE_RECURRING] Found ${schedules.length} active schedule(s), shared blueprint: ${sharedBlueprint ? sharedBlueprint.id : 'none'}`);
+    console.log(`[ENSURE_RECURRING] Found ${schedules.length} active schedule(s), ${blueprints.length} blueprint(s)`);
 
     const results = [];
 
@@ -136,7 +117,6 @@ Deno.serve(async (req) => {
       const dayOfWeek = schedule.day_of_week;
       const dayLabel = DAY_LABELS[dayOfWeek] || dayOfWeek;
 
-      // Calculate next occurrence
       const nextDate = getNextOccurrence(nowET, dayOfWeek);
       if (!nextDate) {
         console.warn(`[ENSURE_RECURRING] Invalid day_of_week: ${dayOfWeek}`);
@@ -175,7 +155,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Derive slot names from schedule sessions
+      // 5. Derive slot names from schedule sessions
       let slotNames = ["9:30am"];
       if (schedule.sessions?.length > 0) {
         slotNames = schedule.sessions
@@ -183,7 +163,10 @@ Deno.serve(async (req) => {
           .map(s => s.name);
       }
 
-      // 6. Create service
+      // 6. Create Service entity (metadata only — NO segment JSON blobs)
+      const emptySlotObj = {};
+      slotNames.forEach(name => { emptySlotObj[name] = ""; });
+
       const servicePayload = {
         name: `${dayLabel} - ${dateStr}`,
         day_of_week: dayOfWeek,
@@ -192,52 +175,95 @@ Deno.serve(async (req) => {
         service_type: 'weekly',
         origin: 'auto_created',
         selected_announcements: [],
-        segments: [],
+        coordinators: { ...emptySlotObj },
+        ujieres: { ...emptySlotObj },
+        sound: { ...emptySlotObj },
+        luces: { ...emptySlotObj },
+        fotografia: { ...emptySlotObj },
+        pre_service_notes: { ...emptySlotObj },
+        receso_notes: {},
       };
-
-      const emptySlotObj = {};
-      slotNames.forEach(name => { emptySlotObj[name] = ""; });
-      servicePayload.coordinators = { ...emptySlotObj };
-      servicePayload.ujieres = { ...emptySlotObj };
-      servicePayload.sound = { ...emptySlotObj };
-      servicePayload.luces = { ...emptySlotObj };
-      servicePayload.fotografia = null;
-      servicePayload.receso_notes = {};
       slotNames.slice(0, -1).forEach(s => { servicePayload.receso_notes[s] = ""; });
-      servicePayload.pre_service_notes = { ...emptySlotObj };
 
-      slotNames.forEach(name => {
-        const sessionDef = schedule.sessions?.find(s => s.name === name);
+      const newService = await base44.asServiceRole.entities.Service.create(servicePayload);
+      console.log(`[ENSURE_RECURRING] Created Service for ${dayLabel} ${dateStr} (id: ${newService.id})`);
+
+      // 7. Create Session + Segment entities for each slot
+      // P0 FIX: This is the critical change — previously we wrote JSON blobs.
+      let totalSegmentsCreated = 0;
+
+      for (const slotName of slotNames) {
+        // Resolve blueprint segments for this slot
+        const sessionDef = schedule.sessions?.find(s => s.name === slotName);
         let bpSegments = [];
-        
+
         if (sessionDef?.blueprint_id) {
-          // Resolve blueprint per session
           const bp = blueprints.find(b => b.id === sessionDef.blueprint_id);
           if (bp) {
             bpSegments = bp.segments || [];
+            // Legacy fallback: look for old slot-keyed arrays
             if (bpSegments.length === 0) {
-              const firstKey = Object.keys(bp).find(k => Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k));
+              const firstKey = Object.keys(bp).find(k =>
+                Array.isArray(bp[k]) && !['segments', 'selected_announcements', 'actions'].includes(k)
+              );
               if (firstKey) bpSegments = bp[firstKey];
             }
           }
         }
-        
-        // If still empty, use legacy fallback
+
+        // Fallback to hardcoded blueprint if nothing resolved
         if (!bpSegments || bpSegments.length === 0) {
-          bpSegments = FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"] || [];
+          bpSegments = FALLBACK_BLUEPRINT_SEGMENTS;
         }
 
-        servicePayload[name] = cloneSegments(bpSegments);
-      });
+        // Create Session entity
+        const session = await base44.asServiceRole.entities.Session.create({
+          service_id: newService.id,
+          name: slotName,
+          date: dateStr,
+          order: slotNames.indexOf(slotName) + 1,
+        });
+        console.log(`[ENSURE_RECURRING] Created Session "${slotName}" (id: ${session.id})`);
 
-      const newService = await base44.asServiceRole.entities.Service.create(servicePayload);
-      console.log(`[ENSURE_RECURRING] Created ${dayLabel} service for ${dateStr} (id: ${newService.id})`);
+        // Create Segment entities from blueprint
+        for (let i = 0; i < bpSegments.length; i++) {
+          const segData = bpSegments[i];
+          const segmentPayload = {
+            session_id: session.id,
+            service_id: newService.id,
+            order: i + 1,
+            title: segData.title || "Untitled",
+            segment_type: resolveSegmentEnum(segData.type),
+            duration_min: Number(segData.duration) || 0,
+            show_in_general: true,
+            ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
+            ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
+              label: sa.label || "Untitled",
+              person_field_name: sa.person_field_name || "",
+              duration_min: Number(sa.duration_min || sa.duration) || 0,
+            })) : [],
+            requires_translation: !!segData.requires_translation,
+            default_translator_source: segData.default_translator_source || "manual",
+          };
+
+          if (segData.number_of_songs !== undefined) {
+            segmentPayload.number_of_songs = Number(segData.number_of_songs) || 0;
+          }
+
+          await base44.asServiceRole.entities.Segment.create(segmentPayload);
+          totalSegmentsCreated++;
+        }
+      }
+
+      console.log(`[ENSURE_RECURRING] Created ${slotNames.length} sessions, ${totalSegmentsCreated} segments for ${dayLabel} ${dateStr}`);
       results.push({
         schedule: schedule.name,
         date: dateStr,
         status: 'created',
         service_id: newService.id,
-        blueprint_source: 'per-session-resolved'
+        sessions_created: slotNames.length,
+        segments_created: totalSegmentsCreated,
+        blueprint_source: 'per-session-resolved',
       });
     }
 

@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
@@ -85,27 +86,8 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
         for (let i = 0; i < segmentsToCreate.length; i++) {
           const segData = segmentsToCreate[i];
           
-          // Enum normalization for segment_type
-          const typeMap = {
-            'worship': 'Alabanza', 'alabanza': 'Alabanza',
-            'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
-            'offering': 'Ofrenda', 'ofrenda': 'Ofrenda',
-            'message': 'Plenaria', 'plenaria': 'Plenaria',
-            'video': 'Video',
-            'anuncio': 'Anuncio',
-            'dinamica': 'Dinámica',
-            'break': 'Break',
-            'techonly': 'TechOnly',
-            'prayer': 'Oración', 'oracion': 'Oración',
-            'special': 'Especial', 'especial': 'Especial',
-            'closing': 'Cierre', 'cierre': 'Cierre',
-            'ministry': 'Ministración', 'ministracion': 'Ministración',
-            'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel', 'receso': 'Receso', 'almuerzo': 'Almuerzo'
-          };
-          let resolvedType = "Especial";
-          if (segData.type) {
-             resolvedType = typeMap[segData.type.toLowerCase()] || segData.type;
-          }
+          // DECISION-002 Contract 2: Shared type normalization
+          const resolvedType = resolveSegmentEnum(segData.type);
 
           const entityPayload = {
             session_id: session.id,
