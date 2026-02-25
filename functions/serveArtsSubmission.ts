@@ -541,12 +541,18 @@ Deno.serve(async (req) => {
 
     ${eventError ? `<p style="color:#991B1B;font-size:0.9rem;margin-bottom:16px;">${escapeHtml(eventError)}</p>` : ''}
 
+    <!-- Language Toggle -->
+    <div style="position: fixed; top: 20px; right: 20px; display: flex; gap: 6px; z-index: 1000;">
+      <button onclick="setLang('es')" style="padding: 8px 12px; background: ${currentLanguage === 'es' ? 'var(--brand-teal)' : '#E5E7EB'}; color: ${currentLanguage === 'es' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">ES</button>
+      <button onclick="setLang('en')" style="padding: 8px 12px; background: ${currentLanguage === 'en' ? 'var(--brand-teal)' : '#E5E7EB'}; color: ${currentLanguage === 'en' ? 'white' : 'var(--text-primary)'}; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">EN</button>
+    </div>
+
     <!-- Gate: Name + Email -->
     <div id="gateSection" class="${eventError ? 'hidden' : ''}">
       <div class="gate-card">
-        <h2>IDENTIFICACIÓN / IDENTIFICATION</h2>
-        <p>
-          Ingrese su nombre y correo para acceder al formulario. / Enter your name and email to access the form.
+        <h2 id="gateTitle">IDENTIFICACIÓN</h2>
+        <p id="gateDesc">
+          Ingrese su nombre y correo para acceder al formulario.
         </p>
         <input type="text" id="gateName" placeholder="Nombre completo / Full name" />
         <input type="email" id="gateEmail" placeholder="Correo electrónico / Email" />
