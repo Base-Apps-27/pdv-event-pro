@@ -544,22 +544,8 @@ Deno.serve(async (req) => {
     <!-- Language Toggle -->
     <div style="position: fixed; top: 20px; right: 20px; display: flex; gap: 6px; z-index: 1000;" id="langToggle"></div>
 
-    <!-- Gate: Name + Email -->
-    <div id="gateSection" class="${eventError ? 'hidden' : ''}">
-      <div class="gate-card">
-        <h2 id="gateTitle">IDENTIFICACIÓN</h2>
-        <p id="gateDesc">
-          Ingrese su nombre y correo para acceder al formulario.
-        </p>
-        <input type="text" id="gateName" placeholder="" />
-        <input type="email" id="gateEmail" placeholder="" />
-        <button class="primary-btn" id="gateBtn" onclick="enterForm()"></button>
-          <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
-        </div>
-        </div>
-
-        <!-- Main Form (hidden until gate passed) -->
-        <div id="formSection" class="hidden">
+    <!-- Main Form -->
+    <div id="formSection">
       <div class="gate-card" style="border-left-color: var(--brand-green);">
         <p id="formIntroText" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
       </div>
