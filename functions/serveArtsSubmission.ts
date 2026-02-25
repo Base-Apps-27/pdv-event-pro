@@ -561,8 +561,6 @@ Deno.serve(async (req) => {
     // ===== LANGUAGE & DATA =====
     const SEGMENTS = ${segmentsJson};
     const IS_UNICA = ${isUnicaEvent};
-    let submitterName = '';
-    let submitterEmail = '';
     let currentLanguage = localStorage.getItem('artsFormLang') || 'es';
 
     const i18n = {
