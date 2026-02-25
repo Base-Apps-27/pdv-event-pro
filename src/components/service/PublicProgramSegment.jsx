@@ -490,7 +490,10 @@ export default function PublicProgramSegment({
 
             {/* Scripture References (for Message or Offering segments) */}
             {/* Live view is READ-ONLY: Only show BookOpen when parsed_verse_data already exists */}
-            {(isMessage || isOffering) && getData('parsed_verse_data') && onOpenVerses && (
+            {(isMessage || isOffering) && (
+              (getData('parsed_verse_data') && getData('parsed_verse_data').type === 'verse_list') || 
+              (getData('parsed_verse_data') && getData('parsed_verse_data').key_takeaways && getData('parsed_verse_data').key_takeaways.length > 0)
+            ) && onOpenVerses && (
               <Button
                 variant="outline"
                 size="sm"
