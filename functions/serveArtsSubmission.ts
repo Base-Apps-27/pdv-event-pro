@@ -257,21 +257,21 @@ Deno.serve(async (req) => {
     
     /* Song card — compact card for each song slot */
     .song-card {
-      background: var(--bg-light);
-      border: 1px solid var(--border-light);
+      background: var(--bg-white);
+      border: 1.5px solid var(--brand-green);
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
     }
     .song-card-header {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--brand-teal);
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--brand-green);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-light);
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      padding-bottom: 0;
+      border-bottom: none;
     }
 
     /* Gate */
