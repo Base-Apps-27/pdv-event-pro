@@ -215,9 +215,21 @@ export function useSegmentMutation() {
     const column = SEGMENT_FIELD_MAP[field] || field;
     const key = `seg:${entityId}:${column}`;
 
-    scheduleWrite(key, () =>
-      base44.entities.Segment.update(entityId, { [column]: value })
-    );
+    // DEBUG: Log the actual write operation
+    console.log(`[useSegmentMutation] Scheduling write for field="${field}" → column="${column}" value="${value}" entityId="${entityId}"`);
+
+    scheduleWrite(key, () => {
+      console.log(`[useSegmentMutation] Executing write: Segment.update(${entityId}, { ${column}: "${value}" })`);
+      return base44.entities.Segment.update(entityId, { [column]: value })
+        .then(result => {
+          console.log(`[useSegmentMutation] Write succeeded for field="${field}"`);
+          return result;
+        })
+        .catch(err => {
+          console.error(`[useSegmentMutation] Write FAILED for field="${field}":`, err);
+          throw err;
+        });
+    });
   }, [scheduleWrite]);
 
   // ── Songs mutation ──────────────────────────────────────────
