@@ -110,7 +110,6 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
   // Build data object with values in all possible field locations
   const data = {
     presenter: segment.presenter || "",
-    leader: segment.presenter || "",
     preacher: segment.preacher || "",
     message_title: segment.message_title || "",
     title: segment.message_title || "",
