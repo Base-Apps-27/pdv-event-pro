@@ -577,11 +577,168 @@ Deno.serve(async (req) => {
   </div>
 
   <script>
-    // ===== DATA =====
+    // ===== LANGUAGE & DATA =====
     const SEGMENTS = ${segmentsJson};
     const IS_UNICA = ${isUnicaEvent};
     let submitterName = '';
     let submitterEmail = '';
+    let currentLanguage = localStorage.getItem('artsFormLang') || 'es';
+
+    const i18n = {
+      es: {
+        // Gate
+        gateTitle: 'IDENTIFICACIÓN / IDENTIFICATION',
+        gateDesc: 'Ingrese su nombre y correo para acceder al formulario.',
+        gatePlaceholderName: 'Nombre completo',
+        gatePlaceholderEmail: 'Correo electrónico',
+        gateBtn: 'Continuar',
+        gateErrorName: 'Por favor ingrese su nombre.',
+        gateErrorEmail: 'Por favor ingrese un correo válido.',
+        
+        // Form intro
+        formIntro: 'A continuación encontrará los segmentos de Artes para este evento. Abra cada uno para ingresar los detalles de su presentación. Puede guardar progreso parcial y regresar luego para completar.',
+        
+        // Status
+        statusIncomplete: '🔴 Incompleto',
+        statusMinimum: '🟡 Mínimo',
+        statusComplete: '🟢 Completo',
+        missingArtType: 'Tipo de arte',
+        missingAsset: 'Al menos un enlace (canción, video, o guía)',
+        missingDanceStart: 'Cue inicio danza',
+        missingDanceEnd: 'Cue fin danza',
+        missingDanceSong: 'Canción de danza',
+        missingDramaStart: 'Cue inicio drama',
+        missingDramaEnd: 'Cue fin drama',
+        missingDramaSong: 'Canción de drama',
+        missingVideo: 'Enlace de video',
+        missingRunOfShow: 'Guía de Artes',
+        
+        // Form sections
+        artType: 'TIPO DE ARTE',
+        danceTitle: '🩰 DANZA',
+        dramaTitle: '🎭 DRAMA',
+        videoTitle: '🎬 VIDEO',
+        otherTitle: '✨ OTRO',
+        
+        // Fields
+        handheldMics: 'Handheld Mics',
+        headsetMics: 'Headset Mics',
+        startCue: 'Cue de Inicio',
+        endCue: 'Cue de Fin',
+        includeSongs: 'Incluir canción(es)',
+        videoName: 'Nombre del Video',
+        videoLink: 'Enlace',
+        videoDuration: 'Duración (seg)',
+        videoOwner: 'Responsable',
+        description: 'Descripción',
+        
+        // Songs
+        song1: 'Canción 1',
+        song2: 'Canción 2 (Opcional)',
+        song3: 'Canción 3 (Opcional)',
+        title: 'Título',
+        owner: 'Responsable',
+        link: 'Enlace',
+        
+        // Policy banners
+        policyUnicaSongs: 'Política Única: Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. Spotify/YouTube no permitido para Única únicamente.',
+        policyOtherSongs: 'Recomendado: Google Drive, OneDrive, Dropbox o Spotify con acceso público.',
+        policyUnicaVideo: 'Política Única: Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. YouTube no permitido.',
+        policyOtherVideo: 'Recomendado: Google Drive, OneDrive o Dropbox con acceso público. Streaming puede depender de conexión estable.',
+        artsDirections: '📋 GUÍA DE ARTES',
+        artsDirectionsNote: 'Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc.',
+        additionalNotes: '📝 NOTAS ADICIONALES',
+        notesPlaceholder: 'Detalles o instrucciones especiales',
+        
+        // Buttons
+        saveBtn: '💾 GUARDAR PROGRESO',
+        savingBtn: '⏳ Guardando...',
+        saveSuccess: '✅ Guardado exitosamente',
+        saveError: '❌ Error: ',
+        
+        // Empty state
+        noSegments: 'NO HAY SEGMENTOS DE ARTES',
+        noSegmentsDesc: 'No se encontraron segmentos de tipo "Artes" para este evento.',
+      },
+      en: {
+        // Gate
+        gateTitle: 'IDENTIFICATION',
+        gateDesc: 'Enter your name and email to access the form.',
+        gatePlaceholderName: 'Full name',
+        gatePlaceholderEmail: 'Email',
+        gateBtn: 'Continue',
+        gateErrorName: 'Please enter your name.',
+        gateErrorEmail: 'Please enter a valid email.',
+        
+        // Form intro
+        formIntro: 'Below you\'ll find the Arts segments for this event. Open each one to enter your presentation details. You can save partial progress and return later to complete.',
+        
+        // Status
+        statusIncomplete: '🔴 Incomplete',
+        statusMinimum: '🟡 Minimum',
+        statusComplete: '🟢 Complete',
+        missingArtType: 'Art type',
+        missingAsset: 'At least one link (song, video, or guide)',
+        missingDanceStart: 'Dance start cue',
+        missingDanceEnd: 'Dance end cue',
+        missingDanceSong: 'Dance song',
+        missingDramaStart: 'Drama start cue',
+        missingDramaEnd: 'Drama end cue',
+        missingDramaSong: 'Drama song',
+        missingVideo: 'Video link',
+        missingRunOfShow: 'Arts Directions',
+        
+        // Form sections
+        artType: 'ART TYPE',
+        danceTitle: '🩰 DANCE',
+        dramaTitle: '🎭 DRAMA',
+        videoTitle: '🎬 VIDEO',
+        otherTitle: '✨ OTHER',
+        
+        // Fields
+        handheldMics: 'Handheld Mics',
+        headsetMics: 'Headset Mics',
+        startCue: 'Start Cue',
+        endCue: 'End Cue',
+        includeSongs: 'Include song(s)',
+        videoName: 'Video Name',
+        videoLink: 'Link',
+        videoDuration: 'Length (sec)',
+        videoOwner: 'Owner',
+        description: 'Description',
+        
+        // Songs
+        song1: 'Song 1',
+        song2: 'Song 2 (Optional)',
+        song3: 'Song 3 (Optional)',
+        title: 'Title',
+        owner: 'Owner',
+        link: 'Link',
+        
+        // Policy banners
+        policyUnicaSongs: 'Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. Spotify/YouTube not allowed for Única only.',
+        policyOtherSongs: 'Recommended: Cloud storage or Spotify with public access.',
+        policyUnicaVideo: 'Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. YouTube not allowed.',
+        policyOtherVideo: 'Recommended: Cloud storage with public access. Streaming may depend on stable internet.',
+        artsDirections: '📋 ARTS DIRECTIONS',
+        artsDirectionsNote: 'Ensure the link has public permissions. Preferred: PDF or Google Doc.',
+        additionalNotes: '📝 ADDITIONAL NOTES',
+        notesPlaceholder: 'Special details or instructions',
+        
+        // Buttons
+        saveBtn: '💾 SAVE PROGRESS',
+        savingBtn: '⏳ Saving...',
+        saveSuccess: '✅ Saved successfully',
+        saveError: '❌ Error: ',
+        
+        // Empty state
+        noSegments: 'NO ARTS SEGMENTS',
+        noSegmentsDesc: 'No "Artes" segments found for this event.',
+      }
+    };
+
+    function t(key) { return i18n[currentLanguage][key] || key; }
+    function setLang(lang) { currentLanguage = lang; localStorage.setItem('artsFormLang', lang); location.reload(); }
 
     // ===== GATE =====
     function enterForm() {
