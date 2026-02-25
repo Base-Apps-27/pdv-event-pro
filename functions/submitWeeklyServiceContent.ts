@@ -260,6 +260,48 @@ Deno.serve(async (req) => {
                 scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
             }
             console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
+
+            // PIPELINE 2: Extract Key Takeaways (Async LLM - Best Effort)
+            let keyTakeaways = [];
+            try {
+                if (content && content.length > 100) {
+                    console.log(`[TAKEAWAYS_PIPELINE] Starting LLM extraction for submission`);
+                    const prompt = `
+Analyze the following text which is a sermon or message outline.
+Extract the "Key Takeaways" or "Main Points".
+These are usually the main headings, bullet points, or core actionable statements.
+Do NOT include bible verses in this list.
+Return ONLY a valid JSON array of strings.
+Example: ["Faith requires action", "Love your neighbor", "Pray without ceasing"]
+
+Text to analyze:
+${content.substring(0, 15000)}`;
+
+                    const llmResponse = await base44.integrations.Core.InvokeLLM({
+                        prompt: prompt,
+                        response_json_schema: {
+                            type: "object",
+                            properties: {
+                                takeaways: {
+                                    type: "array",
+                                    items: { type: "string" }
+                                }
+                            }
+                        }
+                    });
+
+                    if (llmResponse && llmResponse.takeaways && Array.isArray(llmResponse.takeaways)) {
+                        keyTakeaways = llmResponse.takeaways;
+                        console.log(`[TAKEAWAYS_PIPELINE] Extracted ${keyTakeaways.length} takeaways`);
+                    }
+                }
+            } catch (llmError) {
+                console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
+            }
+
+            if (keyTakeaways.length > 0) {
+                parsedData.key_takeaways = keyTakeaways;
+            }
         } else {
             console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");
             // DO NOT append raw content to projectionNotes.
