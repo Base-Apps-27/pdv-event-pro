@@ -210,7 +210,15 @@ export default function DayServiceEditor({
     },
     onSuccess: (result) => {
       if (result?.updated_date) captureServiceBaseline(result.updated_date);
-      queryClient.invalidateQueries({ queryKey: ['dayService', date, dayOfWeek] });
+      // 429 FIX (2026-02-25): Don't immediately refetch after metadata save.
+      // The metadata save fires every 3s and triggering a full refetch
+      // (loadWeeklyFromSessions → Segment.filter + PreSessionDetails.filter)
+      // causes 429 cascades, especially after reset which just created entities.
+      // Instead, mark the query as stale so it refetches on next user-initiated load.
+      queryClient.invalidateQueries({
+        queryKey: ['dayService', date, dayOfWeek],
+        refetchType: 'none',  // Mark stale but do NOT auto-refetch
+      });
       setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
     },
     onError: (error) => {

@@ -502,6 +502,13 @@ export function useWeeklyServiceHandlers({
       nextState._fromEntities = true;
       setServiceData(nextState);
 
+      // 429 FIX (2026-02-25): After reset, local state is already correct with fresh entity IDs.
+      // Do NOT let the metadata save's onSuccess trigger queryClient.invalidateQueries,
+      // because that fires loadWeeklyFromSessions immediately, competing with the reset's
+      // own Segment.create calls for API rate limits. Instead, we delay any refetch by 5s
+      // to let the platform rate limiter cool down.
+      // The reset already set local state — the UI is correct without a refetch.
+
       const resetLabel = targetSlots.length < slotNames.length
         ? `Horarios restablecidos: ${targetSlots.join(', ')}`
         : "Servicio restablecido al diseño original";
