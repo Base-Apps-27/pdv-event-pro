@@ -384,9 +384,9 @@ export function useWeeklyServiceHandlers({
         return segmentCopy;
       });
 
-      // Use serviceId prop (passed from DayServiceEditor) instead of trying to capture stale state.
-      // This ensures we have the correct ID even if async operations interleave.
-      if (!serviceId) {
+      // Use current serviceData.id directly (avoids stale state closure issues).
+      // serviceData is a dependency of this handler, so it's always fresh.
+      if (!serviceData?.id) {
          throw new Error("Service ID missing. Cannot reset. Please refresh the page.");
       }
 
@@ -417,7 +417,7 @@ export function useWeeklyServiceHandlers({
         if (!sessionId) {
           // Create Session on the fly
             const newSession = await base44.entities.Session.create({
-              service_id: serviceId,
+              service_id: serviceData.id,
               name: slotName,
               // Assuming default date/order logic is handled by backend or we accept defaults
               date: nextState.date
@@ -465,7 +465,7 @@ export function useWeeklyServiceHandlers({
           // Map to entity structure, ensuring strict schema compliance
           const entityPayload = {
             session_id: sessionId,
-            service_id: serviceId,
+            service_id: serviceData.id,
             order: i + 1,
             title: segData.title || "Untitled",
             segment_type: resolvedType,

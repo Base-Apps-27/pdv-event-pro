@@ -238,7 +238,6 @@ export default function DayServiceEditor({
     setShowResetConfirm, editingAnnouncement, createAnnouncementMutation,
     slotNames,
     segmentMutation,
-    serviceId: existingData?.id,  // Pass service ID to avoid stale state issues
   });
 
   // ── Initialize service data ──
