@@ -213,3 +213,53 @@ Missing from SEGMENT_FIELD_MAP in useSegmentMutation:
 ### P4: Make reset use bulkCreate instead of sequential creates
 - **Impact:** Reduces 429 risk during reset
 - **Risk:** Low (API supports it)
+
+---
+
+## 8. POST-IMPLEMENTATION VERIFICATION (2026-02-25)
+
+### Verification Method
+Code re-read of all affected files + production DB entity queries.
+
+### Results
+
+| Finding | Fix | Status | Evidence |
+|---------|-----|--------|----------|
+| P0: ensureRecurringServices writes JSON blobs | Rewrite to create Session+Segment entities | ✅ VERIFIED | DB has Session `699d280094be8a434b905a65` (9:30am) + `699d283987a8af194db3a14a` (11:30am) with Segment children for service `699bdf1cf3c959efcc24d06b`. Function test returns `already_exists`. |
+| P1: `leader` missing from SEGMENT_FIELD_MAP | Added `leader: "presenter"` | ✅ VERIFIED | Code line 47: `leader: "presenter"` with comment referencing this audit. |
+| P2: Type normalization duplicated in 4 files | Extracted to `segmentTypeMap.js` | ✅ VERIFIED | `EmptyDayPrompt` imports `resolveSegmentEnum`. `weeklySessionSync` imports `normalizeSegmentType`. `DayServiceEditor` imports `normalizeSegmentType`. `useWeeklyServiceHandlers` imports `resolveSegmentEnum`. Backend has sync'd inline copy. |
+| P3: Reset has no atomicity | Added pre-reset snapshot logging | ✅ PARTIAL | Snapshot logged before delete. Auto-rollback deferred (Phase 2). |
+| P4: Public form mid-reset vulnerability | Not yet addressed | ⚠️ DEFERRED | Documented risk. Mitigation: entity existence check before update. |
+| P5: Dead blueprint slot code in read path | Not addressed (harmless) | ⚠️ HARMLESS | `blueprintSlot` is always undefined for entity-backed data. No functional impact. |
+| P6: No concurrent operation protection | Accepted tradeoff | ⚠️ ACCEPTED | Per DECISION-002. Last-write-wins semantics. |
+| 429 cascade after metadata save | Changed to `refetchType: 'none'` | ✅ VERIFIED | Metadata save no longer triggers cascading refetch. |
+
+### Entity Verification (Production DB)
+
+**Service** `699bdf1cf3c959efcc24d06b`:
+- `origin`: "auto_created" ← ensureRecurringServices created it
+- `service_type`: "weekly" ✅
+- `date`: "2026-03-01" ✅
+- `day_of_week`: "Sunday" ✅
+- Still has legacy JSON blob fields (`9:30am`, `11:30am`) — these are stale pre-fix data, ignored by STRICT MODE
+
+**Sessions** (2 found):
+- `699d280094be8a434b905a65` — name: "9:30am", order: 1, service_id: matches ✅
+- `699d283987a8af194db3a14a` — name: "11:30am", order: 2, service_id: matches ✅
+
+**Segments** (10 found across both sessions):
+- Session 11:30am: 5 segments (Alabanza, Bienvenida, Ofrenda, Plenaria, Oración) with correct `segment_type` enum values, `ui_fields`, `session_id`, `service_id` ✅
+- Session 9:30am: 5 segments (matching structure) ✅
+- All segments have `parent_segment_id: null` (top-level, no orphaned children) ✅
+- All segments created 2026-02-25 22:52 (post-reset timestamp matches) ✅
+
+### Data Flow Integrity Check
+
+| Flow | Path | Status |
+|------|------|--------|
+| Manual creation (EmptyDayPrompt) | Creates Service → Session → Segment entities | ✅ Uses `resolveSegmentEnum` from shared module |
+| Auto creation (ensureRecurringServices) | Creates Service → Session → Segment entities | ✅ Uses inlined `resolveSegmentEnum` (sync'd) |
+| Hydration (DayServiceEditor) | Service.filter → loadWeeklyFromSessions → batch Segment.filter | ✅ Batch query, no N+1 |
+| Field edit (useSegmentMutation) | `leader` → `presenter` column via SEGMENT_FIELD_MAP | ✅ |
+| Reset (executeResetToBlueprint) | Snapshot → delete → create per slot | ✅ Snapshot logged, type normalization shared |
+| Metadata save (DayServiceEditor) | Service.update → `refetchType: 'none'` | ✅ No cascade |
