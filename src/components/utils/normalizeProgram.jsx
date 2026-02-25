@@ -41,16 +41,20 @@ export function applyTimeAdjustments(segments, liveAdjustments = [], sessions = 
 
     const sessionName = sessionNameMap.get(seg.session_id) || null;
 
-    if (sessionName) {
-      // Resolve via session name (e.g. "9:30am")
-      const adj = liveAdjustments.find(a => a.time_slot === sessionName);
+    if (seg.session_id && seg.session_id !== 'slot-break') {
+      // Resolve via explicit matching based on adjustment types
+      const adj = liveAdjustments.find(a => 
+        (a.adjustment_type === 'time_slot' && sessionName && a.time_slot === sessionName) || 
+        (a.adjustment_type === 'session' && a.session_id === seg.session_id) ||
+        (a.adjustment_type === 'global')
+      );
       if (adj) offsetMinutes = adj.offset_minutes || 0;
     } else if (seg.session_id === 'slot-break') {
       // The inter-service break follows the first slot's adjustment
       const firstAdj = liveAdjustments.find(a => a.time_slot && /^\d+:\d+[ap]m$/i.test(a.time_slot));
       if (firstAdj) offsetMinutes = firstAdj.offset_minutes || 0;
     } else {
-      // Global adjustment (Custom services or events)
+      // Global adjustment (Custom services or events without session_id)
       const globalAdj = liveAdjustments.find(a => a.adjustment_type === 'global');
       if (globalAdj) offsetMinutes = globalAdj.offset_minutes || 0;
     }
