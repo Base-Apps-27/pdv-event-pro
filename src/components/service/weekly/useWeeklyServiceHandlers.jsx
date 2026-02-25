@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { safeParseTimeSlot } from "@/components/service/pdfUtils";
+import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 
 export function useWeeklyServiceHandlers({
   serviceData,    // NOTE: This is the serviceData snapshot at last render — use serviceDataRef for latest in callbacks
@@ -384,6 +385,22 @@ export function useWeeklyServiceHandlers({
         return segmentCopy;
       });
 
+      // DECISION-002 Contract 4: Snapshot before destructive reset.
+      // Capture segment IDs so we can log them if something fails.
+      const preResetSnapshot = {};
+      for (const slotName of (slotsToReset && slotsToReset.length > 0 ? slotsToReset : slotNames)) {
+        const sessionId = serviceData?._sessionIds?.[slotName];
+        if (sessionId) {
+          try {
+            const existingSegs = await base44.entities.Segment.filter({ session_id: sessionId });
+            preResetSnapshot[slotName] = existingSegs.map(s => ({ id: s.id, title: s.title, type: s.segment_type }));
+          } catch (e) {
+            preResetSnapshot[slotName] = [];
+          }
+        }
+      }
+      console.log("[executeResetToBlueprint] Pre-reset snapshot:", JSON.stringify(preResetSnapshot));
+
       // Use current serviceData.id directly (avoids stale state closure issues).
       // serviceData is a dependency of this handler, so it's always fresh.
       if (!serviceData?.id) {
@@ -439,28 +456,8 @@ export function useWeeklyServiceHandlers({
         for (let i = 0; i < newSegmentsData.length; i++) {
           const segData = newSegmentsData[i];
           
-          // Enum normalization for segment_type
-          const typeMap = {
-            'worship': 'Alabanza', 'alabanza': 'Alabanza',
-            'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
-            'offering': 'Ofrenda', 'ofrenda': 'Ofrenda',
-            'message': 'Plenaria', 'plenaria': 'Plenaria',
-            'video': 'Video',
-            'anuncio': 'Anuncio',
-            'dinamica': 'Dinámica',
-            'break': 'Break',
-            'techonly': 'TechOnly',
-            'prayer': 'Oración', 'oracion': 'Oración',
-            'special': 'Especial', 'especial': 'Especial',
-            'closing': 'Cierre', 'cierre': 'Cierre',
-            'ministry': 'Ministración', 'ministracion': 'Ministración',
-            'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel', 'receso': 'Receso', 'almuerzo': 'Almuerzo'
-          };
-          
-          let resolvedType = "Especial"; // Safe default enum value
-          if (segData.type) {
-            resolvedType = typeMap[segData.type.toLowerCase()] || segData.type;
-          }
+          // DECISION-002 Contract 2: Shared type normalization
+          const resolvedType = resolveSegmentEnum(segData.type);
 
           // Map to entity structure, ensuring strict schema compliance
           const entityPayload = {
