@@ -810,6 +810,13 @@ Deno.serve(async (req) => {
     }
 
     // ===== RENDER =====
+    function initAllLabels() {
+      initGateLabels();
+      document.getElementById('formIntroText').textContent = t('formIntro');
+      document.getElementById('emptyTitle').textContent = t('noSegments');
+      document.getElementById('emptyDesc').textContent = t('noSegmentsDesc');
+    }
+
     function renderAccordions() {
       const container = document.getElementById('accordionContainer');
       if (SEGMENTS.length === 0) {
