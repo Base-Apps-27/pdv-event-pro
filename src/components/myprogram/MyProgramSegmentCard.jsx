@@ -57,12 +57,23 @@ const DEPT_LABEL_MAP = {
 export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
+  const [showResourcesModal, setShowResourcesModal] = useState(false);
 
   const segmentType = segment.segment_type || segment.type || 'Especial';
   const isWorship = ['Alabanza', 'worship'].includes(segmentType);
   const isMessage = ['Plenaria', 'message', 'Message'].includes(segmentType);
   const isBreak = ['Break', 'Receso', 'Almuerzo'].includes(segmentType);
   const isSpecial = ['Especial', 'Special'].includes(segmentType);
+  const isArtes = ['Artes', 'Arts'].includes(segmentType);
+
+  // Check if segment has any resource links
+  const presentationUrl = getData('presentation_url');
+  const notesUrl = getData('notes_url');
+  const hasResourceLinks = segment.video_url || 
+    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
+    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
+    segment.arts_run_of_show_url ||
+    presentationUrl || notesUrl;
 
   const songs = isWorship ? getNormalizedSongs(segment).filter(s => s.title) : [];
   const countdown = getCountdown(segment, currentTime, status, t);
@@ -260,7 +271,7 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
         {/* View Verses / Key Points Button */}
         {getData('parsed_verse_data') && (
-          <div className="mt-2">
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
             <Button 
               variant="outline" 
               size="sm" 
@@ -272,6 +283,36 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span className="text-xs">Versos y Puntos Clave</span>
+            </Button>
+
+            {/* Resources Button - only show if segment has resource links */}
+            {hasResourceLinks && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResourcesModal(true)}
+                className="h-8 px-2 border-2 border-pink-500 text-pink-600 hover:bg-pink-50 hover:text-pink-700 text-xs gap-1"
+                title={t('resources.title')}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>{t('resources.title')}</span>
+              </Button>
+            )}
+          </div>
+        )}
+        
+        {/* If no verses but has resources */}
+        {!getData('parsed_verse_data') && hasResourceLinks && (
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowResourcesModal(true)}
+              className="h-8 px-2 border-2 border-pink-500 text-pink-600 hover:bg-pink-50 hover:text-pink-700 text-xs gap-1"
+              title={t('resources.title')}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>{t('resources.title')}</span>
             </Button>
           </div>
         )}
@@ -343,6 +384,13 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
         )}
       </div>
 
+      {/* Resources Modal */}
+      <SegmentResourcesModal
+        open={showResourcesModal}
+        onOpenChange={setShowResourcesModal}
+        segment={segment}
+        onOpenVerses={onOpenVerses}
+      />
     </div>
   );
 }
