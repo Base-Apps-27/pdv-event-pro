@@ -274,22 +274,28 @@ export default function PublicProgramSegment({
                     <span className="text-gray-400 text-sm line-through">- {formatTimeToEST(getData('end_time'))}</span>
                   )}
                   {/* Show original planned time crossed out */}
-                  {getData('start_time') && getData('start_time') !== segment.actual_start_time && (
+                  {(segment.original_start_time || getData('start_time')) && (segment.original_start_time || getData('start_time')) !== segment.actual_start_time && (
                     <span className="text-gray-400 text-xs line-through ml-1">
-                      (plan: {formatTimeToEST(getData('start_time'))})
+                      (plan: {formatTimeToEST(segment.original_start_time || getData('start_time'))})
                     </span>
                   )}
-                </>
-              ) : (
-                <>
+                  </>
+                  ) : (
+                  <>
                   <span className="font-bold text-base sm:text-lg text-gray-900">
                     {getData('start_time') ? formatTimeToEST(getData('start_time')) : "-"}
                   </span>
                   {getData('end_time') && (
                     <span className="text-gray-600 text-sm">- {formatTimeToEST(getData('end_time'))}</span>
                   )}
-                </>
-              )}
+                  {/* Show original planned time if time slot was adjusted globally */}
+                  {segment._time_adjusted && segment.original_start_time && (
+                    <span className="text-gray-400 text-xs line-through ml-1">
+                      (plan: {formatTimeToEST(segment.original_start_time)})
+                    </span>
+                  )}
+                  </>
+                  )}
               {segment.duration_min && (
                 <span className="text-xs sm:text-sm text-gray-600">({segment.duration_min} min)</span>
               )}
