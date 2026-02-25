@@ -228,7 +228,7 @@ export function useWeeklyServiceHandlers({
           if (seg._entityId && sourceSegments[idx]) {
             const src = sourceSegments[idx];
             // Copy text fields from source to target entity
-            const textFields = ['leader', 'preacher', 'presenter', 'translator', 'verse',
+            const textFields = ['presenter', 'preacher', 'translator', 'verse',
               'messageTitle', 'description_details', 'coordinator_notes', 'projection_notes',
               'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes'];
             textFields.forEach(f => {
