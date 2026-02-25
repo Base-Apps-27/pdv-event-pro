@@ -13,6 +13,7 @@
  */
 
 import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
+import { normalizeSegmentType } from "@/components/utils/segmentTypeMap";
 
 // ═══════════════════════════════════════════════════════════════
 // LOAD: Session + Segment entities → Weekly Service JSON format
@@ -235,36 +236,20 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
 /**
  * Find the matching blueprint segment by type and position.
  */
+// DECISION-002 Contract 2: Uses shared normalizeSegmentType from segmentTypeMap
 function findMatchingBlueprintSegment(segType, blueprintSlotSegments, idx) {
   if (!blueprintSlotSegments) return null;
 
-  const normalizeType = (t) => {
-    if (!t) return "";
-    const lower = t.toLowerCase();
-    if (lower === "alabanza" || lower === "worship") return "worship";
-    if (lower === "bienvenida" || lower === "welcome") return "welcome";
-    if (lower === "ofrenda" || lower === "ofrendas" || lower === "offering")
-      return "offering";
-    if (
-      lower === "plenaria" ||
-      lower === "predica" ||
-      lower === "mensaje" ||
-      lower === "message"
-    )
-      return "message";
-    return lower;
-  };
-
-  const targetType = normalizeType(segType);
+  const targetType = normalizeSegmentType(segType);
 
   // Try position match first
   const positional = blueprintSlotSegments[idx];
-  if (positional && normalizeType(positional.type) === targetType) {
+  if (positional && normalizeSegmentType(positional.type) === targetType) {
     return positional;
   }
 
   // Fall back to type match
   return blueprintSlotSegments.find(
-    (b) => normalizeType(b.type) === targetType
+    (b) => normalizeSegmentType(b.type) === targetType
   );
 }
