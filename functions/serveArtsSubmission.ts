@@ -239,13 +239,19 @@ Deno.serve(async (req) => {
 
     /* Link hint — subtle inline helper text shown beneath URL fields */
     .link-hint {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      margin-top: 4px;
-      line-height: 1.4;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      line-height: 1.5;
+      padding: 8px 12px;
+      background: #F0F9FF;
+      border-left: 3px solid var(--brand-teal);
+      border-radius: 4px;
     }
     .link-hint-strict {
-      color: #B45309;
+      background: #FFF7ED;
+      border-left-color: #F59E0B;
+      color: #92400E;
     }
 
     /* Gate */
@@ -721,7 +727,14 @@ Deno.serve(async (req) => {
           <div class="type-section">
             <div class="type-section-title">🎬 VIDEO</div>
             <div class="form-group"><label>Nombre del Video / Video Name</label><input type="text" value="\${esc(seg.video_name)}" onchange="updateField('\${seg.id}','video_name',this.value)"></div>
-            <div class="form-group"><label>Enlace / Link</label><input type="url" value="\${esc(seg.video_url)}" onchange="updateField('\${seg.id}','video_url',this.value)" placeholder="https://drive.google.com/..."><div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente. No YouTube.' : 'Preferible: Google Drive, OneDrive, Dropbox.'}</div></div>
+            <div class="form-group">
+              <label>Enlace / Link</label>
+              <input type="url" value="\${esc(seg.video_url)}" onchange="updateField('\${seg.id}','video_url',this.value)" placeholder="https://drive.google.com/...">
+              <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA 
+                ? '<strong>Única:</strong> Solo se aceptan archivos en Google Drive, OneDrive o Dropbox con acceso público. YouTube no es permitido. / <em>Only Google Drive, OneDrive, or Dropbox files with public access. YouTube is not allowed.</em>' 
+                : 'Recomendado: Google Drive, OneDrive o Dropbox con acceso público. YouTube puede depender de conexión a internet estable. / <em>Recommended: Google Drive, OneDrive, or Dropbox with public access.</em>'
+              }</div>
+            </div>
             <div class="form-row">
               <div class="form-group"><label>Duración (seg) / Length (sec)</label><input type="number" min="0" value="\${seg.video_length_sec}" onchange="updateField('\${seg.id}','video_length_sec',parseInt(this.value)||0)"></div>
               <div class="form-group"><label>Responsable / Owner</label><input type="text" value="\${esc(seg.video_owner)}" onchange="updateField('\${seg.id}','video_owner',this.value)"></div>
@@ -743,7 +756,7 @@ Deno.serve(async (req) => {
           <div class="form-group">
             <label>Enlace (PDF/Documento) / Link (PDF/Document)</label>
             <input type="url" value="\${esc(seg.arts_run_of_show_url)}" onchange="updateField('\${seg.id}','arts_run_of_show_url',this.value)" placeholder="https://drive.google.com/...">
-            <div class="link-hint">Enlace público (cualquiera con el enlace puede ver) / Public link (anyone with the link can view)</div>
+            <div class="link-hint">Asegúrese de que el enlace tenga permisos públicos ("Cualquiera con el enlace puede ver"). PDF o Google Doc preferible. / <em>Ensure the link has public permissions ("Anyone with the link can view"). PDF or Google Doc preferred.</em></div>
           </div>
         </div>
 
@@ -782,21 +795,30 @@ Deno.serve(async (req) => {
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 1 / Song 1</div>
           <input type="text" value="\${esc(s1Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_title',this.value)" style="margin-bottom:6px">
           <input type="url" value="\${esc(s1Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_source',this.value)" style="margin-bottom:2px">
-          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente. No Spotify/YouTube.' : 'Preferible: Google Drive, OneDrive, Dropbox.'}</div>
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA 
+            ? '<strong>Única:</strong> Solo se aceptan archivos en Google Drive, OneDrive o Dropbox con acceso público. No se permiten Spotify, Apple Music ni YouTube. / <em>Only Google Drive, OneDrive, or Dropbox files with public access. Spotify, Apple Music, and YouTube are not allowed.</em>' 
+            : 'Recomendado: Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). Los enlaces de streaming pueden depender de conexión a internet. / <em>Recommended: Google Drive, OneDrive, or Dropbox with public access. Streaming links may depend on stable internet.</em>'
+          }</div>
           <input type="text" value="\${esc(s1Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_owner',this.value)">
         </div>
         <div class="song-slot">
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 2 / Song 2 (opcional)</div>
           <input type="text" value="\${esc(s2Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_2_title',this.value)" style="margin-bottom:6px">
           <input type="url" value="\${esc(s2Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_2_url',this.value)" style="margin-bottom:2px">
-          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente.' : 'Preferible: Drive, OneDrive, Dropbox.'}</div>
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA 
+            ? '<strong>Única:</strong> Google Drive, OneDrive o Dropbox solamente. / <em>Google Drive, OneDrive, or Dropbox only.</em>' 
+            : 'Recomendado: Google Drive, OneDrive o Dropbox.'
+          }</div>
           <input type="text" value="\${esc(s2Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_2_owner',this.value)">
         </div>
         <div class="song-slot">
           <div style="font-size:0.8rem;font-weight:600;color:#9D174D;margin-bottom:6px">Canción 3 / Song 3 (opcional)</div>
           <input type="text" value="\${esc(s3Title)}" placeholder="Título / Title" onchange="updateField('\${seg.id}','\${prefix}_song_3_title',this.value)" style="margin-bottom:6px">
           <input type="url" value="\${esc(s3Url)}" placeholder="Enlace / Link" onchange="updateField('\${seg.id}','\${prefix}_song_3_url',this.value)" style="margin-bottom:2px">
-          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA ? 'Drive/Dropbox/OneDrive solamente.' : 'Preferible: Drive, OneDrive, Dropbox.'}</div>
+          <div class="link-hint \${IS_UNICA ? 'link-hint-strict' : ''}">\${IS_UNICA 
+            ? '<strong>Única:</strong> Google Drive, OneDrive o Dropbox solamente. / <em>Google Drive, OneDrive, or Dropbox only.</em>' 
+            : 'Recomendado: Google Drive, OneDrive o Dropbox.'
+          }</div>
           <input type="text" value="\${esc(s3Owner)}" placeholder="Responsable / Owner" onchange="updateField('\${seg.id}','\${prefix}_song_3_owner',this.value)">
         </div>
       \`;
