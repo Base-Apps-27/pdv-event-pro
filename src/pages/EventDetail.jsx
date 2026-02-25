@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio, Palette } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
@@ -292,7 +292,6 @@ export default function EventDetail() {
                     rel="noopener noreferrer" 
                     className="flex items-center w-full"
                     onClick={async (e) => {
-                      // Copy link when clicking, also opens in new tab
                       try {
                         const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
                         await navigator.clipboard.writeText(url);
@@ -304,6 +303,26 @@ export default function EventDetail() {
                   >
                     <LinkIcon className="w-4 h-4 mr-2" />
                     {t('eventDetail.speakerForm')}
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a 
+                    href={`${window.location.origin}/api/functions/serveArtsSubmission?event_id=${eventId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center w-full"
+                    onClick={async (e) => {
+                      try {
+                        const url = `${window.location.origin}/api/functions/serveArtsSubmission?event_id=${eventId}`;
+                        await navigator.clipboard.writeText(url);
+                        toast.success(t('eventDetail.linkCopied'));
+                      } catch (err) {
+                        // Silent fail on copy, still opens link
+                      }
+                    }}
+                  >
+                    <Palette className="w-4 h-4 mr-2" />
+                    {t('eventDetail.artsForm')}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
