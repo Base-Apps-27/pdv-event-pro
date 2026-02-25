@@ -238,9 +238,15 @@ export function SegmentAutocomplete({ service, segmentIndex, field, placeholder,
   const segment = serviceData?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
   const { updateSegmentField, mutateSegmentField, mutateSubAssignment } = useContext(UpdatersContext);
+  const [inputValue, setInputValue] = useState(value);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value, service, segmentIndex, field]);
 
   const handleChange = (e) => {
     const val = e.target.value;
+    setInputValue(val);
     updateSegmentField(service, segmentIndex, field, val);
 
     if (!segment?._entityId) return;
@@ -269,7 +275,7 @@ export function SegmentAutocomplete({ service, segmentIndex, field, placeholder,
     <AutocompleteInput
       type={type}
       placeholder={placeholder}
-      value={value}
+      value={inputValue}
       onChange={handleChange}
       className={className}
     />
