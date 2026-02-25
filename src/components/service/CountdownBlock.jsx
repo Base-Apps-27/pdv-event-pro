@@ -94,7 +94,7 @@ export default function CountdownBlock({
 
     return {
       countdownText: text,
-      isLiveAdjusted: segment.is_live_adjusted || false,
+      isLiveAdjusted: segment.is_live_adjusted || segment._time_adjusted || false,
       progressPercent
     };
   }, [segment, currentTime, serviceDate, displayMode]);
