@@ -558,8 +558,6 @@ Deno.serve(async (req) => {
         </div>
         </div>
 
-        <script>initAllLabels();</script>
-
         <!-- Main Form (hidden until gate passed) -->
         <div id="formSection" class="hidden">
       <div class="gate-card" style="border-left-color: var(--brand-green);">
