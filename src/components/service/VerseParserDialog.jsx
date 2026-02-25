@@ -249,6 +249,15 @@ function VerseParserDialog({
     if (!parsedData) return <p className="text-gray-500 text-sm italic text-center py-8">{t.noData}</p>;
 
     if (parsedData.type === 'empty') {
+      if (parsedData.key_takeaways && parsedData.key_takeaways.length > 0) {
+        return (
+          <div className="text-center py-4 mb-2 border-b border-gray-100 pb-4">
+            <p className="text-gray-500 text-sm italic">
+              {language === 'es' ? 'No se encontraron referencias bíblicas, pero sí puntos clave.' : 'No scripture references found, but key points were extracted.'}
+            </p>
+          </div>
+        );
+      }
       return <p className="text-gray-500 text-sm italic text-center py-8">{t.noData}</p>;
     }
 
