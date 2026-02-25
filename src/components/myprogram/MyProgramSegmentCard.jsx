@@ -53,7 +53,7 @@ const DEPT_LABEL_MAP = {
   livestream: 'Livestream',
 };
 
-export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
+export default function MyProgramSegmentCard({ segment, status, department, currentTime }) {
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
 
