@@ -152,7 +152,7 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
         </div>
         <div className="flex gap-2 flex-wrap">
           <Badge variant="secondary" className={`text-xs px-2 py-0.5 font-medium ${typeBadgeClass}`}>
-            {segment.segment_type}
+            {segmentType}
           </Badge>
           {segment.requires_translation && (
             <Badge variant="outline" className="text-xs px-2 py-0.5 border-purple-200 text-purple-700 bg-purple-50 gap-1">
