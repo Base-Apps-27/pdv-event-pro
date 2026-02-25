@@ -499,7 +499,10 @@ export default function PublicProgramSegment({
                 size="sm"
                 onClick={() => onOpenVerses({
                   parsedData: getData('parsed_verse_data'),
-                  rawText: getData('scripture_references') || getData('verse')
+                  rawText: getData('scripture_references') || getData('verse'),
+                  presentationUrl,
+                  notesUrl,
+                  isSlidesOnly
                 })}
                 className="h-7 px-2 border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white text-xs gap-1"
                 title={t('live.viewVerses') || 'Ver Versos'}

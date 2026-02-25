@@ -266,7 +266,10 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
               className="gap-2 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 h-8"
               onClick={() => onOpenVerses({
                 parsedData: getData('parsed_verse_data'),
-                rawText: getData('submitted_content')
+                rawText: getData('submitted_content'),
+                presentationUrl: getData('presentation_url'),
+                notesUrl: getData('notes_url'),
+                isSlidesOnly: getData('content_is_slides_only')
               })}
             >
               <BookOpen className="w-3.5 h-3.5" />

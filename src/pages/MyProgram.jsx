@@ -283,6 +283,9 @@ export default function MyProgram() {
           onOpenChange={(open) => { if (!open) setVerseModalData(null); }}
           parsedData={verseModalData.parsedData}
           rawText={verseModalData.rawText}
+          presentationUrl={verseModalData.presentationUrl}
+          notesUrl={verseModalData.notesUrl}
+          isSlidesOnly={verseModalData.isSlidesOnly}
         />
       )}
     </div>

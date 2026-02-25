@@ -5,11 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, List, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Monitor } from "lucide-react";
+
 export default function StructuredVersesModal({ 
   open, 
   onOpenChange, 
   parsedData,
   rawText,
+  presentationUrl,
+  notesUrl,
+  isSlidesOnly,
   language = 'es' 
 }) {
   const texts = {
@@ -19,7 +24,10 @@ export default function StructuredVersesModal({
       outline: "Bosquejo del Mensaje",
       text: "Texto",
       close: "Cerrar",
-      noData: "No hay datos disponibles"
+      noData: "No hay datos disponibles",
+      openSlides: "Abrir Slides",
+      onlySlides: "Solo Slides",
+      addNotes: "Notas Adicionales"
     },
     en: {
       title: "Verses and Key Points",
@@ -27,7 +35,10 @@ export default function StructuredVersesModal({
       outline: "Message Outline",
       text: "Text",
       close: "Close",
-      noData: "No data available"
+      noData: "No data available",
+      openSlides: "Open Slides",
+      onlySlides: "Slides Only",
+      addNotes: "Additional Notes"
     }
   };
 
@@ -164,6 +175,26 @@ export default function StructuredVersesModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
+          {(presentationUrl || notesUrl) && (
+            <div className="flex flex-wrap gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+              {presentationUrl && (
+                <Button asChild className={`gap-2 ${isSlidesOnly ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+                  <a href={presentationUrl} target="_blank" rel="noopener noreferrer">
+                    <Monitor className="w-4 h-4" />
+                    {isSlidesOnly ? t.onlySlides : t.openSlides}
+                  </a>
+                </Button>
+              )}
+              {notesUrl && (
+                <Button asChild variant="outline" className="gap-2 border-purple-500 text-purple-700 hover:bg-purple-50">
+                  <a href={notesUrl} target="_blank" rel="noopener noreferrer">
+                    <FileText className="w-4 h-4" />
+                    {t.addNotes}
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
           {renderKeyTakeaways()}
           {renderContent()}
         </div>
