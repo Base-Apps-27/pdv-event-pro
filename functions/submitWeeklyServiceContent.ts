@@ -456,6 +456,18 @@ ${content.substring(0, 15000)}`;
         }
         console.log("[INLINE_PROCESS] Audit record(s) created");
 
+        // EXPLICIT CACHE REFRESH: Since Segment entity automation is disabled,
+        // we explicitly trigger a cache rebuild so the public displays update instantly.
+        try {
+            await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+                trigger: 'weekly_service_form_submission',
+                changedEntityType: 'Segment',
+                changedEntityId: targetSegmentEntity ? targetSegmentEntity.id : null
+            });
+        } catch (cacheErr) {
+            console.error('[submitWeeklyServiceContent] Cache refresh failed (non-critical):', cacheErr.message);
+        }
+
         // Success
         const responsePayload = { success: true };
         if (idempotencyKey) {
