@@ -20,7 +20,7 @@ function parseTimeToMinutes(timeStr) {
 
 import MyProgramPreSessionCard from './MyProgramPreSessionCard';
 
-export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, preServiceNotes, selectedSession, onOpenVerses, segmentRefs }) {
+export default function MyProgramTimeline({ segments, sessionFilter, department, currentTime, sessionDate, preSessionDetails, preServiceNotes, selectedSession, segmentRefs }) {
   const { t } = useLanguage();
   const nowRef = useRef(null);
   const hasScrolled = useRef(false);
