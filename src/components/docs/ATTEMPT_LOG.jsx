@@ -63,3 +63,31 @@
 **What was attempted:** Added a pre-reset snapshot that captures all existing segment IDs + titles before deletion. Logged to console for debugging. This doesn't provide automatic rollback but ensures traceability of what was deleted if reset partially fails.
 **Result:** SUCCESS (partial — logging only, not auto-rollback)
 **Disposition:** IMPLEMENTED (Phase 1 — logging. Phase 2 — auto-rollback — deferred.)
+
+## [ATT-009] Fix 429 cascade after metadata save / reset
+**Date:** 2026-02-25
+**Surfaces:** DayServiceEditor (saveMetadataMutation.onSuccess)
+**What was attempted:** Changed `queryClient.invalidateQueries` in metadata save's `onSuccess` from default `refetchType` (which auto-refetches) to `refetchType: 'none'` (marks stale but doesn't trigger immediate refetch). The metadata auto-save fires every 3s; each save was triggering loadWeeklyFromSessions → 2 API calls (Segment.filter + PreSessionDetails.filter), which cascaded into 429 rate limits especially after reset (which creates many entities in rapid succession).
+**Result:** SUCCESS — 429 errors eliminated after reset
+**Disposition:** IMPLEMENTED
+
+## [ATT-010] Post-Implementation Verification Audit
+**Date:** 2026-02-25
+**Surfaces:** All surfaces from ATT-004
+**What was attempted:** Re-read all code files AND queried production DB to verify each audit finding was addressed.
+**Result:** COMPLETED — Verification results:
+- P0 (ensureRecurringServices entity-first): ✅ VERIFIED. DB confirms Session + Segment entities exist for auto-created service 699bdf1cf3c959efcc24d06b. Function test returns `already_exists`.
+- P1 (leader → presenter mapping): ✅ VERIFIED. `SEGMENT_FIELD_MAP.leader = "presenter"` present in code.
+- P2 (shared type normalization): ✅ VERIFIED. All 4 frontend consumers import from `segmentTypeMap.js`. Backend has sync'd inline copy.
+- P3 (reset snapshot): ✅ VERIFIED. Pre-reset snapshot logs segment IDs before deletion. Auto-rollback deferred.
+- P4 (public form mid-reset vulnerability): ⚠️ NOT YET ADDRESSED (documented risk, not in P0-P3 scope)
+- P5 (dead blueprint slot code in read path): ⚠️ HARMLESS — dead code for entity-backed segments, only affects pre-migration data
+- P6 (concurrent ops): ⚠️ ACCEPTED TRADEOFF per DECISION-002
+- 429 fix (ATT-009): ✅ VERIFIED. Metadata save no longer triggers cascading refetches.
+**Disposition:** COMPLETED
+
+### Remaining Known Risks (documented, not blocking):
+1. **Stale JSON blobs on Service entity**: Pre-fix services still have `9:30am`/`11:30am` JSON arrays. Harmless (ignored by STRICT MODE) but not cleaned up. Non-destructive cleanup could be done later.
+2. **Public form mid-reset**: Speaker submission could fail if admin resets segments during form open. Mitigation: check entity existence before Segment.update() in submitWeeklyServiceContent.
+3. **Reset partial failure**: Sequential segment creation could fail mid-loop. Mitigation (deferred): bulkCreate + auto-rollback.
+4. **Blueprint versioning**: Still none. Reset always uses current blueprint. Accepted tradeoff per DECISION-002 Contract 3.
