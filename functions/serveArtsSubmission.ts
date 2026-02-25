@@ -865,14 +865,14 @@ Deno.serve(async (req) => {
         <!-- Dance Section -->
         <div id="dance-\${seg.id}" class="\${types.includes('DANCE') ? '' : 'hidden'}">
           <div class="type-section">
-            <div class="type-section-title">🩰 DANZA / DANCE</div>
+            <div class="type-section-title">\${typeLabel('DANCE')}</div>
             <div class="form-row">
-              <div class="form-group"><label>Handheld Mics</label><input type="number" min="0" value="\${seg.dance_handheld_mics}" onchange="updateField('\${seg.id}','dance_handheld_mics',parseInt(this.value)||0)"></div>
-              <div class="form-group"><label>Headset Mics</label><input type="number" min="0" value="\${seg.dance_headset_mics}" onchange="updateField('\${seg.id}','dance_headset_mics',parseInt(this.value)||0)"></div>
+              <div class="form-group"><label>\${t('handheldMics')}</label><input type="number" min="0" value="\${seg.dance_handheld_mics}" onchange="updateField('\${seg.id}','dance_handheld_mics',parseInt(this.value)||0)"></div>
+              <div class="form-group"><label>\${t('headsetMics')}</label><input type="number" min="0" value="\${seg.dance_headset_mics}" onchange="updateField('\${seg.id}','dance_headset_mics',parseInt(this.value)||0)"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Cue de Inicio / Start Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_start_cue',this.value)">\${esc(seg.dance_start_cue)}</textarea></div>
-              <div class="form-group"><label>Cue de Fin / End Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_end_cue',this.value)">\${esc(seg.dance_end_cue)}</textarea></div>
+              <div class="form-group"><label>\${t('startCue')}</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_start_cue',this.value)">\${esc(seg.dance_start_cue)}</textarea></div>
+              <div class="form-group"><label>\${t('endCue')}</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_end_cue',this.value)">\${esc(seg.dance_end_cue)}</textarea></div>
             </div>
             <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light)">
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:var(--text-primary); margin:0">
