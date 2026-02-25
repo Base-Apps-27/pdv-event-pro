@@ -205,9 +205,15 @@ export function SegmentTextarea({ service, segmentIndex, field, placeholder, cla
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
   const { updateSegmentField, mutateSegmentField } = useContext(UpdatersContext);
+  const [inputValue, setInputValue] = useState(value);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value, service, segmentIndex, field]);
 
   const handleChange = (e) => {
     const val = e.target.value;
+    setInputValue(val);
     updateSegmentField(service, segmentIndex, field, val);
     // Entity write: debounced field update
     if (mutateSegmentField && segment?._entityId) {
@@ -218,7 +224,7 @@ export function SegmentTextarea({ service, segmentIndex, field, placeholder, cla
   return (
     <Textarea
       placeholder={placeholder}
-      value={value}
+      value={inputValue}
       onChange={handleChange}
       className={className}
       rows={rows}
