@@ -557,12 +557,14 @@ Deno.serve(async (req) => {
         <input type="text" id="gateName" placeholder="" />
         <input type="email" id="gateEmail" placeholder="" />
         <button class="primary-btn" id="gateBtn" onclick="enterForm()"></button>
-        <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
-      </div>
-    </div>
+          <p id="gateError" style="color: #991B1B; font-size: 0.85rem; margin-top: 12px; display: none;"></p>
+        </div>
+        </div>
 
-    <!-- Main Form (hidden until gate passed) -->
-    <div id="formSection" class="hidden">
+        <script>initAllLabels();</script>
+
+        <!-- Main Form (hidden until gate passed) -->
+        <div id="formSection" class="hidden">
       <div class="gate-card" style="border-left-color: var(--brand-green);">
         <p id="formIntroText" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
       </div>
