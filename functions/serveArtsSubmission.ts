@@ -747,19 +747,26 @@ Deno.serve(async (req) => {
     function setLang(lang) { currentLanguage = lang; localStorage.setItem('artsFormLang', lang); location.reload(); }
 
     // ===== GATE =====
+    function initGateLabels() {
+      document.getElementById('gateTitle').textContent = t('gateTitle');
+      document.getElementById('gateDesc').textContent = t('gateDesc');
+      document.getElementById('gateName').placeholder = t('gatePlaceholderName');
+      document.getElementById('gateEmail').placeholder = t('gatePlaceholderEmail');
+      document.getElementById('gateBtn').textContent = t('gateBtn');
+    }
+
     function enterForm() {
       const name = document.getElementById('gateName').value.trim();
       const email = document.getElementById('gateEmail').value.trim();
       const errEl = document.getElementById('gateError');
 
       if (!name || name.length < 2) {
-        errEl.textContent = 'Por favor ingrese su nombre. / Please enter your name.';
+        errEl.textContent = t('gateErrorName');
         errEl.style.display = 'block';
         return;
       }
-      // Simple email format check (no real auth)
       if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
-        errEl.textContent = 'Por favor ingrese un correo válido. / Please enter a valid email.';
+        errEl.textContent = t('gateErrorEmail');
         errEl.style.display = 'block';
         return;
       }
