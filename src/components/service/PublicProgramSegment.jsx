@@ -353,10 +353,10 @@ export default function PublicProgramSegment({
              </div>
            )}
            {/* Leader: Show only for Worship segments */}
-           {isWorship && getData('leader') && (
+           {isWorship && (getData('leader') || getData('presenter')) && (
              <div className="flex items-center gap-2 text-green-600 text-sm">
                <Users className="w-4 h-4" />
-               <span className="font-semibold">Dirige: {normalizeName(getData('leader'))}</span>
+               <span className="font-semibold">Dirige: {normalizeName(getData('leader') || getData('presenter'))}</span>
              </div>
            )}
            {/* Preacher: Show only for Message segments - BLUE color */}
