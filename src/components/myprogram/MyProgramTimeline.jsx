@@ -161,7 +161,6 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
             status={seg._status}
             department={department}
             currentTime={currentTime}
-            onOpenVerses={onOpenVerses}
           />
         </div>
       ))}
