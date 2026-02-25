@@ -564,14 +564,7 @@ Deno.serve(async (req) => {
     <!-- Main Form (hidden until gate passed) -->
     <div id="formSection" class="hidden">
       <div class="gate-card" style="border-left-color: var(--brand-green);">
-        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
-          A continuación encontrará los segmentos de Artes para este evento. 
-          Abra cada uno para ingresar los detalles de su presentación. 
-          Puede guardar progreso parcial y regresar luego para completar.
-          <br/><em>Below you'll find the Arts segments for this event. 
-          Open each one to enter your presentation details. 
-          You can save partial progress and return later to complete.</em>
-        </p>
+        <p id="formIntroText" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
       </div>
       <div id="accordionContainer"></div>
       <div id="emptyState" class="empty-state hidden">
