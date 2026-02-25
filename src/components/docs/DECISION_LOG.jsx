@@ -18,3 +18,43 @@ Any functional improvement, UI enhancement, or schema change made to the **Verse
 **Consequences:**
 *   Reduces technical debt by preventing "forgotten" features in the Events module.
 *   Ensures a consistent experience for speakers who speak at both Sunday services and Special Events.
+
+---
+
+## [DECISION-002] Recurring Service Lifecycle Audit & Architecture Contract
+**Date:** 2026-02-25
+**Status:** ACTIVE
+**Context:** Multiple one-off fixes to the service creation, blueprint, and reset cycles caused cascading failures. A full audit identified 7 systemic issues (see SYSTEM_AUDIT_RECURRING_SERVICES.md).
+
+**Decision:**
+All code paths that create, load, or reset recurring service data MUST use Session + Segment entities (NOT Service JSON blobs). The following contracts are established:
+
+### Contract 1: Entity-First Data Path
+- **ensureRecurringServices** MUST create Session + Segment entities (same as EmptyDayPrompt)
+- Service entity stores ONLY metadata (name, date, day_of_week, status, selected_announcements, receso_notes, print_settings)
+- No segment data on Service entity blobs
+
+### Contract 2: Shared Type Normalization
+- A single `normalizeSegmentType(rawType) → enumType` function MUST be used everywhere
+- Located in: `components/utils/segmentNormalization.js` (or new shared util)
+- No inline typeMap objects
+
+### Contract 3: Blueprint is Read-Only Reference
+- Blueprints are stored as `Service.segments[]` (canonical array, not slot-keyed)
+- Blueprint data is cloned, never mutated
+- Reset uses the CURRENT blueprint (no versioning — accepted tradeoff)
+
+### Contract 4: Reset Atomicity
+- Before deleting segments, capture a snapshot of current segment IDs + data
+- If segment creation fails, log the error but do NOT leave a half-reset state
+- Use bulkCreate where possible to reduce API calls
+
+### Contract 5: Field Mapping Completeness
+- SEGMENT_FIELD_MAP must cover ALL fields the UI renders, including `leader`
+- Any new field added to BlueprintSegmentEditor MUST be added to SEGMENT_FIELD_MAP
+
+**Consequences:**
+- ensureRecurringServices requires update (P0)
+- SEGMENT_FIELD_MAP requires `leader` entry (P1)
+- Type normalization extraction (P2)
+- Reset hardening (P3)
