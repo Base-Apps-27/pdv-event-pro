@@ -41,6 +41,10 @@ import { toast } from "sonner";
  */
 const SEGMENT_FIELD_MAP = {
   // Person fields → single `presenter` column (resolved by segment type)
+  // P1 FIX (2026-02-25): `leader` is the UI field name for worship director.
+  // Without this mapping, edits to the worship leader were written to a phantom
+  // column and lost on reload. See SYSTEM_AUDIT_RECURRING_SERVICES.md §5.
+  leader: "presenter",
   preacher: "presenter",
   presenter: "presenter",
 
