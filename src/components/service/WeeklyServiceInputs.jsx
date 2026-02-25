@@ -174,9 +174,15 @@ export function SegmentTextInput({ service, segmentIndex, field, placeholder, cl
   const segment = useContext(ServiceDataContext)?.[service]?.[segmentIndex];
   const value = getSegmentData(segment, field) || "";
   const { updateSegmentField, mutateSegmentField } = useContext(UpdatersContext);
+  const [inputValue, setInputValue] = useState(value);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value, service, segmentIndex, field]);
 
   const handleChange = (e) => {
     const val = e.target.value;
+    setInputValue(val);
     updateSegmentField(service, segmentIndex, field, val);
     // Entity write: debounced field update
     if (mutateSegmentField && segment?._entityId) {
@@ -187,7 +193,7 @@ export function SegmentTextInput({ service, segmentIndex, field, placeholder, cl
   return (
     <Input
       placeholder={placeholder}
-      value={value}
+      value={inputValue}
       onChange={handleChange}
       className={className}
     />
