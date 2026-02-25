@@ -781,42 +781,40 @@ Deno.serve(async (req) => {
     // ===== STATUS CALCULATION =====
     function calcStatus(seg) {
       const types = seg.art_types || [];
-      if (types.length === 0) return { level: 'incomplete', label: '🔴 Incompleto', missing: ['Tipo de arte / Art type'] };
+      if (types.length === 0) return { level: 'incomplete', label: t('statusIncomplete'), missing: [t('missingArtType')] };
 
       const missing = [];
       const hasDance = types.includes('DANCE');
       const hasDrama = types.includes('DRAMA');
       const hasVideo = types.includes('VIDEO');
 
-      // Check for at least one primary asset (Minimum)
       const hasAnySong = !!(seg.dance_song_source || seg.drama_song_source || seg.dance_song_title || seg.drama_song_title);
       const hasVideoLink = !!(seg.video_url);
       const hasRunOfShow = !!(seg.arts_run_of_show_url);
       const hasAnyAsset = hasAnySong || hasVideoLink || hasRunOfShow;
 
       if (!hasAnyAsset) {
-        missing.push('Al menos un enlace (canción, video, o guía) / At least one link');
+        missing.push(t('missingAsset'));
       }
 
-      // Complete checks
       if (hasDance) {
-        if (!seg.dance_start_cue) missing.push('Cue inicio danza / Dance start cue');
-        if (!seg.dance_end_cue) missing.push('Cue fin danza / Dance end cue');
-        if (seg.dance_has_song && !seg.dance_song_source && !seg.dance_song_title) missing.push('Canción de danza / Dance song');
+        if (!seg.dance_start_cue) missing.push(t('missingDanceStart'));
+        if (!seg.dance_end_cue) missing.push(t('missingDanceEnd'));
+        if (seg.dance_has_song && !seg.dance_song_source && !seg.dance_song_title) missing.push(t('missingDanceSong'));
       }
       if (hasDrama) {
-        if (!seg.drama_start_cue) missing.push('Cue inicio drama / Drama start cue');
-        if (!seg.drama_end_cue) missing.push('Cue fin drama / Drama end cue');
-        if (seg.drama_has_song && !seg.drama_song_source && !seg.drama_song_title) missing.push('Canción de drama / Drama song');
+        if (!seg.drama_start_cue) missing.push(t('missingDramaStart'));
+        if (!seg.drama_end_cue) missing.push(t('missingDramaEnd'));
+        if (seg.drama_has_song && !seg.drama_song_source && !seg.drama_song_title) missing.push(t('missingDramaSong'));
       }
       if (hasVideo) {
-        if (!seg.video_url) missing.push('Enlace de video / Video link');
+        if (!seg.video_url) missing.push(t('missingVideo'));
       }
-      if (!hasRunOfShow) missing.push('Guía de Artes / Arts Directions');
+      if (!hasRunOfShow) missing.push(t('missingRunOfShow'));
 
-      if (missing.length === 0) return { level: 'complete', label: '🟢 Completo', missing: [] };
-      if (hasAnyAsset) return { level: 'minimum', label: '🟡 Mínimo', missing };
-      return { level: 'incomplete', label: '🔴 Incompleto', missing };
+      if (missing.length === 0) return { level: 'complete', label: t('statusComplete'), missing: [] };
+      if (hasAnyAsset) return { level: 'minimum', label: t('statusMinimum'), missing };
+      return { level: 'incomplete', label: t('statusIncomplete'), missing };
     }
 
     // ===== RENDER =====
