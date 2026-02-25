@@ -772,10 +772,10 @@ Deno.serve(async (req) => {
     // ===== RENDER =====
     function initAllLabels() {
       renderLanguageToggle();
-      initGateLabels();
       document.getElementById('formIntroText').textContent = t('formIntro');
       document.getElementById('emptyTitle').textContent = t('noSegments');
       document.getElementById('emptyDesc').textContent = t('noSegmentsDesc');
+      renderAccordions();
     }
 
     function renderAccordions() {
