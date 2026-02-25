@@ -1173,6 +1173,11 @@ Deno.serve(async (req) => {
       btn.disabled = false;
       btn.textContent = '💾 GUARDAR PROGRESO / SAVE PROGRESS';
     }
+
+    // Initialize labels and UI on page load (after DOM is ready)
+    window.addEventListener('DOMContentLoaded', () => {
+      initAllLabels();
+    });
   </script>
 </body>
 </html>`;
