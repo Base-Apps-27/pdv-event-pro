@@ -730,38 +730,6 @@ Deno.serve(async (req) => {
       \`;
     }
 
-    // ===== GATE =====
-    function initGateLabels() {
-      document.getElementById('gateTitle').textContent = t('gateTitle');
-      document.getElementById('gateDesc').textContent = t('gateDesc');
-      document.getElementById('gateName').placeholder = t('gatePlaceholderName');
-      document.getElementById('gateEmail').placeholder = t('gatePlaceholderEmail');
-      document.getElementById('gateBtn').textContent = t('gateBtn');
-    }
-
-    function enterForm() {
-      const name = document.getElementById('gateName').value.trim();
-      const email = document.getElementById('gateEmail').value.trim();
-      const errEl = document.getElementById('gateError');
-
-      if (!name || name.length < 2) {
-        errEl.textContent = t('gateErrorName');
-        errEl.style.display = 'block';
-        return;
-      }
-      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
-        errEl.textContent = t('gateErrorEmail');
-        errEl.style.display = 'block';
-        return;
-      }
-
-      submitterName = name;
-      submitterEmail = email;
-      document.getElementById('gateSection').classList.add('hidden');
-      document.getElementById('formSection').classList.remove('hidden');
-      renderAccordions();
-    }
-
     // ===== STATUS CALCULATION =====
     function calcStatus(seg) {
       const types = seg.art_types || [];
