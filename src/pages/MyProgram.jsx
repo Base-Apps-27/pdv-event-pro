@@ -24,7 +24,6 @@ import SessionPicker from '@/components/myprogram/SessionPicker';
 import MyProgramTimeline from '@/components/myprogram/MyProgramTimeline';
 import MyProgramStandby from '@/components/myprogram/MyProgramStandby';
 import MyProgramStatusBar from '@/components/myprogram/MyProgramStatusBar';
-import StructuredVersesModal from '@/components/service/StructuredVersesModal';
 
 export default function MyProgram() {
   const { t, language } = useLanguage();
