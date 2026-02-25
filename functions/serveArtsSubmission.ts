@@ -1016,7 +1016,15 @@ Deno.serve(async (req) => {
 
     // ===== HELPERS =====
     function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
-    function typeLabel(t) { return { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', OTHER: '✨ Otro' }[t] || t; }
+    function typeLabel(t) { 
+      const labels = {
+        DANCE: currentLanguage === 'es' ? '🩰 Danza' : '🩰 Dance',
+        DRAMA: currentLanguage === 'es' ? '🎭 Drama' : '🎭 Drama',
+        VIDEO: currentLanguage === 'es' ? '🎬 Video' : '🎬 Video',
+        OTHER: currentLanguage === 'es' ? '✨ Otro' : '✨ Other'
+      };
+      return labels[t] || t;
+    }
     function formatTime(t) { if (!t) return ''; const [h,m] = t.split(':').map(Number); const p = h >= 12 ? 'PM' : 'AM'; return (h%12||12)+':'+String(m).padStart(2,'0')+' '+p; }
 
     function toggleAccordion(id) {
