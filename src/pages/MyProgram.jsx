@@ -269,20 +269,9 @@ export default function MyProgram() {
           preSessionDetails={programData?.preSessionDetails}
           preServiceNotes={contextType === 'service' ? (programData?.program?.pre_service_notes || null) : null}
           selectedSession={selectedSession}
-          onOpenVerses={setVerseModalData}
           segmentRefs={segmentRefs}
         />
       </div>
-
-      {/* Verses Modal */}
-      {verseModalData && (
-        <StructuredVersesModal
-          open={!!verseModalData}
-          onOpenChange={(open) => { if (!open) setVerseModalData(null); }}
-          parsedData={verseModalData.parsedData}
-          rawText={verseModalData.rawText}
-        />
-      )}
     </div>
   );
 }
