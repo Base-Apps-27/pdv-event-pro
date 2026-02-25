@@ -851,7 +851,7 @@ Deno.serve(async (req) => {
       const types = seg.art_types || [];
       return \`
         <div class="form-section">
-          <div class="form-section-title">TIPO DE ARTE / ART TYPE</div>
+          <div class="form-section-title">\${t('artType')}</div>
           <div class="check-group">
             \${['DANCE','DRAMA','VIDEO','OTHER'].map(t => \`
               <label class="check-label \${types.includes(t) ? 'checked' : ''}" id="cl-\${seg.id}-\${t}">
