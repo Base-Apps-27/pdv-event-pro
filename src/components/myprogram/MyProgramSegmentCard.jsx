@@ -252,20 +252,6 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
           })()}
         </div>
 
-        {/* Action Buttons — Verses only (Arts Resources not shown in MyProgram) */}
-        {hasVerses && canSeeVerses && onOpenVerses && (
-          <div className="flex flex-wrap gap-2.5 mt-3">
-            <Button 
-              variant="outline" 
-              className="h-10 text-sm gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 px-4"
-              onClick={() => onOpenVerses({ parsedData: getData('parsed_verse_data'), rawText: getData('scripture_references') })}
-            >
-              <BookOpen className="w-4 h-4" />
-              Ver Versículos
-            </Button>
-          </div>
-        )}
-
         {/* Songs (general department, worship segments) */}
         {department === 'general' && songs.length > 0 && (
           <div className="bg-gray-50/80 rounded-lg p-2.5 text-xs text-gray-700 border border-gray-100">
