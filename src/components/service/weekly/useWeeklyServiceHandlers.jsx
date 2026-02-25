@@ -384,19 +384,13 @@ export function useWeeklyServiceHandlers({
         return segmentCopy;
       });
 
-      // We need to ensure we have the absolute latest serviceData ID because this function is async
-      // and state closures can get stale. We'll fetch the latest from the setter function callback.
-      let currentState;
-      setServiceData(prev => {
-        currentState = prev;
-        return prev;
-      });
-      
-      if (!currentState || !currentState.id) {
+      // Use serviceId prop (passed from DayServiceEditor) instead of trying to capture stale state.
+      // This ensures we have the correct ID even if async operations interleave.
+      if (!serviceId) {
          throw new Error("Service ID missing. Cannot reset. Please refresh the page.");
       }
 
-      let nextState = { ...currentState };
+      let nextState = { ...serviceData };
       const targetSlots = (slotsToReset && slotsToReset.length > 0) ? slotsToReset : slotNames;
 
       for (const slotName of targetSlots) {
@@ -422,12 +416,12 @@ export function useWeeklyServiceHandlers({
         let sessionId = nextState._sessionIds?.[slotName];
         if (!sessionId) {
           // Create Session on the fly
-          const newSession = await base44.entities.Session.create({
-            service_id: nextState.id,
-            name: slotName,
-            // Assuming default date/order logic is handled by backend or we accept defaults
-            date: nextState.date
-          });
+            const newSession = await base44.entities.Session.create({
+              service_id: serviceId,
+              name: slotName,
+              // Assuming default date/order logic is handled by backend or we accept defaults
+              date: nextState.date
+            });
           sessionId = newSession.id;
           nextState = { 
             ...nextState, 
@@ -471,7 +465,7 @@ export function useWeeklyServiceHandlers({
           // Map to entity structure, ensuring strict schema compliance
           const entityPayload = {
             session_id: sessionId,
-            service_id: nextState.id,
+            service_id: serviceId,
             order: i + 1,
             title: segData.title || "Untitled",
             segment_type: resolvedType,
