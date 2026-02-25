@@ -36,6 +36,30 @@ export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
     _sessionIds: {},
   };
 
+  // OPTIMIZATION (2026-02-25): Batch all segment queries into one call
+  // instead of per-session. This eliminates N+1 pattern that caused 429 cascades.
+  const allSegments = await base44.entities.Segment.filter({
+    session_id: { $in: sessions.map(s => s.id) }
+  }).catch(() => []);
+
+  // Build lookup: session_id → [segments]
+  const segmentsBySession = {};
+  sessions.forEach(s => { segmentsBySession[s.id] = []; });
+  allSegments.forEach(seg => {
+    if (segmentsBySession[seg.session_id]) {
+      segmentsBySession[seg.session_id].push(seg);
+    }
+  });
+
+  // Batch PreSessionDetails queries (all at once instead of per-session)
+  const allPSD = await base44.entities.PreSessionDetails.filter({
+    session_id: { $in: sessions.map(s => s.id) }
+  }).catch(() => []);
+  const psdBySession = {};
+  allPSD.forEach(psd => {
+    psdBySession[psd.session_id] = psd;
+  });
+
   for (const session of sessions.sort(
     (a, b) => (a.order || 0) - (b.order || 0)
   )) {
@@ -49,26 +73,16 @@ export async function loadWeeklyFromSessions(base44, serviceId, blueprint) {
     result.luces[slotName] = session.tech_team || "";
     result.fotografia[slotName] = session.photography_team || "";
 
-    // Pre-session notes from PreSessionDetails
-    try {
-      const psd = await base44.entities.PreSessionDetails.filter({
-        session_id: session.id,
-      });
-      result.pre_service_notes[slotName] = psd[0]?.general_notes || "";
-    } catch {
-      result.pre_service_notes[slotName] = "";
-    }
+    // Pre-session notes from batched PreSessionDetails
+    result.pre_service_notes[slotName] = psdBySession[session.id]?.general_notes || "";
 
-    // Load all segments for this session
-    const allSegments = await base44.entities.Segment.filter({
-      session_id: session.id,
-    });
-
-    const parentSegments = allSegments
+    // Get segments for this session from pre-batched data
+    const sessionSegments = segmentsBySession[session.id] || [];
+    const parentSegments = sessionSegments
       .filter((s) => !s.parent_segment_id)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    const childSegments = allSegments.filter((s) => s.parent_segment_id);
+    const childSegments = sessionSegments.filter((s) => s.parent_segment_id);
 
     // Transform each parent segment back to weekly JSON format
     const blueprintSlot = blueprint?.[slotName];

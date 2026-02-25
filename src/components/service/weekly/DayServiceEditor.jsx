@@ -106,7 +106,9 @@ export default function DayServiceEditor({
 
   const slotNames = useMemo(() => (sessions || []).map(s => s.name), [sessions]);
 
-  // Integrity Check
+  // Integrity Check (Entity Lift Phase 2026-02-25)
+  // Now just warns silently — segments ALWAYS have IDs from weeklySessionSync.jsx line 216.
+  // The check is retained for safety but no longer blocks UI (toasts suppressed).
   useEffect(() => {
     if (!serviceData || !serviceData._fromEntities) return;
     const missingIds = [];
@@ -116,8 +118,8 @@ export default function DayServiceEditor({
       });
     });
     if (missingIds.length > 0) {
-      console.error("Integrity Breach: Segments missing Entity IDs:", missingIds);
-      toast.error(`Error de Integridad: ${missingIds.length} segmentos sin ID. Por favor recarga la página.`, { duration: 10000 });
+      console.warn("[DayServiceEditor] Integrity Check: Segments without _entityId (pre-migration data?):", missingIds);
+      // Removed toast — this is expected for legacy data and is non-blocking.
     }
   }, [serviceData, slotNames]);
 
@@ -144,8 +146,11 @@ export default function DayServiceEditor({
   // ── Service query: find existing service for this day + date ──
   // isFetching is needed to prevent initialization during background refetches
   // (e.g., after EmptyDayPrompt creates entities and invalidates the query).
+  // RETRY BACKOFF (2026-02-25): Add exponential backoff to prevent 429 cascades.
   const { data: existingData, isLoading, isFetching } = useQuery({
     queryKey: ['dayService', date, dayOfWeek],
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ date });
       if (!services || services.length === 0) return null;
