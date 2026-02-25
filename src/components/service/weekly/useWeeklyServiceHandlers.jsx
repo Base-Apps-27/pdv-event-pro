@@ -73,10 +73,13 @@ export function useWeeklyServiceHandlers({
       newServiceArray[segmentIndex] = newSegment;
       const updated = { ...prev, [service]: newServiceArray };
 
-      // Auto-propagate translator from worship to other segments in the SAME slot
-      if (field === 'translator' && newSegment.type === 'worship') {
+      // Auto-propagate translator to segments that reference this segment type
+      if (field === 'translator' && newSegment.type) {
+        const sourceType = newSegment.type.toLowerCase();
+        const sourceKey = `${sourceType}_segment_translator`;
+        
         updated[service] = updated[service].map((seg, idx) => {
-          if (idx !== segmentIndex && seg.default_translator_source === 'worship_segment_translator' && !seg.data?.translator) {
+          if (idx !== segmentIndex && seg.default_translator_source === sourceKey && !seg.data?.translator) {
             // Collect entity writes to run after state updater returns
             if (seg._entityId) {
               propagationWrites.push(seg._entityId);

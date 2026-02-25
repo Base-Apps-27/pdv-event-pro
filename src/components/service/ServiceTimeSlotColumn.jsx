@@ -518,27 +518,51 @@ function StandardSegmentCard({
         )}
 
         {/* Translation */}
-        {segment.requires_translation && (
-          <div className="bg-blue-50 border border-blue-200 rounded p-2">
-            <Label className="text-xs font-semibold text-blue-800 mb-1">
-              🌐 Traductor(a)
-              {segment.default_translator_source === "worship_segment_translator" && (
-                <span className="ml-2 text-[10px] font-normal text-blue-600">(auto-rellena de Alabanza)</span>
-              )}
-            </Label>
-            <SegmentAutocomplete
-              service={timeSlot}
-              segmentIndex={idx}
-              field="translator"
-              type="translator"
-              placeholder={
-                segment.default_translator_source === "worship_segment_translator"
-                  ? (serviceData[timeSlot].find(s => s.type === "worship")?.data?.translator || "Del segmento de Alabanza")
-                  : "Nombre del traductor"
-              }
-            />
-          </div>
-        )}
+        {segment.requires_translation && (() => {
+          // Extract source segment type from default_translator_source
+          const sourceMatch = segment.default_translator_source?.match(/^(.+)_segment_translator$/);
+          const sourceType = sourceMatch ? sourceMatch[1] : null;
+          const sourceSegment = sourceType 
+            ? serviceData[timeSlot]?.find(s => s.type?.toLowerCase() === sourceType.toLowerCase())
+            : null;
+          
+          const sourceLabels = {
+            'worship': 'Alabanza',
+            'alabanza': 'Alabanza',
+            'ofrenda': 'Ofrenda',
+            'offering': 'Ofrenda',
+            'bienvenida': 'Bienvenida',
+            'welcome': 'Bienvenida',
+            'message': 'Mensaje',
+            'plenaria': 'Mensaje'
+          };
+          
+          const sourceLabel = sourceType ? (sourceLabels[sourceType.toLowerCase()] || sourceType) : null;
+          
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+              <Label className="text-xs font-semibold text-blue-800 mb-1">
+                🌐 Traductor(a)
+                {sourceLabel && (
+                  <span className="ml-2 text-[10px] font-normal text-blue-600">(auto-rellena de {sourceLabel})</span>
+                )}
+              </Label>
+              <SegmentAutocomplete
+                service={timeSlot}
+                segmentIndex={idx}
+                field="translator"
+                type="translator"
+                placeholder={
+                  sourceSegment?.data?.translator 
+                    ? sourceSegment.data.translator 
+                    : sourceLabel 
+                      ? `Del segmento de ${sourceLabel}` 
+                      : "Nombre del traductor"
+                }
+              />
+            </div>
+          );
+        })()}
 
         {/* Sub-Assignments */}
         {segment.sub_assignments && segment.sub_assignments.length > 0 && (
