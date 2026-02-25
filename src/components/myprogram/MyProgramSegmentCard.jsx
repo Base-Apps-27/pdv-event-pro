@@ -87,7 +87,12 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
 
   // Determine button visibility
   const canSeeVerses = ['general', 'projection', 'livestream', 'translation'].includes(department);
-  const hasVerses = (isMessage || segment.segment_type === 'Ofrenda') && getData('parsed_verse_data');
+  const parsedDataObj = getData('parsed_verse_data');
+  const isOffering = ['Ofrenda', 'offering'].includes(segmentType);
+  const hasVerses = (isMessage || isOffering) && (
+    (parsedDataObj && parsedDataObj.type === 'verse_list') || 
+    (parsedDataObj && parsedDataObj.key_takeaways && parsedDataObj.key_takeaways.length > 0)
+  );
 
   // Container styles by status
   const containerClass = {
