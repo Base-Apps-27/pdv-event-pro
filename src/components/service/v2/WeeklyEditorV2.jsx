@@ -99,7 +99,7 @@ export default function WeeklyEditorV2({
   const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey);
   const { copySegmentContent, copyAllToSlot } = useCopyBetweenSlots(
     segmentsBySession, sessions, psdBySession,
-    writeSegment, writeSession, writePSD, writeSongs
+    writeSegment, writeSession, writePSD, writeSongs, childSegments
   );
 
   // ── Sub-assignment child write handler ──
