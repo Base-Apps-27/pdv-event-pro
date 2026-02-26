@@ -139,8 +139,26 @@ export default function WeeklyEditorV2({
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialDetails, setSpecialDetails] = useState({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '' });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
+  const [verseParserSegmentId, setVerseParserSegmentId] = useState(null);
 
   const slotNames = useMemo(() => sessions.map(s => s.name), [sessions]);
+
+  // ── Verse parser handler ──
+  const handleOpenVerseParser = useCallback((segmentId) => {
+    setVerseParserSegmentId(segmentId);
+    // Find segment to get initial text
+    setVerseParserOpen(true);
+  }, []);
+
+  // Find the segment for verse parser initial text
+  const verseParserInitialText = useMemo(() => {
+    if (!verseParserSegmentId) return '';
+    for (const sessionId in segmentsBySession) {
+      const seg = (segmentsBySession[sessionId] || []).find(s => s.id === verseParserSegmentId);
+      if (seg) return seg.scripture_references || '';
+    }
+    return '';
+  }, [verseParserSegmentId, segmentsBySession]);
 
   // ── Loading ──
   if (serviceLoading) return <div className="p-8"><Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" /></div>;
@@ -245,6 +263,7 @@ export default function WeeklyEditorV2({
           onWriteSession: writeSession,
           onWritePSD: writePSD,
           onWriteDuration: handleWriteDuration,
+          onOpenVerseParser: handleOpenVerseParser,
           onOpenSpecialDialog: (session) => {
             setSpecialDetails(prev => ({ ...prev, sessionId: session.id }));
             setShowSpecialDialog(true);
@@ -285,9 +304,20 @@ export default function WeeklyEditorV2({
       {/* Verse Parser Dialog */}
       <VerseParserDialog
         open={verseParserOpen}
-        onOpenChange={setVerseParserOpen}
-        initialText=""
-        onSave={() => setVerseParserOpen(false)}
+        onOpenChange={(open) => {
+          setVerseParserOpen(open);
+          if (!open) setVerseParserSegmentId(null);
+        }}
+        initialText={verseParserInitialText}
+        onSave={(result) => {
+          if (verseParserSegmentId && result) {
+            // Write parsed verse string back to entity
+            if (result.verse) writeSegment(verseParserSegmentId, 'scripture_references', result.verse);
+            if (result.parsed_data) writeSegment(verseParserSegmentId, 'parsed_verse_data', result.parsed_data);
+          }
+          setVerseParserOpen(false);
+          setVerseParserSegmentId(null);
+        }}
         language="es"
       />
     </div>
