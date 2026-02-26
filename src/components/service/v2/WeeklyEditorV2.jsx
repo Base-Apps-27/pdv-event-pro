@@ -103,25 +103,36 @@ export default function WeeklyEditorV2({
   );
 
   // ── Sub-assignment child write handler ──
+  // BUGFIX (2026-02-26): Previously, parent_segment_id was not being passed,
+  // causing child Ministración segments to be created as top-level segments.
+  // useWeeklyData then treated them as parent segments with empty ui_fields,
+  // showing amber "unconfigured" warnings. Now parentId is properly threaded
+  // from SubAssignmentRow through subConfig.
   const handleWriteChild = useCallback((childId, columnOrConfig, value, sessionId, svcId) => {
     if (childId) {
       // Existing child — update
       writeSegment(childId, 'presenter', value);
-    } else if (value && sessionId) {
+    } else if (value?.trim() && sessionId && columnOrConfig?.parentId) {
       // No child entity yet — create one
+      // Guard: require parentId to prevent creating orphaned top-level segments
       base44.entities.Segment.create({
         session_id: sessionId,
         service_id: svcId,
-        parent_segment_id: columnOrConfig?.parentId, // from subConfig
+        parent_segment_id: columnOrConfig.parentId,
         order: 1,
         title: columnOrConfig?.label || 'Sub-asignación',
         segment_type: 'Ministración',
         duration_min: columnOrConfig?.duration_min || 5,
-        presenter: value,
+        presenter: value.trim(),
         show_in_general: false,
       }).then(() => {
         queryClient.invalidateQueries({ queryKey });
       }).catch(err => console.error('[V2] Child create failed:', err.message));
+    } else if (!columnOrConfig?.parentId && !childId) {
+      // Safety: log if parentId is missing — do NOT create an orphan segment
+      console.warn('[V2] handleWriteChild blocked: no parentId for sub-assignment create', {
+        label: columnOrConfig?.label, sessionId, value
+      });
     }
   }, [writeSegment, queryClient, queryKey]);
 
