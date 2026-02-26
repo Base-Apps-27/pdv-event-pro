@@ -30,19 +30,31 @@ Deno.serve(async (req) => {
     // Defensive: ensure array
     sessions = Array.isArray(sessions) ? sessions : [];
 
-    // Deterministic sort
+    // DECISION-004 (ATT-015): Chronological sort as primary.
+    // Previous sort used `order` as primary — but order field is unreliable
+    // (can be duplicated, wrong, or stale). Chronological sort matches user
+    // expectations and what EventDetail/SessionManager already display.
+    // Sort: date → planned_start_time → order (tiebreaker) → name
     const sorted = sessions.sort((a, b) => {
-      const ao = Number.isFinite(a?.order) ? a.order : Number.POSITIVE_INFINITY;
-      const bo = Number.isFinite(b?.order) ? b.order : Number.POSITIVE_INFINITY;
-      if (ao !== bo) return ao - bo;
-
       const ad = a?.date || '';
       const bd = b?.date || '';
-      if (ad !== bd) return ad.localeCompare(bd);
+      if (ad !== bd) {
+        if (!ad) return 1;
+        if (!bd) return -1;
+        return ad.localeCompare(bd);
+      }
 
       const at = a?.planned_start_time || '';
       const bt = b?.planned_start_time || '';
-      if (at !== bt) return at.localeCompare(bt);
+      if (at !== bt) {
+        if (!at) return 1;
+        if (!bt) return -1;
+        return at.localeCompare(bt);
+      }
+
+      const ao = Number.isFinite(a?.order) ? a.order : Number.POSITIVE_INFINITY;
+      const bo = Number.isFinite(b?.order) ? b.order : Number.POSITIVE_INFINITY;
+      if (ao !== bo) return ao - bo;
 
       const an = a?.name || '';
       const bn = b?.name || '';
