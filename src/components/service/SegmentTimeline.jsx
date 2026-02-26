@@ -57,7 +57,8 @@ export default function SegmentTimeline({
       {/* List - no internal header, parent handles it */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {segments.map((segment, index) => {
-          const startTime = getTimeDate(segment.start_time || segment.actual_start_time);
+          // DECISION-004: Pass segment.date so multi-day events resolve correct day
+          const startTime = getTimeDate(segment.start_time || segment.actual_start_time, segment.date);
           const timeStr = startTime
             ? formatTimeToEST(startTime.toTimeString().substring(0, 5))
             : "--:--";
