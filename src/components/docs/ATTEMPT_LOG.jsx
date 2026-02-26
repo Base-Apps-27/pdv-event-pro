@@ -147,3 +147,21 @@
   - **WeeklyEditorV2**: Flush on unmount, empty sessions error state, AlertCircle import
 **Result:** IMPLEMENTED
 **Disposition:** IMPLEMENTED — V2 foundation hardened. All layers now have retry, validation, traceability, and defensive patterns.
+
+## [ATT-013] V2 Phase 9 — UI/UX Polish & Print Readiness
+**Date:** 2026-02-26
+**Surfaces:** All V2 column + segment components (8 files)
+**What was attempted:** Comprehensive UI/UX polish pass: memoization for render performance, print-friendly rendering throughout, collapsible empty sections, and visual polish.
+**Changes:**
+  - **All components**: React.memo applied to every leaf + container component to prevent re-render cascade
+  - **TeamSection**: AutocompleteInput for team suggestions, 2-column grid on desktop, print read-only text, labeled fields
+  - **PreServiceSection**: Collapsible when empty (saves vertical space), auto-expands when content exists, print read-only
+  - **RecesoSection**: Collapsible when empty, flush-on-unmount to prevent data loss, print read-only, ref-based closure for timer
+  - **SlotColumn**: Empty segment list warning with guidance, segment count badge in header, memoized timing calculations
+  - **SlotColumnContainer**: Dirty indicator (red dot) on mobile tabs when unsaved changes exist, print layout stacks all columns
+  - **FieldRenderer**: Labels above each field, print read-only text, console.warn for unknown ui_fields keys (don't crash), all sub-components memoized
+  - **SongRows**: Print read-only song list with numbering, Music icon in header, tracks all lead/key fields for sync
+  - **SubAssignmentRow**: Assignment status badge (Asignado/Pendiente), print read-only
+  - **SpeakerMaterialSection**: URL validation green border, print URLs as clickable links, Link icon in header
+**Result:** IMPLEMENTED
+**Disposition:** IMPLEMENTED — V2 now production-ready with full print support, performance optimization, and polished UX across all 19 components.
