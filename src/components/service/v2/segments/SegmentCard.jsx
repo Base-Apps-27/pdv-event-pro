@@ -186,6 +186,7 @@ const SegmentCard = memo(function SegmentCard({
                 subConfig={subConfig}
                 childEntity={childSegments?.[idx] || null}
                 onWriteChild={onWriteChild}
+                parentSegmentId={segment.id}
               />
             ))}
           </div>
