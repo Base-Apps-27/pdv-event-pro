@@ -11,12 +11,46 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { TEAM_FIELDS, TEXT_COPY_COLUMNS } from "../constants/fieldMap";
 
+/**
+ * findMatchingSegment — finds the best-matching segment in the target array.
+ * DECISION (2026-02-26): Match by segment_type + title instead of array index.
+ * Index-based matching breaks when an admin inserts/removes a special segment
+ * in one session, offsetting all subsequent segments.
+ *
+ * Strategy: segment_type + title (exact), then segment_type-only (first unused).
+ */
+function findMatchingSegment(sourceSeg, targetSegs, usedTargetIds) {
+  // 1. Exact match: same segment_type AND same title
+  const exactMatch = targetSegs.find(t =>
+    !usedTargetIds.has(t.id) &&
+    t.segment_type === sourceSeg.segment_type &&
+    t.title === sourceSeg.title
+  );
+  if (exactMatch) {
+    usedTargetIds.add(exactMatch.id);
+    return exactMatch;
+  }
+
+  // 2. Type-only match: same segment_type, first unused
+  const typeMatch = targetSegs.find(t =>
+    !usedTargetIds.has(t.id) &&
+    t.segment_type === sourceSeg.segment_type
+  );
+  if (typeMatch) {
+    usedTargetIds.add(typeMatch.id);
+    return typeMatch;
+  }
+
+  return null;
+}
+
 export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs, childSegments) {
 
   /**
    * copySegmentContent — copies one segment's content to the matching segment in the next slot.
-   * BUGFIX (2026-02-26): Also copies child segment (sub-assignment) presenters via writeChild
-   * so Ministración and other child entities are properly propagated between slots.
+   * BUGFIX (2026-02-26): Also copies child segment (sub-assignment) presenters.
+   * BUGFIX (2026-02-26): Uses type+title matching instead of array index to survive
+   * admin insertions/deletions of special segments.
    */
   const copySegmentContent = useCallback(async (sourceSessionId, segmentIndex) => {
     const sourceSegments = segmentsBySession[sourceSessionId] || [];
@@ -29,7 +63,8 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
     if (!targetSession) return;
 
     const targetSegments = segmentsBySession[targetSession.id] || [];
-    const targetSeg = targetSegments[segmentIndex];
+    const usedIds = new Set();
+    const targetSeg = findMatchingSegment(sourceSeg, targetSegments, usedIds);
     if (!targetSeg) {
       toast.info("No hay segmento correspondiente en el siguiente horario");
       return;
