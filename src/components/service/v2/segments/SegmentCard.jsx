@@ -3,11 +3,17 @@
  * DECISION-003 Principle 2: ui_fields drives ALL rendering.
  * DECISION-003 Principle 4: Entity fields read directly.
  *
+ * HARDENING (Phase 8):
+ *   - Memoized with React.memo to prevent re-render cascade
+ *   - Color coding from entity (color_code field)
+ *   - Better unconfigured segment UX (shows type badge, allows notes)
+ *   - Print-friendly: hides action buttons, shows content
+ *
  * Receives a raw Segment entity object. No JSON blob. No getSegmentData().
  * If segment.ui_fields is empty, shows an "unconfigured" warning.
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +27,16 @@ import SongRows from "./SongRows";
 import SubAssignmentRow from "./SubAssignmentRow";
 import SegmentNotesPanel from "./SegmentNotesPanel";
 
-export default function SegmentCard({
+const COLOR_MAP = {
+  worship: { border: 'border-l-purple-500', bg: 'bg-purple-50/30' },
+  preach:  { border: 'border-l-blue-600',   bg: 'bg-blue-50/30' },
+  break:   { border: 'border-l-gray-400',   bg: 'bg-gray-50' },
+  tech:    { border: 'border-l-slate-500',   bg: 'bg-slate-50' },
+  special: { border: 'border-l-orange-500',  bg: 'bg-orange-50' },
+  default: { border: '', bg: 'bg-white' },
+};
+
+const SegmentCard = memo(function SegmentCard({
   segment,
   children: childSegments,
   index,
@@ -51,35 +66,53 @@ export default function SegmentCard({
   const hasTranslation = !!segment.requires_translation;
   const isDirty = dirtyIds?.has(String(segment.id));
 
-  // ── No ui_fields warning ──
+  // Color from entity or computed
+  const colorKey = isSpecial ? 'special' : (segment.color_code || 'default');
+  const colors = COLOR_MAP[colorKey] || COLOR_MAP.default;
+
+  // ── No ui_fields warning (still allows notes expansion) ──
   if (fields.length === 0 && !isSpecial) {
     return (
       <Card className="border-2 border-amber-300 border-l-4 border-l-amber-500 bg-amber-50">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+            <div className="print:hidden flex flex-col gap-0.5">
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0} className="h-4 w-5 p-0 hover:bg-blue-100">
+                <ChevronUp className="w-3 h-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'down')} disabled={index === totalSegments - 1} className="h-4 w-5 p-0 hover:bg-blue-100">
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </div>
             <AlertTriangle className="w-4 h-4 text-amber-600" />
             {segment.title || 'Sin título'}
+            <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-400">{segment.segment_type}</Badge>
             <Badge variant="outline" className="ml-auto text-xs">{segment.duration_min || 0} min</Badge>
+            <SaveButton isDirty={isDirty} entityId={segment.id} onFlush={onFlushEntity} />
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-amber-700 mb-2">
             Segmento sin configuración de campos (ui_fields vacío).
             Restablezca el servicio desde el blueprint para corregir.
           </p>
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="w-full text-xs print:hidden">
+            {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+            {expanded ? "Menos" : "Notas y detalles"}
+          </Button>
+          {expanded && (
+            <SegmentNotesPanel segment={segment} onWrite={onWrite} onWriteDuration={onWriteDuration} />
+          )}
         </CardContent>
       </Card>
     );
   }
 
-  const borderColor = isSpecial ? 'border-l-orange-500' : `border-l-${accentColor}-500`;
-  const bgColor = isSpecial ? 'bg-orange-50' : 'bg-white';
-
   return (
-    <Card className={`border-2 border-gray-300 border-l-4 ${borderColor} ${bgColor}`}>
-      <CardHeader className={`pb-2 ${isSpecial ? '' : 'bg-gray-50'}`}>
+    <Card className={`border-2 border-gray-300 border-l-4 ${colors.border || `border-l-${accentColor}-500`} ${colors.bg}`}>
+      <CardHeader className={`pb-2 ${isSpecial ? '' : 'bg-gray-50/50'}`}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
             {/* Move buttons */}
             <div className="print:hidden flex flex-col gap-0.5">
               <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0} className="h-4 w-5 p-0 hover:bg-blue-100">
@@ -91,7 +124,10 @@ export default function SegmentCard({
             </div>
             {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className={`w-4 h-4 text-${accentColor}-600`} />}
             {segment.title}
-            {isSpecial && <Badge className="ml-2 bg-orange-200 text-orange-800">Especial</Badge>}
+            {isSpecial && <Badge className="ml-1 bg-orange-200 text-orange-800 text-[10px]">Especial</Badge>}
+            {segment.color_code && segment.color_code !== 'default' && !isSpecial && (
+              <Badge variant="outline" className="text-[9px] text-gray-500 border-gray-300">{segment.color_code}</Badge>
+            )}
             <Badge variant="outline" className="ml-auto text-xs">{segment.duration_min || 0} min</Badge>
             {/* Save indicator */}
             <SaveButton isDirty={isDirty} entityId={segment.id} onFlush={onFlushEntity} />
@@ -171,7 +207,9 @@ export default function SegmentCard({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default SegmentCard;
 
 function SaveButton({ isDirty, entityId, onFlush }) {
   const [saving, setSaving] = useState(false);

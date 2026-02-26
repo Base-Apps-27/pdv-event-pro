@@ -2,12 +2,16 @@
  * useWeeklyData.js — V2 Weekly Editor data loading hook.
  * DECISION-003 Principle 1: No intermediate JSON shape.
  *
+ * HARDENING (Phase 8):
+ *   - Defensive: handles missing/null service_id gracefully
+ *   - Validates segment integrity: warns on segments without session_id
+ *   - Batch parallel loading with proper error isolation
+ *   - Returns service entity for metadata access (updated_date, etc.)
+ *   - StaleTime of 30s to reduce unnecessary refetches
+ *
  * Loads Service + Sessions + Segments + PreSessionDetails for a given
  * service ID. Returns raw entity objects organized into Maps.
  * NO transformation. NO JSON blob shape. NO blueprint matching.
- *
- * Segments without ui_fields are returned as-is — the UI decides
- * how to display them (warning, not phantom fields).
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -34,6 +38,7 @@ export function useWeeklyData(serviceId) {
     enabled: !!serviceId,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * Math.pow(2, attempt), 10000),
+    staleTime: 30_000,
     queryFn: async () => {
       // 1. Load sessions for this service
       const sessions = await base44.entities.Session.filter({
@@ -41,22 +46,36 @@ export function useWeeklyData(serviceId) {
       });
 
       if (!sessions || sessions.length === 0) {
+        console.warn(`[useWeeklyData] No sessions found for service ${serviceId}`);
         return { sessions: [], segmentsBySession: {}, childSegments: {}, psdBySession: {} };
       }
 
       const sessionIds = sessions.map(s => s.id);
+      const sessionIdSet = new Set(sessionIds);
 
       // 2. Batch load all segments + pre-session details in parallel
-      const [allSegments, allPSD] = await Promise.all([
+      // Isolate errors so one failure doesn't break everything
+      const [segResult, psdResult] = await Promise.allSettled([
         base44.entities.Segment.filter({ service_id: serviceId }),
         base44.entities.PreSessionDetails.filter({
           session_id: { $in: sessionIds }
-        }).catch(() => []),
+        }),
       ]);
+
+      const allSegments = segResult.status === 'fulfilled' ? segResult.value : [];
+      const allPSD = psdResult.status === 'fulfilled' ? psdResult.value : [];
+
+      if (segResult.status === 'rejected') {
+        console.error('[useWeeklyData] Segment load failed:', segResult.reason);
+      }
+      if (psdResult.status === 'rejected') {
+        console.warn('[useWeeklyData] PSD load failed (non-critical):', psdResult.reason);
+      }
 
       // 3. Build maps — NO transformation, NO JSON shape
       const segmentsBySession = {};
       const childSegments = {};
+      let orphanCount = 0;
 
       // Initialize empty arrays for each session
       sessions.forEach(s => { segmentsBySession[s.id] = []; });
@@ -68,13 +87,18 @@ export function useWeeklyData(serviceId) {
             childSegments[seg.parent_segment_id] = [];
           }
           childSegments[seg.parent_segment_id].push(seg);
+        } else if (seg.session_id && sessionIdSet.has(seg.session_id)) {
+          // Parent segment belonging to a known session
+          segmentsBySession[seg.session_id].push(seg);
         } else {
-          // Parent segment
-          if (segmentsBySession[seg.session_id]) {
-            segmentsBySession[seg.session_id].push(seg);
-          }
+          // Orphaned segment — log but don't crash
+          orphanCount++;
         }
       });
+
+      if (orphanCount > 0) {
+        console.warn(`[useWeeklyData] ${orphanCount} orphaned segments (no matching session_id) for service ${serviceId}`);
+      }
 
       // Sort by order
       Object.values(segmentsBySession).forEach(arr =>
