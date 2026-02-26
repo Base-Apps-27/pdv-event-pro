@@ -159,17 +159,16 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
     });
 
     // BUGFIX (2026-02-26): Copy sub-assignment (child segment) presenters.
-    // Previously copyAllToSlot only copied parent segment text fields,
-    // omitting child entities like Ministración that hold sub-assignment data.
+    // Uses the same type+title matching to pair parent segments, then title-matches children.
     if (childSegments) {
-      sourceSegs.forEach((src, idx) => {
-        const tgt = targetSegs[idx];
+      const usedForChildren = new Set();
+      sourceSegs.forEach((src) => {
+        const tgt = findMatchingSegment(src, targetSegs, usedForChildren);
         if (!tgt) return;
         const srcChildren = childSegments[src.id] || [];
         const tgtChildren = childSegments[tgt.id] || [];
         srcChildren.forEach((srcChild) => {
           if (!srcChild.presenter) return;
-          // Match by title (label-based, durable)
           const matchingTarget = tgtChildren.find(tc => tc.title === srcChild.title);
           if (matchingTarget) {
             writeSegment(matchingTarget.id, 'presenter', srcChild.presenter);
