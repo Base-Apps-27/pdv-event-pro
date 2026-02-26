@@ -11,7 +11,7 @@
 import React, { useCallback, useMemo, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronsRight, AlertTriangle } from "lucide-react";
+import { Plus, ChevronsRight, AlertTriangle, RotateCcw } from "lucide-react";
 import { addMinutes, format as formatDate } from "date-fns";
 import SegmentCard from "../segments/SegmentCard";
 import PreServiceSection from "./PreServiceSection";
@@ -56,6 +56,7 @@ export default memo(function SlotColumn({
   onRemove,
   onCopyToNext,
   onCopyAllToSlot,
+  onResetSession,
   nextSlotName,
   // Verse parser
   onOpenVerseParser,
@@ -107,6 +108,14 @@ export default memo(function SlotColumn({
               {onCopyAllToSlot && (
                 <Button size="sm" onClick={onCopyAllToSlot} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600">
                   <ChevronsRight className="w-4 h-4 mr-2" />Copiar Todo
+                </Button>
+              )}
+              {onResetSession && (
+                <Button size="sm" variant="outline" onClick={() => onResetSession(session.id)}
+                  className="border-amber-400 text-amber-700 hover:bg-amber-50 font-semibold"
+                  title="Restablecer solo esta sesión"
+                >
+                  <RotateCcw className="w-4 h-4" />
                 </Button>
               )}
               <Button size="sm" variant="outline" onClick={() => onOpenSpecialDialog?.(session)} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold">
