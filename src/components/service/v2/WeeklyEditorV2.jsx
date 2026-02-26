@@ -146,15 +146,25 @@ export default function WeeklyEditorV2({
   // Announcements and print settings are managed by parent (WeeklyServiceManager).
 
   // ── Blueprint resolution ──
-  const resolvedBlueprint = useMemo(() => {
+  // BUGFIX (2026-02-26): Previously returned only the FIRST blueprint found,
+  // so the 11:30am session would get reset with the 9:30am blueprint.
+  // Now we resolve per-session blueprints keyed by session name.
+  const blueprintsBySessionName = useMemo(() => {
+    const map = {};
     for (const sess of (sessionDefs || [])) {
       if (sess.blueprint_id && blueprints?.length) {
         const found = blueprints.find(b => b.id === sess.blueprint_id);
-        if (found) return found;
+        if (found) map[sess.name] = found;
       }
     }
-    return null;
+    return map;
   }, [sessionDefs, blueprints]);
+
+  // Legacy compat: resolvedBlueprint = first found (for UI checks like "has any blueprint")
+  const resolvedBlueprint = useMemo(() => {
+    const first = Object.values(blueprintsBySessionName)[0];
+    return first || null;
+  }, [blueprintsBySessionName]);
 
   // ── Dialog state ──
   const [showResetConfirm, setShowResetConfirm] = useState(false);
