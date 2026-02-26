@@ -170,11 +170,18 @@ export default function PublicCountdownDisplay() {
       // No hard limit — the timeline container is scrollable and naturally
       // shrinks as past segments drop off. A two-service setup (9:30am+11:30am)
       // can have 11+ segments; a fixed slice(0,8) was cutting off the tail.
+      //
+      // FIX (ATT-014): In override/debug mode, show ALL segments when none are
+      // currently active — otherwise the TV layout is blank for past/future services.
+      const isOverrideMode = !!(overrideServiceId || overrideEventId);
       const upcoming = validSegments
         .filter((s) => {
           if (s === current) return false;
           const start = getTimeDate(s._effectiveStart, s.date);
-          return start && start > currentTime;
+          if (!start) return false;
+          // In override mode with no current segment, show all segments
+          if (isOverrideMode && !current) return true;
+          return start > currentTime;
         });
 
       let preLaunch = null;
