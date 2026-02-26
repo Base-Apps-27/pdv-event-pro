@@ -124,9 +124,13 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
     const targetSegs = segmentsBySession[targetSessionId] || [];
     let totalCopied = 0;
 
+    // DECISION (2026-02-26): Use type+title matching instead of index.
+    // Build a used-set so each target is matched at most once.
+    const usedTargetIds = new Set();
+
     // Copy segments
-    sourceSegs.forEach((src, idx) => {
-      const tgt = targetSegs[idx];
+    sourceSegs.forEach((src) => {
+      const tgt = findMatchingSegment(src, targetSegs, usedTargetIds);
       if (!tgt) return;
 
       TEXT_COPY_COLUMNS.forEach(col => {
