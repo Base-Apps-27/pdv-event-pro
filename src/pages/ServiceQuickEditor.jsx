@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalLink, Monitor, Smartphone, AlertTriangle, Loader2, Calendar, Search, Eye } from 'lucide-react';
+import { sortSessionsChronologically } from '@/components/utils/sessionSort';
 
 export default function ServiceQuickEditor() {
   const { user } = useCurrentUser();
