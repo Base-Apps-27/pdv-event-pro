@@ -50,11 +50,22 @@ export default function useActiveProgramCache(overrideParams = {}) {
         if (!service?.[0]) return null;
         
         // Build snapshot from service + sessions + segments
-        const sessions = await base44.entities.Session.filter({ service_id: overrideServiceId });
+        // FIX (Phase 9): Sort sessions by order to prevent slot-order inversion
+        const sessions = (await base44.entities.Session.filter({ service_id: overrideServiceId }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
         const segmentArrays = await Promise.all(
           sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
         );
-        const segments = segmentArrays.flat().filter(s => !s.parent_segment_id && s.show_in_general !== false);
+        // FIX (Phase 9): Sort segments by session order then segment order
+        const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+        const segments = segmentArrays.flat()
+          .filter(s => !s.parent_segment_id && s.show_in_general !== false)
+          .sort((a, b) => {
+            const sA = sessionOrderMap.get(a.session_id) ?? 999;
+            const sB = sessionOrderMap.get(b.session_id) ?? 999;
+            if (sA !== sB) return sA - sB;
+            return (a.order || 0) - (b.order || 0);
+          });
         
         return {
           program_type: 'service',
@@ -71,11 +82,22 @@ export default function useActiveProgramCache(overrideParams = {}) {
         const event = await base44.entities.Event.filter({ id: overrideEventId });
         if (!event?.[0]) return null;
         
-        const sessions = await base44.entities.Session.filter({ event_id: overrideEventId });
+        // FIX (Phase 9): Sort sessions by order
+        const sessions = (await base44.entities.Session.filter({ event_id: overrideEventId }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
         const segmentArrays = await Promise.all(
           sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
         );
-        const segments = segmentArrays.flat().filter(s => !s.parent_segment_id && s.show_in_general !== false);
+        // FIX (Phase 9): Sort segments by session order then segment order
+        const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+        const segments = segmentArrays.flat()
+          .filter(s => !s.parent_segment_id && s.show_in_general !== false)
+          .sort((a, b) => {
+            const sA = sessionOrderMap.get(a.session_id) ?? 999;
+            const sB = sessionOrderMap.get(b.session_id) ?? 999;
+            if (sA !== sB) return sA - sB;
+            return (a.order || 0) - (b.order || 0);
+          });
         
         return {
           program_type: 'event',
