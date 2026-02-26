@@ -91,3 +91,11 @@
 2. **Public form mid-reset**: Speaker submission could fail if admin resets segments during form open. Mitigation: check entity existence before Segment.update() in submitWeeklyServiceContent.
 3. **Reset partial failure**: Sequential segment creation could fail mid-loop. Mitigation (deferred): bulkCreate + auto-rollback.
 4. **Blueprint versioning**: Still none. Reset always uses current blueprint. Accepted tradeoff per DECISION-002 Contract 3.
+
+## [ATT-011] Weekly Editor V2 — Full Zero-Trust Rewrite
+**Date:** 2026-02-26
+**Surfaces:** NEW files in components/service/v2/ (19 files). Integration: pages/WeeklyServiceManager (1 edit swap).
+**What was attempted:** Complete rewrite of the weekly service editor with entity-first architecture. Zero code reuse from V1 editor components. See DECISION-003 for full architecture spec.
+**Result:** IN PROGRESS
+**Disposition:** IN PROGRESS
+**Backup:** All V1 files remain untouched. V2 is additive. Swap is a single edit, instantly revertible.

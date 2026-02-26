@@ -58,3 +58,61 @@ All code paths that create, load, or reset recurring service data MUST use Sessi
 - SEGMENT_FIELD_MAP requires `leader` entry (P1)
 - Type normalization extraction (P2)
 - Reset hardening (P3)
+
+---
+
+## [DECISION-003] Weekly Editor V2 — Entity-First Zero-Trust Rewrite
+**Date:** 2026-02-26
+**Status:** ACTIVE
+**Context:** The V1 weekly editor was incrementally migrated from JSON-blob to entity-based storage. This migration left behind: hardcoded sub-assignment fallbacks, a JSON transformation layer (weeklySessionSync) that injects phantom fields, dual-write patterns (state blob + entity), and multi-alias field access chains. Multiple patching attempts (ATT-001 through ATT-010) fixed individual symptoms but the architecture remains fragile.
+
+**Decision:**
+Build a completely new Weekly Editor (V2) from scratch with zero code reuse from V1 editor components. The V2 architecture:
+
+### Principle 1: No Intermediate JSON Shape
+- Components receive raw entity objects directly from React Query cache
+- No `serviceData["9:30am"][idx].data.presenter` shape
+- No `weeklySessionSync` transformation layer
+- No `segmentEntityToWeeklyJSON()` function
+
+### Principle 2: `ui_fields` and `ui_sub_assignments` Are Canonical
+- These fields are stamped on Segment entities at creation time (from blueprint)
+- The editor reads ONLY from `segment.ui_fields` to determine which inputs to show
+- Zero fallback logic. Zero blueprint matching at read time.
+- Segments without `ui_fields` show an "unconfigured" warning, NOT guessed fields.
+
+### Principle 3: Single Write Path
+- User input → optimistic React Query cache update → debounced entity.update()
+- No `setServiceData()` blob. No `ServiceDataContext`. No `UpdatersContext`.
+- No dual-write (state + entity) pattern.
+
+### Principle 4: Entity Fields Read Directly
+- `segment.presenter` not `segment.data.presenter` or `getSegmentData(segment, 'leader')`
+- One location. One value. No alias chains.
+
+### Principle 5: Additive Deployment
+- V2 files built in `components/service/v2/` alongside V1
+- V1 files remain untouched until V2 is verified
+- Single edit to WeeklyServiceManager swaps V1→V2 (instantly revertible)
+
+### File Structure:
+- 19 new files, ~1,240 total lines (avg 65/file)
+- Replaces 8 V1 files, ~2,850+ lines (avg 356/file)
+
+### What V2 Does NOT Touch:
+- Entity schemas (Service, Session, Segment, PreSessionDetails)
+- ensureRecurringServices (already entity-first)
+- EmptyDayPrompt (already creates entities correctly)
+- BlueprintEditor + BlueprintSegmentEditor
+- useServiceSchedules
+- segmentTypeMap.js
+- PDF generation (adapter added if needed)
+- Announcements (stay in WeeklyServiceManager parent)
+- SpecialSegmentDialog, VerseParserDialog
+- AutocompleteInput
+
+**Consequences:**
+- Ghost JSON injections eliminated at the architecture level
+- Hardcoded fallbacks impossible (no fallback code exists)
+- Every field rendered is traceable to `segment.ui_fields` on the entity
+- Pre-migration segments without `ui_fields` show explicit warnings instead of phantom data
