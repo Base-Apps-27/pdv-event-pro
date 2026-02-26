@@ -177,6 +177,34 @@
 **Result:** IMPLEMENTED (partial — see ATT-015 for root cause fix)
 **Disposition:** IMPLEMENTED — Sort fix applied but used `order` field as primary, which is unreliable. See ATT-015.
 
+## [ATT-015a] Comprehensive Sub-Assignment Management Fix
+**Date:** 2026-02-26
+**Surfaces:** WeeklyEditorV2, SubAssignmentRow, SegmentCard, useWeeklyData, useResetToBlueprint, useCopyBetweenSlots
+**What was attempted:** End-to-end fix for sub-assignment (Ministración child segment) management across ALL code paths. Prior to this fix, child segments could be created without `parent_segment_id`, causing them to appear as orphaned top-level segments with empty `ui_fields`, triggering amber "unconfigured" warnings.
+
+**Root Causes Found:**
+1. `SubAssignmentRow` fired a CREATE on every keystroke (no debounce for new entities), potentially creating duplicates
+2. `handleWriteChild` in WeeklyEditorV2 didn't validate `parentId` presence before creating child segments
+3. `SubAssignmentRow` didn't pass `parentSegmentId` to the config object for creates
+4. `SegmentCard` matched children to sub-assignments by positional index — fragile if children arrive out of order
+5. `useResetToBlueprint` never created child Segment entities for blueprint sub_assignments — relied on UI to create on first edit
+6. `useWeeklyData` couldn't distinguish valid children from orphaned children (parent_segment_id pointing to nonexistent parent)
+7. 7 orphaned Ministración segments were found in production (service 699bdf1cf3c959efcc24d06b) — deleted with user approval
+
+**Fixes Applied (6 files):**
+1. **SubAssignmentRow**: Added 600ms debounce for CREATE path (prevents duplicates while typing). Existing child UPDATE path unchanged (uses standard useEntityWrite debounce). Added cleanup on unmount.
+2. **SegmentCard**: Now passes `parentSegmentId={segment.id}` to SubAssignmentRow. Matches children by `title === subConfig.label` (durable) with index fallback.
+3. **WeeklyEditorV2 handleWriteChild**: Added guard requiring `columnOrConfig.parentId` for creates. Blocks + logs warning if parentId missing. Trims whitespace.
+4. **useWeeklyData**: Two-pass segment categorization: first identifies all parent IDs, then validates children's parent_segment_id against that set. Orphaned children (stale references) are logged and excluded.
+5. **useResetToBlueprint**: Now creates child Segment entities at reset time for each blueprint sub_assignment, with `parent_segment_id` pointing to the newly created parent. Children are immediately available without waiting for user input.
+6. **useCopyBetweenSlots**: Added JSDoc noting child segment copy scope (children are NOT auto-copied between slots since they are independent entities per session).
+
+**Data Cleanup:**
+- Deleted 7 orphaned Ministración segments from production (parent_segment_id: null, service_id: 699bdf1cf3c959efcc24d06b) — approved by user.
+
+**Result:** IMPLEMENTED
+**Disposition:** IMPLEMENTED — Sub-assignments are now properly managed across create, reset, edit, and data loading paths. No orphan creation possible.
+
 ## [ATT-015] Platform-Wide Session Order Audit — Chronological Sort Fix
 **Date:** 2026-02-26
 **Surfaces:** components/utils/sessionSort.js (NEW), components/myprogram/useActiveProgramCache, components/myprogram/normalizeSession, functions/refreshActiveProgram, functions/getSortedSessions
