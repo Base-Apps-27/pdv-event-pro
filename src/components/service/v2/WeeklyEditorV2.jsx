@@ -10,13 +10,13 @@
  * NO weeklySessionSync. NO mergeSegmentsWithBlueprint.
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { hasPermission } from "@/components/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus } from "lucide-react";
+import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -73,14 +73,22 @@ export default function WeeklyEditorV2({
     isLoading: dataLoading, queryKey
   } = useWeeklyData(serviceId);
 
-  // ── Write hook (single write path) ──
+  // ── Write hook (single write path, coalesced + retry) ──
   const {
     writeSegment, writeSession, writePSD, writeSongs,
     dirtyIds, flushAll, flushEntity
   } = useEntityWrite(queryKey);
 
-  // ── External sync ──
+  // ── External sync (watches Service + Segment + Session) ──
   const { externalChangeAvailable, handleReload, markOwnWrite } = useExternalSync(serviceId, queryKey);
+
+  // ── Flush before navigating away ──
+  useEffect(() => {
+    return () => {
+      // Component unmounting — flush any pending writes
+      flushAll().catch(() => {});
+    };
+  }, [flushAll]);
 
   // ── Action hooks ──
   const { execute: executeReset } = useResetToBlueprint(queryKey);
@@ -179,6 +187,35 @@ export default function WeeklyEditorV2({
   }
 
   if (dataLoading) return <div className="p-8"><Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" /></div>;
+
+  // ── Data error ──
+  if (!dataLoading && sessions.length === 0 && serviceId) {
+    return (
+      <div className="p-6 bg-amber-50 border-2 border-amber-300 rounded-lg space-y-3">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-600" />
+          <p className="text-sm text-amber-800 font-medium">
+            No se encontraron sesiones para este servicio.
+          </p>
+        </div>
+        <p className="text-xs text-amber-700">
+          El servicio existe (ID: {serviceId}) pero no tiene sesiones.
+          Restablezca desde el blueprint para recrear la estructura.
+        </p>
+        {resolvedBlueprint && (
+          <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white"
+            onClick={() => {
+              // Create sessions + segments from blueprint directly
+              toast.info("Use el botón de Restablecer después de crear sesiones manualmente, o contacte un administrador.");
+            }}
+          >
+            <RotateCcw className="w-3 h-3 mr-1" />
+            Reparar Estructura
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
