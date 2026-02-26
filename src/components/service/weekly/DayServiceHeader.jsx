@@ -73,7 +73,18 @@ export default function DayServiceHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} className="gap-2">
+            <DropdownMenuItem 
+              onClick={() => {
+                // DECISION-005 compliant: Use full production URL, not relative path.
+                // Relative paths break when accessed via preview/proxy contexts.
+                const url = `${window.location.origin}/api/functions/serveWeeklyServiceSubmission`;
+                navigator.clipboard.writeText(url).then(() => {
+                  // Copied silently
+                }).catch(() => {});
+                window.open(url, '_blank');
+              }} 
+              className="gap-2"
+            >
               <ExternalLink className="w-4 h-4 text-purple-500" />
               <span>Link para Oradores</span>
             </DropdownMenuItem>
