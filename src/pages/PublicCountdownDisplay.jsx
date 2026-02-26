@@ -221,12 +221,14 @@ export default function PublicCountdownDisplay() {
   }
 
   // ── All done → Standby ──
+  // FIX (ATT-014): When override is active (debug mode), never go to standby
+  // so admins can inspect the TV layout for any service/event regardless of date.
   const allDone =
     !currentSegment &&
     !nextSegment &&
     !preLaunchSegment &&
     segments.length > 0;
-  if (allDone) {
+  if (allDone && !_isOverride) {
     return <StandbyScreen currentTime={currentTime} />;
   }
 
