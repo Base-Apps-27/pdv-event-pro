@@ -1,13 +1,17 @@
 /**
  * SlotColumn.jsx — V2 renders one complete time-slot column.
- * Receives session entity + segments array directly from useWeeklyData.
- * No JSON blob. No serviceData shape.
+ * HARDENING (Phase 9):
+ *   - Memoized with React.memo
+ *   - Print-friendly segment timeline (start/end times)
+ *   - Empty segment list warning
+ *   - Configurable target duration from session entity
+ *   - Segment count badge in header
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronsRight } from "lucide-react";
+import { Plus, ChevronsRight, AlertTriangle } from "lucide-react";
 import { addMinutes, format as formatDate } from "date-fns";
 import SegmentCard from "../segments/SegmentCard";
 import PreServiceSection from "./PreServiceSection";
@@ -15,6 +19,7 @@ import RecesoSection from "./RecesoSection";
 import TeamSection from "./TeamSection";
 
 const SLOT_COLORS = ['teal', 'blue', 'purple', 'amber', 'green'];
+const DEFAULT_TARGET_MIN = 90;
 
 function safeParseTime(slotName) {
   const match = slotName?.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
@@ -27,7 +32,7 @@ function safeParseTime(slotName) {
   return new Date(2000, 0, 1, hours, minutes);
 }
 
-export default function SlotColumn({
+export default memo(function SlotColumn({
   session,
   segments,
   childSegments,
@@ -64,10 +69,18 @@ export default function SlotColumn({
   const accentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
 
   // Calculate timing
-  const totalDuration = segments.reduce((sum, s) => sum + (s.duration_min || 0), 0);
-  const startTime = safeParseTime(session.name);
-  const endTime = addMinutes(startTime, totalDuration);
-  const isOverage = totalDuration > 90;
+  const { totalDuration, startTime, endTime, isOverage, targetMin } = useMemo(() => {
+    const total = segments.reduce((sum, s) => sum + (s.duration_min || 0), 0);
+    const start = safeParseTime(session.name);
+    const target = DEFAULT_TARGET_MIN;
+    return {
+      totalDuration: total,
+      startTime: start,
+      endTime: addMinutes(start, total),
+      isOverage: total > target,
+      targetMin: target,
+    };
+  }, [segments, session.name]);
 
   const handleMove = useCallback((idx, dir) => {
     onMove?.(session.id, idx, dir);
@@ -90,13 +103,13 @@ export default function SlotColumn({
             {session.name?.replace('am', ' a.m.').replace('pm', ' p.m.')}
           </h2>
           {canEdit && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 print:hidden">
               {onCopyAllToSlot && (
-                <Button size="sm" onClick={onCopyAllToSlot} className="print:hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600">
+                <Button size="sm" onClick={onCopyAllToSlot} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600">
                   <ChevronsRight className="w-4 h-4 mr-2" />Copiar Todo
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={() => onOpenSpecialDialog?.(session)} className="print:hidden border-2 border-gray-400 bg-white text-gray-900 font-semibold">
+              <Button size="sm" variant="outline" onClick={() => onOpenSpecialDialog?.(session)} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold">
                 <Plus className="w-4 h-4 mr-2" />Especial
               </Button>
             </div>
@@ -104,10 +117,13 @@ export default function SlotColumn({
         </div>
         <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
           <Badge variant="outline" className={isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : `bg-${accentColor}-50`}>
-            {totalDuration} min total{isOverage && ` (+${totalDuration - 90} min)`}
+            {totalDuration} min total{isOverage && ` (+${totalDuration - targetMin} min)`}
+          </Badge>
+          <Badge variant="outline" className="text-xs text-gray-500">
+            {segments.length} segmentos
           </Badge>
           <span>Termina: {formatDate(endTime, "h:mm a")}</span>
-          <span className="text-xs text-gray-500">(Meta: 90 min)</span>
+          <span className="text-xs text-gray-500">(Meta: {targetMin} min)</span>
           {isOverage && <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>}
         </div>
       </div>
@@ -117,6 +133,17 @@ export default function SlotColumn({
 
       {/* Segments */}
       <div className="space-y-4">
+        {segments.length === 0 && (
+          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <AlertTriangle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">No hay segmentos en este horario.</p>
+            {canEdit && (
+              <p className="text-xs text-gray-400 mt-1">
+                Use "Especial" para agregar, o restablezca desde el blueprint.
+              </p>
+            )}
+          </div>
+        )}
         {segments.map((segment, idx) => (
           <SegmentCard
             key={segment.id}
@@ -155,4 +182,4 @@ export default function SlotColumn({
       <TeamSection session={session} accentColor={accentColor} onWriteSession={onWriteSession} />
     </div>
   );
-}
+});

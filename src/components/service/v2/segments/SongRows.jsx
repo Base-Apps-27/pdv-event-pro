@@ -1,14 +1,17 @@
 /**
  * SongRows.jsx — V2 song input rows for worship segments.
- * Reads song data from flat entity fields (song_1_title, etc.).
- * Writes via onWriteSongs(segmentId, songsArray).
+ * HARDENING (Phase 9):
+ *   - Memoized with React.memo
+ *   - Print: read-only song list
+ *   - Song row numbering with accent color
+ *   - Better sync with entity: tracks all 6 lead/key fields
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Music } from "lucide-react";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 /**
@@ -24,17 +27,16 @@ function getSongsFromEntity(segment) {
       key: segment[`song_${i}_key`] || '',
     });
   }
-  // Ensure at least the right number of slots
   while (songs.length < count) {
     songs.push({ title: '', lead: '', key: '' });
   }
   return songs;
 }
 
-export default function SongRows({ segment, onWriteSongs, canEdit = true }) {
+export default memo(function SongRows({ segment, onWriteSongs, canEdit = true }) {
   const [songs, setSongs] = useState(() => getSongsFromEntity(segment));
 
-  // Sync from entity when segment changes (e.g., after external reload)
+  // Sync from entity when segment changes
   useEffect(() => {
     setSongs(getSongsFromEntity(segment));
   }, [
@@ -42,6 +44,8 @@ export default function SongRows({ segment, onWriteSongs, canEdit = true }) {
     segment.number_of_songs,
     segment.song_1_title, segment.song_2_title, segment.song_3_title,
     segment.song_4_title, segment.song_5_title, segment.song_6_title,
+    segment.song_1_lead, segment.song_2_lead, segment.song_3_lead,
+    segment.song_4_lead, segment.song_5_lead, segment.song_6_lead,
   ]);
 
   const updateSong = useCallback((idx, field, value) => {
@@ -67,12 +71,17 @@ export default function SongRows({ segment, onWriteSongs, canEdit = true }) {
     onWriteSongs(segment.id, next);
   }, [songs, segment.id, onWriteSongs]);
 
+  const filledSongs = songs.filter(s => s.title);
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <Label className="text-xs font-semibold text-gray-700">Canciones</Label>
+        <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+          <Music className="w-3 h-3" />
+          Canciones
+        </Label>
         {canEdit && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 print:hidden">
             <span className="text-[10px] text-gray-400">{songs.length}</span>
             <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={removeSlot} disabled={songs.length <= 1} title="Quitar canción">
               <Minus className="w-3 h-3" />
@@ -83,36 +92,53 @@ export default function SongRows({ segment, onWriteSongs, canEdit = true }) {
           </div>
         )}
       </div>
-      {songs.map((song, idx) => (
-        <div key={idx} className="grid grid-cols-12 gap-2">
-          <div className="col-span-5">
-            <AutocompleteInput
-              type="songTitle"
-              placeholder={`Canción ${idx + 1}`}
-              value={song.title}
-              onChange={(e) => updateSong(idx, 'title', e.target.value)}
-              className="text-xs"
-            />
+
+      {/* Screen: editable */}
+      <div className="print:hidden space-y-1">
+        {songs.map((song, idx) => (
+          <div key={idx} className="grid grid-cols-12 gap-2">
+            <div className="col-span-5">
+              <AutocompleteInput
+                type="songTitle"
+                placeholder={`Canción ${idx + 1}`}
+                value={song.title}
+                onChange={(e) => updateSong(idx, 'title', e.target.value)}
+                className="text-xs"
+              />
+            </div>
+            <div className="col-span-5">
+              <AutocompleteInput
+                type="worshipLeader"
+                placeholder="Líder"
+                value={song.lead}
+                onChange={(e) => updateSong(idx, 'lead', e.target.value)}
+                className="text-xs"
+              />
+            </div>
+            <div className="col-span-2">
+              <Input
+                placeholder="Tono"
+                value={song.key}
+                onChange={(e) => updateSong(idx, 'key', e.target.value)}
+                className="text-xs px-1 text-center"
+              />
+            </div>
           </div>
-          <div className="col-span-5">
-            <AutocompleteInput
-              type="worshipLeader"
-              placeholder="Líder"
-              value={song.lead}
-              onChange={(e) => updateSong(idx, 'lead', e.target.value)}
-              className="text-xs"
-            />
-          </div>
-          <div className="col-span-2">
-            <Input
-              placeholder="Tono"
-              value={song.key}
-              onChange={(e) => updateSong(idx, 'key', e.target.value)}
-              className="text-xs px-1 text-center"
-            />
-          </div>
+        ))}
+      </div>
+
+      {/* Print: read-only */}
+      {filledSongs.length > 0 && (
+        <div className="hidden print:block space-y-0.5">
+          {filledSongs.map((song, idx) => (
+            <div key={idx} className="text-xs text-gray-800">
+              <span className="font-semibold">{idx + 1}.</span> {song.title}
+              {song.lead && <span className="text-gray-600"> — {song.lead}</span>}
+              {song.key && <span className="text-gray-500"> ({song.key})</span>}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
-}
+});

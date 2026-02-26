@@ -1,11 +1,15 @@
 /**
  * SubAssignmentRow.jsx — V2 renders one sub-assignment input.
  * DECISION-003: Reads from segment.ui_sub_assignments (entity field).
- * Writes to child Segment entity via dedicated handler.
+ * HARDENING (Phase 9):
+ *   - Memoized
+ *   - Print: read-only display
+ *   - Shows assignment status (filled vs empty)
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 
 /**
@@ -13,32 +17,46 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
  * @param {object|null} childEntity - The child Segment entity (if exists)
  * @param {function} onWriteChild - (childEntityId, column, value) or (null, subConfig, value) for create
  */
-export default function SubAssignmentRow({ subConfig, childEntity, onWriteChild }) {
+export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteChild }) {
   const value = childEntity?.presenter || '';
   const [local, setLocal] = useState(value);
   useEffect(() => { setLocal(value); }, [value]);
 
   return (
     <div className="bg-purple-50 border border-purple-200 rounded p-2">
-      <Label className="text-xs font-semibold text-purple-800 mb-1">
-        {subConfig.label} {subConfig.duration_min ? `(${subConfig.duration_min} min)` : ''}
-      </Label>
-      <AutocompleteInput
-        type="person"
-        placeholder={`Nombre para ${subConfig.label}`}
-        value={local}
-        onChange={(e) => {
-          const val = e.target.value;
-          setLocal(val);
-          if (childEntity?.id) {
-            onWriteChild(childEntity.id, 'presenter', val);
-          } else {
-            // No child entity yet — parent handler will create one
-            onWriteChild(null, subConfig, val);
-          }
-        }}
-        className="text-sm"
-      />
+      <div className="flex items-center justify-between mb-1">
+        <Label className="text-xs font-semibold text-purple-800">
+          {subConfig.label} {subConfig.duration_min ? `(${subConfig.duration_min} min)` : ''}
+        </Label>
+        {value ? (
+          <Badge variant="outline" className="text-[9px] bg-green-50 border-green-300 text-green-700">Asignado</Badge>
+        ) : (
+          <Badge variant="outline" className="text-[9px] bg-gray-50 border-gray-300 text-gray-500">Pendiente</Badge>
+        )}
+      </div>
+      {/* Screen: editable */}
+      <div className="print:hidden">
+        <AutocompleteInput
+          type="person"
+          placeholder={`Nombre para ${subConfig.label}`}
+          value={local}
+          onChange={(e) => {
+            const val = e.target.value;
+            setLocal(val);
+            if (childEntity?.id) {
+              onWriteChild(childEntity.id, 'presenter', val);
+            } else {
+              // No child entity yet — parent handler will create one
+              onWriteChild(null, subConfig, val);
+            }
+          }}
+          className="text-sm"
+        />
+      </div>
+      {/* Print: read-only */}
+      {value && (
+        <div className="hidden print:block text-xs text-gray-800">{value}</div>
+      )}
     </div>
   );
-}
+});

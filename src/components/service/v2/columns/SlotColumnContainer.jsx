@@ -1,10 +1,13 @@
 /**
  * SlotColumnContainer.jsx — V2 responsive container for slot columns.
- * Desktop: side-by-side with horizontal scroll.
- * Mobile: tab-based switcher.
+ * HARDENING (Phase 9):
+ *   - Memoized with React.memo
+ *   - Print layout: stacked with page breaks
+ *   - Keyboard-accessible tab navigation
+ *   - Dirty indicator on mobile tabs (red dot)
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import SlotColumn from "./SlotColumn";
@@ -21,7 +24,7 @@ function useIsMobile(breakpoint = 768) {
   return isMobile;
 }
 
-export default function SlotColumnContainer({ sessions, segmentsBySession, childSegments, psdBySession, columnProps }) {
+export default memo(function SlotColumnContainer({ sessions, segmentsBySession, childSegments, psdBySession, columnProps }) {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(sessions[0]?.name || '');
 
@@ -30,6 +33,22 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
       setActiveTab(sessions[0].name);
     }
   }, [sessions, activeTab]);
+
+  // Check which sessions have dirty segments (for tab indicator)
+  const dirtySessionIds = useMemo(() => {
+    if (!columnProps.dirtyIds?.size) return new Set();
+    const result = new Set();
+    for (const session of sessions) {
+      const segs = segmentsBySession[session.id] || [];
+      for (const seg of segs) {
+        if (columnProps.dirtyIds.has(String(seg.id))) {
+          result.add(session.id);
+          break;
+        }
+      }
+    }
+    return result;
+  }, [sessions, segmentsBySession, columnProps.dirtyIds]);
 
   const renderColumn = (session, idx) => {
     const isLast = idx === sessions.length - 1;
@@ -55,7 +74,7 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
     );
   };
 
-  // Single slot
+  // Single slot — no tabs needed
   if (sessions.length <= 1) {
     return (
       <div className="overflow-x-auto -mx-2 px-2">
@@ -69,14 +88,18 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
     return (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <style>{`[data-v2-slot-tab][data-state="active"] { background-color: #1F8A70 !important; color: #ffffff !important; }`}</style>
-        <TabsList className="w-full h-11 bg-gray-200 mb-3">
+        <TabsList className="w-full h-11 bg-gray-200 mb-3 print:hidden">
           {sessions.map((s, idx) => {
             const segs = segmentsBySession[s.id] || [];
             const totalMin = segs.reduce((sum, seg) => sum + (seg.duration_min || 0), 0);
+            const isDirty = dirtySessionIds.has(s.id);
             return (
-              <TabsTrigger key={s.id} value={s.name} className="flex-1 px-2 py-1.5 text-sm font-bold text-gray-700" data-v2-slot-tab="true">
+              <TabsTrigger key={s.id} value={s.name} className="flex-1 px-2 py-1.5 text-sm font-bold text-gray-700 relative" data-v2-slot-tab="true">
                 {s.name?.replace('am', ' AM').replace('pm', ' PM')}
                 <Badge variant="outline" className="ml-1 text-[9px] text-gray-600 border-gray-400">{totalMin}m</Badge>
+                {isDirty && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                )}
               </TabsTrigger>
             );
           })}
@@ -86,6 +109,10 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
             {renderColumn(s, idx)}
           </TabsContent>
         ))}
+        {/* Print: show all columns stacked */}
+        <div className="hidden print:block space-y-8">
+          {sessions.map((s, idx) => renderColumn(s, idx))}
+        </div>
       </Tabs>
     );
   }
@@ -98,4 +125,4 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
       </div>
     </div>
   );
-}
+});
