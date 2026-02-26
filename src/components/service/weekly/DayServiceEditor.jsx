@@ -219,7 +219,6 @@ export default function DayServiceEditor({
         queryKey: ['dayService', date, dayOfWeek],
         refetchType: 'none',  // Mark stale but do NOT auto-refetch
       });
-      setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
     },
     onError: (error) => {
       ownSaveInProgressRef.current = false;
