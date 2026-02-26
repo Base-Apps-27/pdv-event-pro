@@ -158,3 +158,43 @@ All session sorting throughout the platform MUST use chronological sort as prima
 - Sessions always appear in chronological order regardless of `order` field values
 - Eliminates the class of bugs where duplicate/wrong `order` values cause display inversions
 - The `order` field becomes a "hint" rather than authoritative — safe to ignore when date+time are available
+
+---
+
+## [DECISION-005] Public HTML Form CSP Headers — Constitutional Non-Negotiable
+**Date:** 2026-02-26
+**Status:** ACTIVE — CONSTITUTIONAL AMENDMENT
+**Context:** Backend functions that serve public HTML forms (`serveSpeakerSubmission`, `serveArtsSubmission`, `serveWeeklyServiceSubmission`, and any future form-serving functions) rely on inline scripts, inline styles, external CDN scripts (cdnjs.cloudflare.com), and Google Fonts. Without proper `Content-Security-Policy` headers, browsers block these resources entirely, rendering forms non-functional. This is not a feature — it is a hard prerequisite for form functionality.
+
+**Decision:**
+Every backend function that returns `Content-Type: text/html` with inline scripts or external script dependencies MUST include CSP headers. This is a **constitutional non-negotiable** — forms are not considered complete, shippable, or functional without them.
+
+### Required Headers (Canonical)
+Every HTML-serving response MUST include:
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'
+```
+
+### Rules
+1. **Non-Negotiable:** Any backend function returning `text/html` with `<script>` tags MUST include the CSP header. No exceptions.
+2. **Definition of Done:** A public HTML form is NOT done unless CSP headers are present and verified.
+3. **New Form Checklist:** When creating a new HTML-serving backend function, the CSP header MUST be included in the initial implementation — not added as a fix later.
+4. **Update Protocol:** When modifying an existing HTML-serving function, verify CSP headers are present. If missing, add them as part of the change.
+5. **Scope Extension:** If a form adds a new external script domain (beyond cdnjs.cloudflare.com), the CSP header MUST be updated to include it. Document the addition in the commit.
+
+### Affected Functions (current)
+- `functions/serveSpeakerSubmission` — ✅ CSP added
+- `functions/serveArtsSubmission` — ✅ CSP added
+- `functions/serveWeeklyServiceSubmission` — ✅ CSP added
+
+### Why Constitutional
+- Without CSP headers, forms silently break in production with no user-visible error
+- The failure mode is invisible — the HTML loads but scripts don't execute
+- This is a platform infrastructure concern, not a feature toggle
+- Every form, every time, no exceptions
+
+**Consequences:**
+- All current and future HTML-serving functions are protected against CSP blocking
+- Forms are guaranteed functional at the browser level
+- Any new HTML form function that omits CSP headers is considered incomplete and must not ship
