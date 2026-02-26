@@ -274,7 +274,8 @@ Deno.serve(async (req) => {
             if (sessionId && sessionId !== "all") sessionFilter.id = sessionId;
 
             sessions = await withRetry(() => base44.asServiceRole.entities.Session.filter(sessionFilter, undefined, undefined, undefined, dataEnv));
-            sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+            // DECISION-004 (ATT-015): Sort sessions chronologically, not by unreliable `order` field
+            sessions = sortSessionsChronologically(sessions);
 
             // Fetch segments, preSessionDetails, streamBlocks, and extras SEQUENTIALLY
             // to avoid rate-limit cascades. Each batch uses withRetry for resilience.
@@ -458,7 +459,8 @@ Deno.serve(async (req) => {
             }
 
             if (sessions.length > 0) {
-                 sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+                 // DECISION-004 (ATT-015): Sort sessions chronologically, not by unreliable `order` field
+                 sessions = sortSessionsChronologically(sessions);
 
                  const sessionIds = sessions.map(s => s.id);
                  const allResults = [];
