@@ -448,21 +448,38 @@ function StandardSegmentCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 pt-3">
-        {/* Director field (for worship segments, stored as presenter) */}
-        {segment.fields?.includes("presenter") && segment.type === "Alabanza" && (
-          <div className="space-y-1">
-            <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="presenter" type="worshipLeader" placeholder="Director" />
-            <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
-              💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
-            </p>
-          </div>
-        )}
-        {segment.fields?.includes("presenter") && (
-          <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="presenter" type="presenter" placeholder="Presentador" />
-        )}
-        {segment.fields?.includes("preacher") && (
-          <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="preacher" type="preacher" placeholder="Predicador" />
-        )}
+        {/* Person field — "leader", "presenter", "preacher" are all aliases for the same
+             entity column (presenter). We render one input with the right label/placeholder
+             based on which alias the blueprint declared. All write to field="presenter"
+             via SEGMENT_FIELD_MAP (leader→presenter, preacher→presenter). */}
+        {(() => {
+          const fields = segment.fields || [];
+          const isWorship = segment.type === "Alabanza" || segment.type === "worship";
+          const hasLeader = fields.includes("leader");
+          const hasPresenter = fields.includes("presenter");
+          const hasPreacher = fields.includes("preacher");
+
+          // Worship segments: show "Director" label
+          if (isWorship && (hasLeader || hasPresenter)) {
+            return (
+              <div className="space-y-1">
+                <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="leader" type="worshipLeader" placeholder="Director de A&A" />
+                <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+                  💡 Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.
+                </p>
+              </div>
+            );
+          }
+          // Preacher field (Plenaria/message segments)
+          if (hasPreacher) {
+            return <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="preacher" type="preacher" placeholder="Predicador" />;
+          }
+          // Generic presenter (Bienvenida, Ofrenda, Oración, etc.)
+          if (hasPresenter || hasLeader) {
+            return <SegmentAutocomplete service={timeSlot} segmentIndex={idx} field="presenter" type="presenter" placeholder="Presentador" />;
+          }
+          return null;
+        })()}
         {segment.fields?.includes("title") && (
           <SegmentTextInput service={timeSlot} segmentIndex={idx} field="title" placeholder="Título del Mensaje" />
         )}
