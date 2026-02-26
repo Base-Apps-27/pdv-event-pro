@@ -99,7 +99,7 @@ Build a completely new Weekly Editor (V2) from scratch with zero code reuse from
 - 19 new files, ~1,240 total lines (avg 65/file)
 - Replaces 8 V1 files, ~2,850+ lines (avg 356/file)
 
-### What V2 Does NOT Touch:
+### What V2 Does NOT Touch (updated):
 - Entity schemas (Service, Session, Segment, PreSessionDetails)
 - ensureRecurringServices (already entity-first)
 - EmptyDayPrompt (already creates entities correctly)

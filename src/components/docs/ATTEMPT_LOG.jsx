@@ -174,5 +174,41 @@
   2. Root cause identified: `useActiveProgramCache` override query was NOT sorting sessions by `order` or sorting segments by session-order-then-segment-order. The regular cache path (refreshActiveProgram) sorts correctly, but the override path (used for testing) did not.
   3. FIX: Added `.sort((a, b) => (a.order || 0) - (b.order || 0))` to sessions and proper session-order-then-segment-order sorting to segments in both `overrideServiceId` and `overrideEventId` code paths.
   4. Created temporary `ServiceQuickEditor` page for admin to select any service/event and view it on MyProgram or PublicProgramView, with full diagnostic data (session order, segment order, timestamps).
+**Result:** IMPLEMENTED (partial — see ATT-015 for root cause fix)
+**Disposition:** IMPLEMENTED — Sort fix applied but used `order` field as primary, which is unreliable. See ATT-015.
+
+## [ATT-015] Platform-Wide Session Order Audit — Chronological Sort Fix
+**Date:** 2026-02-26
+**Surfaces:** components/utils/sessionSort.js (NEW), components/myprogram/useActiveProgramCache, components/myprogram/normalizeSession, functions/refreshActiveProgram, functions/getSortedSessions
+**What was attempted:**
+  Full audit of session ordering across the entire platform. User reported event sessions appearing in reverse chronological order (Sábado PM before Viernes PM) on TV display and other surfaces. ServiceQuickEditor diagnostic showed all 3 sessions had `order=4` — proving the `order` field is unreliable.
+
+  **Root Cause:** Session `order` field is assigned as a simple counter at creation time (`sessions.length + 1`) but:
+  - Multiple sessions can end up with identical `order` values
+  - AI Helper may overwrite order values inconsistently
+  - Nobody recalculates order when sessions are added, deleted, or reordered
+  - All data pipeline surfaces (refreshActiveProgram, useActiveProgramCache, normalizeSession) trusted `order` as primary sort key
+
+  **Audit Results — Sort strategies by surface BEFORE fix:**
+  - EventDetail: date → time ✅ (already correct for display)
+  - SessionManager: date → time ✅ (already correct for display)
+  - refreshActiveProgram: `order` only ❌
+  - useActiveProgramCache (override): `order` only ❌
+  - getSortedSessions: `order` → date → time ❌ (order was primary)
+  - normalizeSession (event + entity-sourced): `session.order` ❌
+
+  **Fix Applied (DECISION-004):**
+  1. Created `components/utils/sessionSort.js` — canonical sort: date → planned_start_time → order (tiebreaker) → name
+  2. Updated `useActiveProgramCache` override queries to use `sortSessionsChronologically()`
+  3. Updated `normalizeSession` (both `normalizeEventSegments` and `normalizeEntitySourcedSegments`) to build chronological index
+  4. Updated `refreshActiveProgram` (backend) with inlined chronological sort (Deno can't import frontend modules)
+  5. Updated `getSortedSessions` (backend) to use date → time as primary sort
+
+  **What was NOT changed (already correct):**
+  - EventDetail sessions sort (line 84-92)
+  - SessionManager display sort (line 331-336)
+  - Session entity schema (no field changes)
+  - No data migration (non-destructive)
+
 **Result:** IMPLEMENTED
-**Disposition:** IMPLEMENTED — Sort fix applied. Temp debug viewer created. Debug viewer should be removed after validation.
+**Disposition:** IMPLEMENTED — All data pipeline surfaces now sort sessions chronologically. The `order` field is preserved but demoted to tiebreaker only.
