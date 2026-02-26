@@ -128,3 +128,22 @@
 - `v2/actions/useSpecialSegment.js` — add/remove special segments
 - `v2/actions/useCopyBetweenSlots.js` — cross-slot copy handler
 - `v2/WeeklyEditorV2.jsx` — day-level orchestrator
+
+## [ATT-012] V2 Phase 8 — Foundation Hardening
+**Date:** 2026-02-26
+**Surfaces:** All 19 V2 files (hooks, actions, segments, columns)
+**What was attempted:** Comprehensive hardening pass across all V2 layers to make the foundation durable for long-term use. No new UI features — focused on reliability, correctness, and resilience.
+**Changes:**
+  - **useEntityWrite**: Field coalescing (multiple rapid writes to same entity batched into 1 API call), retry with backoff (2 retries), error toast on permanent failure, cleaner flush lifecycle
+  - **useExternalSync**: Now watches Segment + Session entities (not just Service), separate event handler with better debouncing
+  - **useWeeklyData**: Promise.allSettled for parallel loading (segment load failure doesn't kill PSD), orphan segment detection + warning, 30s staleTime to reduce refetches
+  - **fieldMap**: Added livestream_notes, microphone_assignments, prep_instructions, other_notes to NOTES_FIELDS. Exported TEXT_COPY_COLUMNS for cross-slot copy consistency
+  - **useCopyBetweenSlots**: Uses TEXT_COPY_COLUMNS from registry (single source of truth), copies parsed_verse_data, field count in toast
+  - **useResetToBlueprint**: Deletes children before parents (prevents orphans), carries color_code + segment_actions + visibility flags from blueprint, partial success handling with per-session error reporting
+  - **useSpecialSegment**: Input validation, child cascade delete, automatic re-ordering after remove to prevent order gaps
+  - **useMoveSegment**: Full re-index after swap (prevents cumulative order drift from partial updates)
+  - **SegmentNotesPanel**: Added visibility toggles (show_in_*), stage_call_offset input, collapsible empty notes (click to expand), department badge on actions
+  - **SegmentCard**: React.memo for performance, entity color_code support (worship/preach/break/tech/special), unconfigured segments now allow notes expansion + reorder
+  - **WeeklyEditorV2**: Flush on unmount, empty sessions error state, AlertCircle import
+**Result:** IMPLEMENTED
+**Disposition:** IMPLEMENTED — V2 foundation hardened. All layers now have retry, validation, traceability, and defensive patterns.
