@@ -138,8 +138,10 @@ const SegmentCard = memo(function SegmentCard({
               </Button>
             )}
           </CardTitle>
-          {isSpecial && canEdit && (
-            <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden">
+          {canEdit && (
+            <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden"
+              title="Eliminar segmento"
+            >
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
           )}
