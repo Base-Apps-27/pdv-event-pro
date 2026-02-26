@@ -165,3 +165,14 @@
   - **SpeakerMaterialSection**: URL validation green border, print URLs as clickable links, Link icon in header
 **Result:** IMPLEMENTED
 **Disposition:** IMPLEMENTED — V2 now production-ready with full print support, performance optimization, and polished UX across all 19 components.
+
+## [ATT-014] MyProgram Session/Segment Order Bug — Diagnosis & Fix
+**Date:** 2026-02-26
+**Surfaces:** useActiveProgramCache (override query), pages/ServiceQuickEditor (NEW temp tool)
+**What was attempted:**
+  1. User reported MyProgram showing segments in reverse order, 11:30am session ahead of 9:30am.
+  2. Root cause identified: `useActiveProgramCache` override query was NOT sorting sessions by `order` or sorting segments by session-order-then-segment-order. The regular cache path (refreshActiveProgram) sorts correctly, but the override path (used for testing) did not.
+  3. FIX: Added `.sort((a, b) => (a.order || 0) - (b.order || 0))` to sessions and proper session-order-then-segment-order sorting to segments in both `overrideServiceId` and `overrideEventId` code paths.
+  4. Created temporary `ServiceQuickEditor` page for admin to select any service/event and view it on MyProgram or PublicProgramView, with full diagnostic data (session order, segment order, timestamps).
+**Result:** IMPLEMENTED
+**Disposition:** IMPLEMENTED — Sort fix applied. Temp debug viewer created. Debug viewer should be removed after validation.
