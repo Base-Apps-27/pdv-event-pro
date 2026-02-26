@@ -118,7 +118,7 @@ export default function SegmentCard({
             field={field}
             onWrite={onWrite}
             onWriteSongs={onWriteSongs}
-            onOpenVerseParser={onOpenVerseParser}
+            onOpenVerseParser={() => onOpenVerseParser?.(segment.id)}
           />
         ))}
 
