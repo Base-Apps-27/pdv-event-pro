@@ -150,20 +150,95 @@ Deno.serve(async (req) => {
     servicePayload.fotografia = null;
     servicePayload.receso_notes = { [slotNames[0]]: "" };
     servicePayload.pre_service_notes = { ...emptySlotObj };
-    slotNames.forEach(name => {
-      // Use matching blueprint slot or fall back to first slot's blueprint
-      const source = blueprint?.[name] || FALLBACK_BLUEPRINT[name] || FALLBACK_BLUEPRINT["9:30am"];
-      servicePayload[name] = cloneSegments(source);
-    });
-
     const newService = await base44.asServiceRole.entities.Service.create(servicePayload);
 
     console.log(`[ENSURE_SERVICE] Created service for ${dateStr} (id: ${newService.id})`);
+
+    // DECISION-002: Create Session + Segment entities (NOT JSON blobs).
+    // Uses per-session blueprint resolution so each session gets its own
+    // requires_translation and field settings.
+    let totalSegmentsCreated = 0;
+    for (const slotName of slotNames) {
+      // Resolve blueprint for this specific session
+      const sessionBp = blueprintMap[slotName];
+      let bpSegments = sessionBp?.segments || [];
+      // Legacy fallback: old slot-keyed arrays or hardcoded
+      if (!bpSegments.length && blueprint) {
+        bpSegments = blueprint[slotName] || blueprint.segments || [];
+      }
+      if (!bpSegments.length) {
+        bpSegments = FALLBACK_BLUEPRINT[slotName] || FALLBACK_BLUEPRINT["9:30am"];
+      }
+
+      const sessionOrder = slotNames.indexOf(slotName) + 1;
+      const session = await base44.asServiceRole.entities.Session.create({
+        service_id: newService.id,
+        name: slotName,
+        date: dateStr,
+        order: sessionOrder,
+      });
+
+      for (let i = 0; i < bpSegments.length; i++) {
+        const segData = bpSegments[i];
+        const segPayload = {
+          session_id: session.id,
+          service_id: newService.id,
+          order: i + 1,
+          title: segData.title || "Sin título",
+          segment_type: resolveSegmentEnum(segData.type),
+          duration_min: Number(segData.duration) || 0,
+          show_in_general: true,
+          ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
+          ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
+            label: sa.label || "Sin título",
+            person_field_name: sa.person_field_name || "",
+            duration_min: Number(sa.duration_min || sa.duration) || 0,
+          })) : [],
+          requires_translation: !!segData.requires_translation,
+          default_translator_source: segData.default_translator_source || "manual",
+        };
+        if (segData.number_of_songs !== undefined) {
+          segPayload.number_of_songs = Number(segData.number_of_songs) || 0;
+        }
+        if (Array.isArray(segData.actions) && segData.actions.length > 0) {
+          segPayload.segment_actions = segData.actions;
+        }
+
+        const createdSeg = await base44.asServiceRole.entities.Segment.create(segPayload);
+        totalSegmentsCreated++;
+
+        // Create child entities for sub_assignments
+        if (Array.isArray(segData.sub_assignments) && segData.sub_assignments.length > 0) {
+          for (let saIdx = 0; saIdx < segData.sub_assignments.length; saIdx++) {
+            const sa = segData.sub_assignments[saIdx];
+            await base44.asServiceRole.entities.Segment.create({
+              session_id: session.id,
+              service_id: newService.id,
+              parent_segment_id: createdSeg.id,
+              order: saIdx + 1,
+              title: sa.label || 'Sub-asignación',
+              segment_type: 'Ministración',
+              duration_min: Number(sa.duration_min || sa.duration) || 5,
+              presenter: '',
+              show_in_general: false,
+              origin: 'template',
+              ui_fields: [],
+              ui_sub_assignments: [],
+            });
+            totalSegmentsCreated++;
+          }
+        }
+      }
+    }
+
+    console.log(`[ENSURE_SERVICE] Created service ${dateStr} (id: ${newService.id}), ${slotNames.length} sessions, ${totalSegmentsCreated} segments`);
 
     return Response.json({ 
       status: 'created', 
       date: dateStr, 
       service_id: newService.id,
+      sessions_created: slotNames.length,
+      segments_created: totalSegmentsCreated,
       blueprint_source: blueprint ? 'database' : 'fallback'
     });
 
