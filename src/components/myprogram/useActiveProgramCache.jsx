@@ -22,6 +22,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useMemo, useEffect, useRef, useCallback } from 'react';
+import { sortSessionsChronologically, buildSessionIndexMap } from '@/components/utils/sessionSort';
 
 export default function useActiveProgramCache(overrideParams = {}) {
   const queryClient = useQueryClient();
@@ -50,19 +51,20 @@ export default function useActiveProgramCache(overrideParams = {}) {
         if (!service?.[0]) return null;
         
         // Build snapshot from service + sessions + segments
-        // FIX (Phase 9): Sort sessions by order to prevent slot-order inversion
-        const sessions = (await base44.entities.Session.filter({ service_id: overrideServiceId }))
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        // FIX (ATT-015 / DECISION-004): Sort sessions chronologically (date → time → order)
+        // The `order` field is unreliable — use chronological sort as primary.
+        const rawSessions = await base44.entities.Session.filter({ service_id: overrideServiceId });
+        const sessions = sortSessionsChronologically(rawSessions);
         const segmentArrays = await Promise.all(
           sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
         );
-        // FIX (Phase 9): Sort segments by session order then segment order
-        const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+        // Sort segments by session chronological position then segment order
+        const sessionIndexMap = buildSessionIndexMap(sessions);
         const segments = segmentArrays.flat()
           .filter(s => !s.parent_segment_id && s.show_in_general !== false)
           .sort((a, b) => {
-            const sA = sessionOrderMap.get(a.session_id) ?? 999;
-            const sB = sessionOrderMap.get(b.session_id) ?? 999;
+            const sA = sessionIndexMap.get(a.session_id) ?? 999;
+            const sB = sessionIndexMap.get(b.session_id) ?? 999;
             if (sA !== sB) return sA - sB;
             return (a.order || 0) - (b.order || 0);
           });
@@ -82,19 +84,19 @@ export default function useActiveProgramCache(overrideParams = {}) {
         const event = await base44.entities.Event.filter({ id: overrideEventId });
         if (!event?.[0]) return null;
         
-        // FIX (Phase 9): Sort sessions by order
-        const sessions = (await base44.entities.Session.filter({ event_id: overrideEventId }))
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        // FIX (ATT-015 / DECISION-004): Sort sessions chronologically (date → time → order)
+        const rawSessions = await base44.entities.Session.filter({ event_id: overrideEventId });
+        const sessions = sortSessionsChronologically(rawSessions);
         const segmentArrays = await Promise.all(
           sessions.map(s => base44.entities.Segment.filter({ session_id: s.id }))
         );
-        // FIX (Phase 9): Sort segments by session order then segment order
-        const sessionOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
+        // Sort segments by session chronological position then segment order
+        const sessionIndexMap = buildSessionIndexMap(sessions);
         const segments = segmentArrays.flat()
           .filter(s => !s.parent_segment_id && s.show_in_general !== false)
           .sort((a, b) => {
-            const sA = sessionOrderMap.get(a.session_id) ?? 999;
-            const sB = sessionOrderMap.get(b.session_id) ?? 999;
+            const sA = sessionIndexMap.get(a.session_id) ?? 999;
+            const sB = sessionIndexMap.get(b.session_id) ?? 999;
             if (sA !== sB) return sA - sB;
             return (a.order || 0) - (b.order || 0);
           });

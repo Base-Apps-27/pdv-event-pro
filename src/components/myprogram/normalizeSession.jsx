@@ -27,6 +27,17 @@ export function normalizeEventSegments(programData) {
   const roomMap = {};
   rooms.forEach(r => { roomMap[r.id] = r; });
 
+  // FIX (ATT-015 / DECISION-004): Build chronological index from sessions.
+  // The `order` field is unreliable — sort by date → start_time → order.
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const aDate = a.date || ''; const bDate = b.date || '';
+    if (aDate !== bDate) return (aDate || 'zzz').localeCompare(bDate || 'zzz');
+    const aTime = a.planned_start_time || ''; const bTime = b.planned_start_time || '';
+    if (aTime !== bTime) return (aTime || 'zzz').localeCompare(bTime || 'zzz');
+    return (a.order ?? Infinity) - (b.order ?? Infinity);
+  });
+  const sessionChronoIndex = new Map(sortedSessions.map((s, i) => [s.id, i]));
+
   return segments.map(seg => {
     const session = sessionMap[seg.session_id] || {};
     // Enrich breakout rooms with room names if available
@@ -46,12 +57,10 @@ export function normalizeEventSegments(programData) {
       _source: 'event',
     };
   }).sort((a, b) => {
-    // Sort by session order, then segment order
-    const sessionA = sessionMap[a.session_id];
-    const sessionB = sessionMap[b.session_id];
-    const sOrdA = sessionA?.order ?? 0;
-    const sOrdB = sessionB?.order ?? 0;
-    if (sOrdA !== sOrdB) return sOrdA - sOrdB;
+    // Sort by session chronological position, then segment order
+    const sIdxA = sessionChronoIndex.get(a.session_id) ?? 999;
+    const sIdxB = sessionChronoIndex.get(b.session_id) ?? 999;
+    if (sIdxA !== sIdxB) return sIdxA - sIdxB;
     return (a.order || 0) - (b.order || 0);
   });
 }
@@ -95,6 +104,16 @@ function normalizeEntitySourcedSegments(programData) {
 
   const sessionMap = {};
   sessions.forEach(s => { sessionMap[s.id] = s; });
+
+  // FIX (ATT-015 / DECISION-004): Build chronological index for sort.
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const aDate = a.date || ''; const bDate = b.date || '';
+    if (aDate !== bDate) return (aDate || 'zzz').localeCompare(bDate || 'zzz');
+    const aTime = a.planned_start_time || ''; const bTime = b.planned_start_time || '';
+    if (aTime !== bTime) return (aTime || 'zzz').localeCompare(bTime || 'zzz');
+    return (a.order ?? Infinity) - (b.order ?? Infinity);
+  });
+  const sessionChronoIndex = new Map(sortedSessions.map((s, i) => [s.id, i]));
 
   return segments
     .filter(seg => seg.show_in_general !== false)
@@ -165,12 +184,10 @@ function normalizeEntitySourcedSegments(programData) {
       };
     })
     .sort((a, b) => {
-      // Sort by session order, then segment order
-      const sA = sessionMap[a._sessionId];
-      const sB = sessionMap[b._sessionId];
-      const sOrdA = sA?.order ?? 0;
-      const sOrdB = sB?.order ?? 0;
-      if (sOrdA !== sOrdB) return sOrdA - sOrdB;
+      // Sort by session chronological position, then segment order (ATT-015)
+      const sIdxA = sessionChronoIndex.get(a._sessionId) ?? 999;
+      const sIdxB = sessionChronoIndex.get(b._sessionId) ?? 999;
+      if (sIdxA !== sIdxB) return sIdxA - sIdxB;
       return (a.order || 0) - (b.order || 0);
     });
 }
