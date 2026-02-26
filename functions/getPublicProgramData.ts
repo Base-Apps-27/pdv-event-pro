@@ -23,6 +23,34 @@ async function withRetry(fn, maxRetries = 2) {
     }
 }
 
+// DECISION-004 (ATT-015): Canonical chronological session sort.
+// Sort by date → planned_start_time → order → name.
+// The `order` field is unreliable (can be duplicated or wrong).
+// Inlined here because Deno backend cannot import frontend modules.
+// MUST stay in sync with components/utils/sessionSort.js
+function sortSessionsChronologically(sessions) {
+  return [...sessions].sort((a, b) => {
+    const aDate = a?.date || '';
+    const bDate = b?.date || '';
+    if (aDate !== bDate) {
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
+    }
+    const aTime = a?.planned_start_time || '';
+    const bTime = b?.planned_start_time || '';
+    if (aTime !== bTime) {
+      if (!aTime) return 1;
+      if (!bTime) return -1;
+      return aTime.localeCompare(bTime);
+    }
+    const aOrder = Number.isFinite(a?.order) ? a.order : Infinity;
+    const bOrder = Number.isFinite(b?.order) ? b.order : Infinity;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return (a?.name || '').localeCompare(b?.name || '');
+  });
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
