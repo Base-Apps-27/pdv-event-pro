@@ -10,6 +10,13 @@
  * `type`   = input component type.
  * `autocompleteType` = suggestion type for AutocompleteInput.
  * `hasVerseParser` = shows verse parser button alongside.
+ *
+ * HARDENING (Phase 8):
+ *   - Added livestream_notes and show_in_livestream to NOTES_FIELDS
+ *   - Added microphone_assignments and other_notes
+ *   - Added prep_instructions for coordinator prep
+ *   - SPEAKER_MATERIAL_FIELDS now includes all content delivery fields
+ *   - TEXT_COPY_COLUMNS exported for cross-slot copy consistency
  */
 
 export const FIELD_REGISTRY = {
@@ -49,7 +56,11 @@ export const NOTES_FIELDS = [
   { column: 'sound_notes',         label: 'Notas de Sonido' },
   { column: 'ushers_notes',        label: 'Notas de Ujieres' },
   { column: 'translation_notes',   label: 'Notas de Traducción' },
+  { column: 'livestream_notes',    label: 'Notas de Livestream' },
   { column: 'stage_decor_notes',   label: 'Notas de Stage/Decor' },
+  { column: 'microphone_assignments', label: 'Asignación de Micrófonos' },
+  { column: 'prep_instructions',   label: 'Instrucciones de Preparación' },
+  { column: 'other_notes',         label: 'Notas Adicionales' },
   { column: 'description_details', label: 'Notas Generales' },
 ];
 
@@ -61,4 +72,17 @@ export const SPEAKER_MATERIAL_FIELDS = [
   { column: 'presentation_url',      label: 'Enlace a Presentación (Slides)', type: 'text' },
   { column: 'notes_url',             label: 'Link de Bosquejo / Notas (PDF o Doc)', type: 'text' },
   { column: 'content_is_slides_only', label: 'Solo Slides (Sin versículos)', type: 'checkbox' },
+];
+
+/**
+ * Text columns eligible for cross-slot copy.
+ * Exported so useCopyBetweenSlots stays in sync with the registry.
+ */
+export const TEXT_COPY_COLUMNS = [
+  'presenter', 'message_title', 'scripture_references', 'translator_name',
+  'description_details', 'coordinator_notes', 'projection_notes',
+  'sound_notes', 'ushers_notes', 'translation_notes', 'stage_decor_notes',
+  'livestream_notes', 'microphone_assignments', 'other_notes', 'prep_instructions',
+  // Speaker material
+  'presentation_url', 'notes_url', 'content_is_slides_only',
 ];

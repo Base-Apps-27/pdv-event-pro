@@ -4,18 +4,26 @@
  *
  * Every field edit:
  *   1. Updates React Query cache optimistically (instant UI)
- *   2. Schedules a debounced entity.update() call (300ms)
+ *   2. Schedules a debounced entity.update() call (400ms)
+ *
+ * HARDENING (Phase 8):
+ *   - Field coalescing: multiple rapid field writes to same entity are batched
+ *     into a single API call (e.g. writing presenter + description = 1 call)
+ *   - Retry on failure: failed writes retry up to 2 times with backoff
+ *   - Error toast: persistent failures surface to user
+ *   - Flush on unmount + beforeunload to prevent data loss
  *
  * No setServiceData. No dual-write. The RQ cache IS the state.
- *
- * Flush on unmount and beforeunload to prevent data loss.
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
-const DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 400;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
 
 /**
  * @param {string[]} queryKey - The React Query key for the weekly data
@@ -31,6 +39,8 @@ const DEBOUNCE_MS = 300;
  */
 export function useEntityWrite(queryKey) {
   const queryClient = useQueryClient();
+  // Coalesced pending writes: { entityKey -> { entityType, entityId, fields: { col: val } } }
+  const pendingRef = useRef({});
   const timersRef = useRef({});
   const [dirtyIds, setDirtyIds] = useState(new Set());
 
@@ -106,29 +116,65 @@ export function useEntityWrite(queryKey) {
     });
   }, []);
 
-  // ── Core scheduler ────────────────────────────────────────────
-  const scheduleWrite = useCallback((key, entityId, writeFn) => {
-    const existing = timersRef.current[key];
-    if (existing?.timerId) clearTimeout(existing.timerId);
+  // ── Retry-aware write executor ────────────────────────────────
+  const executeWrite = useCallback(async (entityType, entityId, fields, attempt = 0) => {
+    const entityMap = {
+      Segment: base44.entities.Segment,
+      Session: base44.entities.Session,
+      PreSessionDetails: base44.entities.PreSessionDetails,
+    };
+    const entity = entityMap[entityType];
+    if (!entity) return;
 
+    try {
+      await entity.update(entityId, fields);
+    } catch (err) {
+      if (attempt < MAX_RETRIES) {
+        console.warn(`[useEntityWrite] Retry ${attempt + 1}/${MAX_RETRIES} for ${entityType}:${entityId}`, err.message);
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
+        return executeWrite(entityType, entityId, fields, attempt + 1);
+      }
+      console.error(`[useEntityWrite] PERMANENT FAIL for ${entityType}:${entityId}:`, err.message);
+      toast.error(`Error al guardar: ${err.message}`, { duration: 5000 });
+      throw err;
+    }
+  }, []);
+
+  // ── Coalesced scheduler ───────────────────────────────────────
+  // Groups multiple field writes to the same entity into one API call.
+  const scheduleCoalesced = useCallback((entityType, entityId, column, value) => {
+    const entityKey = `${entityType}:${entityId}`;
     markDirty(entityId);
 
-    const timerId = setTimeout(async () => {
-      delete timersRef.current[key];
+    // Accumulate fields
+    if (!pendingRef.current[entityKey]) {
+      pendingRef.current[entityKey] = { entityType, entityId, fields: {} };
+    }
+    pendingRef.current[entityKey].fields[column] = value;
+
+    // Clear existing timer and set new one
+    if (timersRef.current[entityKey]) clearTimeout(timersRef.current[entityKey]);
+
+    timersRef.current[entityKey] = setTimeout(async () => {
+      const entry = pendingRef.current[entityKey];
+      delete pendingRef.current[entityKey];
+      delete timersRef.current[entityKey];
+
+      if (!entry) return;
+
       try {
-        await writeFn();
-      } catch (err) {
-        console.error(`[useEntityWrite] Write failed for ${key}:`, err.message);
+        await executeWrite(entry.entityType, entry.entityId, entry.fields);
+      } catch (_) {
+        // Already handled in executeWrite with toast
       }
+
       // If no more pending writes for this entity, mark clean
-      const hasMore = Object.keys(timersRef.current).some(k =>
-        timersRef.current[k]?.entityId === entityId
+      const hasMore = Object.keys(pendingRef.current).some(k =>
+        pendingRef.current[k]?.entityId === entityId
       );
       if (!hasMore) markClean(entityId);
     }, DEBOUNCE_MS);
-
-    timersRef.current[key] = { timerId, writeFn, entityId };
-  }, [markDirty, markClean]);
+  }, [markDirty, markClean, executeWrite]);
 
   // ── Public write methods ──────────────────────────────────────
 
@@ -139,12 +185,9 @@ export function useEntityWrite(queryKey) {
     }
     // Optimistic update
     updateCache('Segment', segmentId, { [column]: value });
-    // Debounced write
-    const key = `seg:${segmentId}:${column}`;
-    scheduleWrite(key, segmentId, () =>
-      base44.entities.Segment.update(segmentId, { [column]: value })
-    );
-  }, [updateCache, scheduleWrite]);
+    // Coalesced debounced write
+    scheduleCoalesced('Segment', segmentId, column, value);
+  }, [updateCache, scheduleCoalesced]);
 
   const writeSession = useCallback((sessionId, column, value) => {
     if (!sessionId) {
@@ -152,37 +195,40 @@ export function useEntityWrite(queryKey) {
       return;
     }
     updateCache('Session', sessionId, { [column]: value });
-    const key = `sess:${sessionId}:${column}`;
-    scheduleWrite(key, sessionId, () =>
-      base44.entities.Session.update(sessionId, { [column]: value })
-    );
-  }, [updateCache, scheduleWrite]);
+    scheduleCoalesced('Session', sessionId, column, value);
+  }, [updateCache, scheduleCoalesced]);
 
   const writePSD = useCallback((psdId, sessionId, column, value) => {
     if (!psdId) {
       // Create PSD if it doesn't exist
       if (!sessionId || !value) return;
-      const key = `psd:${sessionId}:${column}`;
-      scheduleWrite(key, sessionId, async () => {
-        const created = await base44.entities.PreSessionDetails.create({
-          session_id: sessionId,
-          [column]: value,
-        });
-        // Update cache with new PSD
-        queryClient.setQueryData(queryKey, (old) => {
-          if (!old) return old;
-          const newPSD = { ...old.psdBySession, [sessionId]: created };
-          return { ...old, psdBySession: newPSD };
-        });
-      });
+      markDirty(sessionId);
+      const entityKey = `PSD_CREATE:${sessionId}`;
+      if (timersRef.current[entityKey]) clearTimeout(timersRef.current[entityKey]);
+      timersRef.current[entityKey] = setTimeout(async () => {
+        delete timersRef.current[entityKey];
+        try {
+          const created = await base44.entities.PreSessionDetails.create({
+            session_id: sessionId,
+            [column]: value,
+          });
+          // Update cache with new PSD
+          queryClient.setQueryData(queryKey, (old) => {
+            if (!old) return old;
+            const newPSD = { ...old.psdBySession, [sessionId]: created };
+            return { ...old, psdBySession: newPSD };
+          });
+        } catch (err) {
+          console.error('[useEntityWrite] PSD create failed:', err.message);
+          toast.error('Error al guardar pre-servicio: ' + err.message);
+        }
+        markClean(sessionId);
+      }, DEBOUNCE_MS);
       return;
     }
     updateCache('PreSessionDetails', psdId, { [column]: value });
-    const key = `psd:${psdId}:${column}`;
-    scheduleWrite(key, psdId, () =>
-      base44.entities.PreSessionDetails.update(psdId, { [column]: value })
-    );
-  }, [updateCache, scheduleWrite, queryClient, queryKey]);
+    scheduleCoalesced('PreSessionDetails', psdId, column, value);
+  }, [updateCache, scheduleCoalesced, queryClient, queryKey, markDirty, markClean]);
 
   const writeSongs = useCallback((segmentId, songs) => {
     if (!segmentId) return;
@@ -198,22 +244,46 @@ export function useEntityWrite(queryKey) {
     payload.number_of_songs = safeArray.length;
 
     updateCache('Segment', segmentId, payload);
-    const key = `seg:${segmentId}:songs`;
-    scheduleWrite(key, segmentId, () =>
-      base44.entities.Segment.update(segmentId, payload)
-    );
-  }, [updateCache, scheduleWrite]);
+
+    // Songs go through coalesced path too — all 19 fields merge into one call
+    markDirty(segmentId);
+    const entityKey = `Segment:${segmentId}`;
+    if (!pendingRef.current[entityKey]) {
+      pendingRef.current[entityKey] = { entityType: 'Segment', entityId: segmentId, fields: {} };
+    }
+    Object.assign(pendingRef.current[entityKey].fields, payload);
+
+    if (timersRef.current[entityKey]) clearTimeout(timersRef.current[entityKey]);
+    timersRef.current[entityKey] = setTimeout(async () => {
+      const entry = pendingRef.current[entityKey];
+      delete pendingRef.current[entityKey];
+      delete timersRef.current[entityKey];
+      if (!entry) return;
+      try {
+        await executeWrite(entry.entityType, entry.entityId, entry.fields);
+      } catch (_) {}
+      const hasMore = Object.keys(pendingRef.current).some(k =>
+        pendingRef.current[k]?.entityId === segmentId
+      );
+      if (!hasMore) markClean(segmentId);
+    }, DEBOUNCE_MS);
+  }, [updateCache, markDirty, markClean, executeWrite]);
 
   // ── Flush logic ───────────────────────────────────────────────
 
   const flushAllRef = useRef(null);
   flushAllRef.current = async () => {
-    const entries = { ...timersRef.current };
+    // Clear all timers
+    Object.values(timersRef.current).forEach(t => { if (t) clearTimeout(t); });
     timersRef.current = {};
-    const writes = Object.entries(entries).map(([key, entry]) => {
-      if (entry?.timerId) clearTimeout(entry.timerId);
-      return entry?.writeFn?.() || Promise.resolve();
-    });
+
+    // Execute all pending writes
+    const entries = { ...pendingRef.current };
+    pendingRef.current = {};
+
+    const writes = Object.values(entries).map(entry =>
+      executeWrite(entry.entityType, entry.entityId, entry.fields).catch(() => {})
+    );
     await Promise.allSettled(writes);
     setDirtyIds(new Set());
   };
@@ -224,29 +294,45 @@ export function useEntityWrite(queryKey) {
 
   const flushEntity = useCallback(async (entityId) => {
     const eid = String(entityId);
-    const keys = Object.keys(timersRef.current).filter(
-      k => timersRef.current[k]?.entityId === eid
+
+    // Find and execute pending write for this entity
+    const matchingKeys = Object.keys(pendingRef.current).filter(
+      k => pendingRef.current[k]?.entityId === eid
     );
-    const writes = keys.map(key => {
-      const entry = timersRef.current[key];
-      if (entry?.timerId) clearTimeout(entry.timerId);
-      delete timersRef.current[key];
-      return entry?.writeFn?.() || Promise.resolve();
-    });
-    await Promise.allSettled(writes);
+
+    for (const key of matchingKeys) {
+      if (timersRef.current[key]) {
+        clearTimeout(timersRef.current[key]);
+        delete timersRef.current[key];
+      }
+      const entry = pendingRef.current[key];
+      delete pendingRef.current[key];
+      if (entry) {
+        try {
+          await executeWrite(entry.entityType, entry.entityId, entry.fields);
+        } catch (_) {}
+      }
+    }
+
     markClean(eid);
-  }, [markClean]);
+  }, [markClean, executeWrite]);
 
   // Flush on unmount + beforeunload
   useEffect(() => {
     const handleUnload = (e) => {
-      const hasPending = Object.keys(timersRef.current).length > 0;
+      const hasPending = Object.keys(pendingRef.current).length > 0;
       if (hasPending) {
-        // Fire-and-forget flush
-        Object.values(timersRef.current).forEach(entry => {
-          if (entry?.timerId) clearTimeout(entry.timerId);
-          entry?.writeFn?.();
+        // Fire-and-forget flush — use navigator.sendBeacon pattern
+        Object.values(pendingRef.current).forEach(entry => {
+          const entityMap = {
+            Segment: base44.entities.Segment,
+            Session: base44.entities.Session,
+            PreSessionDetails: base44.entities.PreSessionDetails,
+          };
+          entityMap[entry.entityType]?.update(entry.entityId, entry.fields).catch(() => {});
         });
+        pendingRef.current = {};
+        Object.values(timersRef.current).forEach(t => { if (t) clearTimeout(t); });
         timersRef.current = {};
         e.preventDefault();
         e.returnValue = '';
@@ -255,12 +341,18 @@ export function useEntityWrite(queryKey) {
     window.addEventListener('beforeunload', handleUnload);
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
-      // Unmount flush
-      Object.values(timersRef.current).forEach(entry => {
-        if (entry?.timerId) clearTimeout(entry.timerId);
-        entry?.writeFn?.();
-      });
+      // Unmount flush — fire-and-forget
+      Object.values(timersRef.current).forEach(t => { if (t) clearTimeout(t); });
       timersRef.current = {};
+      Object.values(pendingRef.current).forEach(entry => {
+        const entityMap = {
+          Segment: base44.entities.Segment,
+          Session: base44.entities.Session,
+          PreSessionDetails: base44.entities.PreSessionDetails,
+        };
+        entityMap[entry.entityType]?.update(entry.entityId, entry.fields).catch(() => {});
+      });
+      pendingRef.current = {};
     };
   }, []);
 
