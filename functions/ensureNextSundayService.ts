@@ -21,6 +21,26 @@
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Type normalization (inlined for Deno — no local imports)
+const TYPE_TO_ENUM = {
+  'worship': 'Alabanza', 'alabanza': 'Alabanza',
+  'welcome': 'Bienvenida', 'bienvenida': 'Bienvenida',
+  'offering': 'Ofrenda', 'ofrenda': 'Ofrenda', 'ofrendas': 'Ofrenda',
+  'message': 'Plenaria', 'plenaria': 'Plenaria',
+  'video': 'Video', 'anuncio': 'Anuncio',
+  'break': 'Break', 'techonly': 'TechOnly',
+  'prayer': 'Oración', 'oracion': 'Oración', 'oración': 'Oración',
+  'special': 'Especial', 'especial': 'Especial',
+  'closing': 'Cierre', 'cierre': 'Cierre',
+  'ministry': 'Ministración', 'ministracion': 'Ministración', 'ministración': 'Ministración',
+  'mc': 'MC', 'artes': 'Artes', 'breakout': 'Breakout', 'panel': 'Panel',
+  'receso': 'Receso', 'almuerzo': 'Almuerzo',
+};
+function resolveSegmentEnum(rawType) {
+  if (!rawType) return 'Especial';
+  return TYPE_TO_ENUM[rawType.toLowerCase()] || rawType;
+}
+
 // Hardcoded fallback blueprint (matches weeklyBlueprint.js)
 const FALLBACK_BLUEPRINT = {
   "9:30am": [
