@@ -48,6 +48,7 @@ export default function SlotColumnContainer({ sessions, segmentsBySession, child
         nextSlotName={nextSession?.name}
         style={isMobile ? {} : { minWidth: 480, flex: '1 0 480px' }}
         {...columnProps}
+        onOpenVerseParser={columnProps.onOpenVerseParser}
         onCopyToNext={nextSession ? columnProps.onCopyToNext : null}
         onCopyAllToSlot={prevSession ? () => columnProps.onCopyAllToSlot?.(prevSession.id, session.id) : null}
       />
