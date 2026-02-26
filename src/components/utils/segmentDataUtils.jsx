@@ -103,8 +103,21 @@ export const normalizeServiceTeams = (rawService) => {
  */
 export const getSegmentData = (segment, field) => {
   if (!segment) return "";
+  // Person field aliases: "leader", "preacher", "presenter" all map to the same
+  // entity column (presenter) and data key. Check both the requested field and
+  // the canonical data.presenter / data.leader / data.preacher fallbacks.
+  const PERSON_ALIASES = { leader: true, preacher: true, presenter: true };
+  if (PERSON_ALIASES[field]) {
+    // Check root level first, then data sub-object
+    return segment.presenter || segment.data?.presenter
+      || segment[field] || segment.data?.[field] || "";
+  }
   if (segment[field] !== undefined && segment[field] !== null) {
     return segment[field];
+  }
+  // Fallback to data sub-object for hydrated weekly JSON format
+  if (segment.data?.[field] !== undefined && segment.data?.[field] !== null) {
+    return segment.data[field];
   }
   return "";
 };
