@@ -413,6 +413,10 @@ export default function WeeklyEditorV2({
           onRemove: (sessionId, idx, segmentId) => removeSpecial(sessionId, idx, segmentId),
           onCopyToNext: copySegmentContent,
           onCopyAllToSlot: copyAllToSlot,
+          onResetSession: resolvedBlueprint ? (sessionId) => {
+            setResetTargetSessionId(sessionId);
+            setShowResetConfirm(true);
+          } : null,
           dirtyIds,
           onFlushEntity: flushEntity,
           markOwnWrite,
