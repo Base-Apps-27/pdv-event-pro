@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { TEAM_FIELDS, TEXT_COPY_COLUMNS } from "../constants/fieldMap";
 
-export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs) {
+export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs, childSegments) {
 
   /**
    * copySegmentContent — copies one segment's content to the matching segment in the next slot.
