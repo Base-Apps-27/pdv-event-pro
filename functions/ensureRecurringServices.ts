@@ -250,8 +250,31 @@ Deno.serve(async (req) => {
             segmentPayload.number_of_songs = Number(segData.number_of_songs) || 0;
           }
 
-          await base44.asServiceRole.entities.Segment.create(segmentPayload);
+          const createdSeg = await base44.asServiceRole.entities.Segment.create(segmentPayload);
           totalSegmentsCreated++;
+
+          // BUGFIX (2026-02-26): Create child Segment entities for sub_assignments
+          // so Ministración rows appear immediately in the editor without manual creation.
+          if (Array.isArray(segData.sub_assignments) && segData.sub_assignments.length > 0) {
+            for (let saIdx = 0; saIdx < segData.sub_assignments.length; saIdx++) {
+              const sa = segData.sub_assignments[saIdx];
+              await base44.asServiceRole.entities.Segment.create({
+                session_id: session.id,
+                service_id: newService.id,
+                parent_segment_id: createdSeg.id,
+                order: saIdx + 1,
+                title: sa.label || 'Sub-asignación',
+                segment_type: 'Ministración',
+                duration_min: Number(sa.duration_min || sa.duration) || 5,
+                presenter: '',
+                show_in_general: false,
+                origin: 'template',
+                ui_fields: [],
+                ui_sub_assignments: [],
+              });
+              totalSegmentsCreated++;
+            }
+          }
         }
       }
 
