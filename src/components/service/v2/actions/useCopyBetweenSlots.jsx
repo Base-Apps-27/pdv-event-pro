@@ -105,6 +105,27 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
       if (songs.length > 0) writeSongs(tgt.id, songs);
     });
 
+    // BUGFIX (2026-02-26): Copy sub-assignment (child segment) presenters.
+    // Previously copyAllToSlot only copied parent segment text fields,
+    // omitting child entities like Ministración that hold sub-assignment data.
+    if (childSegments) {
+      sourceSegs.forEach((src, idx) => {
+        const tgt = targetSegs[idx];
+        if (!tgt) return;
+        const srcChildren = childSegments[src.id] || [];
+        const tgtChildren = childSegments[tgt.id] || [];
+        srcChildren.forEach((srcChild) => {
+          if (!srcChild.presenter) return;
+          // Match by title (label-based, durable)
+          const matchingTarget = tgtChildren.find(tc => tc.title === srcChild.title);
+          if (matchingTarget) {
+            writeSegment(matchingTarget.id, 'presenter', srcChild.presenter);
+            totalCopied++;
+          }
+        });
+      });
+    }
+
     // Copy team fields
     const srcSession = sessions.find(s => s.id === sourceSessionId);
     if (srcSession) {
@@ -125,7 +146,7 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
     }
 
     toast.success(`Todo copiado (${totalCopied} campos)`);
-  }, [segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs]);
+  }, [segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs, childSegments]);
 
   return { copySegmentContent, copyAllToSlot };
 }
