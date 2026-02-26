@@ -66,6 +66,34 @@ function groupBy(arr, keyFn) {
   return map;
 }
 
+// DECISION-004 (ATT-015): Canonical chronological session sort.
+// Sort by date → planned_start_time → order → name.
+// The `order` field is unreliable (can be duplicated or wrong).
+// Inlined here because Deno backend cannot import frontend modules.
+// MUST stay in sync with components/utils/sessionSort.js
+function sortSessionsChronologically(sessions) {
+  return [...sessions].sort((a, b) => {
+    const aDate = a?.date || '';
+    const bDate = b?.date || '';
+    if (aDate !== bDate) {
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
+    }
+    const aTime = a?.planned_start_time || '';
+    const bTime = b?.planned_start_time || '';
+    if (aTime !== bTime) {
+      if (!aTime) return 1;
+      if (!bTime) return -1;
+      return aTime.localeCompare(bTime);
+    }
+    const aOrder = Number.isFinite(a?.order) ? a.order : Infinity;
+    const bOrder = Number.isFinite(b?.order) ? b.order : Infinity;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return (a?.name || '').localeCompare(b?.name || '');
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -287,7 +315,8 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
     ]);
 
     eventDays = eventDaysResult;
-    sessions = sessionsResult.sort((a, b) => (a.order || 0) - (b.order || 0));
+    // DECISION-004 (ATT-015): Sort sessions chronologically, not by unreliable `order` field
+    sessions = sortSessionsChronologically(sessionsResult);
 
     if (sessions.length > 0) {
       const sessionIds = sessions.map(s => s.id);
@@ -321,6 +350,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
       streamBlocks = allStreamBlocks;
 
       // Process segments: resolve children onto parents, filter, add date, sort
+      // orderMap uses chronological index from sortSessionsChronologically (ATT-015)
       const orderMap = new Map(sessions.map((s, i) => [s.id, i]));
       const sessionDateMap = new Map(sessions.map(s => [s.id, s.date]));
 
@@ -401,7 +431,8 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
     // Strict Entity Mode - JSON Fallbacks removed completely
     
     if (directSessions.length > 0) {
-      sessions = directSessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+      // DECISION-004 (ATT-015): Sort sessions chronologically, not by unreliable `order` field
+      sessions = sortSessionsChronologically(directSessions);
       const sessionIds = sessions.map(s => s.id);
 
       // Bulk fetch segments, preSessionDetails, streamBlocks for all sessions (batched)
@@ -436,7 +467,7 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           s => s.parent_segment_id
         );
 
-        // Sort by session order first, then segment order (matches event path pattern)
+        // Sort by session chronological position, then segment order (ATT-015)
         const sessionsMap = new Map(sessions.map((s, i) => [s.id, i]));
         segments = allSegs
           .filter(s => s.show_in_general !== false && !s.parent_segment_id)
