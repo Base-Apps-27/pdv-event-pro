@@ -158,6 +158,7 @@ export default function WeeklyEditorV2({
 
   // ── Dialog state ──
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetTargetSessionId, setResetTargetSessionId] = useState(null); // null = all, string = single session
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialDetails, setSpecialDetails] = useState({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '' });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
@@ -341,27 +342,46 @@ export default function WeeklyEditorV2({
         <Badge variant="outline" className="text-[10px] text-green-700 border-green-300 bg-green-50">V2</Badge>
       </div>
 
-      {/* Reset confirm */}
+      {/* Reset confirm — supports per-session or all-sessions */}
       {showResetConfirm && resolvedBlueprint && (
-        <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 space-y-3">
           <div>
             <p className="text-sm font-semibold text-amber-800">¿Restablecer estructura predeterminada?</p>
-            <p className="text-xs text-amber-700 mt-0.5">El contenido ingresado se borrará.</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              {resetTargetSessionId
+                ? `Solo "${sessions.find(s => s.id === resetTargetSessionId)?.name}" será restablecido. El contenido ingresado en esa sesión se borrará.`
+                : 'TODAS las sesiones serán restablecidas. Todo el contenido ingresado se borrará.'}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 sm:ml-4 shrink-0">
+          <div className="flex flex-wrap gap-2">
+            {/* Per-session buttons */}
+            {sessions.map(s => (
+              <Button key={s.id} size="sm" variant={resetTargetSessionId === s.id ? "default" : "outline"}
+                className={`text-xs h-7 px-3 ${resetTargetSessionId === s.id ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'border-amber-400 text-amber-700 hover:bg-amber-100'}`}
+                onClick={() => setResetTargetSessionId(resetTargetSessionId === s.id ? null : s.id)}
+              >
+                {s.name?.replace('am', ' a.m.').replace('pm', ' p.m.')}
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 px-3"
               onClick={() => {
+                const targetSessions = resetTargetSessionId
+                  ? sessions.filter(s => s.id === resetTargetSessionId)
+                  : sessions;
                 setShowResetConfirm(false);
+                setResetTargetSessionId(null);
                 executeReset({
-                  sessions,
+                  sessions: targetSessions,
                   blueprintSegments: resolvedBlueprint.segments || [],
                   serviceId,
                 });
               }}
             >
-              Restablecer Todo
+              {resetTargetSessionId ? 'Restablecer Sesión' : 'Restablecer Todo'}
             </Button>
-            <Button size="sm" variant="ghost" className="text-xs h-7 px-2" onClick={() => setShowResetConfirm(false)}>
+            <Button size="sm" variant="ghost" className="text-xs h-7 px-2" onClick={() => { setShowResetConfirm(false); setResetTargetSessionId(null); }}>
               Cancelar
             </Button>
           </div>
