@@ -200,7 +200,7 @@ export default function DayServiceEditor({
   // ── Metadata save mutation ──
   const saveMetadataMutation = useMutation({
     mutationFn: async ({ serviceId, metadata }) => {
-      ownSaveInProgressRef.current = true;
+      markOwnSave();
       if (serviceId) {
         return base44.entities.Service.update(serviceId, metadata);
       } else {
