@@ -177,18 +177,28 @@ const SegmentCard = memo(function SegmentCard({
         )}
 
         {/* Sub-Assignments from ui_sub_assignments */}
+        {/* Sub-Assignments from ui_sub_assignments
+          * BUGFIX (2026-02-26): Match child entities by label/title, not positional
+          * index, to handle out-of-order or missing children correctly.
+          */}
         {subAssignments.length > 0 && (
           <div className="space-y-2 border-t pt-2 mt-2">
             <Label className="text-xs font-semibold text-purple-800">Sub-Asignaciones</Label>
-            {subAssignments.map((subConfig, idx) => (
-              <SubAssignmentRow
-                key={idx}
-                subConfig={subConfig}
-                childEntity={childSegments?.[idx] || null}
-                onWriteChild={onWriteChild}
-                parentSegmentId={segment.id}
-              />
-            ))}
+            {subAssignments.map((subConfig, idx) => {
+              // Match child entity by label → title (durable), fallback to index
+              const matchedChild = (childSegments || []).find(
+                c => c.title === subConfig.label
+              ) || childSegments?.[idx] || null;
+              return (
+                <SubAssignmentRow
+                  key={subConfig.label || idx}
+                  subConfig={subConfig}
+                  childEntity={matchedChild}
+                  onWriteChild={onWriteChild}
+                  parentSegmentId={segment.id}
+                />
+              );
+            })}
           </div>
         )}
 
