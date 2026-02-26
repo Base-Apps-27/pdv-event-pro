@@ -96,6 +96,35 @@
 **Date:** 2026-02-26
 **Surfaces:** NEW files in components/service/v2/ (19 files). Integration: pages/WeeklyServiceManager (1 edit swap).
 **What was attempted:** Complete rewrite of the weekly service editor with entity-first architecture. Zero code reuse from V1 editor components. See DECISION-003 for full architecture spec.
-**Result:** IN PROGRESS
-**Disposition:** IN PROGRESS
-**Backup:** All V1 files remain untouched. V2 is additive. Swap is a single edit, instantly revertible.
+**Result:** COMPLETED — All phases implemented:
+  - Phase 1: Foundation (fieldMap, useWeeklyData, useEntityWrite, useExternalSync) ✅
+  - Phase 2: Segments (FieldRenderer, SongRows, SpeakerMaterialSection, SubAssignmentRow, SegmentNotesPanel, SegmentCard) ✅
+  - Phase 3: Columns (PreServiceSection, RecesoSection, TeamSection, SlotColumn, SlotColumnContainer) ✅
+  - Phase 4: Actions (useResetToBlueprint, useMoveSegment, useSpecialSegment, useCopyBetweenSlots) ✅
+  - Phase 5: Orchestrator (WeeklyEditorV2) ✅
+  - Phase 6: Integration (WeeklyServiceManager swap V1→V2) ✅
+  - Phase 7: Wiring (VerseParser dialog connected with segmentId state, SpecialSegmentDialog adapted for V2 entity shape) ✅
+**Disposition:** IMPLEMENTED
+**Backup:** All V1 files remain untouched (DayServiceEditor, weeklySessionSync, useWeeklyServiceHandlers, ServiceTimeSlotColumn, ServiceSlotColumns, SundaySlotColumns, WeeklyServiceInputs, useSegmentMutation). Rollback = change import in WeeklyServiceManager back to DayServiceEditor.
+
+### V2 File Inventory (19 files):
+- `v2/constants/fieldMap.js` — field registry, team fields, notes fields, speaker material fields
+- `v2/hooks/useWeeklyData.js` — entity loader (no JSON transformation)
+- `v2/hooks/useEntityWrite.js` — debounced write + optimistic cache + dirty tracking
+- `v2/hooks/useExternalSync.js` — concurrent editing detection
+- `v2/segments/FieldRenderer.jsx` — renders single field from ui_fields
+- `v2/segments/SongRows.jsx` — worship song inputs
+- `v2/segments/SpeakerMaterialSection.jsx` — presentation/notes URL inputs
+- `v2/segments/SubAssignmentRow.jsx` — child entity inputs
+- `v2/segments/SegmentNotesPanel.jsx` — expandable department notes
+- `v2/segments/SegmentCard.jsx` — single segment card
+- `v2/columns/PreServiceSection.jsx` — pre-service notes
+- `v2/columns/RecesoSection.jsx` — break notes
+- `v2/columns/TeamSection.jsx` — session team inputs
+- `v2/columns/SlotColumn.jsx` — full time-slot column
+- `v2/columns/SlotColumnContainer.jsx` — responsive desktop/mobile layout
+- `v2/actions/useResetToBlueprint.js` — reset handler
+- `v2/actions/useMoveSegment.js` — reorder handler
+- `v2/actions/useSpecialSegment.js` — add/remove special segments
+- `v2/actions/useCopyBetweenSlots.js` — cross-slot copy handler
+- `v2/WeeklyEditorV2.jsx` — day-level orchestrator
