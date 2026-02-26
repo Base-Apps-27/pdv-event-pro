@@ -17,9 +17,15 @@ import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 export function useResetToBlueprint(queryKey) {
   const queryClient = useQueryClient();
 
-  const execute = useCallback(async ({ sessions, blueprintSegments, serviceId }) => {
-    if (!sessions?.length || !blueprintSegments?.length || !serviceId) {
+  const execute = useCallback(async ({ sessions, blueprintSegments, blueprintsBySessionName, serviceId }) => {
+    if (!sessions?.length || !serviceId) {
       toast.error("Faltan datos para restablecer");
+      return;
+    }
+
+    // Must have at least one source of blueprint segments
+    if (!blueprintSegments?.length && (!blueprintsBySessionName || Object.keys(blueprintsBySessionName).length === 0)) {
+      toast.error("Faltan datos del blueprint para restablecer");
       return;
     }
 
@@ -29,6 +35,20 @@ export function useResetToBlueprint(queryKey) {
 
     for (const session of sessions) {
       try {
+        // BUGFIX (2026-02-26): Resolve the correct blueprint for THIS session.
+        // Previously all sessions used the same blueprintSegments array,
+        // so a 9:30am blueprint (requires_translation=false) was used for 11:30am
+        // (which needs requires_translation=true). This caused translation fields
+        // to vanish after reset.
+        const sessionBlueprint = blueprintsBySessionName?.[session.name];
+        const bpSegs = sessionBlueprint?.segments || blueprintSegments || [];
+
+        if (!bpSegs.length) {
+          console.warn(`[V2 Reset] No blueprint segments for session ${session.name}, skipping`);
+          errors.push(`${session.name}: sin segmentos en el blueprint`);
+          continue;
+        }
+
         // 1. Snapshot before delete (traceability — logged, not stored)
         const existing = await base44.entities.Segment.filter({ session_id: session.id });
         console.log(`[V2 Reset] Pre-reset snapshot for ${session.name}:`,
@@ -44,9 +64,9 @@ export function useResetToBlueprint(queryKey) {
         await Promise.all(children.map(s => base44.entities.Segment.delete(s.id)));
         await Promise.all(parents.map(s => base44.entities.Segment.delete(s.id)));
 
-        // 3. Create new segments from blueprint
-        for (let i = 0; i < blueprintSegments.length; i++) {
-          const bp = blueprintSegments[i];
+        // 3. Create new segments from this session's blueprint
+        for (let i = 0; i < bpSegs.length; i++) {
+          const bp = bpSegs[i];
           const payload = {
             session_id: session.id,
             service_id: serviceId,
