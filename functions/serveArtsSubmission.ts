@@ -27,6 +27,11 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         const eventIdParam = url.searchParams.get('event_id');
 
+        // DECISION-005 compliant: Derive production base URL from the actual request URL.
+        // This is the real production origin (e.g. https://app-name.base44.app),
+        // NOT window.location which may be a proxy/preview context.
+        const productionBaseUrl = url.origin;
+
         let targetEvent = null;
         let eventError = null;
         let artsSegments = [];

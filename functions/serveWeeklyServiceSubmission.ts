@@ -21,6 +21,12 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
 
+        // DECISION-005 compliant: Derive production base URL from the actual request URL.
+        // This is the real production origin (e.g. https://app-name.base44.app),
+        // NOT window.location which may be a proxy/preview context.
+        const requestUrl = new URL(req.url);
+        const productionBaseUrl = requestUrl.origin;
+
         // --- 1. DATA FETCHING ---
         let serviceGroups = []; // Array of { label, date, serviceId, options: [...], sessionNames: [...] }
         let globalError = null;
