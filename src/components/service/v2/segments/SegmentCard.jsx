@@ -89,12 +89,17 @@ const SegmentCard = memo(function SegmentCard({
             <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-400">{segment.segment_type}</Badge>
             <Badge variant="outline" className="ml-auto text-xs">{segment.duration_min || 0} min</Badge>
             <SaveButton isDirty={isDirty} entityId={segment.id} onFlush={onFlushEntity} />
+            {canEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden" title="Eliminar segmento">
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-xs text-amber-700 mb-2">
             Segmento sin configuración de campos (ui_fields vacío).
-            Restablezca el servicio desde el blueprint para corregir.
+            Restablezca el servicio desde el blueprint para corregir, o elimine este segmento.
           </p>
           <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="w-full text-xs print:hidden">
             {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
