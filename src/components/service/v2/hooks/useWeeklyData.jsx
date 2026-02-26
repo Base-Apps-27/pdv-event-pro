@@ -80,13 +80,34 @@ export function useWeeklyData(serviceId) {
       // Initialize empty arrays for each session
       sessions.forEach(s => { segmentsBySession[s.id] = []; });
 
+      // BUGFIX (2026-02-26): Track parent IDs so we can detect orphaned children
+      // (children whose parent_segment_id doesn't match any parent in this service).
+      // These are caused by stale data after resets or the previous bug where
+      // child segments were created without parent_segment_id.
+      const parentIdSet = new Set();
+
+      // First pass: identify all parent segments
+      allSegments.forEach(seg => {
+        if (!seg.parent_segment_id && seg.session_id && sessionIdSet.has(seg.session_id)) {
+          parentIdSet.add(seg.id);
+        }
+      });
+
+      // Second pass: categorize all segments
+      let orphanChildCount = 0;
       allSegments.forEach(seg => {
         if (seg.parent_segment_id) {
-          // Child segment (Ministración, Cierre, etc.)
-          if (!childSegments[seg.parent_segment_id]) {
-            childSegments[seg.parent_segment_id] = [];
+          if (parentIdSet.has(seg.parent_segment_id)) {
+            // Valid child segment — parent exists in this service
+            if (!childSegments[seg.parent_segment_id]) {
+              childSegments[seg.parent_segment_id] = [];
+            }
+            childSegments[seg.parent_segment_id].push(seg);
+          } else {
+            // Orphaned child — parent_segment_id points to a nonexistent parent.
+            // Log and skip to prevent UI corruption.
+            orphanChildCount++;
           }
-          childSegments[seg.parent_segment_id].push(seg);
         } else if (seg.session_id && sessionIdSet.has(seg.session_id)) {
           // Parent segment belonging to a known session
           segmentsBySession[seg.session_id].push(seg);
@@ -95,6 +116,10 @@ export function useWeeklyData(serviceId) {
           orphanCount++;
         }
       });
+
+      if (orphanChildCount > 0) {
+        console.warn(`[useWeeklyData] ${orphanChildCount} orphaned child segments (parent not found) for service ${serviceId}`);
+      }
 
       if (orphanCount > 0) {
         console.warn(`[useWeeklyData] ${orphanCount} orphaned segments (no matching session_id) for service ${serviceId}`);
