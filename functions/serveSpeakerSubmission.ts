@@ -567,7 +567,7 @@ Deno.serve(async (req) => {
         statusMsg.innerText = 'Enviando mensaje...';
 
         try {
-            const response = await fetch('/api/functions/submitSpeakerContent', {
+            const response = await fetch('${productionBaseUrl}/functions/submitSpeakerContent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

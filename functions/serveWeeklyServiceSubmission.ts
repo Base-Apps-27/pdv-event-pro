@@ -419,7 +419,7 @@ Deno.serve(async (req) => {
         statusMsg.style.display = 'none';
 
         try {
-            const response = await fetch('/api/functions/submitWeeklyServiceContent', {
+            const response = await fetch('${productionBaseUrl}/functions/submitWeeklyServiceContent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
