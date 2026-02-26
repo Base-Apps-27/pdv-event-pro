@@ -128,8 +128,9 @@ export default function PublicCountdownDisplay() {
           _effectiveEnd: s.actual_end_time || s.end_time,
         }))
         .sort((a, b) => {
-          const tA = getTimeDate(a._effectiveStart);
-          const tB = getTimeDate(b._effectiveStart);
+          // DECISION-004: Sort by date FIRST (multi-day events), then by time
+          const tA = getTimeDate(a._effectiveStart, a.date);
+          const tB = getTimeDate(b._effectiveStart, b.date);
           if (!tA && !tB) return 0;
           if (!tA) return 1;
           if (!tB) return -1;
