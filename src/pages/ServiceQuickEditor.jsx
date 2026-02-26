@@ -63,10 +63,11 @@ export default function ServiceQuickEditor() {
         segments = segArrays.flat();
       }
 
-      // Sort sessions by order
-      sessions.sort((a, b) => (a.order || 0) - (b.order || 0));
+      // DECISION-004: Sort sessions chronologically (date → time → order → name)
+      // The `order` field is unreliable. This matches what useActiveProgramCache does.
+      sessions = sortSessionsChronologically(sessions);
 
-      // Sort segments by session order then segment order
+      // Sort segments by session chronological position then segment order
       const sessOrderMap = new Map(sessions.map((s, i) => [s.id, i]));
       segments.sort((a, b) => {
         const sA = sessOrderMap.get(a.session_id) ?? 999;
