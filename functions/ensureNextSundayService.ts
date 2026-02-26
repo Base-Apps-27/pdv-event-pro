@@ -119,37 +119,7 @@ Deno.serve(async (req) => {
         .map(s => s.name);
     }
 
-    const source930 = blueprint?.["9:30am"] || FALLBACK_BLUEPRINT["9:30am"];
-    const source1130 = blueprint?.["11:30am"] || FALLBACK_BLUEPRINT["11:30am"];
-
-    // Deep-clone segments to avoid mutation, clear person-specific data
-    const cloneSegments = (segments) => segments.map(seg => {
-      const clone = JSON.parse(JSON.stringify(seg));
-      // Clear person-specific data fields (presenter, preacher, etc.) 
-      // but keep structural data (type, title, duration, actions, fields)
-      if (clone.data) {
-        // Keep only non-person fields
-        const persisted = {};
-        // These are structural fields that should carry over
-        const structuralKeys = ['message_title', 'title'];
-        for (const key of structuralKeys) {
-          if (clone.data[key]) persisted[key] = clone.data[key];
-        }
-        clone.data = persisted;
-      }
-      // Clear submission-related fields
-      clone.submitted_content = null;
-      clone.parsed_verse_data = null;
-      clone.submission_status = 'ignored';
-      clone.scripture_references = null;
-      clone.presentation_url = null;
-      clone.notes_url = null;
-      clone.content_is_slides_only = false;
-      return clone;
-    });
-
-    // 4. Create the service record
-    // Entity Lift: Build slot data dynamically from ServiceSchedule slot names
+    // 4. Create the service record (metadata only — segments go to entities)
     const servicePayload = {
       name: `Domingo - ${dateStr}`,
       day_of_week: 'Sunday',
