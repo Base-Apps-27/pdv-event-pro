@@ -310,6 +310,12 @@ export default function WeeklyEditorV2({
 
       {/* Action bar */}
       <div className="flex gap-1.5 items-center flex-wrap">
+        <Button onClick={handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Programa">
+          <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Prog.</span>
+        </Button>
+        <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Anuncios">
+          <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
+        </Button>
         <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs h-8 px-2" title="Live View">
           <Eye className="w-4 h-4" />
         </Button>
