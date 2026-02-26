@@ -159,11 +159,19 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
 
   // Build sub_asignaciones from child segments and inject presenter data
   // back into the parent's data object so the UI inputs can display it.
+  //
+  // BUG FIX (2026-02-26): person_field_name was stored as empty string '' in
+  // ui_sub_assignments for some segments. Empty string is falsy but !== undefined,
+  // so the `||` fallback wasn't triggering. Now we explicitly check for truthy.
   let sub_asignaciones;
   if (childSegments.length > 0) {
     const subConfig = segment.ui_sub_assignments || [];
     sub_asignaciones = childSegments.map((child, ci) => {
-      const fieldName = subConfig[ci]?.person_field_name || "ministry_leader";
+      // Derive a stable field name: use config if non-empty, else generate from child title
+      const rawFieldName = subConfig[ci]?.person_field_name;
+      const fieldName = rawFieldName && rawFieldName.trim()
+        ? rawFieldName
+        : `sub_${ci}_leader`; // stable unique key per child index
       if (child.presenter) {
         data[fieldName] = child.presenter;
       }
@@ -174,6 +182,7 @@ function segmentEntityToWeeklyJSON(segment, childSegments, blueprintSlotSegments
         duration: child.duration_min || 5,
         person_field_name: fieldName,
         duration_min: child.duration_min || 5,
+        _childEntityId: child.id, // carry child ID for direct writes
       };
     });
   }
