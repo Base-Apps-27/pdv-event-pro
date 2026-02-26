@@ -1,6 +1,9 @@
 /**
  * useMoveSegment.js — V2 reorder segments via entity order field swap.
- * Optimistic cache update + parallel entity writes.
+ * HARDENING (Phase 8):
+ *   - Validates index bounds before swap
+ *   - Full re-index after swap to prevent cumulative order drift
+ *   - Logs reorder actions for traceability
  */
 
 import { useCallback } from "react";
@@ -16,22 +19,32 @@ export function useMoveSegment(queryKey) {
       const newSBS = { ...old.segmentsBySession };
       const arr = [...(newSBS[sessionId] || [])];
       const targetIdx = direction === 'up' ? index - 1 : index + 1;
+
+      // Bounds check
       if (targetIdx < 0 || targetIdx >= arr.length) return old;
 
-      // Swap in cache
+      // Swap
       const seg1 = arr[index];
       const seg2 = arr[targetIdx];
-      arr[index] = { ...seg2, order: index + 1 };
-      arr[targetIdx] = { ...seg1, order: targetIdx + 1 };
-      newSBS[sessionId] = arr;
+      arr[index] = seg2;
+      arr[targetIdx] = seg1;
 
-      // Entity writes (fire-and-forget)
-      if (seg1.id && seg2.id) {
-        Promise.all([
-          base44.entities.Segment.update(seg1.id, { order: targetIdx + 1 }),
-          base44.entities.Segment.update(seg2.id, { order: index + 1 }),
-        ]).catch(err => console.error('[V2 Move] Swap failed:', err.message));
+      // Full re-index (prevents cumulative drift from partial updates)
+      const reindexed = arr.map((seg, i) => ({ ...seg, order: i + 1 }));
+      newSBS[sessionId] = reindexed;
+
+      // Entity writes — update ALL orders to match new positions
+      const writes = reindexed
+        .filter((seg, i) => seg.id && seg.order !== (old.segmentsBySession[sessionId]?.[i]?.order))
+        .map(seg => base44.entities.Segment.update(seg.id, { order: seg.order }));
+
+      if (writes.length > 0) {
+        Promise.all(writes).catch(err =>
+          console.error('[V2 Move] Re-index failed:', err.message)
+        );
       }
+
+      console.log(`[V2 Move] Session ${sessionId}: moved idx ${index} ${direction} → re-indexed ${writes.length} segments`);
 
       return { ...old, segmentsBySession: newSBS };
     });

@@ -1,6 +1,10 @@
 /**
  * useSpecialSegment.js — V2 add/remove special segments.
- * Creates/deletes Segment entities and updates cache.
+ * HARDENING (Phase 8):
+ *   - Validates required fields before create
+ *   - Re-orders remaining segments after remove to prevent gaps
+ *   - Handles special segment types beyond 'Especial' (Oración, Cierre, etc.)
+ *   - Logs actions for traceability
  */
 
 import { useCallback } from "react";
@@ -11,25 +15,40 @@ import { toast } from "sonner";
 export function useSpecialSegment(queryKey) {
   const queryClient = useQueryClient();
 
-  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx }) => {
+  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType }) => {
+    if (!sessionId || !serviceId) {
+      toast.error("Faltan datos: sessionId o serviceId");
+      return;
+    }
+
+    const resolvedTitle = (title || "").trim() || "Especial";
+    const resolvedType = segmentType || "Especial";
+
     try {
+      console.log(`[V2 Special] Adding "${resolvedTitle}" to session ${sessionId} after idx ${insertAfterIdx}`);
+
       const created = await base44.entities.Segment.create({
         session_id: sessionId,
         service_id: serviceId,
         order: (insertAfterIdx || 0) + 2,
-        title: title || "Especial",
-        segment_type: "Especial",
-        duration_min: duration || 15,
+        title: resolvedTitle,
+        segment_type: resolvedType,
+        duration_min: Math.max(1, duration || 15),
         presenter: presenter || "",
         translator_name: translator || "",
         show_in_general: true,
+        show_in_projection: true,
+        show_in_sound: true,
+        show_in_ushers: true,
+        show_in_livestream: true,
         ui_fields: ["presenter", "description"],
         ui_sub_assignments: [],
+        origin: "manual",
       });
 
       // Refresh cache
       queryClient.invalidateQueries({ queryKey });
-      toast.success(`Segmento "${title}" agregado`);
+      toast.success(`"${resolvedTitle}" agregado`);
       return created;
     } catch (err) {
       console.error('[V2 Special] Create failed:', err.message);
@@ -38,9 +57,36 @@ export function useSpecialSegment(queryKey) {
   }, [queryClient, queryKey]);
 
   const remove = useCallback(async (sessionId, segmentIndex, segmentId) => {
-    if (!segmentId) return;
+    if (!segmentId) {
+      toast.error("No se puede eliminar: falta ID del segmento");
+      return;
+    }
+
     try {
+      console.log(`[V2 Special] Removing segment ${segmentId} from session ${sessionId}`);
+
+      // Also delete any child segments
+      const children = await base44.entities.Segment.filter({ parent_segment_id: segmentId });
+      if (children.length > 0) {
+        await Promise.all(children.map(c => base44.entities.Segment.delete(c.id)));
+        console.log(`[V2 Special] Deleted ${children.length} child segments`);
+      }
+
       await base44.entities.Segment.delete(segmentId);
+
+      // Re-order remaining segments to prevent order gaps
+      if (sessionId) {
+        const remaining = await base44.entities.Segment.filter({ session_id: sessionId });
+        const parents = remaining.filter(s => !s.parent_segment_id).sort((a, b) => (a.order || 0) - (b.order || 0));
+        const reorderPromises = parents
+          .filter((seg, idx) => seg.order !== idx + 1)
+          .map((seg, idx) => base44.entities.Segment.update(seg.id, { order: idx + 1 }));
+        if (reorderPromises.length > 0) {
+          await Promise.all(reorderPromises);
+          console.log(`[V2 Special] Re-ordered ${reorderPromises.length} segments`);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey });
       toast.success("Segmento eliminado");
     } catch (err) {
