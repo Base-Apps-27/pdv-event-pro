@@ -413,14 +413,37 @@ export default function DayServiceEditor({
   }, [existingData, date, dayOfWeek, slotNames, sessions, blueprints]); // Removed isLoading/isFetching dependencies
 
   // ── External change subscription ──
+  // FALSE-POSITIVE FIX (2026-02-26): The previous implementation had a race condition:
+  // metadata auto-save fires every 3s → sets ownSaveInProgressRef=true for 3s
+  // → subscription event arrives after 2s debounce + server latency (~3-5s total)
+  // → by then the 3s guard has expired → false "otro administrador" toast.
+  //
+  // Fix: Track last own-save timestamp instead of a boolean flag, and suppress
+  // any subscription events within 8s of our last save. This covers the full
+  // round-trip: debounce(3s) + network(~2s) + subscription delivery(~2s) + buffer.
+  const lastOwnSaveTimestampRef = useRef(0);
+  
+  // Patch ownSaveInProgressRef to also record timestamp (used by metadata save + receso)
+  const markOwnSave = useCallback(() => {
+    ownSaveInProgressRef.current = true;
+    lastOwnSaveTimestampRef.current = Date.now();
+    setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
+  }, []);
+
   useEffect(() => {
     if (!existingData?.id) return;
     const externalDebounce = { timer: null };
     const unsub = base44.entities.Service.subscribe((event) => {
       if (event.id !== existingData.id) return;
+      // Suppress if we saved recently (within 8s window to cover full round-trip)
       if (ownSaveInProgressRef.current) return;
+      const msSinceOwnSave = Date.now() - lastOwnSaveTimestampRef.current;
+      if (msSinceOwnSave < 8000) return;
       if (externalDebounce.timer) clearTimeout(externalDebounce.timer);
       externalDebounce.timer = setTimeout(() => {
+        // Double-check again after debounce in case we saved during the wait
+        const msSinceOwnSave2 = Date.now() - lastOwnSaveTimestampRef.current;
+        if (msSinceOwnSave2 < 8000) return;
         setExternalChangeAvailable(true);
         toast.info('Programa actualizado por otro administrador');
       }, 2000);
