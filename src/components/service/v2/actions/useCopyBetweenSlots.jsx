@@ -67,8 +67,22 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
       fieldsCopied++;
     }
 
+    // BUGFIX (2026-02-26): Copy sub-assignment (child segment) presenters for single copy too
+    if (childSegments) {
+      const srcChildren = childSegments[sourceSeg.id] || [];
+      const tgtChildren = childSegments[targetSeg.id] || [];
+      srcChildren.forEach((srcChild) => {
+        if (!srcChild.presenter) return;
+        const matchingTarget = tgtChildren.find(tc => tc.title === srcChild.title);
+        if (matchingTarget) {
+          writeSegment(matchingTarget.id, 'presenter', srcChild.presenter);
+          fieldsCopied++;
+        }
+      });
+    }
+
     toast.success(`Copiado (${fieldsCopied} campos)`);
-  }, [segmentsBySession, sessions, writeSegment, writeSongs]);
+  }, [segmentsBySession, sessions, writeSegment, writeSongs, childSegments]);
 
   const copyAllToSlot = useCallback(async (sourceSessionId, targetSessionId) => {
     const sourceSegs = segmentsBySession[sourceSessionId] || [];
