@@ -16,8 +16,9 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
  * @param {object} subConfig - { label, person_field_name, duration_min } from ui_sub_assignments
  * @param {object|null} childEntity - The child Segment entity (if exists)
  * @param {function} onWriteChild - (childEntityId, column, value) or (null, subConfig, value) for create
+ * @param {string} parentSegmentId - The parent segment's ID (required for creating child segments)
  */
-export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteChild }) {
+export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteChild, parentSegmentId }) {
   const value = childEntity?.presenter || '';
   const [local, setLocal] = useState(value);
   useEffect(() => { setLocal(value); }, [value]);
@@ -47,7 +48,8 @@ export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteC
               onWriteChild(childEntity.id, 'presenter', val);
             } else {
               // No child entity yet — parent handler will create one
-              onWriteChild(null, subConfig, val);
+              // Pass parentId so the handler can set parent_segment_id correctly
+              onWriteChild(null, { ...subConfig, parentId: parentSegmentId }, val);
             }
           }}
           className="text-sm"
