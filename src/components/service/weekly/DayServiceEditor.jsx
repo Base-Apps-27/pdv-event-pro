@@ -290,17 +290,14 @@ export default function DayServiceEditor({
       const mergeSegmentsWithBlueprint = (existingSegments, timeSlot) => {
         return existingSegments.map((savedSeg, idx) => {
           if (savedSeg.fields && savedSeg.fields.length > 0 && savedSeg._entityId) {
+            // BLUEPRINT-AUTHORITY (2026-02-26): sub_assignments come from entity
+            // (ui_sub_assignments) or blueprint only. No hardcoded fallbacks.
             const savedType = normalizeSegmentType(savedSeg.type);
-            let subAssignments = savedSeg.sub_assignments || [];
-            if (subAssignments.length === 0) {
-              if (savedType === 'worship') subAssignments = [{ label: 'Ministración de Sanidad y Milagros', person_field_name: 'ministry_leader', duration_min: 5 }];
-              else if (savedType === 'message') subAssignments = [{ label: 'Cierre', person_field_name: 'cierre_leader', duration_min: 5 }];
-            }
             let songs = savedSeg.songs;
             if (savedType === 'worship' && (!songs || !Array.isArray(songs) || songs.length === 0)) {
               songs = [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }];
             }
-            return { ...savedSeg, sub_assignments: subAssignments, songs };
+            return { ...savedSeg, songs };
           }
           const savedType = normalizeSegmentType(savedSeg.type);
           const sessionDef = sessions?.find(s => s.name === timeSlot);
