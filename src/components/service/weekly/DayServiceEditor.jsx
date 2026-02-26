@@ -575,9 +575,8 @@ export default function DayServiceEditor({
         mutateTeam: segmentMutation.mutateTeam,
         mutatePreServiceNotes: segmentMutation.mutatePreServiceNotes,
         mutateRecesoNotes: (...args) => {
-          ownSaveInProgressRef.current = true;
+          markOwnSave();
           segmentMutation.mutateRecesoNotes(...args);
-          setTimeout(() => { ownSaveInProgressRef.current = false; }, 3000);
         },
         mutateSubAssignment: segmentMutation.mutateSubAssignment,
         dirtyEntities: segmentMutation.dirtyEntities,
