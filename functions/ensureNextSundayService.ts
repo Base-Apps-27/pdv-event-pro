@@ -79,6 +79,16 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Service.filter({ status: 'blueprint' }),
       base44.asServiceRole.entities.ServiceSchedule.filter({ day_of_week: 'Sunday', is_active: true }),
     ]);
+    // Build per-session blueprint map from ServiceSchedule → blueprint_id
+    const blueprintMap = {};
+    if (schedules.length > 0 && schedules[0].sessions?.length > 0) {
+      for (const sess of schedules[0].sessions) {
+        if (sess.blueprint_id) {
+          const bp = blueprints.find(b => b.id === sess.blueprint_id);
+          if (bp) blueprintMap[sess.name] = bp;
+        }
+      }
+    }
     const blueprint = blueprints[0] || null;
     
     // Entity Lift: derive slot names from ServiceSchedule, fallback to legacy
