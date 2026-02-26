@@ -52,6 +52,8 @@ export default function SlotColumn({
   onCopyToNext,
   onCopyAllToSlot,
   nextSlotName,
+  // Verse parser
+  onOpenVerseParser,
   // Dirty tracking
   dirtyIds,
   onFlushEntity,
@@ -131,7 +133,7 @@ export default function SlotColumn({
             onMove={handleMove}
             onRemove={handleRemove}
             onCopyToNext={onCopyToNext ? (segIdx) => onCopyToNext(session.id, segIdx) : null}
-            onOpenVerseParser={() => {}}
+            onOpenVerseParser={onOpenVerseParser}
             dirtyIds={dirtyIds}
             onFlushEntity={onFlushEntity}
             nextSlotName={nextSlotName}
