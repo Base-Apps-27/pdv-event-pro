@@ -284,7 +284,9 @@ export default function WeeklyEditorV2({
         onOpenChange={setShowSpecialDialog}
         details={specialDetails}
         setDetails={setSpecialDetails}
-        serviceSegments={segmentsBySession[specialDetails.sessionId] || []}
+        serviceSegments={(segmentsBySession[specialDetails.sessionId] || []).map(s => ({
+          ...s, type: s.segment_type, // V2→V1 adapter: SpecialSegmentDialog filters by .type
+        }))}
         slotHasTranslation={false}
         onAdd={() => {
           addSpecial({
