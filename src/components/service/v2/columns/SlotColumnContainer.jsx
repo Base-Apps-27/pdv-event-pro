@@ -70,6 +70,7 @@ export default memo(function SlotColumnContainer({ sessions, segmentsBySession, 
         onOpenVerseParser={columnProps.onOpenVerseParser}
         onCopyToNext={nextSession ? columnProps.onCopyToNext : null}
         onCopyAllToSlot={prevSession ? () => columnProps.onCopyAllToSlot?.(prevSession.id, session.id) : null}
+        onResetSession={columnProps.onResetSession}
       />
     );
   };
