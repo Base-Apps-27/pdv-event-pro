@@ -116,3 +116,45 @@ Build a completely new Weekly Editor (V2) from scratch with zero code reuse from
 - Hardcoded fallbacks impossible (no fallback code exists)
 - Every field rendered is traceable to `segment.ui_fields` on the entity
 - Pre-migration segments without `ui_fields` show explicit warnings instead of phantom data
+
+---
+
+## [DECISION-004] Canonical Session Sort Strategy — Chronological Primary
+**Date:** 2026-02-26
+**Status:** ACTIVE
+**Context:** Session `order` field is unreliable across the platform. It's assigned as `sessions.length + 1` at creation time but can be duplicated (all sessions with `order=4`), overwritten by AI Helper, or stale after deletions. Multiple surfaces sorted by `order` as primary key, causing sessions to appear in wrong order (e.g., Sábado PM before Viernes PM). EventDetail and SessionManager already sorted correctly by date+time for display, but all data pipelines (refreshActiveProgram, useActiveProgramCache, normalizeSession, getSortedSessions) used `order` as primary.
+
+**Decision:**
+All session sorting throughout the platform MUST use chronological sort as primary:
+
+### Sort Priority (Canonical)
+1. `date` ASC (YYYY-MM-DD string comparison)
+2. `planned_start_time` ASC (HH:MM string comparison)
+3. `order` ASC (tiebreaker only — for same date+time sessions)
+4. `name` localeCompare (last resort)
+
+### Implementation
+- **Frontend canonical:** `components/utils/sessionSort.js` exports `sortSessionsChronologically()`, `compareSessionsChronologically()`, and `buildSessionIndexMap()`
+- **Backend (Deno):** Inlined copy in `refreshActiveProgram` and `getSortedSessions` (Deno cannot import frontend modules). MUST be kept in sync with frontend canonical.
+
+### Rules
+1. The `order` field is NOT deleted, NOT renamed, NOT deprecated. It is preserved for backward compatibility and as a tiebreaker.
+2. No surface may use `order` as the primary sort key for sessions.
+3. Any new surface that displays or processes sessions MUST import from `sessionSort.js` (frontend) or inline the canonical sort (backend).
+4. The `order` field continues to be set at creation time for backward compat, but its value is not authoritative.
+
+### Affected Surfaces (all fixed in ATT-015)
+- `functions/refreshActiveProgram` — event + service session sort
+- `functions/getSortedSessions` — backend sorted sessions endpoint
+- `components/myprogram/useActiveProgramCache` — override query sort
+- `components/myprogram/normalizeSession` — event + entity-sourced segment sort
+- `components/utils/sessionSort.js` — NEW canonical sort module
+
+### Surfaces Already Correct (no changes needed)
+- `pages/EventDetail` — already sorts by date → time
+- `components/event/SessionManager` — already sorts by date → time
+
+**Consequences:**
+- Sessions always appear in chronological order regardless of `order` field values
+- Eliminates the class of bugs where duplicate/wrong `order` values cause display inversions
+- The `order` field becomes a "hint" rather than authoritative — safe to ignore when date+time are available
