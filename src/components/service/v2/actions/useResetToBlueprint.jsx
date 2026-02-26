@@ -81,8 +81,33 @@ export function useResetToBlueprint(queryKey) {
             payload.number_of_songs = Number(bp.number_of_songs) || 0;
           }
 
-          await base44.entities.Segment.create(payload);
+          const created = await base44.entities.Segment.create(payload);
           totalCreated++;
+
+          // BUGFIX (2026-02-26): If blueprint defines sub_assignments, create child
+          // Segment entities with parent_segment_id set to the newly created parent.
+          // This ensures sub-assignments are properly linked from the start,
+          // rather than relying on the UI to create them on first edit.
+          if (Array.isArray(bp.sub_assignments) && bp.sub_assignments.length > 0) {
+            for (let saIdx = 0; saIdx < bp.sub_assignments.length; saIdx++) {
+              const sa = bp.sub_assignments[saIdx];
+              await base44.entities.Segment.create({
+                session_id: session.id,
+                service_id: serviceId,
+                parent_segment_id: created.id,
+                order: saIdx + 1,
+                title: sa.label || 'Sub-asignación',
+                segment_type: 'Ministración',
+                duration_min: Number(sa.duration_min || sa.duration) || 5,
+                presenter: '',
+                show_in_general: false,
+                origin: 'template',
+                ui_fields: [],
+                ui_sub_assignments: [],
+              });
+              totalCreated++;
+            }
+          }
         }
       } catch (error) {
         console.error(`[V2 Reset] Failed for session ${session.name}:`, error);
