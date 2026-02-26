@@ -382,9 +382,14 @@ export default function WeeklyEditorV2({
                   : sessions;
                 setShowResetConfirm(false);
                 setResetTargetSessionId(null);
+                // BUGFIX (2026-02-26): Use per-session blueprints so each session
+                // gets its own blueprint (e.g. 9:30am vs 11:30am have different
+                // requires_translation settings).
                 executeReset({
                   sessions: targetSessions,
-                  blueprintSegments: resolvedBlueprint.segments || [],
+                  blueprintsBySessionName,
+                  // Legacy fallback: single blueprint segments for sessions without dedicated blueprint
+                  blueprintSegments: resolvedBlueprint?.segments || [],
                   serviceId,
                 });
               }}
