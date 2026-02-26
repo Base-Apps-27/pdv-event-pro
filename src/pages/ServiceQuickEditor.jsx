@@ -88,6 +88,11 @@ export default function ServiceQuickEditor() {
     ? createPageUrl('PublicProgramView') + `?${selectedType === 'service' ? 'serviceId' : 'eventId'}=${selectedId}`
     : null;
 
+  // TV Display override uses same param names as MyProgram
+  const tvDisplayUrl = selectedId
+    ? createPageUrl('PublicCountdownDisplay') + `?${selectedType === 'service' ? 'override_service_id' : 'override_event_id'}=${selectedId}`
+    : null;
+
   if (!user || user.role !== 'admin') {
     return (
       <div className="p-8 text-center">
@@ -155,6 +160,14 @@ export default function ServiceQuickEditor() {
             >
               <Smartphone className="w-4 h-4 mr-2" />
               MyProgram (Override)
+            </Button>
+            <Button
+              onClick={() => window.open(tvDisplayUrl, '_blank')}
+              variant="outline"
+              className="border-purple-500 text-purple-600"
+            >
+              <Monitor className="w-4 h-4 mr-2" />
+              TV Display (Override)
             </Button>
             <Button
               onClick={() => window.open(publicViewUrl, '_blank')}
