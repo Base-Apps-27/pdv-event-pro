@@ -154,6 +154,70 @@ export default function WeeklyEditorV2({
 
   const slotNames = useMemo(() => sessions.map(s => s.name), [sessions]);
 
+  // ── PDF download handlers ──
+  const handleDownloadProgramPDF = useCallback(async () => {
+    const toastId = toast.loading('Generando PDF del Programa...');
+    try {
+      const pdfData = buildPdfData({
+        existingService,
+        sessions,
+        segmentsBySession,
+        childSegments,
+        psdBySession,
+      });
+      if (!pdfData) { toast.error('No hay datos para generar PDF', { id: toastId }); return; }
+      const pdf = await generateWeeklyProgramPDF(pdfData);
+      pdf.download(`Programa-${existingService.day_of_week || 'Servicio'}-${date}.pdf`);
+      toast.success('PDF descargado', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+    }
+  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date]);
+
+  const handleDownloadAnnouncementsPDF = useCallback(async () => {
+    const toastId = toast.loading('Generando PDF de Anuncios...');
+    try {
+      // We need announcements data - fetch fresh
+      const [allAnns, events] = await Promise.all([
+        base44.entities.AnnouncementItem.list('priority'),
+        base44.entities.Event.list(),
+      ]);
+
+      const selDate = new Date(date + 'T00:00:00');
+      const fixed = allAnns.filter(a => a.category === 'General' && a.is_active);
+      const dynamic = [
+        ...allAnns.filter(a => {
+          if (a.category === 'General' || !a.is_active) return false;
+          if (!a.date_of_occurrence) return false;
+          return new Date(a.date_of_occurrence + 'T00:00:00') >= selDate;
+        }),
+        ...events.filter(e => {
+          if (!e.promote_in_announcements || !e.start_date) return false;
+          return new Date(e.start_date + 'T00:00:00') >= selDate;
+        }).map(e => ({ ...e, isEvent: true }))
+      ];
+
+      const allForPrint = [...fixed, ...dynamic];
+      if (allForPrint.length === 0) { toast.error('No hay anuncios', { id: toastId }); return; }
+
+      const pdfData = buildPdfData({
+        existingService,
+        sessions,
+        segmentsBySession,
+        childSegments,
+        psdBySession,
+      });
+
+      const pdf = await generateAnnouncementsPDF(allForPrint, pdfData || { date });
+      pdf.download(`Anuncios-${existingService?.day_of_week || 'Servicio'}-${date}.pdf`);
+      toast.success('PDF descargado', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+    }
+  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date]);
+
   // ── Verse parser handler ──
   const handleOpenVerseParser = useCallback((segmentId) => {
     setVerseParserSegmentId(segmentId);
