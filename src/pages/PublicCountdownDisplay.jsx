@@ -190,7 +190,9 @@ export default function PublicCountdownDisplay() {
       } else if (!current && !next && validSegments.length > 0) {
         const first = validSegments[0];
         const firstStart = getTimeDate(first._effectiveStart, first.date);
-        if (firstStart && currentTime < firstStart) preLaunch = first;
+        // FIX (ATT-014): In override mode, always show first segment as pre-launch
+        // so the TV layout isn't blank for past/future services.
+        if (isOverrideMode || (firstStart && currentTime < firstStart)) preLaunch = first;
       }
 
       return {
