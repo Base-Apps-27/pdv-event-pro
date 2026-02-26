@@ -13,6 +13,11 @@ import { TEAM_FIELDS, TEXT_COPY_COLUMNS } from "../constants/fieldMap";
 
 export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs) {
 
+  /**
+   * copySegmentContent — copies one segment's content to the matching segment in the next slot.
+   * BUGFIX (2026-02-26): Also copies child segment (sub-assignment) presenters via writeChild
+   * so Ministración and other child entities are properly propagated between slots.
+   */
   const copySegmentContent = useCallback(async (sourceSessionId, segmentIndex) => {
     const sourceSegments = segmentsBySession[sourceSessionId] || [];
     const sourceSeg = sourceSegments[segmentIndex];
