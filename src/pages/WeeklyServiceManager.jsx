@@ -35,7 +35,7 @@ import WeeklyServicePrintCSS from "@/components/service/WeeklyServicePrintCSS";
 import WeeklyAnnouncementSection from "@/components/service/WeeklyAnnouncementSection";
 import WeeklyServiceDialogs from "@/components/service/weekly/WeeklyServiceDialogs";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
-import DayServiceEditor from "@/components/service/weekly/DayServiceEditor";
+import WeeklyEditorV2 from "@/components/service/v2/WeeklyEditorV2";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 
 // Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
@@ -335,26 +335,12 @@ export default function WeeklyServiceManager() {
 
         {activeDays.map(day => (
           <TabsContent key={day.key} value={day.key} className="mt-0">
-            <DayServiceEditor
+            <WeeklyEditorV2
               dayOfWeek={day.dayName}
               date={dayDates[day.key] || selectedDate}
               sessions={daySessionsMap[day.key] || []}
               blueprints={blueprints}
               user={user}
-              selectedAnnouncements={selectedAnnouncements}
-              fixedAnnouncements={fixedAnnouncements}
-              dynamicAnnouncements={dynamicAnnouncements}
-              setOptimizingAnnouncement={setOptimizingAnnouncement}
-              setPrintSettingsPage1={setPrintSettingsPage1}
-              setPrintSettingsPage2={setPrintSettingsPage2}
-              printSettingsPage1={printSettingsPage1}
-              printSettingsPage2={printSettingsPage2}
-              setEditingAnnouncement={setEditingAnnouncement}
-              setAnnouncementForm={setAnnouncementForm}
-              setShowAnnouncementDialog={setShowAnnouncementDialog}
-              editingAnnouncement={editingAnnouncement}
-              createAnnouncementMutation={createAnnouncementMutation}
-              updateAnnouncementMutation={updateAnnouncementMutation}
             />
           </TabsContent>
         ))}
