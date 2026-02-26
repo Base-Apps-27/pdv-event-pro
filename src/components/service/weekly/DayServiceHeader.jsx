@@ -75,13 +75,11 @@ export default function DayServiceHeader({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem 
               onClick={() => {
-                // DECISION-005 compliant: Use full production URL, not relative path.
-                // Relative paths break when accessed via preview/proxy contexts.
-                const url = `${window.location.origin}/api/functions/serveWeeklyServiceSubmission`;
-                navigator.clipboard.writeText(url).then(() => {
-                  // Copied silently
-                }).catch(() => {});
-                window.open(url, '_blank');
+                // DECISION-005: Open the public speaker submission form.
+                // Uses /functions/ (production canonical path).
+                // The form itself derives its own production base URL from req.url
+                // for any downstream fetch calls, so no window.location dependency.
+                window.open('/functions/serveWeeklyServiceSubmission', '_blank');
               }} 
               className="gap-2"
             >
