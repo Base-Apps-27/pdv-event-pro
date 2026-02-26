@@ -989,9 +989,13 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
+        // CSP: allow inline scripts/styles, cdnjs, Google Fonts
+        const cspHeader = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'";
+
         return new Response(html, {
             headers: {
                 'Content-Type': 'text/html; charset=utf-8',
+                'Content-Security-Policy': cspHeader,
                 'Cache-Control': 'no-store, no-cache, must-revalidate',
                 'Pragma': 'no-cache',
                 'Expires': '0'
