@@ -361,10 +361,13 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     currentTime = addMinutes(currentTime, seg.duration || 0);
 
     // Header: Time + Title + Duration
+    // Special segments get a star marker (★) to match Sparkles icon in app UI
+    const isSpecialSegment = ['Especial', 'Special', 'special'].includes(seg.segment_type || seg.type || '');
     items.push({
       text: [
         { text: timeStr, bold: true, color: slotColor || BRAND.RED, fontSize: 10 * scale },
-        { text: '  ' + (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
+        isSpecialSegment ? { text: '  ★ ', bold: true, color: '#F59E0B', fontSize: 10.5 * scale } : '',
+        { text: (isSpecialSegment ? '' : '  ') + (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
         seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
       ],
