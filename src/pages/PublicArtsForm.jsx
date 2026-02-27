@@ -78,7 +78,7 @@ export default function PublicArtsForm() {
                     <ArtsGateForm onEnter={setGateUser} />
                 ) : (
                     <>
-                        <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-[#8DC63F] p-5 mb-6 text-sm text-gray-500 leading-relaxed">
+                        <div className="bg-white rounded-lg border border-gray-200 border-l-4 p-5 mb-6 text-sm text-gray-500 leading-relaxed" style={{ borderLeftColor: '#8DC63F' }}>
                             A continuación encontrará los segmentos de Artes para este evento.
                             Abra cada uno para ingresar los detalles de su presentación.
                             Puede guardar progreso parcial y regresar luego para completar.

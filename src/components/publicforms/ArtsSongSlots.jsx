@@ -9,7 +9,7 @@ import React from 'react';
 function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChange, onOwnerChange }) {
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3">
-            <div className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3 pb-2 border-b border-gray-100">
+            <div className="text-xs font-bold uppercase tracking-wide mb-3 pb-2 border-b border-gray-100" style={{ color: '#1F8A70' }}>
                 {label}
             </div>
             <div className="mb-2">
@@ -39,8 +39,8 @@ export default function ArtsSongSlots({ prefix, segment, onFieldChange, isUnica 
         <div>
             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
                 {isUnica
-                    ? <><strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. No Spotify/YouTube. / <em>Única Policy: Only cloud storage with public access. No Spotify/YouTube.</em></>
-                    : <><strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público. / <em>Recommended: Cloud storage with public access.</em></>
+                    ? <><strong>Política Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Única Policy: Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
+                    : <><strong>General:</strong> Enlaces de Google Drive, OneDrive o Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox links (public access required). Spotify/YouTube accepted but not recommended.</em></>
                 }
             </div>
             <SongCard label="Canción 1 / Song 1"

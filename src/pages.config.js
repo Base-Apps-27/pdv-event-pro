@@ -67,8 +67,11 @@ import MessageProcessing from './pages/MessageProcessing';
 import MyProgram from './pages/MyProgram';
 import People from './pages/People';
 import ProjectionView from './pages/ProjectionView';
+import PublicArtsForm from './pages/PublicArtsForm';
 import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
 import PublicProgramView from './pages/PublicProgramView';
+import PublicSpeakerForm from './pages/PublicSpeakerForm';
+import PublicWeeklyForm from './pages/PublicWeeklyForm';
 import Reports from './pages/Reports';
 import RolePermissionManager from './pages/RolePermissionManager';
 import Rooms from './pages/Rooms';
@@ -88,9 +91,6 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import PublicSpeakerForm from './pages/PublicSpeakerForm';
-import PublicArtsForm from './pages/PublicArtsForm';
-import PublicWeeklyForm from './pages/PublicWeeklyForm';
 import __Layout from './Layout.jsx';
 
 
@@ -115,8 +115,11 @@ export const PAGES = {
     "MyProgram": MyProgram,
     "People": People,
     "ProjectionView": ProjectionView,
+    "PublicArtsForm": PublicArtsForm,
     "PublicCountdownDisplay": PublicCountdownDisplay,
     "PublicProgramView": PublicProgramView,
+    "PublicSpeakerForm": PublicSpeakerForm,
+    "PublicWeeklyForm": PublicWeeklyForm,
     "Reports": Reports,
     "RolePermissionManager": RolePermissionManager,
     "Rooms": Rooms,
@@ -136,9 +139,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "PublicSpeakerForm": PublicSpeakerForm,
-    "PublicArtsForm": PublicArtsForm,
-    "PublicWeeklyForm": PublicWeeklyForm,
 }
 
 export const pagesConfig = {

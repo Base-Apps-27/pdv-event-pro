@@ -112,7 +112,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 <div className="border-t border-gray-200 p-5 space-y-5">
                     {/* Art Type Selection */}
                     <div>
-                        <h4 className="text-lg text-pdv-teal tracking-wide mb-3">TIPO DE ARTE / ART TYPE</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>TIPO DE ARTE / ART TYPE</h4>
                         <div className="flex flex-wrap gap-3">
                             {['DANCE', 'DRAMA', 'VIDEO', 'OTHER'].map(t => (
                                 <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer px-3 py-2 rounded-md border transition-all ${types.includes(t) ? 'bg-blue-50 border-[#1F8A70] text-blue-800 font-semibold' : 'border-gray-200 hover:border-[#1F8A70]'}`}>
@@ -123,30 +123,23 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         </div>
                     </div>
 
-                    {/* Dance Section */}
+                    {/* Dance Section — songs are primary (no toggle), cues for coordination */}
                     {types.includes('DANCE') && (
-                        <div className="bg-gray-50 border border-gray-200 border-l-4 border-l-pdv-green rounded-lg p-5">
-                            <h5 className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3">🩰 DANZA / DANCE</h5>
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Handheld Mics</label><input type="number" min="0" value={seg.dance_handheld_mics || 0} onChange={e => updateField('dance_handheld_mics', parseInt(e.target.value) || 0)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Headset Mics</label><input type="number" min="0" value={seg.dance_headset_mics || 0} onChange={e => updateField('dance_headset_mics', parseInt(e.target.value) || 0)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
-                            </div>
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🩰 DANZA / DANCE</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Inicio / Start Cue</label><textarea rows={2} value={seg.dance_start_cue || ''} onChange={e => updateField('dance_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Fin / End Cue</label><textarea rows={2} value={seg.dance_end_cue || ''} onChange={e => updateField('dance_end_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
-                            <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
-                                <input type="checkbox" checked={seg.dance_has_song || false} onChange={e => updateField('dance_has_song', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
-                                Incluye playlist/canción(es) / Includes playlist/song(s)
-                            </label>
-                            {seg.dance_has_song && <ArtsSongSlots prefix="dance" segment={seg} onFieldChange={updateField} isUnica={isUnica} />}
+                            {/* Songs always shown for dance — dance primarily uses songs */}
+                            <ArtsSongSlots prefix="dance" segment={seg} onFieldChange={updateField} isUnica={isUnica} />
                         </div>
                     )}
 
                     {/* Drama Section */}
                     {types.includes('DRAMA') && (
-                        <div className="bg-gray-50 border border-gray-200 border-l-4 border-l-pdv-green rounded-lg p-5">
-                            <h5 className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3">🎭 DRAMA</h5>
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🎭 DRAMA</h5>
                             <div className="grid grid-cols-2 gap-3 mb-3">
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Handheld Mics</label><input type="number" min="0" value={seg.drama_handheld_mics || 0} onChange={e => updateField('drama_handheld_mics', parseInt(e.target.value) || 0)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Headset Mics</label><input type="number" min="0" value={seg.drama_headset_mics || 0} onChange={e => updateField('drama_headset_mics', parseInt(e.target.value) || 0)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
@@ -165,11 +158,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
                     {/* Video Section */}
                     {types.includes('VIDEO') && (
-                        <div className="bg-gray-50 border border-gray-200 border-l-4 border-l-pdv-green rounded-lg p-5">
-                            <h5 className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3">🎬 VIDEO</h5>
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🎬 VIDEO</h5>
                             <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre del Video / Video Name</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
-                                {isUnica ? <><strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox. YouTube no permitido.</> : <><strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público.</>}
+                                {isUnica
+                                    ? <><strong>Política Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Única Policy: Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
+                                    : <><strong>General:</strong> Enlaces de Google Drive, OneDrive o Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox links (public access required). Spotify/YouTube accepted but not recommended.</em></>
+                                }
                             </div>
                             <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Enlace / Link</label><input type="url" value={seg.video_url || ''} onChange={e => updateField('video_url', e.target.value)} placeholder="https://drive.google.com/..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className="grid grid-cols-2 gap-3">
@@ -181,8 +177,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
                     {/* Other Section */}
                     {types.includes('OTHER') && (
-                        <div className="bg-gray-50 border border-gray-200 border-l-4 border-l-pdv-green rounded-lg p-5">
-                            <h5 className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3">✨ OTRO / OTHER</h5>
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>✨ OTRO / OTHER</h5>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción / Description</label>
                             <textarea rows={3} value={seg.art_other_description || ''} onChange={e => updateField('art_other_description', e.target.value)} placeholder="Describe la presentación..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                         </div>
@@ -190,9 +186,9 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
                     {/* Arts Directions */}
                     <div>
-                        <h4 className="text-lg text-pdv-teal tracking-wide mb-3">📋 GUÍA DE ARTES / ARTS DIRECTIONS</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📋 GUÍA DE ARTES / ARTS DIRECTIONS</h4>
                         <div className="text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 bg-blue-50 border-[#1F8A70] text-blue-800">
-                            <strong>Instrucción:</strong> Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc.
+                            <strong>Instrucción:</strong> Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc. / <em>Ensure the link has public permissions. Preferred: PDF or Google Doc.</em>
                         </div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Enlace (PDF/Documento) / Link</label>
                         <input type="url" value={seg.arts_run_of_show_url || ''} onChange={e => updateField('arts_run_of_show_url', e.target.value)} placeholder="https://drive.google.com/..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
@@ -200,7 +196,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
                     {/* Notes */}
                     <div>
-                        <h4 className="text-lg text-pdv-teal tracking-wide mb-3">📝 NOTAS ADICIONALES</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📝 NOTAS ADICIONALES / ADDITIONAL NOTES</h4>
                         <textarea rows={3} value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)} placeholder="Cualquier detalle adicional para el equipo técnico..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                     </div>
 

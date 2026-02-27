@@ -19,11 +19,11 @@ export default function ArtsFormHeader({ event }) {
         <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
             <div className="h-1.5 brand-gradient" />
             <div className="pt-8 pb-6 px-6 md:px-8 text-center">
-                <p className="text-[10px] font-extrabold text-pdv-teal uppercase tracking-[0.2em] mb-1">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] mb-1" style={{ color: '#1F8A70' }}>
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
-                    FORMULARIO DE ARTES
+                    FORMULARIO DE ARTES / ARTS FORM
                 </h1>
                 <h3 className="text-lg text-gray-500 tracking-wide">
                     {event?.name || 'Evento'}
@@ -31,13 +31,13 @@ export default function ArtsFormHeader({ event }) {
                 <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (
                         <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-pdv-green" />
+                            <Calendar className="w-3.5 h-3.5" style={{ color: '#8DC63F' }} />
                             <span>{eventDate}</span>
                         </div>
                     )}
                     {event?.location && (
                         <div className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-pdv-green" />
+                            <MapPin className="w-3.5 h-3.5" style={{ color: '#8DC63F' }} />
                             <span>{event.location}</span>
                         </div>
                     )}

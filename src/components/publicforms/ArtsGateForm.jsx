@@ -24,8 +24,8 @@ export default function ArtsGateForm({ onEnter }) {
     };
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
-            <h3 className="text-xl text-pdv-teal tracking-wide mb-3">
+        <div className="bg-white rounded-lg border border-gray-200 border-l-4 p-6 mb-6" style={{ borderLeftColor: '#1F8A70' }}>
+            <h3 className="text-xl tracking-wide mb-3" style={{ color: '#1F8A70' }}>
                 IDENTIFICACIÓN / IDENTIFICATION
             </h3>
             <p className="text-sm text-gray-500 mb-4 leading-relaxed">
