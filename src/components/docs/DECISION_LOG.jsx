@@ -198,3 +198,40 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' h
 - All current and future HTML-serving functions are protected against CSP blocking
 - Forms are guaranteed functional at the browser level
 - Any new HTML form function that omits CSP headers is considered incomplete and must not ship
+
+---
+
+## [DECISION-006] Live View Services Always Fresh-Fetch (No Cache Snapshot)
+**Date:** 2026-02-27
+**Status:** ACTIVE
+**Context:** The Live View (PublicProgramView) had two data paths: (1) cache-first via ActiveProgramCache snapshot for the auto-detected program, and (2) fresh-fetch via `getPublicProgramData` for explicitly selected programs. Services auto-detected by the cache used the snapshot, but if that snapshot was stale (e.g., built before segment_actions were added to newly created segments), the StickyOpsDeck showed no actions. Events never had this problem because selecting an event always triggered a fresh fetch from `getPublicProgramData`, which queries entities directly. The cache architecture was designed for passive display surfaces (TV Display, MyProgram) where instant load matters and ~30s staleness is acceptable. The Live View is an authenticated, interactive surface where a ~1s fetch is perfectly fine and data freshness is critical for operational cues.
+
+**Decision:**
+Services in the Live View (PublicProgramView) ALWAYS use `getPublicProgramData` fresh-fetch, matching how events work. The `isCachedSelection` flag returns `false` for `viewType === 'service'`, forcing the explicit fetch query to activate.
+
+### What Uses Cache (unchanged)
+- **TV Display** (PublicCountdownDisplay): Cache snapshot — instant load, no interaction
+- **MyProgram**: Cache snapshot — instant load, passive display
+- **Live View auto-detection**: Cache is used ONLY for determining which program to auto-select and populating selector dropdowns
+- **Live View events**: Cache when selection matches auto-detected event (events have robust entity automations)
+
+### What Now Fresh-Fetches
+- **Live View services**: ALWAYS fresh-fetch via `getPublicProgramData`, regardless of whether the selection matches the cached program
+
+### Why Not Events Too?
+Events have robust entity automation coverage (Event create/update triggers `refreshActiveProgram`), and their sessions/segments are typically created well before live viewing. Services are more volatile — created by auto-jobs and manual "Create Service" buttons minutes before live use. Fresh-fetching events could be added later if needed, but there's no current evidence of staleness issues.
+
+### Affected Surfaces
+- `pages/PublicProgramView` — `isCachedSelection` now returns `false` for services
+
+### Complementary Fixes (same session)
+- `EmptyDayPrompt`: Now carries `segment_actions` and `color_code` from blueprint at creation time
+- `ensureRecurringServices`: Now carries `segment_actions` and `color_code` from blueprint at creation time
+- These ensure the cache snapshot is ALSO correct for TV Display and MyProgram
+
+**Consequences:**
+- Live View services always show the latest entity data, including actions added at creation time
+- StickyOpsDeck shows correct countdown actions for newly created services immediately
+- No dependency on `refreshActiveProgram` having run after service creation for Live View
+- Adds ~1s load time for service programs in Live View (acceptable for interactive surface)
+- Cache still serves TV Display and MyProgram (those surfaces are unaffected)
