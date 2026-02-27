@@ -74,8 +74,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
 
     if (status === 'success') {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1F8A70] to-[#8DC63F]" />
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
+                <div className="h-1.5 brand-gradient" />
                 <div className="text-center py-16 px-6">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="w-8 h-8" />
@@ -189,7 +189,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             )}
 
             <button type="submit" disabled={status === 'loading'}
-                className="w-full py-4 bg-gradient-to-r from-[#1F8A70] to-[#8DC63F] text-white font-bold text-base uppercase tracking-wide rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+                className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
                 {status === 'loading' ? 'Enviando...' : 'ENVIAR Y PROCESAR'}
             </button>
         </form>

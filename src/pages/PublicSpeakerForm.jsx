@@ -47,7 +47,7 @@ export default function PublicSpeakerForm() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
+            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
                 <div className="text-center text-gray-400">
                     <div className="animate-spin w-8 h-8 border-2 border-[#1F8A70] border-t-transparent rounded-full mx-auto mb-4" />
                     <p className="text-sm font-medium">Cargando formulario...</p>
@@ -58,8 +58,8 @@ export default function PublicSpeakerForm() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
-                <div className="w-full max-w-[600px]">
+            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
+                <div className="w-full max-w-[640px]">
                     <SpeakerFormHeader event={null} />
                     <div className="bg-red-50 text-red-800 border border-red-200 rounded-lg p-4 font-medium">
                         {error}
@@ -70,8 +70,8 @@ export default function PublicSpeakerForm() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
-            <div className="w-full max-w-[600px]">
+        <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+            <div className="w-full max-w-[640px] mx-auto">
                 <SpeakerFormHeader event={event} />
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
                     Comparta sus notas o bosquejo para la proyección de versículos.

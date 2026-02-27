@@ -40,7 +40,7 @@ export default function PublicWeeklyForm() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
+            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
                 <div className="text-center text-gray-400">
                     <div className="animate-spin w-8 h-8 border-2 border-[#1F8A70] border-t-transparent rounded-full mx-auto mb-4" />
                     <p className="text-sm font-medium">Cargando formulario...</p>
@@ -50,8 +50,8 @@ export default function PublicWeeklyForm() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
-            <div className="w-full max-w-[600px]">
+        <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+            <div className="w-full max-w-[640px] mx-auto">
                 <WeeklyFormHeader />
 
                 {error && serviceGroups.length === 0 ? (

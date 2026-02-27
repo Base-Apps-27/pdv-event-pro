@@ -17,30 +17,30 @@ export default function SpeakerFormHeader({ event }) {
         : '';
 
     return (
-        <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-            {/* Gradient bar */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1F8A70] to-[#8DC63F]" />
+        <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+            {/* Brand gradient top bar — matches dashboard cards */}
+            <div className="h-1.5 brand-gradient" />
             
-            <div className="pt-10 pb-8 px-8 text-center">
-                <p className="text-xs font-extrabold text-[#1F8A70] uppercase tracking-widest mb-1">
+            <div className="pt-8 pb-6 px-6 md:px-8 text-center">
+                <p className="text-[10px] font-extrabold text-pdv-teal uppercase tracking-[0.2em] mb-1">
                     PALABRAS DE VIDA
                 </p>
-                <h1 className="text-5xl text-[#1A1A1A] mb-2 leading-none">
+                <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
                     VERSÍCULOS DE SU MENSAJE
                 </h1>
-                <p className="text-lg font-semibold text-gray-500 uppercase tracking-wide">
+                <h3 className="text-lg text-gray-500 tracking-wide">
                     {event?.name || 'Evento'}
-                </p>
-                <div className="flex justify-center flex-wrap gap-4 mt-4 text-sm text-gray-400 font-medium">
+                </h3>
+                <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (
                         <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-[#8DC63F]" />
+                            <Calendar className="w-3.5 h-3.5 text-pdv-green" />
                             <span>{eventDate}</span>
                         </div>
                     )}
                     {event?.location && (
                         <div className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-[#8DC63F]" />
+                            <MapPin className="w-3.5 h-3.5 text-pdv-green" />
                             <span>{event.location}</span>
                         </div>
                     )}

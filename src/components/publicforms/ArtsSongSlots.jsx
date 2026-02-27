@@ -8,8 +8,8 @@ import React from 'react';
 
 function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChange, onOwnerChange }) {
     return (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3">
-            <div className="text-xs font-bold text-[#1F8A70] uppercase tracking-wide mb-3 pb-2 border-b border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3">
+            <div className="text-xs font-bold text-pdv-teal uppercase tracking-wide mb-3 pb-2 border-b border-gray-100">
                 {label}
             </div>
             <div className="mb-2">

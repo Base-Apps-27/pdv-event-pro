@@ -49,7 +49,7 @@ export default function PublicArtsForm() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
+            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
                 <div className="text-center text-gray-400">
                     <div className="animate-spin w-8 h-8 border-2 border-[#1F8A70] border-t-transparent rounded-full mx-auto mb-4" />
                     <p className="text-sm font-medium">Cargando formulario...</p>
@@ -60,8 +60,8 @@ export default function PublicArtsForm() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
-                <div className="w-full max-w-[700px]">
+            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
+                <div className="w-full max-w-[720px]">
                     <ArtsFormHeader event={null} />
                     <div className="bg-red-50 text-red-800 border border-red-200 rounded-lg p-4 font-medium">{error}</div>
                 </div>
@@ -70,15 +70,15 @@ export default function PublicArtsForm() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-5">
-            <div className="w-full max-w-[700px]">
+        <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+            <div className="w-full max-w-[720px] mx-auto">
                 <ArtsFormHeader event={event} />
 
                 {!gateUser ? (
                     <ArtsGateForm onEnter={setGateUser} />
                 ) : (
                     <>
-                        <div className="bg-gray-50 rounded-lg border-l-4 border-[#8DC63F] p-5 mb-6 text-sm text-gray-500 leading-relaxed">
+                        <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-[#8DC63F] p-5 mb-6 text-sm text-gray-500 leading-relaxed">
                             A continuación encontrará los segmentos de Artes para este evento.
                             Abra cada uno para ingresar los detalles de su presentación.
                             Puede guardar progreso parcial y regresar luego para completar.
