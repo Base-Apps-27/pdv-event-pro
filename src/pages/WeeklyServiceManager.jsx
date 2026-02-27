@@ -242,24 +242,61 @@ export default function WeeklyServiceManager() {
     <div className="p-6 md:p-8 space-y-8 print:p-0 bg-[#F0F1F3] min-h-screen">
       <WeeklyServicePrintCSS printSettingsPage1={printSettingsPage1 || defaultPrintSettings} printSettingsPage2={printSettingsPage2 || defaultPrintSettings} />
 
-      {/* Header — compact single row for mobile */}
-      <div className="flex items-center justify-between gap-2 print:hidden">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
-            {/* Prominent selected date display */}
-            <span className="text-lg md:text-2xl font-bold text-pdv-teal tracking-tight leading-tight" style={{ fontFamily: "'Anton', sans-serif", textTransform: 'uppercase' }}>
-              {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM", { locale: es }) : ""}
-            </span>
+      {/* Header — Row 1: Title + view buttons + menu */}
+      <div className="space-y-2 print:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
+          <div className="flex gap-1.5 items-center flex-shrink-0">
+            <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8">
+              <Eye className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">{t('btn.live_view')}</span>
+            </Button>
+            <Button onClick={() => navigate(createPageUrl('PublicCountdownDisplay') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-purple-400 text-purple-700 hover:bg-purple-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="TV Display">
+              <Tv className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">TV</span>
+            </Button>
+            <Button onClick={() => navigate(createPageUrl('MyProgram') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-blue-400 text-blue-700 hover:bg-blue-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="Mi Programa">
+              <UserCircle className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">Mi Prog.</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="border-2 border-gray-300 bg-white text-gray-600 hover:bg-gray-100 h-8 w-8">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} className="gap-2">
+                  <ExternalLink className="w-4 h-4 text-purple-500" />
+                  <span>Link para Oradores</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowPrintSettings(true)} className="gap-2">
+                  <Settings className="w-4 h-4 text-gray-500" />
+                  <span>Ajustes de Impresión</span>
+                </DropdownMenuItem>
+                {hasPermission(user, 'edit_services') && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowScheduleManager(true)} className="gap-2">
+                      <Wrench className="w-4 h-4 text-purple-500" />
+                      <span>Configurar Horarios</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          {/* Date picker trigger */}
+        </div>
+
+        {/* Row 2: Date centered, prominent */}
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-2xl md:text-3xl text-pdv-teal tracking-tight leading-tight" style={{ fontFamily: "'Anton', sans-serif", textTransform: 'uppercase' }}>
+            {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM", { locale: es }) : ""}
+          </span>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="border-2 border-pdv-teal text-pdv-teal font-semibold text-xs px-2 h-8 hover:bg-emerald-50">
-                <CalendarIcon className="w-4 h-4" />
+              <Button variant="ghost" size="sm" className="text-pdv-teal hover:bg-emerald-50 px-1.5 h-8">
+                <CalendarIcon className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0" align="center">
               <style>{`
                 [data-disabled="true"] { color: #d1d5db !important; cursor: not-allowed !important; }
                 button[role="gridcell"][data-selected="true"], button[role="gridcell"][aria-selected="true"] { background-color: #8DC63F !important; color: white !important; }
@@ -280,44 +317,6 @@ export default function WeeklyServiceManager() {
               />
             </PopoverContent>
           </Popover>
-        </div>
-
-        <div className="flex gap-1.5 items-center flex-shrink-0">
-          <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8">
-            <Eye className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">{t('btn.live_view')}</span>
-          </Button>
-          <Button onClick={() => navigate(createPageUrl('PublicCountdownDisplay') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-purple-400 text-purple-700 hover:bg-purple-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="TV Display">
-            <Tv className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">TV</span>
-          </Button>
-          <Button onClick={() => navigate(createPageUrl('MyProgram') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-blue-400 text-blue-700 hover:bg-blue-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="Mi Programa">
-            <UserCircle className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">Mi Prog.</span>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="border-2 border-gray-300 bg-white text-gray-600 hover:bg-gray-100 h-8 w-8">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} className="gap-2">
-                <ExternalLink className="w-4 h-4 text-purple-500" />
-                <span>Link para Oradores</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowPrintSettings(true)} className="gap-2">
-                <Settings className="w-4 h-4 text-gray-500" />
-                <span>Ajustes de Impresión</span>
-              </DropdownMenuItem>
-              {hasPermission(user, 'edit_services') && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowScheduleManager(true)} className="gap-2">
-                    <Wrench className="w-4 h-4 text-purple-500" />
-                    <span>Configurar Horarios</span>
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
