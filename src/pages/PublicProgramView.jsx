@@ -193,7 +193,8 @@ export default function PublicProgramView() {
       if (response.status >= 400) throw new Error("Failed to fetch program data");
       return response.data;
     },
-    // Only enable when user picks something NOT in cache
+    // Enable when user picks something NOT in cache.
+    // Services always fresh-fetch (isCachedSelection is always false for services).
     enabled: !isCachedSelection && !!(selectedEventId || selectedServiceId || preloadedDate),
     staleTime: 30 * 1000,    // Fresh for 30s (entity subs handle live updates)
     refetchInterval: 30000,  // Safety net: 30s poll (subs are primary update channel)
