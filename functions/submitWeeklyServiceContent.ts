@@ -111,19 +111,24 @@ function parseScriptureReferences(rawText) {
     if (blacklist.includes(bookLower)) return;
 
     let formattedContent = fullMatch.replace(/[–—]/g, '-');
+    let foundMatch = false;
     
     if (BIBLE_BOOKS[bookLower]) {
       const { en, es } = BIBLE_BOOKS[bookLower];
       formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
+      foundMatch = true;
     } else {
       if (bookLower.length >= 3) {
         const matchedKey = Object.keys(BIBLE_BOOKS).find(key => key.startsWith(bookLower) || bookLower.startsWith(key));
         if (matchedKey) {
           const { en, es } = BIBLE_BOOKS[matchedKey];
           formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
+          foundMatch = true;
         }
       }
     }
+    
+    if (!foundMatch) return;
     
     const cleanRef = `${bookRaw} ${restOfRef}`;
     if (!seenRefs.has(cleanRef)) {
