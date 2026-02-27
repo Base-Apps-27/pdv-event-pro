@@ -48,7 +48,8 @@ export default function ArtsGateForm({ onEnter }) {
             {error && <p className="text-red-700 text-sm mb-3">{error}</p>}
             <button
                 onClick={handleSubmit}
-                className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all"
+                className="w-full py-3.5 text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all"
+                style={{ background: 'linear-gradient(90deg, #0F5C4D 0%, #4A7C2F 50%, #7A8C1A 100%)' }}
             >
                 Continuar / Continue
             </button>

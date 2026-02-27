@@ -200,9 +200,10 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         <textarea rows={3} value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)} placeholder="Cualquier detalle adicional para el equipo técnico..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                     </div>
 
-                    {/* Save Button */}
+                    {/* Save Button — inline gradient for reliable rendering on public pages */}
                     <button onClick={handleSave} disabled={saving}
-                        className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                        className="w-full py-3.5 text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                        style={{ background: 'linear-gradient(90deg, #0F5C4D 0%, #4A7C2F 50%, #7A8C1A 100%)' }}>
                         {saving ? '⏳ Guardando...' : '💾 GUARDAR PROGRESO / SAVE PROGRESS'}
                     </button>
                     {saveMsg && <p className={`text-center text-sm font-medium mt-2 ${saveMsg.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>{saveMsg.text}</p>}
