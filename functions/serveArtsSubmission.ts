@@ -707,24 +707,15 @@ Deno.serve(async (req) => {
           </div>
         </div>
 
-        <!-- Dance Section -->
+        <!-- Dance Section — songs shown by default, no mic fields (dance primarily uses songs) -->
         <div id="dance-\${seg.id}" class="\${types.includes('DANCE') ? '' : 'hidden'}">
           <div class="type-section">
             <div class="type-section-title">🩰 DANZA / DANCE</div>
             <div class="form-row">
-              <div class="form-group"><label>Handheld Mics</label><input type="number" min="0" value="\${seg.dance_handheld_mics}" onchange="updateField('\${seg.id}','dance_handheld_mics',parseInt(this.value)||0)"></div>
-              <div class="form-group"><label>Headset Mics</label><input type="number" min="0" value="\${seg.dance_headset_mics}" onchange="updateField('\${seg.id}','dance_headset_mics',parseInt(this.value)||0)"></div>
-            </div>
-            <div class="form-row">
               <div class="form-group"><label>Cue de Inicio / Start Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_start_cue',this.value)">\${esc(seg.dance_start_cue)}</textarea></div>
               <div class="form-group"><label>Cue de Fin / End Cue</label><textarea rows="2" onchange="updateField('\${seg.id}','dance_end_cue',this.value)">\${esc(seg.dance_end_cue)}</textarea></div>
             </div>
-            <div class="form-group" style="margin-top:8px">
-              <label><input type="checkbox" \${seg.dance_has_song ? 'checked' : ''} onchange="updateField('\${seg.id}','dance_has_song',this.checked); toggleSongs('\${seg.id}','dance',this.checked)"> Incluye playlist/canción(es) / Includes playlist/song(s)</label>
-            </div>
-            <div id="dsongs-\${seg.id}" class="\${seg.dance_has_song ? '' : 'hidden'}">
-              \${renderSongSlots(seg, 'dance')}
-            </div>
+            \${renderSongSlots(seg, 'dance')}
           </div>
         </div>
 
@@ -756,8 +747,8 @@ Deno.serve(async (req) => {
             <div class="form-group"><label>Nombre del Video / Video Name</label><input type="text" value="\${esc(seg.video_name)}" onchange="updateField('\${seg.id}','video_name',this.value)"></div>
             <div class="policy-banner \${IS_UNICA ? 'policy-banner-strict' : ''}">
               \${IS_UNICA 
-                ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace puede ver"). YouTube no permitido. / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. YouTube not allowed.</em>' 
-                : '<strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público. Streaming puede depender de conexión estable. / <em>Recommended: Cloud storage with public access. Streaming may depend on stable internet.</em>'
+                ? '<strong>Política Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Única Policy: Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em>' 
+                : '<strong>General:</strong> Enlaces de Google Drive, OneDrive o Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox links (public access required). Spotify/YouTube accepted but not recommended.</em>'
               }
             </div>
             <div class="form-group">
@@ -822,8 +813,8 @@ Deno.serve(async (req) => {
       return \`
         <div class="policy-banner \${IS_UNICA ? 'policy-banner-strict' : ''}">
           \${IS_UNICA 
-            ? '<strong>Política Única:</strong> Solo archivos en Google Drive, OneDrive o Dropbox con acceso público. No Spotify/YouTube. / <em>Única Policy: Only Google Drive, OneDrive, or Dropbox files with public access. No Spotify/YouTube.</em>' 
-            : '<strong>Recomendado:</strong> Google Drive, OneDrive o Dropbox con acceso público ("Cualquiera con el enlace"). / <em>Recommended: Cloud storage with public access ("Anyone with the link").</em>'
+            ? '<strong>Política Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Única Policy: Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em>' 
+            : '<strong>General:</strong> Enlaces de Google Drive, OneDrive o Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox links (public access required). Spotify/YouTube accepted but not recommended.</em>'
           }
         </div>
         <div class="song-card">
