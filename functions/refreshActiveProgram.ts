@@ -194,71 +194,36 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── STEP 3: Determine active program ───
-    // ADMIN OVERRIDE (2026-02-27): If an admin has force-set a program,
-    // use that instead of auto-detection. The midnight scheduled refresh
-    // clears the override fields so normal detection resumes next day.
+    // ─── STEP 3: Determine active program (auto-detection only) ───
     let targetProgram = null;
     let isEvent = false;
 
-    // Check for existing admin override on the cache record
-    const existingCache = await withRetry(() =>
-      base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
-    );
-    const currentCache = existingCache?.[0];
-    const hasAdminOverride = currentCache?.admin_override_id && currentCache?.admin_override_type;
+    const todayService = relevantServices.find(s => s.date === todayStr);
+    const todayEvent = relevantEvents.find(e => {
+      if (!e.start_date) return false;
+      return todayStr >= e.start_date && todayStr <= (e.end_date || e.start_date);
+    });
 
-    // Midnight trigger clears any admin override so auto-detect resumes.
-    const isMidnightTrigger = trigger === 'midnight' || trigger === 'scheduled';
-    
-    if (hasAdminOverride && !isMidnightTrigger) {
-      // Resolve the override target from the already-fetched lists
-      if (currentCache.admin_override_type === 'event') {
-        const overrideEvent = allEvents.find(e => e.id === currentCache.admin_override_id);
-        if (overrideEvent) {
-          targetProgram = overrideEvent;
-          isEvent = true;
-          console.log(`[refreshActiveProgram] Using admin override: event ${overrideEvent.name}`);
-        }
-      } else if (currentCache.admin_override_type === 'service') {
-        const overrideService = allServices.find(s => s.id === currentCache.admin_override_id);
-        if (overrideService) {
-          targetProgram = overrideService;
-          isEvent = false;
-          console.log(`[refreshActiveProgram] Using admin override: service ${overrideService.name}`);
-        }
-      }
-    }
+    if (todayService) {
+      targetProgram = todayService;
+      isEvent = false;
+    } else if (todayEvent) {
+      targetProgram = todayEvent;
+      isEvent = true;
+    } else {
+      const futureService = relevantServices.find(s => s.date > todayStr);
+      const futureEvent = relevantEvents.find(e => e.start_date > todayStr);
 
-    // Normal auto-detection (when no override or override target not found)
-    if (!targetProgram) {
-      const todayService = relevantServices.find(s => s.date === todayStr);
-      const todayEvent = relevantEvents.find(e => {
-        if (!e.start_date) return false;
-        return todayStr >= e.start_date && todayStr <= (e.end_date || e.start_date);
-      });
-
-      if (todayService) {
-        targetProgram = todayService;
-        isEvent = false;
-      } else if (todayEvent) {
-        targetProgram = todayEvent;
-        isEvent = true;
-      } else {
-        const futureService = relevantServices.find(s => s.date > todayStr);
-        const futureEvent = relevantEvents.find(e => e.start_date > todayStr);
-
-        if (futureService && futureEvent) {
-          if (futureService.date <= futureEvent.start_date) {
-            targetProgram = futureService; isEvent = false;
-          } else {
-            targetProgram = futureEvent; isEvent = true;
-          }
-        } else if (futureService) {
+      if (futureService && futureEvent) {
+        if (futureService.date <= futureEvent.start_date) {
           targetProgram = futureService; isEvent = false;
-        } else if (futureEvent) {
+        } else {
           targetProgram = futureEvent; isEvent = true;
         }
+      } else if (futureService) {
+        targetProgram = futureService; isEvent = false;
+      } else if (futureEvent) {
+        targetProgram = futureEvent; isEvent = true;
       }
     }
 
@@ -282,34 +247,6 @@ Deno.serve(async (req) => {
       last_refresh_trigger: trigger,
       last_refresh_at: new Date().toISOString(),
     };
-
-    // ADMIN OVERRIDE LIFECYCLE (2026-02-27):
-    // - Midnight/scheduled trigger: CLEAR override fields → auto-detect resumes next day
-    // - admin_override trigger: override fields are set by the caller (frontend)
-    // - All other triggers: PRESERVE existing override fields
-    if (isMidnightTrigger) {
-      cacheData.admin_override_type = null;
-      cacheData.admin_override_id = null;
-      cacheData.admin_override_by = null;
-      cacheData.admin_override_at = null;
-      console.log(`[refreshActiveProgram] Midnight trigger: clearing admin override`);
-    } else if (trigger === 'admin_override') {
-      // Override fields were set by the frontend caller on the cache record
-      // BEFORE invoking this function. We must PRESERVE them here because
-      // the update at Step 5 would otherwise clear them (BUG FIX 2026-02-27).
-      if (currentCache) {
-        cacheData.admin_override_type = currentCache.admin_override_type;
-        cacheData.admin_override_id = currentCache.admin_override_id;
-        cacheData.admin_override_by = currentCache.admin_override_by;
-        cacheData.admin_override_at = currentCache.admin_override_at;
-      }
-    } else if (hasAdminOverride) {
-      // Preserve existing override for non-midnight, non-override triggers
-      cacheData.admin_override_type = currentCache.admin_override_type;
-      cacheData.admin_override_id = currentCache.admin_override_id;
-      cacheData.admin_override_by = currentCache.admin_override_by;
-      cacheData.admin_override_at = currentCache.admin_override_at;
-    }
 
     const existing = await withRetry(() =>
       base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })

@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
-import ForceDisplayOverride from "@/components/admin/ForceDisplayOverride";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -140,11 +139,6 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Admin: Force Display Override — only for admin users */}
-        {currentUser?.role === 'admin' && (
-          <ForceDisplayOverride user={currentUser} />
-        )}
 
         {/* Quick Actions - 3 Shortcuts */}
         <div className="grid md:grid-cols-3 gap-6">
