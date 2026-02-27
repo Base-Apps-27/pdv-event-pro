@@ -95,12 +95,48 @@ Deno.serve(async (req) => {
             updatePayload.drama_song_1_url_meta = null;
         }
 
-        // Save directly to the Segment entity
+        // ── ARTS SUBMISSION TRACKING (2026-02-27) ──
+        // 1. Stamp the segment with who submitted and when
+        updatePayload.arts_last_submitted_by = `${submitter_name || 'Unknown'} (${submitter_email || 'no-email'})`;
+        updatePayload.arts_last_submitted_at = new Date().toISOString();
+
+        // 2. Save to the Segment entity
         await base44.asServiceRole.entities.Segment.update(segment_id, updatePayload);
 
-        console.log(`[ArtsSubmission] Segment ${segment_id} updated by ${submitter_name} (${submitter_email})`);
+        // 3. Compute which fields actually changed (for the audit log)
+        const fieldsChanged = [];
+        for (const field of Object.keys(updatePayload)) {
+            // Skip meta/tracking fields from diff
+            if (['arts_last_submitted_by', 'arts_last_submitted_at'].includes(field)) continue;
+            const oldVal = JSON.stringify(segment[field] ?? null);
+            const newVal = JSON.stringify(updatePayload[field] ?? null);
+            if (oldVal !== newVal) fieldsChanged.push(field);
+        }
 
-        return Response.json({ success: true }, { headers: corsHeaders });
+        // 4. Create immutable audit log entry (ArtsSubmissionLog)
+        // Resolve event_id from the segment's session for grouping
+        let eventId = null;
+        if (segment.session_id) {
+            try {
+                const sessions = await base44.asServiceRole.entities.Session.filter({ id: segment.session_id });
+                if (sessions[0]?.event_id) eventId = sessions[0].event_id;
+            } catch (e) { /* non-critical — log continues without event_id */ }
+        }
+
+        await base44.asServiceRole.entities.ArtsSubmissionLog.create({
+            segment_id: segment_id,
+            event_id: eventId || '',
+            segment_title: segment.title || '',
+            submitter_name: submitter_name || 'Unknown',
+            submitter_email: submitter_email || '',
+            submitted_at: new Date().toISOString(),
+            data_snapshot: updatePayload,
+            fields_changed: fieldsChanged,
+        });
+
+        console.log(`[ArtsSubmission] Segment ${segment_id} updated by ${submitter_name} (${submitter_email}). Changed: ${fieldsChanged.join(', ') || 'none'}`);
+
+        return Response.json({ success: true, fields_changed: fieldsChanged.length }, { headers: corsHeaders });
 
     } catch (error) {
         console.error('[ArtsSubmission] Error:', error);
