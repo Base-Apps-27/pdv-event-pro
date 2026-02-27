@@ -15,6 +15,11 @@ import ForceDisplayOverride from "@/components/admin/ForceDisplayOverride";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
   
   const gradientStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
