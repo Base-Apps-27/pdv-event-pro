@@ -588,14 +588,14 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       }
     });
 
-    // Render notes as compact inline lines with orange label + amber highlight
+    // Render notes as compact inline lines — department color on label, dark text for content
     // NO table/box wrapper — just indented text lines to minimize vertical space
     if (activeNotes.length > 0) {
       activeNotes.forEach((note, idx) => {
         items.push({
           text: [
-            { text: `${note.label}: `, bold: true, color: '#EA580C', fontSize: 7.5 * scale }, // Orange-600
-            { text: note.text, color: '#92400E', fontSize: 7.5 * scale, background: '#FEF3C7' } // Amber-800 text on Amber-100 highlight
+            { text: `${note.label}: `, bold: true, color: note.color, fontSize: 7.5 * scale },
+            { text: note.text, color: '#374151', fontSize: 7.5 * scale } // Gray-700 body text
           ],
           margin: [8, idx === 0 ? 2 : 0, 0, 0],
           lineHeight: scale < 0.85 ? 0.85 : 1.05
@@ -603,8 +603,8 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       });
     }
 
-    // Actions: replaced with a compact indicator badge only.
-    // Full action details are now surfaced via the app/TV display, not print.
+    // Actions: compact orange/amber indicator badge for prep + cue counts
+    // Full action details are surfaced via the app/TV display, not print.
     if (seg.actions?.length > 0) {
       const prepCount = seg.actions.filter(a => a.timing === 'before_start').length;
       const duringCount = seg.actions.filter(a => a.timing !== 'before_start').length;
@@ -613,8 +613,8 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       if (duringCount > 0) parts.push(`${duringCount} cue${duringCount > 1 ? 's' : ''}`);
       items.push({
         text: [
-          { text: '* ', bold: true, color: '#9CA3AF', fontSize: 7.5 * scale },
-          { text: parts.join(' + '), color: '#9CA3AF', fontSize: 7.5 * scale, italics: true }
+          { text: '⚠ ', bold: true, color: '#EA580C', fontSize: 7.5 * scale },
+          { text: parts.join(' + '), color: '#92400E', fontSize: 7.5 * scale, italics: true, background: '#FEF3C7' }
         ],
         margin: [8, 0, 0, 2]
       });
