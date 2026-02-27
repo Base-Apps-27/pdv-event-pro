@@ -226,23 +226,20 @@ function VerseParserDialog({
   const handleParse = async () => {
     setIsParsing(true);
     
-    // Provide immediate feedback with local regex
+    // 1. Immediate deterministic verse extraction using local regex
     const localResult = parseScriptureReferences(rawText);
-    setParsedData(localResult);
     
     try {
+      // 2. LLM solely for Key Takeaways
       const prompt = `
         You are an expert sermon analysis assistant. Analyze the following speaker notes.
         
-        1. Extract the main key takeaways (3-5 bullet points). Language: ${language === 'es' ? 'Spanish' : 'English'}.
-        2. Identify all actual biblical scripture references mentioned. 
-           IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
-           Format the scripture references EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
-           If there are no verses, return an empty array for verses.
+        Extract the main key takeaways (3-5 bullet points). Language: ${language === 'es' ? 'Spanish' : 'English'}.
+        Return ONLY a JSON array of strings containing the takeaways. Do not include bible verses in this list.
         
         Notes to analyze:
         """
-        ${rawText}
+        ${rawText.substring(0, 15000)}
         """
       `;
 
@@ -251,38 +248,26 @@ function VerseParserDialog({
         response_json_schema: {
           type: "object",
           properties: {
-            verses: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
-                }
-              }
-            },
-            key_takeaways: {
+            takeaways: {
               type: "array",
               items: { type: "string" }
             }
-          },
-          required: ["verses", "key_takeaways"]
+          }
         }
       });
 
-      const aiVerses = aiResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
-      const aiTakeaways = aiResponse?.key_takeaways || [];
+      const aiTakeaways = aiResponse?.takeaways || [];
       
-      const finalVerses = aiVerses.length > 0 ? aiVerses : localResult.sections;
-
       setParsedData({
-        type: finalVerses.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
-        sections: finalVerses,
+        type: localResult.sections.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
+        sections: localResult.sections,
         key_takeaways: aiTakeaways
       });
 
     } catch (error) {
       console.error("AI parsing failed:", error);
       // Keep localResult if AI fails
+      setParsedData(localResult);
     } finally {
       setIsParsing(false);
     }
