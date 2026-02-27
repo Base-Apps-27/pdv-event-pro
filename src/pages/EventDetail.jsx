@@ -287,13 +287,14 @@ export default function EventDetail() {
                 )}
                 <DropdownMenuItem asChild>
                   <a 
-                    href={`${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`} 
+                    href={createPageUrl('PublicSpeakerForm') + `?event_id=${eventId}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="flex items-center w-full"
                     onClick={async (e) => {
                       try {
-                        const url = `${window.location.origin}/api/functions/serveSpeakerSubmission?event_id=${eventId}`;
+                        // CSP Migration (2026-02-27): Now points to React page instead of SSR HTML function
+                        const url = `${window.location.origin}${createPageUrl('PublicSpeakerForm')}?event_id=${eventId}`;
                         await navigator.clipboard.writeText(url);
                         toast.success(t('eventDetail.linkCopied'));
                       } catch (err) {
