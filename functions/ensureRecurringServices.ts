@@ -236,6 +236,7 @@ Deno.serve(async (req) => {
             segment_type: resolveSegmentEnum(segData.type),
             duration_min: Number(segData.duration) || 0,
             show_in_general: true,
+            color_code: segData.color_code || 'default',
             ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
             ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
               label: sa.label || "Untitled",
@@ -248,6 +249,12 @@ Deno.serve(async (req) => {
 
           if (segData.number_of_songs !== undefined) {
             segmentPayload.number_of_songs = Number(segData.number_of_songs) || 0;
+          }
+
+          // BUGFIX (2026-02-27): Carry forward structured actions from blueprint.
+          // Without this, StickyOpsDeck sees no actions on auto-created services.
+          if (Array.isArray(segData.actions) && segData.actions.length > 0) {
+            segmentPayload.segment_actions = segData.actions;
           }
 
           const createdSeg = await base44.asServiceRole.entities.Segment.create(segmentPayload);
