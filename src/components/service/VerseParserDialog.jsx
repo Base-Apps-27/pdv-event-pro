@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, BookOpen } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 // ╔══════════════════════════════════════════════════════════════════════╗
 // ║  VERSE PARSING LOGIC — CANONICAL CLIENT-SIDE COPY                   ║
@@ -153,6 +154,9 @@ function parseScriptureReferences(rawText) {
       }
     }
     
+    // If it doesn't match any known book, discard it (fixes "Domingo 9:30" bug)
+    if (!foundMatch) return;
+
     // Create clean reference key for deduplication (Book + chapter:verse)
     const cleanRef = `${bookRaw} ${restOfRef}`;
     
@@ -219,14 +223,69 @@ function VerseParserDialog({
 
   const t = texts[language] || texts.es;
 
-  const handleParse = () => {
+  const handleParse = async () => {
     setIsParsing(true);
-    // Simulate brief processing time for UX
-    setTimeout(() => {
-      const result = parseScriptureReferences(rawText);
-      setParsedData(result);
+    
+    // Provide immediate feedback with local regex
+    const localResult = parseScriptureReferences(rawText);
+    setParsedData(localResult);
+    
+    try {
+      const prompt = `
+        You are an expert sermon analysis assistant. Analyze the following speaker notes.
+        
+        1. Extract the main key takeaways (3-5 bullet points). Language: ${language === 'es' ? 'Spanish' : 'English'}.
+        2. Identify all actual biblical scripture references mentioned. 
+           IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
+           Format the scripture references EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
+           If there are no verses, return an empty array for verses.
+        
+        Notes to analyze:
+        """
+        ${rawText}
+        """
+      `;
+
+      const aiResponse = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            verses: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
+                }
+              }
+            },
+            key_takeaways: {
+              type: "array",
+              items: { type: "string" }
+            }
+          },
+          required: ["verses", "key_takeaways"]
+        }
+      });
+
+      const aiVerses = aiResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
+      const aiTakeaways = aiResponse?.key_takeaways || [];
+      
+      const finalVerses = aiVerses.length > 0 ? aiVerses : localResult.sections;
+
+      setParsedData({
+        type: finalVerses.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
+        sections: finalVerses,
+        key_takeaways: aiTakeaways
+      });
+
+    } catch (error) {
+      console.error("AI parsing failed:", error);
+      // Keep localResult if AI fails
+    } finally {
       setIsParsing(false);
-    }, 300);
+    }
   };
 
   const handleSave = () => {
