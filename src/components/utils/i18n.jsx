@@ -478,7 +478,17 @@ const translations = {
       'myprogram.countdown.startsIn': 'Inicia en',
       'myprogram.countdown.endsIn': 'Termina en',
       'myprogram.thankYou': '¡Gracias por servir hoy!',
-      'myprogram.sessionFinalized': 'Sesión Finalizada'
+      'myprogram.sessionFinalized': 'Sesión Finalizada',
+
+      // Force Display Override (2026-02-27)
+      'forceDisplay.title': 'Forzar Pantalla',
+      'forceDisplay.description': 'Forza un evento o servicio a todas las pantallas. Se limpia automáticamente a medianoche.',
+      'forceDisplay.push': 'Enviar a Pantallas',
+      'forceDisplay.pushing': 'Enviando...',
+      'forceDisplay.success': 'Pantallas actualizadas con override',
+      'forceDisplay.cleared': 'Override eliminado — detección normal activa',
+      'forceDisplay.clear': 'Quitar',
+      'forceDisplay.activeOverride': 'Override activo',
   },
   en: {
     // Navigation
@@ -965,7 +975,17 @@ const translations = {
     'myprogram.countdown.startsIn': 'Starts in',
     'myprogram.countdown.endsIn': 'Ends in',
     'myprogram.thankYou': 'Thank you for serving today!',
-    'myprogram.sessionFinalized': 'Session Finalized'
+    'myprogram.sessionFinalized': 'Session Finalized',
+
+    // Force Display Override (2026-02-27)
+    'forceDisplay.title': 'Force Display',
+    'forceDisplay.description': 'Force an event or service to all display screens. Auto-clears at midnight.',
+    'forceDisplay.push': 'Push to Screens',
+    'forceDisplay.pushing': 'Pushing...',
+    'forceDisplay.success': 'Screens updated with override',
+    'forceDisplay.cleared': 'Override cleared — normal detection active',
+    'forceDisplay.clear': 'Clear',
+    'forceDisplay.activeOverride': 'Active override',
   }
 };
 
