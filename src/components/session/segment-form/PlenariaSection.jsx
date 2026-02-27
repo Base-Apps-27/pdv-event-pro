@@ -63,18 +63,15 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
             className="h-7 px-2 bg-white border-orange-300 text-orange-700 hover:bg-orange-50"
           >
             <BookOpen className="w-3.5 h-3.5 mr-1" />
-            <span className="text-xs">{language === 'es' ? 'Añadir Versículos' : 'Add Verses'}</span>
+            <span className="text-xs">{language === 'es' ? 'Editar Versículos' : 'Edit Verses'}</span>
           </Button>
         </div>
-        {formData.scripture_references ? (
-          <p className="text-sm text-gray-700 py-2">{formData.scripture_references}</p>
-        ) : (
-          <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin versículos añadidos' : 'No verses added'}</p>
-        )}
-        {formData.parsed_verse_data && (
-          <div className="mt-3">
+        {formData.parsed_verse_data ? (
+          <div className="mt-3 bg-white p-3 rounded-md border border-orange-100 shadow-sm">
             <ParsedContentPreview parsedData={formData.parsed_verse_data} language={language} />
           </div>
+        ) : (
+          <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin contenido procesado' : 'No processed content'}</p>
         )}
       </div>
     </div>
