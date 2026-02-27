@@ -338,12 +338,6 @@ export default function WeeklyEditorV2({
         <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Anuncios">
           <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
         </Button>
-        <Button onClick={() => navigate(createPageUrl('PublicCountdownDisplay') + `?date=${date}`)} variant="outline" size="sm" className="border-purple-400 text-purple-700 hover:bg-purple-600 hover:text-white border-2 font-semibold text-xs h-8 px-2" title="TV Display">
-          <Tv className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">TV</span>
-        </Button>
-        <Button onClick={() => navigate(createPageUrl('MyProgram') + `?date=${date}`)} variant="outline" size="sm" className="border-blue-400 text-blue-700 hover:bg-blue-600 hover:text-white border-2 font-semibold text-xs h-8 px-2" title="Mi Programa">
-          <UserCircle className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Mi Prog.</span>
-        </Button>
         {resolvedBlueprint && (
           <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2" title="Restablecer estructura predeterminada">
             <RotateCcw className="w-4 h-4" />

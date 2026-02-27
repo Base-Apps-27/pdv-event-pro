@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Eye, Download, Settings, Wand2, MoreVertical, Wrench, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, Eye, Download, Settings, Wand2, MoreVertical, Wrench, ExternalLink, Tv, UserCircle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { createPageUrl } from "@/utils";
 import { format as formatDate } from "date-fns";
