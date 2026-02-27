@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { hasPermission } from "@/components/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle, Download } from "lucide-react";
+import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle, Download, Tv, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -338,8 +338,11 @@ export default function WeeklyEditorV2({
         <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Anuncios">
           <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
         </Button>
-        <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${date}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs h-8 px-2" title="Live View">
-          <Eye className="w-4 h-4" />
+        <Button onClick={() => navigate(createPageUrl('PublicCountdownDisplay') + `?date=${date}`)} variant="outline" size="sm" className="border-purple-400 text-purple-700 hover:bg-purple-600 hover:text-white border-2 font-semibold text-xs h-8 px-2" title="TV Display">
+          <Tv className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">TV</span>
+        </Button>
+        <Button onClick={() => navigate(createPageUrl('MyProgram') + `?date=${date}`)} variant="outline" size="sm" className="border-blue-400 text-blue-700 hover:bg-blue-600 hover:text-white border-2 font-semibold text-xs h-8 px-2" title="Mi Programa">
+          <UserCircle className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Mi Prog.</span>
         </Button>
         {resolvedBlueprint && (
           <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2" title="Restablecer estructura predeterminada">

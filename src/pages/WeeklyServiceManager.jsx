@@ -244,15 +244,15 @@ export default function WeeklyServiceManager() {
 
       {/* Header — compact single row for mobile */}
       <div className="flex items-center justify-between gap-2 print:hidden">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
-          {/* Inline date picker */}
+          {/* Date picker — prominent branded pill */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 font-normal text-xs md:text-sm px-2 py-1 h-8">
-                <CalendarIcon className="w-3 h-3 mr-1 text-pdv-teal flex-shrink-0" />
-                <span className="truncate max-w-[120px] md:max-w-none">
-                  {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d MMM yyyy", { locale: es }) : "Semana"}
+              <Button variant="outline" className="border-2 border-pdv-teal text-gray-900 font-semibold text-sm md:text-base px-3 py-1.5 h-9 md:h-10 hover:bg-emerald-50">
+                <CalendarIcon className="w-4 h-4 mr-1.5 text-pdv-teal flex-shrink-0" />
+                <span className="truncate max-w-[140px] md:max-w-none">
+                  {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMM, yyyy", { locale: es }) : "Semana"}
                 </span>
               </Button>
             </PopoverTrigger>
