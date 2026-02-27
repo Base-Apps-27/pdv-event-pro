@@ -18,6 +18,7 @@ import { BookOpen } from "lucide-react";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { FIELD_REGISTRY } from "../constants/fieldMap";
 import SpeakerMaterialSection from "./SpeakerMaterialSection";
+import ParsedContentPreview from "../../ParsedContentPreview";
 
 /**
  * @param {object} segment - Raw Segment entity object
@@ -97,9 +98,9 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
               💡 Usa el ícono 📖 para extraer y estructurar referencias bíblicas
             </p>
             {segment.parsed_verse_data && (
-              <Badge variant="outline" className="text-xs bg-green-50 border-green-300 text-green-700">
-                ✓ Analizado ({segment.parsed_verse_data.sections?.length || 0} elementos)
-              </Badge>
+              <div className="mt-2">
+                <ParsedContentPreview parsedData={segment.parsed_verse_data} />
+              </div>
             )}
             <SpeakerMaterialSection segment={segment} onWrite={onWrite} />
           </div>

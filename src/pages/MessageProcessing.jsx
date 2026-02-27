@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Loader2, CheckCircle2, Clock, AlertCircle, FileText, Sparkles, X, History, RotateCcw, Bug } from "lucide-react";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
+import ParsedContentPreview from "@/components/service/ParsedContentPreview";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 
@@ -93,7 +94,16 @@ export default function MessageProcessingPage() {
                 base44.entities.Segment.filter({ submission_status: 'pending' }),
                 base44.entities.Segment.filter({ submission_status: 'processed' })
             ]);
-            const eventSegments = [...pendingSeg, ...processedSeg];
+            const eventSegments = [...pendingSeg, ...processedSeg].map(seg => ({
+                id: seg.id,
+                title: seg.title,
+                presenter: seg.presenter,
+                submitted_content: seg.submitted_content,
+                parsed_verse_data: seg.parsed_verse_data,
+                submission_status: seg.submission_status,
+                updated_date: seg.updated_date,
+                isServiceSegment: false
+            }));
 
             // Fetch Services (Weekly)
             // Strategy: Get recent active services (last 30 days + future)
@@ -125,6 +135,7 @@ export default function MessageProcessingPage() {
                                     title: `${service.name || service.date} - ${session.name} - ${seg.title}`,
                                     presenter: seg.presenter,
                                     submitted_content: seg.submitted_content,
+                                    parsed_verse_data: seg.parsed_verse_data,
                                     submission_status: seg.submission_status,
                                     updated_date: seg.updated_date || service.updated_date,
                                     // Not a JSON service segment — use standard entity path
@@ -148,6 +159,7 @@ export default function MessageProcessingPage() {
                                     title: `${service.name || service.date} - ${slot} - ${seg.title}`,
                                     presenter: seg.data?.presenter || seg.data?.preacher || seg.data?.leader,
                                     submitted_content: seg.submitted_content,
+                                    parsed_verse_data: seg.parsed_verse_data,
                                     submission_status: seg.submission_status,
                                     updated_date: service.updated_date,
                                     isServiceSegment: true,
@@ -285,6 +297,11 @@ export default function MessageProcessingPage() {
                                         <Badge className={isProcessed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
                                             {isProcessed ? 'Procesado' : 'Pendiente'}
                                         </Badge>
+                                        {segment.isServiceSegment && (
+                                            <Badge variant="outline" className="ml-2 text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                                                Servicio Semanal
+                                            </Badge>
+                                        )}
                                         <span className="text-xs text-gray-400 font-mono">
                                             {segment.updated_date ? formatDateTimeET(segment.updated_date) : ''}
                                         </span>
@@ -295,10 +312,15 @@ export default function MessageProcessingPage() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="pt-4 space-y-4">
-                                    <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-600 font-mono h-32 overflow-hidden relative">
-                                        {segment.submitted_content}
-                                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent" />
+                                    <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-600 font-mono max-h-32 overflow-y-auto">
+                                        {segment.submitted_content || <span className="italic text-gray-400">Sin contenido enviado</span>}
                                     </div>
+                                    
+                                    {isProcessed && segment.parsed_verse_data && (
+                                        <div className="pt-2 border-t border-gray-100">
+                                            <ParsedContentPreview parsedData={segment.parsed_verse_data} />
+                                        </div>
+                                    )}
                                     <div className="flex gap-2">
                                         <Button 
                                             onClick={() => handleProcess(segment)} 

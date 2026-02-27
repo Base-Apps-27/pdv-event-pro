@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
+import ParsedContentPreview from "@/components/service/ParsedContentPreview";
 
 export default function PlenariaSection({ formData, setFormData, onOpenVerseParser }) {
   const { language } = useLanguage();
@@ -71,22 +72,8 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
           <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin versículos añadidos' : 'No verses added'}</p>
         )}
         {formData.parsed_verse_data && (
-          <p className="text-xs text-green-600 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            {language === 'es' ? 'Versos estructurados guardados' : 'Structured verses saved'}
-          </p>
-        )}
-        {formData.parsed_verse_data?.key_takeaways && formData.parsed_verse_data.key_takeaways.length > 0 && (
-          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900">
-            <div className="font-bold flex items-center gap-1.5 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              {language === 'es' ? 'Puntos Clave Extraídos:' : 'Extracted Key Takeaways:'}
-            </div>
-            <ul className="list-disc pl-5 space-y-1">
-              {formData.parsed_verse_data.key_takeaways.map((point, i) => (
-                <li key={i} className="text-xs leading-relaxed">{point}</li>
-              ))}
-            </ul>
+          <div className="mt-3">
+            <ParsedContentPreview parsedData={formData.parsed_verse_data} language={language} />
           </div>
         )}
       </div>

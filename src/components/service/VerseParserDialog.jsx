@@ -339,6 +339,11 @@ function VerseParserDialog({
               placeholder={t.inputPlaceholder}
               className="flex-1 min-h-[200px] text-sm font-mono p-4"
             />
+            {initialText && (
+              <p className="text-[10px] text-gray-500 mt-1">
+                Nota: Este texto es el contenido original enviado por el orador. Presiona Extraer para generar la versión estructurada.
+              </p>
+            )}
             <Button
               onClick={handleParse}
               disabled={!rawText.trim() || isParsing}
