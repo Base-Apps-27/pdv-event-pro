@@ -23,6 +23,8 @@ function LayoutContentInner({ children }) {
     const publicExactRoutes = [
       createPageUrl('PublicCountdownDisplay'),
       '/PublicCountdownDisplay',
+      createPageUrl('PublicSpeakerForm'),
+      '/PublicSpeakerForm',
     ];
     if (publicExactRoutes.includes(path)) return true;
     const publicPrefixes = ['/print/', '/public/'];
