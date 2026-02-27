@@ -1,15 +1,14 @@
 /**
  * PublicArtsForm.js
  * 
- * Public React page for Arts Directors to submit technical/creative details.
- * Replaces serveArtsSubmission (SSR HTML) which was blocked by platform CDN CSP.
+ * PUBLIC React page for Arts Directors to submit technical/creative details.
+ * This is the SOLE arts form surface — the old SSR function (serveArtsSubmission) is deprecated.
  * 
- * CSP Migration (2026-02-27): This page runs inside the trusted React app shell,
- * bypassing CDN-level CSP restrictions that block inline scripts in function-served HTML.
  * Data is fetched from getArtsFormData (JSON API), submission goes to submitArtsSegment.
- * 
  * Public route — no auth required. Added to Layout's isPublicPage list.
  * Accepts ?event_id=xxx query param (auto-detects if omitted).
+ * 
+ * Build: 2026-02-27T18:00Z — forced deploy
  */
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
