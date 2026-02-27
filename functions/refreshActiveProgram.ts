@@ -294,9 +294,15 @@ Deno.serve(async (req) => {
       cacheData.admin_override_at = null;
       console.log(`[refreshActiveProgram] Midnight trigger: clearing admin override`);
     } else if (trigger === 'admin_override') {
-      // Override fields were already set by the frontend caller — they'll be in the body
-      // The caller sets admin_override_type/id/by/at directly on the cache record
-      // before invoking this function, so we don't touch them here.
+      // Override fields were set by the frontend caller on the cache record
+      // BEFORE invoking this function. We must PRESERVE them here because
+      // the update at Step 5 would otherwise clear them (BUG FIX 2026-02-27).
+      if (currentCache) {
+        cacheData.admin_override_type = currentCache.admin_override_type;
+        cacheData.admin_override_id = currentCache.admin_override_id;
+        cacheData.admin_override_by = currentCache.admin_override_by;
+        cacheData.admin_override_at = currentCache.admin_override_at;
+      }
     } else if (hasAdminOverride) {
       // Preserve existing override for non-midnight, non-override triggers
       cacheData.admin_override_type = currentCache.admin_override_type;
