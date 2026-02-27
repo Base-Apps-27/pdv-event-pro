@@ -39,8 +39,8 @@ export default function ArtsSongSlots({ prefix, segment, onFieldChange, isUnica 
         <div>
             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
                 {isUnica
-                    ? <><strong>Política Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Única Policy: Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
-                    : <><strong>General:</strong> Google Drive, OneDrive o Dropbox (acceso público preferido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox (public access preferred). Spotify/YouTube accepted but not recommended.</em></>
+                    ? <><strong>Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
+                    : <><strong>General:</strong> Google Drive, OneDrive o Dropbox (acceso "público" requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox ("public" access required). Spotify/YouTube accepted but not recommended.</em></>
                 }
             </div>
             <SongCard label="Canción 1 / Song 1"
