@@ -343,10 +343,7 @@ export default function WeeklyEditorV2({
             <RotateCcw className="w-4 h-4" />
           </Button>
         )}
-        <div title="V2 Entity-Direct Editor" className="flex items-center justify-center w-8 h-8 rounded bg-green-50 border border-green-200">
-          <ShieldCheck className="w-4 h-4 text-green-600" />
-        </div>
-        <Badge variant="outline" className="text-[10px] text-green-700 border-green-300 bg-green-50">V2</Badge>
+
       </div>
 
       {/* Reset confirm — supports per-session or all-sessions */}
