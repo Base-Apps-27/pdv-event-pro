@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import DesktopSidebar from "@/components/nav/DesktopSidebar";
 import MobileNav from "@/components/nav/MobileNav";
+import "@/globals.css"; // Ensure brand utilities (.brand-gradient, etc.) load on all pages
 
 function LayoutContentInner({ children }) {
   const location = useLocation();
