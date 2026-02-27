@@ -240,3 +240,26 @@
 
 **Result:** IMPLEMENTED
 **Disposition:** IMPLEMENTED — All data pipeline surfaces now sort sessions chronologically. The `order` field is preserved but demoted to tiebreaker only.
+
+## [ATT-016] StickyOpsDeck Missing Actions on Newly Created Services
+**Date:** 2026-02-27
+**Surfaces:** pages/PublicProgramView, components/service/weekly/EmptyDayPrompt, functions/ensureRecurringServices, components/docs/DECISION_LOG
+**What was attempted:**
+  User reported StickyOpsDeck showing no coordinator actions for newly created services. Events worked fine because they always fresh-fetch via `getPublicProgramData`.
+
+  **Root Causes Found (2):**
+  1. **Creation gap:** `EmptyDayPrompt` and `ensureRecurringServices` were NOT carrying `segment_actions` from blueprint when creating Segment entities. So newly created segments had no embedded actions.
+  2. **Cache staleness:** Even after fixing creation, the Live View used the ActiveProgramCache snapshot for auto-detected services. If the cache was built before the service existed (or before actions were added), the snapshot had no actions. The cache required `refreshActiveProgram` to run (entity automation trigger), which might not fire reliably for brand-new services.
+
+  **Fix Applied (3 changes + Decision):**
+  1. **EmptyDayPrompt**: Added `segment_actions` carry-forward from blueprint, `color_code` carry-forward, and child sub-assignment entity creation (matching `useResetToBlueprint` contract).
+  2. **ensureRecurringServices**: Added `segment_actions` carry-forward from blueprint and `color_code` carry-forward.
+  3. **PublicProgramView**: `isCachedSelection` now returns `false` for `viewType === 'service'`, so services ALWAYS fresh-fetch via `getPublicProgramData` — matching how events work. See DECISION-006.
+
+  **Why this is durable:**
+  - Fresh-fetch eliminates the entire class of "cache didn't rebuild yet" bugs for services in Live View
+  - Creation fixes ensure cache snapshot is also correct for TV Display and MyProgram
+  - No new background jobs or automations needed
+
+**Result:** IMPLEMENTED
+**Disposition:** IMPLEMENTED — Services in Live View now fresh-fetch like events. Blueprint actions carried forward at creation time.
