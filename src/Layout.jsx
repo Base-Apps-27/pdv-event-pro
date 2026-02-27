@@ -25,6 +25,10 @@ function LayoutContentInner({ children }) {
       '/PublicCountdownDisplay',
       createPageUrl('PublicSpeakerForm'),
       '/PublicSpeakerForm',
+      createPageUrl('PublicArtsForm'),
+      '/PublicArtsForm',
+      createPageUrl('PublicWeeklyForm'),
+      '/PublicWeeklyForm',
     ];
     if (publicExactRoutes.includes(path)) return true;
     const publicPrefixes = ['/print/', '/public/'];
