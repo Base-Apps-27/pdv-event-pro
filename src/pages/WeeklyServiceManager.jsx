@@ -245,15 +245,18 @@ export default function WeeklyServiceManager() {
       {/* Header — compact single row for mobile */}
       <div className="flex items-center justify-between gap-2 print:hidden">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
-          {/* Date picker — prominent branded pill */}
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
+            {/* Prominent selected date display */}
+            <span className="text-lg md:text-2xl font-bold text-pdv-teal tracking-tight leading-tight" style={{ fontFamily: "'Anton', sans-serif", textTransform: 'uppercase' }}>
+              {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM", { locale: es }) : ""}
+            </span>
+          </div>
+          {/* Date picker trigger */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="border-2 border-pdv-teal text-gray-900 font-semibold text-sm md:text-base px-3 py-1.5 h-9 md:h-10 hover:bg-emerald-50">
-                <CalendarIcon className="w-4 h-4 mr-1.5 text-pdv-teal flex-shrink-0" />
-                <span className="truncate max-w-[140px] md:max-w-none">
-                  {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMM, yyyy", { locale: es }) : "Semana"}
-                </span>
+              <Button variant="outline" size="sm" className="border-2 border-pdv-teal text-pdv-teal font-semibold text-xs px-2 h-8 hover:bg-emerald-50">
+                <CalendarIcon className="w-4 h-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -282,6 +285,12 @@ export default function WeeklyServiceManager() {
         <div className="flex gap-1.5 items-center flex-shrink-0">
           <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8">
             <Eye className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">{t('btn.live_view')}</span>
+          </Button>
+          <Button onClick={() => navigate(createPageUrl('PublicCountdownDisplay') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-purple-400 text-purple-700 hover:bg-purple-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="TV Display">
+            <Tv className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">TV</span>
+          </Button>
+          <Button onClick={() => navigate(createPageUrl('MyProgram') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-blue-400 text-blue-700 hover:bg-blue-600 hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8" title="Mi Programa">
+            <UserCircle className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">Mi Prog.</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
