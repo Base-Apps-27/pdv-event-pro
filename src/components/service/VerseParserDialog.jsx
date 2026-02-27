@@ -192,28 +192,28 @@ function VerseParserDialog({
 
   const texts = {
     es: {
-      title: "Extraer Referencias Bíblicas",
-      inputLabel: "Pega tus referencias aquí",
-      inputPlaceholder: "Copia y pega las referencias bíblicas del mensaje...\n\nEjemplos:\nMat 6:22–23\nFil 2:13\nStgo 1:2-3\n(Se formatearán automáticamente a Inglés | Español)",
-      parseBtn: "Extraer y Formatear",
-      parsing: "Procesando...",
-      saveBtn: "Guardar",
-      cancelBtn: "Cancelar",
-      resultTitle: "Referencias Encontradas (EN | ES)",
-      verseList: "Referencias Bíblicas",
-      noData: "Pega las referencias y presiona 'Extraer'",
+      title: "Procesar Contenido del Mensaje",
+      inputLabel: "Contenido a procesar (Texto o Referencias)",
+      inputPlaceholder: "Pega aquí las notas del orador o las referencias bíblicas...\n\nLa IA extraerá:\n1. Los puntos clave del mensaje\n2. Las referencias bíblicas estructuradas",
+      parseBtn: "Extraer Puntos Clave y Versículos",
+      parsing: "Analizando contenido...",
+      saveBtn: "Guardar Contenido Procesado",
+      cancelBtn: "Cerrar",
+      resultTitle: "Resultado del Análisis",
+      verseList: "Referencias Bíblicas Extraídas",
+      noData: "Haz clic en 'Extraer' para analizar el texto.",
     },
     en: {
-      title: "Extract Scripture References",
-      inputLabel: "Paste your references here",
-      inputPlaceholder: "Copy and paste scripture references from the message...\n\nExamples:\nMat 6:22–23\nFil 2:13\nStgo 1:2-3\n(Will auto-format to English | Spanish)",
-      parseBtn: "Extract & Format",
-      parsing: "Processing...",
-      saveBtn: "Save",
-      cancelBtn: "Cancel",
-      resultTitle: "Found References (EN | ES)",
-      verseList: "Scripture References",
-      noData: "Paste references and press 'Extract'",
+      title: "Process Message Content",
+      inputLabel: "Content to process (Text or References)",
+      inputPlaceholder: "Paste speaker notes or scripture references here...\n\nAI will extract:\n1. Key takeaways from the message\n2. Structured scripture references",
+      parseBtn: "Extract Key Points & Verses",
+      parsing: "Analyzing content...",
+      saveBtn: "Save Processed Content",
+      cancelBtn: "Close",
+      resultTitle: "Analysis Result",
+      verseList: "Extracted Scripture References",
+      noData: "Click 'Extract' to analyze the text.",
     }
   };
 
@@ -270,14 +270,11 @@ function VerseParserDialog({
             <Badge variant="outline" className="text-xs">{parsedData.sections.length} {language === 'es' ? (parsedData.sections.length === 1 ? 'referencia' : 'referencias') : (parsedData.sections.length === 1 ? 'reference' : 'references')}</Badge>
           </div>
           {parsedData.sections.map((item, idx) => (
-            <div key={idx} className="flex flex-col items-start gap-1 p-3 bg-white rounded border border-gray-200 hover:border-pdv-teal transition-colors shadow-sm">
-               <div className="flex items-center gap-2 w-full">
-                <span className="text-pdv-teal font-bold text-sm">{idx + 1}.</span>
-                <span className="text-gray-900 font-semibold text-sm flex-1">{item.content}</span>
+            <div key={idx} className="flex flex-col items-start gap-1 p-3 bg-green-50/50 rounded border border-green-100 hover:border-pdv-teal transition-colors shadow-sm">
+               <div className="flex items-start gap-2 w-full">
+                <span className="text-pdv-teal font-bold text-sm mt-0.5">{idx + 1}.</span>
+                <span className="text-gray-900 text-sm flex-1 leading-relaxed">{item.content}</span>
                </div>
-               {item.original && !item.content.includes(item.original.split(' ')[0]) && (
-                 <span className="text-xs text-gray-400 ml-5">Original: {item.original}</span>
-               )}
             </div>
           ))}
         </div>
@@ -333,22 +330,32 @@ function VerseParserDialog({
           {/* Input Side */}
           <div className="flex flex-col gap-2 min-h-0">
             <label className="text-sm font-semibold text-gray-900">{t.inputLabel}</label>
-            <Textarea
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder={t.inputPlaceholder}
-              className="flex-1 min-h-[200px] text-sm font-mono p-4"
-            />
-            {initialText && (
-              <p className="text-[10px] text-gray-500 mt-1">
-                Nota: Este texto es el contenido original enviado por el orador. Presiona Extraer para generar la versión estructurada.
-              </p>
-            )}
+            <div className="flex-1 relative flex flex-col min-h-0">
+              <Textarea
+                value={rawText}
+                onChange={(e) => setRawText(e.target.value)}
+                placeholder={t.inputPlaceholder}
+                className="flex-1 min-h-[200px] text-sm p-4 resize-none bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+              />
+              {initialText && rawText === initialText && (
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-2 flex gap-2 items-start shadow-sm">
+                    <span className="text-blue-500 text-lg leading-none">💡</span>
+                    <p className="text-[10px] text-blue-700 leading-snug">
+                      {language === 'es' 
+                        ? 'Este es el contenido original enviado por el orador. Puedes editarlo antes de procesarlo, o simplemente presionar "Extraer y Formatear".' 
+                        : 'This is the original content submitted by the speaker. You can edit it before processing, or just click "Extract & Format".'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <Button
               onClick={handleParse}
               disabled={!rawText.trim() || isParsing}
               style={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
-              className="w-full font-semibold shadow-sm"
+              className="w-full font-semibold shadow-sm mt-2"
             >
               {isParsing ? (
                 <>
