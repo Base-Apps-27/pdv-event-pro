@@ -263,7 +263,7 @@ export default function WeeklyServiceManager() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => window.open('/api/functions/serveWeeklyServiceSubmission', '_blank')} className="gap-2">
+                <DropdownMenuItem onClick={() => window.open(createPageUrl('PublicWeeklyForm'), '_blank')} className="gap-2">
                   <ExternalLink className="w-4 h-4 text-purple-500" />
                   <span>Link para Oradores</span>
                 </DropdownMenuItem>
