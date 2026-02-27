@@ -283,6 +283,28 @@ Deno.serve(async (req) => {
       last_refresh_at: new Date().toISOString(),
     };
 
+    // ADMIN OVERRIDE LIFECYCLE (2026-02-27):
+    // - Midnight/scheduled trigger: CLEAR override fields → auto-detect resumes next day
+    // - admin_override trigger: override fields are set by the caller (frontend)
+    // - All other triggers: PRESERVE existing override fields
+    if (isMidnightTrigger) {
+      cacheData.admin_override_type = null;
+      cacheData.admin_override_id = null;
+      cacheData.admin_override_by = null;
+      cacheData.admin_override_at = null;
+      console.log(`[refreshActiveProgram] Midnight trigger: clearing admin override`);
+    } else if (trigger === 'admin_override') {
+      // Override fields were already set by the frontend caller — they'll be in the body
+      // The caller sets admin_override_type/id/by/at directly on the cache record
+      // before invoking this function, so we don't touch them here.
+    } else if (hasAdminOverride) {
+      // Preserve existing override for non-midnight, non-override triggers
+      cacheData.admin_override_type = currentCache.admin_override_type;
+      cacheData.admin_override_id = currentCache.admin_override_id;
+      cacheData.admin_override_by = currentCache.admin_override_by;
+      cacheData.admin_override_at = currentCache.admin_override_at;
+    }
+
     const existing = await withRetry(() =>
       base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
     );
