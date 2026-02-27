@@ -90,6 +90,7 @@ import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
 import PublicSpeakerForm from './pages/PublicSpeakerForm';
 import PublicArtsForm from './pages/PublicArtsForm';
+import PublicWeeklyForm from './pages/PublicWeeklyForm';
 import __Layout from './Layout.jsx';
 
 
@@ -137,6 +138,7 @@ export const PAGES = {
     "WeeklyServiceReport": WeeklyServiceReport,
     "PublicSpeakerForm": PublicSpeakerForm,
     "PublicArtsForm": PublicArtsForm,
+    "PublicWeeklyForm": PublicWeeklyForm,
 }
 
 export const pagesConfig = {
