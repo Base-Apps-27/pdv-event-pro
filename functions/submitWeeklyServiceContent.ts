@@ -260,24 +260,25 @@ Deno.serve(async (req) => {
 
         if (!content_is_slides_only) {
             console.log("[INLINE_PROCESS] Parsing scripture references...");
-            parsedData = parseScriptureReferences(content || "");
+            const localResult = parseScriptureReferences(content || "");
+            parsedData = localResult;
             if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
                 scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
             }
-            console.log(`[INLINE_PROCESS] Parsed ${parsedData.sections.length} verse references`);
+            console.log(`[INLINE_PROCESS] Local regex parsed ${parsedData.sections.length} verse references`);
 
-            // PIPELINE 2: Extract Key Takeaways (Async LLM - Best Effort)
-            let keyTakeaways = [];
+            // PIPELINE 2: Extract Key Takeaways & Verses via LLM
             try {
                 if (content && content.length > 100) {
                     console.log(`[TAKEAWAYS_PIPELINE] Starting LLM extraction for submission`);
                     const prompt = `
-Analyze the following text which is a sermon or message outline.
-Extract the "Key Takeaways" or "Main Points".
-These are usually the main headings, bullet points, or core actionable statements.
-Do NOT include bible verses in this list.
-Return ONLY a valid JSON array of strings.
-Example: ["Faith requires action", "Love your neighbor", "Pray without ceasing"]
+You are an expert sermon analysis assistant. Analyze the following speaker notes.
+
+1. Extract the main key takeaways (3-5 bullet points). 
+2. Identify all actual biblical scripture references mentioned. 
+   IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
+   Format the scripture references EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
+   If there are no verses, return an empty array for verses.
 
 Text to analyze:
 ${content.substring(0, 15000)}`;
@@ -287,25 +288,43 @@ ${content.substring(0, 15000)}`;
                         response_json_schema: {
                             type: "object",
                             properties: {
-                                takeaways: {
+                                verses: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
+                                        }
+                                    }
+                                },
+                                key_takeaways: {
                                     type: "array",
                                     items: { type: "string" }
                                 }
-                            }
+                            },
+                            required: ["verses", "key_takeaways"]
                         }
                     });
 
-                    if (llmResponse && llmResponse.takeaways && Array.isArray(llmResponse.takeaways)) {
-                        keyTakeaways = llmResponse.takeaways;
-                        console.log(`[TAKEAWAYS_PIPELINE] Extracted ${keyTakeaways.length} takeaways`);
+                    const aiVerses = llmResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
+                    const aiTakeaways = llmResponse?.key_takeaways || [];
+                    
+                    // Trust AI verses over Regex if it found any
+                    if (aiVerses.length > 0) {
+                        parsedData.sections = aiVerses;
+                        parsedData.type = 'verse_list';
+                        scriptureReferences = aiVerses.map(v => v.content).join('\n');
+                        console.log(`[TAKEAWAYS_PIPELINE] LLM overrode regex with ${aiVerses.length} verses`);
+                    }
+
+                    if (aiTakeaways.length > 0) {
+                        parsedData.key_takeaways = aiTakeaways;
+                        console.log(`[TAKEAWAYS_PIPELINE] Extracted ${aiTakeaways.length} takeaways`);
                     }
                 }
             } catch (llmError) {
                 console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
-            }
-
-            if (keyTakeaways.length > 0) {
-                parsedData.key_takeaways = keyTakeaways;
+                // Silent fail - falls back to local regex result
             }
         } else {
             console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");

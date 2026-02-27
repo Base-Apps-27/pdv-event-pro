@@ -228,14 +228,17 @@ function VerseParserDialog({
     
     // 1. Immediate deterministic verse extraction using local regex
     const localResult = parseScriptureReferences(rawText);
+    setParsedData(localResult); // Show immediate UI update for verses while AI thinks
     
     try {
-      // 2. LLM solely for Key Takeaways
       const prompt = `
         You are an expert sermon analysis assistant. Analyze the following speaker notes.
         
-        Extract the main key takeaways (3-5 bullet points). Language: ${language === 'es' ? 'Spanish' : 'English'}.
-        Return ONLY a JSON array of strings containing the takeaways. Do not include bible verses in this list.
+        1. Extract the main key takeaways (3-5 bullet points). Language: ${language === 'es' ? 'Spanish' : 'English'}.
+        2. Identify all actual biblical scripture references mentioned. 
+           IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
+           Format the scripture references EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
+           If there are no verses, return an empty array for verses.
         
         Notes to analyze:
         """
@@ -248,26 +251,40 @@ function VerseParserDialog({
         response_json_schema: {
           type: "object",
           properties: {
-            takeaways: {
+            verses: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
+                }
+              }
+            },
+            key_takeaways: {
               type: "array",
               items: { type: "string" }
             }
-          }
+          },
+          required: ["verses", "key_takeaways"]
         }
       });
 
-      const aiTakeaways = aiResponse?.takeaways || [];
+      const aiVerses = aiResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
+      const aiTakeaways = aiResponse?.key_takeaways || [];
       
+      // AI is usually smarter at understanding context (e.g. "read from John 3, starting at verse 16"). 
+      // If AI found verses, we trust it more than the regex. If AI failed, fallback to regex.
+      const finalVerses = aiVerses.length > 0 ? aiVerses : localResult.sections;
+
       setParsedData({
-        type: localResult.sections.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
-        sections: localResult.sections,
+        type: finalVerses.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
+        sections: finalVerses,
         key_takeaways: aiTakeaways
       });
 
     } catch (error) {
       console.error("AI parsing failed:", error);
       // Keep localResult if AI fails
-      setParsedData(localResult);
     } finally {
       setIsParsing(false);
     }
