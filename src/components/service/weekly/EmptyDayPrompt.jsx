@@ -97,6 +97,7 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
             segment_type: resolvedType,
             duration_min: Number(segData.duration) || 0,
             show_in_general: true,
+            color_code: segData.color_code || 'default',
             ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
             ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
               label: sa.label || "Untitled",
@@ -110,8 +111,36 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
           if (segData.number_of_songs !== undefined) {
              entityPayload.number_of_songs = Number(segData.number_of_songs) || 0;
           }
+
+          // BUGFIX (2026-02-27): Carry forward structured actions from blueprint.
+          // Without this, StickyOpsDeck sees no actions on newly created services
+          // and doesn't show the coordinator countdown.
+          if (Array.isArray(segData.actions) && segData.actions.length > 0) {
+            entityPayload.segment_actions = segData.actions;
+          }
           
-          await base44.entities.Segment.create(entityPayload);
+          const createdSeg = await base44.entities.Segment.create(entityPayload);
+
+          // Create child segment entities for sub-assignments (matches useResetToBlueprint)
+          if (Array.isArray(segData.sub_assignments) && segData.sub_assignments.length > 0) {
+            for (let saIdx = 0; saIdx < segData.sub_assignments.length; saIdx++) {
+              const sa = segData.sub_assignments[saIdx];
+              await base44.entities.Segment.create({
+                session_id: session.id,
+                service_id: createdService.id,
+                parent_segment_id: createdSeg.id,
+                order: saIdx + 1,
+                title: sa.label || 'Sub-asignación',
+                segment_type: 'Ministración',
+                duration_min: Number(sa.duration_min || sa.duration) || 5,
+                presenter: '',
+                show_in_general: false,
+                origin: 'template',
+                ui_fields: [],
+                ui_sub_assignments: [],
+              });
+            }
+          }
         }
       }
 
