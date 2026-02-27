@@ -285,47 +285,37 @@ export default function EventDetail() {
                     {t('eventDetail.directorConsole')}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem asChild>
-                  <a 
-                    href={createPageUrl('PublicSpeakerForm') + `?event_id=${eventId}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center w-full"
-                    onClick={async (e) => {
-                      try {
-                        // CSP Migration (2026-02-27): Now points to React page instead of SSR HTML function
-                        const url = `${window.location.origin}${createPageUrl('PublicSpeakerForm')}?event_id=${eventId}`;
-                        await navigator.clipboard.writeText(url);
-                        toast.success(t('eventDetail.linkCopied'));
-                      } catch (err) {
-                        // Silent fail on copy, still opens link
-                      }
-                    }}
-                  >
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    {t('eventDetail.speakerForm')}
-                  </a>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    // Hardcoded production origin — window.location.origin returns the
+                    // internal preview URL when accessed from the builder iframe.
+                    const prodOrigin = 'https://app.base44.com/app/cm7mqqvwk00f9la1fghf05eay';
+                    const url = `${prodOrigin}${createPageUrl('PublicSpeakerForm')}?event_id=${eventId}`;
+                    try {
+                      await navigator.clipboard.writeText(url);
+                      toast.success(t('eventDetail.linkCopied'));
+                    } catch { /* silent */ }
+                    window.open(url, '_blank');
+                  }}
+                  className="flex items-center w-full cursor-pointer"
+                >
+                  <LinkIcon className="w-4 h-4 mr-2" />
+                  {t('eventDetail.speakerForm')}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <a 
-                    href={createPageUrl('PublicArtsForm') + `?event_id=${eventId}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center w-full"
-                    onClick={async (e) => {
-                      try {
-                        // CSP Migration (2026-02-27): Now points to React page instead of SSR HTML function
-                        const url = `${window.location.origin}${createPageUrl('PublicArtsForm')}?event_id=${eventId}`;
-                        await navigator.clipboard.writeText(url);
-                        toast.success(t('eventDetail.linkCopied'));
-                      } catch (err) {
-                        // Silent fail on copy, still opens link
-                      }
-                    }}
-                  >
-                    <Palette className="w-4 h-4 mr-2" />
-                    {t('eventDetail.artsForm')}
-                  </a>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    const prodOrigin = 'https://app.base44.com/app/cm7mqqvwk00f9la1fghf05eay';
+                    const url = `${prodOrigin}${createPageUrl('PublicArtsForm')}?event_id=${eventId}`;
+                    try {
+                      await navigator.clipboard.writeText(url);
+                      toast.success(t('eventDetail.linkCopied'));
+                    } catch { /* silent */ }
+                    window.open(url, '_blank');
+                  }}
+                  className="flex items-center w-full cursor-pointer"
+                >
+                  <Palette className="w-4 h-4 mr-2" />
+                  {t('eventDetail.artsForm')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
