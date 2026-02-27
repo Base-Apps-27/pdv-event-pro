@@ -265,6 +265,13 @@ function buildHeader(serviceData, logoDataUrl, scale) {
     }
   }
 
+  // Day-of-week Spanish translation map (PDF is always Spanish per brand standards)
+  const DAY_ES = {
+    'Sunday': 'DOMINGO', 'Monday': 'LUNES', 'Tuesday': 'MARTES',
+    'Wednesday': 'MIÉRCOLES', 'Thursday': 'JUEVES', 'Friday': 'VIERNES', 'Saturday': 'SÁBADO'
+  };
+  const dayLabel = DAY_ES[serviceData.day_of_week] || (serviceData.day_of_week || 'DOMINGO').toUpperCase();
+
   return {
     columns: [
       logoDataUrl ? { width: 60, image: logoDataUrl, fit: [60, 60] } : { width: 60, text: '' },
@@ -282,8 +289,8 @@ function buildHeader(serviceData, logoDataUrl, scale) {
             margin: [0, 4, 0, 2]
           },
           {
-            // Recurring Services Refactor (2026-02-23): Dynamic day label instead of hardcoded DOMINGO
-            text: `${(serviceData.day_of_week || 'DOMINGO').toUpperCase()} ${dateStr}`.toUpperCase(),
+            // Recurring Services Refactor (2026-02-23): Dynamic day label — always Spanish via DAY_ES map
+            text: `${dayLabel} ${dateStr}`.toUpperCase(),
             fontSize: 10 * scale,
             bold: true,
             alignment: 'center',
@@ -572,35 +579,18 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       }
     });
 
-    // Render as a single consolidated block if notes exist
+    // Render notes as compact inline lines with orange label + amber highlight
+    // NO table/box wrapper — just indented text lines to minimize vertical space
     if (activeNotes.length > 0) {
-      items.push({
-        table: {
-          widths: [2, '*'], // Single left accent border
-          body: [[
-            { 
-              text: '', 
-              fillColor: '#6B7280', // Neutral Gray accent 
-              border: [false, false, false, false] 
-            },
-            {
-              stack: activeNotes.map((note, idx) => ({
-                text: [
-                  { text: `${note.label}: `, bold: true, color: note.color, fontSize: 7.5 * scale },
-                  { text: note.text, color: '#374151', fontSize: 7.5 * scale }
-                ],
-                // Add tiny spacing between notes, but much tighter than separate boxes
-                margin: [0, idx > 0 ? 2 : 0, 0, 0],
-                // Ultra-tight line height for notes when scaled
-                lineHeight: scale < 0.85 ? 0.85 : 1.1
-              })),
-              fillColor: '#F9FAFB', // Very light gray background for the whole block
-              border: [false, false, false, false],
-              margin: [4, 3, 2, 3] // Tight internal padding
-            }
-          ]]
-        },
-        margin: [8, 2, 0, 2] // Single margin for the whole block
+      activeNotes.forEach((note, idx) => {
+        items.push({
+          text: [
+            { text: `${note.label}: `, bold: true, color: '#EA580C', fontSize: 7.5 * scale }, // Orange-600
+            { text: note.text, color: '#92400E', fontSize: 7.5 * scale, background: '#FEF3C7' } // Amber-800 text on Amber-100 highlight
+          ],
+          margin: [8, idx === 0 ? 2 : 0, 0, 0],
+          lineHeight: scale < 0.85 ? 0.85 : 1.05
+        });
       });
     }
 
