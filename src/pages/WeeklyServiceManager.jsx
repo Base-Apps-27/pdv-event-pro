@@ -285,8 +285,8 @@ export default function WeeklyServiceManager() {
           </div>
         </div>
 
-        {/* Row 2: Date centered, prominent */}
-        <div className="flex items-center justify-center gap-2">
+        {/* Row 2: Date centered, prominent — visually separated */}
+        <div className="flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm">
           <span className="text-2xl md:text-3xl text-pdv-teal tracking-tight leading-tight" style={{ fontFamily: "'Anton', sans-serif", textTransform: 'uppercase' }}>
             {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM", { locale: es }) : ""}
           </span>
