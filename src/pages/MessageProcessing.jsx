@@ -85,41 +85,75 @@ export default function MessageProcessingPage() {
     const [diagnosticSegmentId, setDiagnosticSegmentId] = useState(null);
     const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
 
-    // Fetch segments AND services with pending OR processed submissions
+    // Fetch segments AND services with pending, processed OR missing submissions
     const { data: segments = [], isLoading } = useQuery({
         queryKey: ['messagesToProcess'],
         queryFn: async () => {
-            // Fetch Segments (Events)
-            const [pendingSeg, processedSeg] = await Promise.all([
-                base44.entities.Segment.filter({ submission_status: 'pending' }),
-                base44.entities.Segment.filter({ submission_status: 'processed' })
-            ]);
-            const eventSegments = [...pendingSeg, ...processedSeg].map(seg => ({
-                id: seg.id,
-                title: seg.title,
-                presenter: seg.presenter,
-                submitted_content: seg.submitted_content,
-                parsed_verse_data: seg.parsed_verse_data,
-                submission_status: seg.submission_status,
-                updated_date: seg.updated_date,
-                isServiceSegment: false
-            }));
-
-            // Fetch Services (Weekly)
-            // Strategy: Get recent active services (last 30 days + future)
             const today = new Date();
             const lastMonth = new Date(today);
             lastMonth.setDate(today.getDate() - 30);
             const dateStr = lastMonth.toISOString().split('T')[0];
+
+            const eventSegments = [];
+            const serviceSegments = [];
+            const seenEntityIds = new Set();
             
+            // 1. Fetch all pending/processed globally
+            const [pendingSeg, processedSeg] = await Promise.all([
+                base44.entities.Segment.filter({ submission_status: 'pending' }),
+                base44.entities.Segment.filter({ submission_status: 'processed' })
+            ]);
+            
+            const globalEventSegments = [...pendingSeg, ...processedSeg];
+            globalEventSegments.forEach(seg => {
+                seenEntityIds.add(seg.id);
+                eventSegments.push({
+                    id: seg.id,
+                    title: seg.title,
+                    presenter: seg.presenter,
+                    submitted_content: seg.submitted_content,
+                    parsed_verse_data: seg.parsed_verse_data,
+                    submission_status: seg.submission_status,
+                    updated_date: seg.updated_date,
+                    isServiceSegment: false
+                });
+            });
+
+            // 2. Fetch recent Events to find missing (unsubmitted) Plenaria segments
+            const recentEvents = await base44.entities.Event.filter({ 
+                status: { $in: ['planning', 'confirmed', 'in_progress'] }
+            });
+            
+            for (const event of recentEvents) {
+                const sessions = await base44.entities.Session.filter({ event_id: event.id });
+                for (const session of sessions) {
+                    const segs = await base44.entities.Segment.filter({ session_id: session.id });
+                    segs.forEach(seg => {
+                        const isMessage = seg.segment_type === 'Plenaria' || seg.title?.toLowerCase().includes('mensaje') || (seg.ui_fields || []).includes('verse');
+                        if (isMessage && !seenEntityIds.has(seg.id)) {
+                            seenEntityIds.add(seg.id);
+                            eventSegments.push({
+                                id: seg.id,
+                                title: `${event.name} - ${seg.title}`,
+                                presenter: seg.presenter,
+                                submitted_content: seg.submitted_content,
+                                parsed_verse_data: seg.parsed_verse_data,
+                                submission_status: seg.submission_status || 'missing',
+                                updated_date: seg.updated_date,
+                                isServiceSegment: false
+                            });
+                        }
+                    });
+                }
+            }
+
+            // 3. Fetch recent Services (Weekly)
             const recentServices = await base44.entities.Service.filter({ 
                 date: { $gte: dateStr },
                 status: 'active'
             });
 
-            // Extract segments from services — entity-first, JSON fallback
-            const serviceSegments = [];
-            const seenEntityIds = new Set();
+            const seenServiceIds = new Set();
 
             // Entity path: check for Segment entities linked to these services via Sessions
             for (const service of recentServices) {
@@ -128,19 +162,22 @@ export default function MessageProcessingPage() {
                     for (const session of sessions) {
                         const segs = await base44.entities.Segment.filter({ session_id: session.id }, 'order');
                         segs.forEach((seg, idx) => {
-                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
-                                seenEntityIds.add(service.id);
-                                serviceSegments.push({
-                                    id: seg.id,
-                                    title: `${service.name || service.date} - ${session.name} - ${seg.title}`,
-                                    presenter: seg.presenter,
-                                    submitted_content: seg.submitted_content,
-                                    parsed_verse_data: seg.parsed_verse_data,
-                                    submission_status: seg.submission_status,
-                                    updated_date: seg.updated_date || service.updated_date,
-                                    // Not a JSON service segment — use standard entity path
-                                    isServiceSegment: false,
-                                });
+                            const isMessage = seg.segment_type === 'Plenaria' || seg.title?.toLowerCase().includes('mensaje') || (seg.ui_fields || []).includes('verse');
+                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed' || isMessage) {
+                                seenServiceIds.add(service.id);
+                                if (!seenEntityIds.has(seg.id)) {
+                                    seenEntityIds.add(seg.id);
+                                    serviceSegments.push({
+                                        id: seg.id,
+                                        title: `${service.name || service.date} - ${session.name} - ${seg.title}`,
+                                        presenter: seg.presenter,
+                                        submitted_content: seg.submitted_content,
+                                        parsed_verse_data: seg.parsed_verse_data,
+                                        submission_status: seg.submission_status || 'missing',
+                                        updated_date: seg.updated_date || service.updated_date,
+                                        isServiceSegment: false,
+                                    });
+                                }
                             }
                         });
                     }
@@ -149,18 +186,19 @@ export default function MessageProcessingPage() {
 
             // JSON fallback: for services without Session entities
             recentServices.forEach(service => {
-                if (seenEntityIds.has(service.id)) return; // Already handled via entity path
+                if (seenServiceIds.has(service.id)) return; // Already handled via entity path
                 Object.keys(service).filter(k => /^\d+:\d+[ap]m$/i.test(k) && Array.isArray(service[k])).forEach(slot => {
                     if (service[slot]) {
                         service[slot].forEach((seg, idx) => {
-                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed') {
+                            const isMessage = seg.type === 'Plenaria' || seg.title?.toLowerCase().includes('mensaje') || (seg.fields || []).includes('verse');
+                            if (seg.submission_status === 'pending' || seg.submission_status === 'processed' || isMessage) {
                                 serviceSegments.push({
                                     id: `weekly_service|${service.id}|${slot}|${idx}|message`,
                                     title: `${service.name || service.date} - ${slot} - ${seg.title}`,
                                     presenter: seg.data?.presenter || seg.data?.preacher || seg.data?.leader,
                                     submitted_content: seg.submitted_content,
                                     parsed_verse_data: seg.parsed_verse_data,
-                                    submission_status: seg.submission_status,
+                                    submission_status: seg.submission_status || 'missing',
                                     updated_date: service.updated_date,
                                     isServiceSegment: true,
                                     serviceId: service.id,
@@ -260,13 +298,16 @@ export default function MessageProcessingPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Procesamiento de Mensajes</h1>
-                    <p className="text-gray-500">Revisar y gestionar envíos de oradores</p>
+                    <p className="text-gray-500">Gestión de contenido de predicaciones (envíos públicos y manuales)</p>
                 </div>
                 <div className="flex gap-2">
-                    <Badge variant="outline" className="px-3 py-1 text-base bg-amber-50 text-amber-700 border-amber-200">
+                    <Badge variant="outline" className="px-3 py-1 text-sm bg-red-50 text-red-700 border-red-200">
+                        {segments.filter(s => s.submission_status === 'missing').length} Sin Envío
+                    </Badge>
+                    <Badge variant="outline" className="px-3 py-1 text-sm bg-amber-50 text-amber-700 border-amber-200">
                         {segments.filter(s => s.submission_status === 'pending').length} Pendientes
                     </Badge>
-                    <Badge variant="outline" className="px-3 py-1 text-base bg-green-50 text-green-700 border-green-200">
+                    <Badge variant="outline" className="px-3 py-1 text-sm bg-green-50 text-green-700 border-green-200">
                         {segments.filter(s => s.submission_status === 'processed').length} Procesados
                     </Badge>
                 </div>
@@ -289,13 +330,30 @@ export default function MessageProcessingPage() {
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {segments.map((segment) => {
-                        const isProcessed = segment.submission_status === 'processed';
+                        const status = segment.submission_status;
+                        const isProcessed = status === 'processed';
+                        const isMissing = status === 'missing';
+                        
+                        let badgeColor = "bg-amber-100 text-amber-800 hover:bg-amber-200";
+                        let badgeText = "Pendiente";
+                        let borderColor = "border-l-amber-500";
+                        
+                        if (isProcessed) {
+                            badgeColor = "bg-green-100 text-green-800 hover:bg-green-200";
+                            badgeText = "Procesado";
+                            borderColor = "border-l-green-500";
+                        } else if (isMissing) {
+                            badgeColor = "bg-red-50 text-red-700 hover:bg-red-100";
+                            badgeText = "Sin Envío";
+                            borderColor = "border-l-red-400 border-dashed border-2";
+                        }
+
                         return (
-                            <Card key={segment.id} className={`overflow-hidden hover:shadow-md transition-shadow ${isProcessed ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-amber-500'}`}>
+                            <Card key={segment.id} className={`overflow-hidden hover:shadow-md transition-shadow border-l-4 ${borderColor}`}>
                                 <CardHeader className="bg-white border-b pb-3">
                                     <div className="flex justify-between items-start mb-2">
-                                        <Badge className={isProcessed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
-                                            {isProcessed ? 'Procesado' : 'Pendiente'}
+                                        <Badge className={badgeColor}>
+                                            {badgeText}
                                         </Badge>
                                         {segment.isServiceSegment && (
                                             <Badge variant="outline" className="ml-2 text-[10px] bg-blue-50 text-blue-700 border-blue-200">
@@ -327,18 +385,20 @@ export default function MessageProcessingPage() {
                                             className={isProcessed ? "flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50" : "flex-1 bg-teal-600 hover:bg-teal-700"}
                                             variant={isProcessed ? "outline" : "default"}
                                         >
-                                            <Sparkles className="w-4 h-4 mr-2" />
-                                            {isProcessed ? 'Revisar' : 'Procesar'}
+                                            {isMissing ? <Sparkles className="w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                                            {isProcessed ? 'Revisar' : isMissing ? 'Añadir Manualmente' : 'Procesar'}
                                         </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon"
-                                            onClick={() => { setDiagnosticSegmentId(segment.id); setIsDiagnosticOpen(true); }}
-                                            className="text-gray-400 hover:text-purple-600"
-                                            title="Diagnóstico de Envío"
-                                        >
-                                            <Bug className="w-4 h-4" />
-                                        </Button>
+                                        {!isMissing && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon"
+                                                onClick={() => { setDiagnosticSegmentId(segment.id); setIsDiagnosticOpen(true); }}
+                                                className="text-gray-400 hover:text-purple-600"
+                                                title="Diagnóstico de Envío"
+                                            >
+                                                <Bug className="w-4 h-4" />
+                                            </Button>
+                                        )}
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
