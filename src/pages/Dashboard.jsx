@@ -141,6 +141,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Admin: Force Display Override — only for admin users */}
+        {currentUser?.role === 'admin' && (
+          <ForceDisplayOverride user={currentUser} />
+        )}
+
         {/* Quick Actions - 3 Shortcuts */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 hover:shadow-lg transition-all group">
