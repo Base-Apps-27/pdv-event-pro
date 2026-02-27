@@ -57,21 +57,19 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
       <div className="space-y-2 pt-2 border-t border-orange-200">
         <div className="flex items-center justify-between">
           <Label>Citas Bíblicas</Label>
-          <Button
-            type="button" variant="outline" size="sm"
-            onClick={onOpenVerseParser}
-            className="h-7 px-2 bg-white border-orange-300 text-orange-700 hover:bg-orange-50"
-          >
-            <BookOpen className="w-3.5 h-3.5 mr-1" />
-            <span className="text-xs">{language === 'es' ? 'Editar Versículos' : 'Edit Verses'}</span>
-          </Button>
         </div>
         {formData.parsed_verse_data ? (
           <div className="mt-3 bg-white p-3 rounded-md border border-orange-100 shadow-sm">
             <ParsedContentPreview parsedData={formData.parsed_verse_data} language={language} />
           </div>
         ) : (
-          <p className="text-sm text-gray-400 italic py-2">{language === 'es' ? 'Sin contenido procesado' : 'No processed content'}</p>
+          <div className="mt-2 border border-dashed border-orange-200 rounded-md p-4 text-center bg-orange-50/50">
+            <BookOpen className="w-6 h-6 text-orange-200 mx-auto mb-2" />
+            <p className="text-xs text-gray-500">{language === 'es' ? 'Sin contenido procesado' : 'No processed content'}</p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {language === 'es' ? 'Las citas bíblicas son de solo lectura aquí. Ve a Procesamiento de Mensajes para modificar.' : 'Verses are read-only here. Go to Message Processing to modify.'}
+            </p>
+          </div>
         )}
       </div>
     </div>

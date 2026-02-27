@@ -75,24 +75,18 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
         )}
         {config.type === 'text' && config.hasVerseParser && (
           <div className="space-y-2">
-            <div className="flex justify-end mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenVerseParser}
-                className="border-2 border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white flex-shrink-0"
-                title="Analizar versos y bosquejo"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                Editar Citas Bíblicas
-              </Button>
-            </div>
             {segment.parsed_verse_data ? (
               <div className="mt-2 border rounded-md p-3 bg-slate-50">
                 <ParsedContentPreview parsedData={segment.parsed_verse_data} />
               </div>
             ) : (
-              <p className="text-xs text-gray-400 italic">Sin contenido procesado</p>
+              <div className="mt-2 border border-dashed rounded-md p-4 text-center bg-gray-50">
+                <BookOpen className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs text-gray-500">Sin contenido procesado</p>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Las citas bíblicas son de solo lectura aquí. Ve a <strong>Procesamiento de Mensajes</strong> para añadir o modificar contenido.
+                </p>
+              </div>
             )}
             <SpeakerMaterialSection segment={segment} onWrite={onWrite} />
           </div>
