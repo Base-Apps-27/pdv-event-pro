@@ -12,7 +12,7 @@
  * Path A ("notes") = paste message + optional slides. Path B ("slides") = upload deck + optional outline.
  * The slidesOnly checkbox is eliminated. Path choice sets content_is_slides_only implicitly.
  */
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
 import FileOrLinkInput from './FileOrLinkInput';
@@ -30,6 +30,10 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
     const [mirrorTargets, setMirrorTargets] = useState({}); // { siblingId: boolean }
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
+
+    // Refs for auto-scroll after selections
+    const segmentSelectorRef = useRef(null);
+    const contentSectionRef = useRef(null);
 
     // Derived from path choice — replaces the old slidesOnly checkbox
     const slidesOnly = submissionPath === 'slides';
@@ -52,6 +56,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                 break;
             }
         }
+        // Auto-scroll to content section after selection
+        if (newId) setTimeout(() => contentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }, [serviceGroups]);
 
     const handleSubmit = async (e) => {
@@ -111,13 +117,13 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             )}
 
             {/* Step 1: Path Selection — determines which fields appear below */}
-            <SubmissionPathSelector value={submissionPath} onChange={setSubmissionPath} />
+            <SubmissionPathSelector value={submissionPath} onChange={setSubmissionPath} nextSectionRef={segmentSelectorRef} />
 
             {/* Everything below only shows once a path is selected */}
             {submissionPath && (<>
 
             {/* Segment Selector */}
-            <div className="mb-6">
+            <div ref={segmentSelectorRef} className="mb-6 scroll-mt-4">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                     {t('Seleccione su Horario y Nombre', 'Select your Time Slot and Name')} <span className="text-red-600">*</span>
                 </label>
@@ -145,7 +151,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             {submissionPath === 'notes' && (
                 <>
                     {/* Primary: Verses / Paste content */}
-                    <div className="mb-6 bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6">
+                    <div ref={contentSectionRef} className="mb-6 bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 scroll-mt-4">
                         <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
                             {t('VERSÍCULOS PARA PROYECCIÓN', 'VERSES FOR PROJECTION')}
                         </h3>
@@ -190,7 +196,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             {submissionPath === 'slides' && (
                 <>
                     {/* Primary: Upload the finished presentation */}
-                    <div className="mb-6 bg-white rounded-lg border border-gray-200 border-l-4 border-l-blue-400 p-6">
+                    <div ref={contentSectionRef} className="mb-6 bg-white rounded-lg border border-gray-200 border-l-4 border-l-blue-400 p-6 scroll-mt-4">
                         <h3 className="text-xl text-blue-600 tracking-wide mb-4">
                             {t('PRESENTACIÓN FINAL', 'FINAL PRESENTATION')}
                         </h3>

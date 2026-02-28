@@ -11,7 +11,7 @@
  * Path A ("notes") = paste message + optional slides. Path B ("slides") = upload deck + optional outline.
  * The slidesOnly checkbox is eliminated. Path choice sets content_is_slides_only implicitly.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
 import FileOrLinkInput from './FileOrLinkInput';
@@ -28,6 +28,10 @@ export default function SpeakerSubmissionForm({ options }) {
     const [notesUrl, setNotesUrl] = useState('');
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
+
+    // Refs for auto-scroll after selections
+    const sessionSectionRef = useRef(null);
+    const contentSectionRef = useRef(null);
 
     // Derived from path choice — replaces the old slidesOnly checkbox
     const slidesOnly = submissionPath === 'slides';
@@ -110,13 +114,13 @@ export default function SpeakerSubmissionForm({ options }) {
             )}
 
             {/* Step 1: Path Selection — determines which fields appear below */}
-            <SubmissionPathSelector value={submissionPath} onChange={setSubmissionPath} />
+            <SubmissionPathSelector value={submissionPath} onChange={setSubmissionPath} nextSectionRef={sessionSectionRef} />
 
             {/* Everything below only shows once a path is selected */}
             {submissionPath && (<>
 
             {/* Section 1: Session Info */}
-            <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
+            <div ref={sessionSectionRef} className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6 scroll-mt-4">
                 <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
                     {t('INFORMACIÓN DE LA SESIÓN', 'SESSION INFORMATION')}
                 </h3>
@@ -126,7 +130,10 @@ export default function SpeakerSubmissionForm({ options }) {
                     </label>
                     <select
                         value={segmentId}
-                        onChange={e => setSegmentId(e.target.value)}
+                        onChange={e => {
+                            setSegmentId(e.target.value);
+                            if (e.target.value) setTimeout(() => contentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+                        }}
                         required
                         className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                     >
@@ -168,7 +175,7 @@ export default function SpeakerSubmissionForm({ options }) {
             {submissionPath === 'notes' && (
                 <>
                     {/* Primary: Verses / Paste content */}
-                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
+                    <div ref={contentSectionRef} className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6 scroll-mt-4">
                         <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
                             {t('VERSÍCULOS PARA PROYECCIÓN', 'VERSES FOR PROJECTION')}
                         </h3>
@@ -225,7 +232,7 @@ export default function SpeakerSubmissionForm({ options }) {
             {submissionPath === 'slides' && (
                 <>
                     {/* Primary: Upload the finished presentation */}
-                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-blue-400 p-6 mb-6">
+                    <div ref={contentSectionRef} className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-blue-400 p-6 mb-6 scroll-mt-4">
                         <h3 className="text-xl text-blue-600 tracking-wide mb-4">
                             {t('PRESENTACIÓN FINAL', 'FINAL PRESENTATION')}
                         </h3>

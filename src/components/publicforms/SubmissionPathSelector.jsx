@@ -17,7 +17,14 @@ import React from 'react';
 import { FileText, Presentation } from 'lucide-react';
 import { usePublicLang } from './PublicFormLangContext';
 
-export default function SubmissionPathSelector({ value, onChange }) {
+/** Helper: smooth scroll to the next form section after a short delay for rendering */
+function scrollToNext(ref) {
+    setTimeout(() => {
+        ref?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+}
+
+export default function SubmissionPathSelector({ value, onChange, nextSectionRef }) {
     const { t } = usePublicLang();
 
     const paths = [
@@ -68,7 +75,7 @@ export default function SubmissionPathSelector({ value, onChange }) {
                         <button
                             key={path.id}
                             type="button"
-                            onClick={() => onChange(path.id)}
+                            onClick={() => { onChange(path.id); if (nextSectionRef) scrollToNext(nextSectionRef); }}
                             className={`
                                 w-full text-left rounded-lg border-2 p-4 transition-all
                                 ${isSelected
