@@ -552,12 +552,14 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     // Instead of separate boxes (which add padding/margin overhead), we stack all notes
     // into a single "Operations" block with colored labels. This mimics the dense "Settings" view.
     
+    // 2026-02-28: Added LIVESTREAM to weekly PDF notes — was present on entity but missing from print
     const NOTES_STYLE = {
       COORD: { color: '#F97316', label: 'COORDINACIÓN' },
       PROJ:  { color: '#2563EB', label: 'PROYECCIÓN' },
       SOUND: { color: '#DC2626', label: 'SONIDO' },
       UJIER: { color: '#16A34A', label: 'UJIERES' },
       TRAD:  { color: '#9333EA', label: 'TRADUCCIÓN' },
+      LIVE:  { color: '#0891B2', label: 'LIVESTREAM' },
       STAGE: { color: '#DB2777', label: 'STAGE' },
       GEN:   { color: '#4B5563', label: 'NOTAS' }
     };
@@ -568,6 +570,7 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       { key: 'sound_notes', ...NOTES_STYLE.SOUND },
       { key: 'ushers_notes', ...NOTES_STYLE.UJIER },
       { key: 'translation_notes', ...NOTES_STYLE.TRAD },
+      { key: 'livestream_notes', ...NOTES_STYLE.LIVE },
       { key: 'stage_decor_notes', ...NOTES_STYLE.STAGE },
       { key: 'description_details', ...NOTES_STYLE.GEN },
       { key: 'description', ...NOTES_STYLE.GEN }
