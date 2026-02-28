@@ -19,10 +19,9 @@
  *   maxSizeMB    - max file size in MB (default 50)
  *   variant      - 'default' | 'compact' for admin vs public form contexts
  */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Upload, Link2, X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import { usePublicLang } from './PublicFormLangContext';
 
 // Supported upload formats on Base44 (from platform docs)
 const SUPPORTED_EXTENSIONS = [
@@ -58,9 +57,11 @@ export default function FileOrLinkInput({
   const [uploadedFileName, setUploadedFileName] = useState('');
   const fileInputRef = useRef(null);
 
-  // Safe hook usage — this component may render outside the provider (admin pages)
-  let tFn;
-  try { tFn = usePublicLang().t; } catch { tFn = (es) => es; }
+  // Import context directly to avoid hook-in-try-catch issue.
+  // When rendered outside PublicFormLangProvider (e.g. admin pages), context is undefined → fallback to ES.
+  const { PublicFormLangContext } = require('./PublicFormLangContext');
+  const langCtx = useContext(PublicFormLangContext);
+  const tFn = langCtx?.t || ((es) => es);
 
   const isCompact = variant === 'compact';
   const inputClass = isCompact
