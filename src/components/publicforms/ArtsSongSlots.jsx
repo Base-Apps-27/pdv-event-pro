@@ -37,9 +37,28 @@ function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChang
     );
 }
 
+/**
+ * Progressive disclosure (2026-02-28): Songs 2 and 3 are hidden by default.
+ * They appear when the previous song has a title OR the user explicitly clicks
+ * "+ Add another song". This prevents UI clutter on first load.
+ * If a slot already has data (e.g. loaded from DB), it shows automatically.
+ */
 export default function ArtsSongSlots({ prefix, segment, onFieldChange, isUnica }) {
     const { t } = usePublicLang();
     const p = prefix; // 'dance' or 'drama'
+
+    // Determine visibility: show slot if it has data OR previous slot has a title OR user forced it open
+    const [forceShow2, setForceShow2] = React.useState(false);
+    const [forceShow3, setForceShow3] = React.useState(false);
+
+    const song1HasTitle = !!(segment[`${p}_song_title`]);
+    const song2HasData = !!(segment[`${p}_song_2_title`] || segment[`${p}_song_2_url`] || segment[`${p}_song_2_owner`]);
+    const song2HasTitle = !!(segment[`${p}_song_2_title`]);
+    const song3HasData = !!(segment[`${p}_song_3_title`] || segment[`${p}_song_3_url`] || segment[`${p}_song_3_owner`]);
+
+    const showSong2 = forceShow2 || song2HasData || song1HasTitle;
+    const showSong3 = forceShow3 || song3HasData || (showSong2 && song2HasTitle);
+
     return (
         <div>
             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
@@ -56,22 +75,36 @@ export default function ArtsSongSlots({ prefix, segment, onFieldChange, isUnica 
                 onUrlChange={v => onFieldChange(`${p}_song_source`, v)}
                 onOwnerChange={v => onFieldChange(`${p}_song_owner`, v)}
             />
-            <SongCard label={t('Canción 2 (Opcional)', 'Song 2 (Optional)')} t={t}
-                titleVal={segment[`${p}_song_2_title`] || ''}
-                urlVal={segment[`${p}_song_2_url`] || ''}
-                ownerVal={segment[`${p}_song_2_owner`] || ''}
-                onTitleChange={v => onFieldChange(`${p}_song_2_title`, v)}
-                onUrlChange={v => onFieldChange(`${p}_song_2_url`, v)}
-                onOwnerChange={v => onFieldChange(`${p}_song_2_owner`, v)}
-            />
-            <SongCard label={t('Canción 3 (Opcional)', 'Song 3 (Optional)')} t={t}
-                titleVal={segment[`${p}_song_3_title`] || ''}
-                urlVal={segment[`${p}_song_3_url`] || ''}
-                ownerVal={segment[`${p}_song_3_owner`] || ''}
-                onTitleChange={v => onFieldChange(`${p}_song_3_title`, v)}
-                onUrlChange={v => onFieldChange(`${p}_song_3_url`, v)}
-                onOwnerChange={v => onFieldChange(`${p}_song_3_owner`, v)}
-            />
+            {showSong2 ? (
+                <SongCard label={t('Canción 2 (Opcional)', 'Song 2 (Optional)')} t={t}
+                    titleVal={segment[`${p}_song_2_title`] || ''}
+                    urlVal={segment[`${p}_song_2_url`] || ''}
+                    ownerVal={segment[`${p}_song_2_owner`] || ''}
+                    onTitleChange={v => onFieldChange(`${p}_song_2_title`, v)}
+                    onUrlChange={v => onFieldChange(`${p}_song_2_url`, v)}
+                    onOwnerChange={v => onFieldChange(`${p}_song_2_owner`, v)}
+                />
+            ) : (
+                <button type="button" onClick={() => setForceShow2(true)}
+                    className="w-full py-2.5 text-xs font-semibold text-[#1F8A70] border border-dashed border-[#1F8A70]/30 rounded-lg hover:bg-[#1F8A70]/5 transition-colors mb-3">
+                    + {t('Agregar otra canción', 'Add another song')}
+                </button>
+            )}
+            {showSong2 && (showSong3 ? (
+                <SongCard label={t('Canción 3 (Opcional)', 'Song 3 (Optional)')} t={t}
+                    titleVal={segment[`${p}_song_3_title`] || ''}
+                    urlVal={segment[`${p}_song_3_url`] || ''}
+                    ownerVal={segment[`${p}_song_3_owner`] || ''}
+                    onTitleChange={v => onFieldChange(`${p}_song_3_title`, v)}
+                    onUrlChange={v => onFieldChange(`${p}_song_3_url`, v)}
+                    onOwnerChange={v => onFieldChange(`${p}_song_3_owner`, v)}
+                />
+            ) : (
+                <button type="button" onClick={() => setForceShow3(true)}
+                    className="w-full py-2.5 text-xs font-semibold text-[#1F8A70] border border-dashed border-[#1F8A70]/30 rounded-lg hover:bg-[#1F8A70]/5 transition-colors mb-3">
+                    + {t('Agregar otra canción', 'Add another song')}
+                </button>
+            ))}
         </div>
     );
 }
