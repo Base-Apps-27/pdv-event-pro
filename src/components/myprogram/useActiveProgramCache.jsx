@@ -133,10 +133,12 @@ export default function useActiveProgramCache(overrideParams = {}) {
 
   // ── Primary: Read from ActiveProgramCache entity (instant, no function call) ──
   // HARDENED (2026-02-15 audit): Added error recovery and retry with backoff.
+  // MULTI-SLOT (2026-02-28): Uses dynamic activeCacheKey to support warm cache
+  // for user-selected programs alongside auto-detected 'current_display'.
   const { data: cacheRecord, isLoading: cacheLoading, error: cacheError } = useQuery({
-    queryKey: ['activeProgramCache'],
+    queryKey: ['activeProgramCache', activeCacheKey],
     queryFn: async () => {
-      const records = await base44.entities.ActiveProgramCache.filter({ cache_key: 'current_display' });
+      const records = await base44.entities.ActiveProgramCache.filter({ cache_key: activeCacheKey });
       return records?.[0] || null;
     },
     staleTime: 60 * 1000,        // Treat data as fresh for 1 min (sub handles live updates)
