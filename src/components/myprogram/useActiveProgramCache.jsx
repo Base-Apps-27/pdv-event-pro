@@ -46,13 +46,14 @@ export default function useActiveProgramCache(overrideParams = {}) {
   // Debounced invalidation: coalesces rapid-fire updates into one refetch.
   // Settle time: 800ms — fast enough for user-perceived real-time,
   // slow enough to absorb burst updates (director marking 3 segments in 2s).
+  // MULTI-SLOT (2026-02-28): Invalidates the specific cache key we're watching.
   const debouncedInvalidate = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['activeProgramCache'] });
+      queryClient.invalidateQueries({ queryKey: ['activeProgramCache', activeCacheKey] });
       debounceRef.current = null;
     }, 800);
-  }, [queryClient]);
+  }, [queryClient, activeCacheKey]);
 
   // ── Override query: Load specific service/event for testing ──
   const { data: overrideData, isLoading: overrideLoading } = useQuery({
