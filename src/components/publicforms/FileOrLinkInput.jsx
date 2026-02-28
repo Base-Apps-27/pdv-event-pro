@@ -22,6 +22,7 @@
 import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Upload, Link2, X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { usePublicLang } from './PublicFormLangContext';
 
 // Supported upload formats on Base44 (from platform docs)
 const SUPPORTED_EXTENSIONS = [
@@ -57,6 +58,10 @@ export default function FileOrLinkInput({
   const [uploadedFileName, setUploadedFileName] = useState('');
   const fileInputRef = useRef(null);
 
+  // Safe hook usage — this component may render outside the provider (admin pages)
+  let tFn;
+  try { tFn = usePublicLang().t; } catch { tFn = (es) => es; }
+
   const isCompact = variant === 'compact';
   const inputClass = isCompact
     ? 'w-full p-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10'
@@ -72,7 +77,7 @@ export default function FileOrLinkInput({
     const maxBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxBytes) {
       setUploadError(
-        `Archivo muy grande (${formatFileSize(file.size)}). Máximo: ${maxSizeMB}MB. Suba a Google Drive y pegue el enlace. / File too large. Max: ${maxSizeMB}MB. Upload to Google Drive and paste the link.`
+        tFn(`Archivo muy grande (${formatFileSize(file.size)}). Máximo: ${maxSizeMB}MB. Suba a Google Drive y pegue el enlace.`, `File too large (${formatFileSize(file.size)}). Max: ${maxSizeMB}MB. Upload to Google Drive and paste the link.`)
       );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -82,7 +87,7 @@ export default function FileOrLinkInput({
     const ext = getFileExtension(file.name);
     if (!SUPPORTED_EXTENSIONS.includes(ext)) {
       setUploadError(
-        `Formato no soportado (${ext}). Suba a Google Drive y pegue el enlace. / Unsupported format. Upload to Google Drive and paste the link.`
+        tFn(`Formato no soportado (${ext}). Suba a Google Drive y pegue el enlace.`, `Unsupported format (${ext}). Upload to Google Drive and paste the link.`)
       );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -126,7 +131,7 @@ export default function FileOrLinkInput({
           }`}
         >
           <Upload className="w-3.5 h-3.5" />
-          Subir / Upload
+          {tFn('Subir', 'Upload')}
         </button>
         <button
           type="button"
@@ -138,7 +143,7 @@ export default function FileOrLinkInput({
           }`}
         >
           <Link2 className="w-3.5 h-3.5" />
-          Enlace / Link
+          {tFn('Enlace', 'Link')}
         </button>
       </div>
 
@@ -157,16 +162,16 @@ export default function FileOrLinkInput({
               {uploading ? (
                 <div className="flex items-center justify-center gap-2 text-gray-500">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm font-medium">Subiendo... / Uploading...</span>
+                  <span className="text-sm font-medium">{tFn('Subiendo...', 'Uploading...')}</span>
                 </div>
               ) : (
                 <>
                   <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
                   <p className="text-sm text-gray-600 font-medium">
-                    Suba su archivo final aquí / Upload your final file here
+                    {tFn('Suba su archivo final aquí', 'Upload your final file here')}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Máx {maxSizeMB}MB · PDF, imágenes, MP4, MP3
+                    {tFn(`Máx ${maxSizeMB}MB · PDF, imágenes, MP4, MP3`, `Max ${maxSizeMB}MB · PDF, images, MP4, MP3`)}
                   </p>
                 </>
               )}
@@ -183,7 +188,7 @@ export default function FileOrLinkInput({
               <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-green-800 truncate">
-                  {uploadedFileName || 'Archivo subido / File uploaded'}
+                  {uploadedFileName || tFn('Archivo subido', 'File uploaded')}
                 </p>
                 <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block">
                   {value}
@@ -238,8 +243,10 @@ export default function FileOrLinkInput({
       {/* Standing guidance: ready-to-install only */}
       {!hasValue && !uploadError && !helpText && (
         <p className="text-[10px] text-gray-400 italic leading-snug">
-          Solo material terminado y listo para instalar. ¿Necesita crear algo nuevo? Contacte la oficina. /
-          Ready-to-install files only. Need something created? Contact the office first.
+          {tFn(
+            'Solo material terminado y listo para instalar. ¿Necesita crear algo nuevo? Contacte la oficina.',
+            'Ready-to-install files only. Need something created? Contact the office first.'
+          )}
         </p>
       )}
     </div>
