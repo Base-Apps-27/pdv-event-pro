@@ -21,6 +21,7 @@ import ArtsTypePainting from './ArtsTypePainting';
 import ArtsTypeOther from './ArtsTypeOther';
 import CompactFileAttach from './CompactFileAttach';
 import ArtsTypeOrderEditor from '@/components/session/ArtsTypeOrderEditor';
+import ArtsTypeRemoveConfirm, { countFilledFieldsForType } from './ArtsTypeRemoveConfirm';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', SPOKEN_WORD: '🎤 Spoken Word', PAINTING: '🎨 Pintura', OTHER: '✨ Otro' };
 
@@ -102,6 +103,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
   const touchedFieldsRef = useRef(new Set());
+  // Confirmation dialog state for art type removal (2026-02-28)
+  const [removeConfirm, setRemoveConfirm] = useState(null); // { type, filledCount }
 
   // Ref to always hold the latest seg for save closure (fixes stale closure bug)
   const segRef = useRef(seg);
@@ -122,14 +125,42 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     }
   }, [initialSeg.id]);
 
-  const toggleType = useCallback((type, checked) => {
+  /**
+   * toggleType with data-loss guard (2026-02-28):
+   * When removing a type that has filled fields, show a custom confirmation dialog
+   * instead of immediately removing. Adding a type never requires confirmation.
+   */
+  const doRemoveType = useCallback((type) => {
     setSeg(prev => {
       const set = new Set(prev.art_types || []);
-      if (checked) set.add(type); else set.delete(type);
+      set.delete(type);
       return { ...prev, art_types: Array.from(set) };
     });
-    base44.analytics.track({ eventName: 'arts_type_toggled', properties: { segment_id: initialSeg.id, type, action: checked ? 'add' : 'remove' } });
+    setRemoveConfirm(null);
+    base44.analytics.track({ eventName: 'arts_type_toggled', properties: { segment_id: initialSeg.id, type, action: 'remove' } });
   }, [initialSeg.id]);
+
+  const toggleType = useCallback((type, checked) => {
+    if (checked) {
+      // Adding a type — no confirmation needed
+      setSeg(prev => {
+        const set = new Set(prev.art_types || []);
+        set.add(type);
+        return { ...prev, art_types: Array.from(set) };
+      });
+      base44.analytics.track({ eventName: 'arts_type_toggled', properties: { segment_id: initialSeg.id, type, action: 'add' } });
+    } else {
+      // Removing — check if the type has filled data
+      const filledCount = countFilledFieldsForType(seg, type);
+      if (filledCount > 0) {
+        // Show custom confirmation dialog
+        setRemoveConfirm({ type, filledCount });
+      } else {
+        // No data — remove immediately
+        doRemoveType(type);
+      }
+    }
+  }, [initialSeg.id, seg, doRemoveType]);
 
   // handleSave reads from segRef.current to always get latest state (not stale closure)
   const handleSave = useCallback(async () => {
@@ -318,6 +349,16 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
           {/* Bottom padding for sticky bar clearance on mobile */}
           <div className="h-16" />
         </div>
+      )}
+
+      {/* Custom confirmation dialog for art type removal with existing data (2026-02-28) */}
+      {removeConfirm && (
+        <ArtsTypeRemoveConfirm
+          artType={removeConfirm.type}
+          filledFieldCount={removeConfirm.filledCount}
+          onConfirm={() => doRemoveType(removeConfirm.type)}
+          onCancel={() => setRemoveConfirm(null)}
+        />
       )}
     </div>
   );
