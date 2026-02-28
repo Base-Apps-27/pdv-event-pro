@@ -250,108 +250,56 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Artes - full details matching HTML (types, mics, cues, songs)
+  // 2026-02-28: Arts summary — types, performance order, key media/people.
+  // Full operational detail (mics, cues, setup) lives in the Resources modal (interactive views)
+  // and is routed to department-specific PDF/HTML reports via smart routing.
+  // This summary is the print-safe fallback: enough to execute even if the app is down.
   if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
-    const artLabels = seg.art_types.map(t => ({ DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' }[t] || t)).join(', ');
+    const TYPE_SHORT = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
+    const savedOrder = seg.arts_type_order || [];
+    const orderedTypes = savedOrder.length > 0
+      ? [...savedOrder].filter(i => seg.art_types.includes(i.type)).sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => i.type)
+      : seg.art_types;
+    const inOrder = new Set(orderedTypes);
+    const allTypes = [...orderedTypes, ...seg.art_types.filter(t => !inOrder.has(t))];
+
+    // Types + order line
+    const orderStr = allTypes.length > 1
+      ? allTypes.map(t => TYPE_SHORT[t] || t).join(' → ')
+      : allTypes.map(t => TYPE_SHORT[t] || t).join(', ');
     stack.push({
-      text: [{ text: 'ARTES: ', bold: true, color: '#831843', fontSize: pdfTheme.fontSize.sm }, { text: artLabels, fontSize: pdfTheme.fontSize.sm }],
+      text: [{ text: 'ARTES: ', bold: true, color: '#831843', fontSize: pdfTheme.fontSize.sm }, { text: orderStr, fontSize: pdfTheme.fontSize.sm }],
       margin: [0, 0, 0, 1],
     });
 
-    // Drama details
-    if (seg.art_types.includes('DRAMA')) {
-      const dramaParts = [];
-      if (seg.drama_handheld_mics > 0) dramaParts.push(`Mics mano: ${seg.drama_handheld_mics}`);
-      if (seg.drama_headset_mics > 0) dramaParts.push(`Headset: ${seg.drama_headset_mics}`);
-      if (seg.drama_start_cue) dramaParts.push(`Inicio: ${seg.drama_start_cue}`);
-      if (seg.drama_end_cue) dramaParts.push(`Fin: ${seg.drama_end_cue}`);
-      if (dramaParts.length) {
-        stack.push({
-          text: dramaParts.join(' • '),
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
+    // Key media items (song/video name + responsible person per type)
+    const mediaItems = [];
+    allTypes.forEach(type => {
+      if (type === 'DRAMA') {
+        if (seg.drama_song_title) mediaItems.push({ type: 'Drama', label: seg.drama_song_title, person: seg.drama_song_owner });
+        if (seg.drama_song_2_title) mediaItems.push({ type: 'Drama', label: seg.drama_song_2_title, person: seg.drama_song_2_owner });
+        if (seg.drama_song_3_title) mediaItems.push({ type: 'Drama', label: seg.drama_song_3_title, person: seg.drama_song_3_owner });
       }
-      if (seg.drama_has_song && seg.drama_song_title) {
-        stack.push({
-          text: `Canción: ${seg.drama_song_title}`,
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
+      if (type === 'DANCE') {
+        if (seg.dance_song_title) mediaItems.push({ type: 'Danza', label: seg.dance_song_title, person: seg.dance_song_owner });
+        if (seg.dance_song_2_title) mediaItems.push({ type: 'Danza', label: seg.dance_song_2_title, person: seg.dance_song_2_owner });
+        if (seg.dance_song_3_title) mediaItems.push({ type: 'Danza', label: seg.dance_song_3_title, person: seg.dance_song_3_owner });
       }
-    }
+      if (type === 'VIDEO' && seg.video_name) mediaItems.push({ type: 'Video', label: seg.video_name, person: seg.video_owner });
+      if (type === 'SPOKEN_WORD' && seg.spoken_word_speaker) mediaItems.push({ type: 'SW', label: seg.spoken_word_description || 'Spoken Word', person: seg.spoken_word_speaker });
+      if (type === 'OTHER' && seg.art_other_description) mediaItems.push({ type: 'Otro', label: seg.art_other_description });
+    });
 
-    // Dance details
-    if (seg.art_types.includes('DANCE')) {
-      const danceParts = [];
-      if (seg.dance_handheld_mics > 0) danceParts.push(`Mics mano: ${seg.dance_handheld_mics}`);
-      if (seg.dance_headset_mics > 0) danceParts.push(`Headset: ${seg.dance_headset_mics}`);
-      if (seg.dance_start_cue) danceParts.push(`Inicio: ${seg.dance_start_cue}`);
-      if (seg.dance_end_cue) danceParts.push(`Fin: ${seg.dance_end_cue}`);
-      if (danceParts.length) {
-        stack.push({
-          text: danceParts.join(' • '),
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
-      }
-      if (seg.dance_has_song && seg.dance_song_title) {
-        stack.push({
-          text: `Música: ${seg.dance_song_title}`,
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
-      }
-    }
-
-    // Spoken Word details (2026-02-28: added for full arts parity in PDF)
-    if (seg.art_types.includes('SPOKEN_WORD')) {
-      const swParts = [];
-      if (seg.spoken_word_speaker) swParts.push(seg.spoken_word_speaker);
-      if (seg.spoken_word_description) swParts.push(seg.spoken_word_description);
-      if (seg.spoken_word_mic_position) swParts.push(`Mic: ${seg.spoken_word_mic_position}`);
-      if (seg.spoken_word_has_music && seg.spoken_word_music_title) swParts.push(`🎵 ${seg.spoken_word_music_title}`);
-      if (swParts.length) {
-        stack.push({
-          text: swParts.join(' • '),
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
-      }
-    }
-
-    // Painting details (2026-02-28: added for full arts parity in PDF)
-    if (seg.art_types.includes('PAINTING')) {
-      const paintParts = [];
-      if (seg.painting_canvas_size) paintParts.push(`Canvas: ${seg.painting_canvas_size}`);
-      if (seg.painting_needs_easel) paintParts.push('Easel');
-      if (seg.painting_needs_drop_cloth) paintParts.push('Drop cloth');
-      if (seg.painting_needs_lighting) paintParts.push('Special lighting');
-      if (seg.painting_other_setup) paintParts.push(seg.painting_other_setup);
-      if (paintParts.length) {
-        stack.push({
-          text: paintParts.join(' • '),
-          color: pdfTheme.text.secondary,
-          fontSize: pdfTheme.fontSize.xs,
-          margin: [0, 0, 0, 1],
-        });
-      }
-    }
-
-    // Other art description
-    if (seg.art_types.includes('OTHER') && seg.art_other_description) {
+    mediaItems.forEach(item => {
       stack.push({
-        text: seg.art_other_description,
-        color: pdfTheme.text.secondary,
-        fontSize: pdfTheme.fontSize.xs,
-        margin: [0, 0, 0, 1],
+        text: [
+          { text: `${item.type}: `, bold: true, color: '#9D174D', fontSize: pdfTheme.fontSize.xs },
+          { text: item.label, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs },
+          item.person ? { text: ` — ${item.person}`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
+        ],
+        margin: [0, 0, 0, 0.5],
       });
-    }
+    });
   }
 
   // Sub-Assignments (Ministración / worship sub-roles) — matching weekly PDF + editor UI

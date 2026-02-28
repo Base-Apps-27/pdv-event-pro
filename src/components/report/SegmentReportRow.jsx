@@ -191,66 +191,57 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
           </div>
         )}
 
-        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
-          <div className="text-[9px] bg-pink-50 px-0.5 py-0.5 rounded border border-pink-200 leading-tight">
-            <span className="text-pink-700 font-bold">ARTES:</span>
-            <span className="text-gray-700 ml-0.5">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : t === "SPOKEN_WORD" ? "Spoken Word" : t === "PAINTING" ? "Pintura" : "Otro").join(", ")}</span>
+        {/* 2026-02-28: Arts summary — types, order, key media/people only.
+         * Full operational detail lives in the Resources modal (interactive) or
+         * is routed to department-specific reports via smart routing.
+         * This summary is designed to survive as a print fallback. */}
+        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (() => {
+          const TYPE_SHORT = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
+          const savedOrder = segment.arts_type_order || [];
+          const orderedTypes = savedOrder.length > 0
+            ? [...savedOrder].filter(i => segment.art_types.includes(i.type)).sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => i.type)
+            : segment.art_types;
+          const inOrder = new Set(orderedTypes);
+          const allTypes = [...orderedTypes, ...segment.art_types.filter(t => !inOrder.has(t))];
 
-            {segment.art_types.includes("DRAMA") && (
-              <div className="mt-0.5 pl-1 border-l border-pink-300">
-                {segment.drama_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.drama_handheld_mics} • </span>}
-                {segment.drama_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.drama_headset_mics} • </span>}
-                {segment.drama_start_cue && <span className="inline">{t('arts.cues.start')}: {segment.drama_start_cue} • </span>}
-                {segment.drama_end_cue && <span className="inline">{t('arts.cues.end')}: {segment.drama_end_cue}</span>}
-                {segment.drama_has_song && segment.drama_song_title && (
-                  <div>{t('arts.song')}: {segment.drama_song_title}</div>
-                )}
-                {segment.microphone_assignments && (
-                  <div className="text-gray-700">Mics: {segment.microphone_assignments}</div>
-                )}
-              </div>
-            )}
+          const mediaItems = [];
+          allTypes.forEach(type => {
+            if (type === 'DRAMA') {
+              if (segment.drama_song_title) mediaItems.push({ type: 'Drama', label: segment.drama_song_title, person: segment.drama_song_owner });
+              if (segment.drama_song_2_title) mediaItems.push({ type: 'Drama', label: segment.drama_song_2_title, person: segment.drama_song_2_owner });
+              if (segment.drama_song_3_title) mediaItems.push({ type: 'Drama', label: segment.drama_song_3_title, person: segment.drama_song_3_owner });
+            }
+            if (type === 'DANCE') {
+              if (segment.dance_song_title) mediaItems.push({ type: 'Danza', label: segment.dance_song_title, person: segment.dance_song_owner });
+              if (segment.dance_song_2_title) mediaItems.push({ type: 'Danza', label: segment.dance_song_2_title, person: segment.dance_song_2_owner });
+              if (segment.dance_song_3_title) mediaItems.push({ type: 'Danza', label: segment.dance_song_3_title, person: segment.dance_song_3_owner });
+            }
+            if (type === 'VIDEO' && segment.video_name) mediaItems.push({ type: 'Video', label: segment.video_name, person: segment.video_owner });
+            if (type === 'SPOKEN_WORD' && segment.spoken_word_speaker) mediaItems.push({ type: 'SW', label: segment.spoken_word_description || 'Spoken Word', person: segment.spoken_word_speaker });
+            if (type === 'OTHER' && segment.art_other_description) mediaItems.push({ type: 'Otro', label: segment.art_other_description });
+          });
 
-            {segment.art_types.includes("DANCE") && (
-              <div className="mt-0.5 pl-1 border-l border-pink-300">
-                {segment.dance_has_song && segment.dance_song_title && (
-                  <span className="inline">{t('arts.music')}: {segment.dance_song_title} • </span>
-                )}
-                {segment.dance_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.dance_handheld_mics} • </span>}
-                {segment.dance_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.dance_headset_mics}</span>}
-              </div>
-            )}
-
-            {/* Spoken Word details in report (2026-02-28) */}
-            {segment.art_types.includes("SPOKEN_WORD") && (
-              <div className="mt-0.5 pl-1 border-l border-pink-300">
-                {segment.spoken_word_speaker && <span className="inline font-semibold">{segment.spoken_word_speaker} • </span>}
-                {segment.spoken_word_description && <span className="inline">{segment.spoken_word_description} • </span>}
-                {segment.spoken_word_mic_position && <span className="inline">Mic: {segment.spoken_word_mic_position} • </span>}
-                {segment.spoken_word_has_music && segment.spoken_word_music_title && (
-                  <span className="inline">🎵 {segment.spoken_word_music_title}</span>
-                )}
-              </div>
-            )}
-
-            {/* Painting details in report (2026-02-28) */}
-            {segment.art_types.includes("PAINTING") && (
-              <div className="mt-0.5 pl-1 border-l border-pink-300">
-                {segment.painting_canvas_size && <span className="inline">Canvas: {segment.painting_canvas_size} • </span>}
-                {segment.painting_needs_easel && <span className="inline">Easel • </span>}
-                {segment.painting_needs_drop_cloth && <span className="inline">Drop cloth • </span>}
-                {segment.painting_needs_lighting && <span className="inline">Special lighting • </span>}
-                {segment.painting_other_setup && <span className="inline">{segment.painting_other_setup}</span>}
-              </div>
-            )}
-
-            {segment.art_types.includes("OTHER") && segment.art_other_description && (
-              <div className="mt-0.5 text-gray-600">
-                {segment.art_other_description}
-              </div>
-            )}
-          </div>
-        )}
+          return (
+            <div className="text-[9px] bg-pink-50 px-0.5 py-0.5 rounded border border-pink-200 leading-tight">
+              <span className="text-pink-700 font-bold">ARTES:</span>
+              <span className="text-gray-700 ml-0.5">
+                {allTypes.length > 1
+                  ? allTypes.map(t => TYPE_SHORT[t] || t).join(' → ')
+                  : allTypes.map(t => TYPE_SHORT[t] || t).join(', ')}
+              </span>
+              {mediaItems.length > 0 && (
+                <div className="mt-0.5 pl-1 border-l border-pink-300">
+                  {mediaItems.map((item, i) => (
+                    <div key={i}>
+                      <span className="text-pink-600 font-semibold">{item.type}:</span>{' '}
+                      {item.label}{item.person ? ` — ${item.person}` : ''}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Sub-Assignments (Ministración / worship sub-roles) — matching editor + PDF */}
         {/* 2026-02-28: Added — was present in editor + weekly PDF but missing from HTML report */}

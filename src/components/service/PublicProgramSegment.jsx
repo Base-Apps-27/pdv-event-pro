@@ -770,76 +770,69 @@ export default function PublicProgramSegment({
               </div>
             )}
 
-            {/* Artes (Dance/Drama/Video/Other) */}
+            {/* 2026-02-28: Arts summary — slim card showing types, order, and key media/people.
+             * Full operational detail (mics, cues, setup) lives in the Resources modal.
+             * Rationale: arts shouldn't dominate the full program view, but the summary must
+             * contain enough info to survive if the app/modal is unavailable (print fallback). */}
             {(() => {
               const isArts = (segment.segment_type || '').toString() === 'Artes';
               const arts = getData('art_types') || segment.art_types;
               if (!isArts || !Array.isArray(arts) || arts.length === 0) return null;
-              const hasDrama = arts.includes('DRAMA');
-              const hasDance = arts.includes('DANCE');
-              const hasOther = arts.includes('OTHER');
+
+              const TYPE_SHORT = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
+
+              // Performance order
+              const savedOrder = segment.arts_type_order || [];
+              const orderedTypes = savedOrder.length > 0
+                ? [...savedOrder].filter(i => arts.includes(i.type)).sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => i.type)
+                : arts;
+              // Append any types not in the saved order
+              const inOrder = new Set(orderedTypes);
+              const allTypes = [...orderedTypes, ...arts.filter(t => !inOrder.has(t))];
+
+              // Collect key media items per type (song/video name + person — the "survive without modal" data)
+              const mediaItems = [];
+              allTypes.forEach(type => {
+                if (type === 'DRAMA') {
+                  if (getData('drama_song_title')) mediaItems.push({ type: 'Drama', label: getData('drama_song_title'), person: getData('drama_song_owner') });
+                  if (getData('drama_song_2_title')) mediaItems.push({ type: 'Drama', label: getData('drama_song_2_title'), person: getData('drama_song_2_owner') });
+                  if (getData('drama_song_3_title')) mediaItems.push({ type: 'Drama', label: getData('drama_song_3_title'), person: getData('drama_song_3_owner') });
+                }
+                if (type === 'DANCE') {
+                  if (getData('dance_song_title')) mediaItems.push({ type: 'Danza', label: getData('dance_song_title'), person: getData('dance_song_owner') });
+                  if (getData('dance_song_2_title')) mediaItems.push({ type: 'Danza', label: getData('dance_song_2_title'), person: getData('dance_song_2_owner') });
+                  if (getData('dance_song_3_title')) mediaItems.push({ type: 'Danza', label: getData('dance_song_3_title'), person: getData('dance_song_3_owner') });
+                }
+                if (type === 'VIDEO') {
+                  if (segment.video_name) mediaItems.push({ type: 'Video', label: segment.video_name, person: segment.video_owner });
+                }
+                if (type === 'SPOKEN_WORD') {
+                  if (getData('spoken_word_speaker')) mediaItems.push({ type: 'Spoken Word', label: getData('spoken_word_description') || 'Spoken Word', person: getData('spoken_word_speaker') });
+                  if (getData('spoken_word_music_title')) mediaItems.push({ type: 'Spoken Word', label: `🎵 ${getData('spoken_word_music_title')}`, person: getData('spoken_word_music_owner') });
+                }
+                if (type === 'OTHER' && getData('art_other_description')) {
+                  mediaItems.push({ type: 'Otro', label: getData('art_other_description') });
+                }
+              });
+
               return (
                 <div className="bg-pink-50 p-2 rounded border border-pink-200 text-xs">
-                  <p className="font-semibold text-pink-800 mb-1">
-                    Artes: {arts.map(a => ({ DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' }[a] || a)).join(', ')}
+                  {/* Types + performance order */}
+                  <p className="font-semibold text-pink-800">
+                    Artes: {allTypes.length > 1
+                      ? allTypes.map(a => TYPE_SHORT[a] || a).join(' → ')
+                      : allTypes.map(a => TYPE_SHORT[a] || a).join(', ')}
                   </p>
-                  {hasDrama && (
-                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5">
-                      {getData('drama_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('drama_handheld_mics')}</div>}
-                      {getData('drama_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('drama_headset_mics')}</div>}
-                      {getData('drama_start_cue') && <div>{t('arts.cues.start')}: {getData('drama_start_cue')}</div>}
-                      {getData('drama_end_cue') && <div>{t('arts.cues.end')}: {getData('drama_end_cue')}</div>}
-                      {getData('drama_has_song') && getData('drama_song_title') && (
-                        <div>{t('arts.song')}: {getData('drama_song_title')}{getData('drama_song_owner') ? ` (${getData('drama_song_owner')})` : ''}</div>
-                      )}
-                      {getData('drama_song_2_title') && (
-                        <div>{t('arts.song')} 2: {getData('drama_song_2_title')}{getData('drama_song_2_owner') ? ` (${getData('drama_song_2_owner')})` : ''}</div>
-                      )}
-                      {getData('drama_song_3_title') && (
-                        <div>{t('arts.song')} 3: {getData('drama_song_3_title')}{getData('drama_song_3_owner') ? ` (${getData('drama_song_3_owner')})` : ''}</div>
-                      )}
+                  {/* Key media & people (print-safe fallback) */}
+                  {mediaItems.length > 0 && (
+                    <div className="mt-1 pl-2 border-l-2 border-pink-300 space-y-0.5 text-gray-700">
+                      {mediaItems.map((item, i) => (
+                        <div key={i}>
+                          <span className="text-pink-600 font-medium">{item.type}:</span>{' '}
+                          {item.label}{item.person ? ` — ${item.person}` : ''}
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  {hasDance && (
-                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
-                      {getData('dance_handheld_mics') > 0 && <div>{t('arts.mics.handheld')}: {getData('dance_handheld_mics')}</div>}
-                      {getData('dance_headset_mics') > 0 && <div>{t('arts.mics.headset')}: {getData('dance_headset_mics')}</div>}
-                      {getData('dance_start_cue') && <div>{t('arts.cues.start')}: {getData('dance_start_cue')}</div>}
-                      {getData('dance_end_cue') && <div>{t('arts.cues.end')}: {getData('dance_end_cue')}</div>}
-                      {getData('dance_has_song') && getData('dance_song_title') && (
-                        <div>{t('arts.music')}: {getData('dance_song_title')}{getData('dance_song_owner') ? ` (${getData('dance_song_owner')})` : ''}</div>
-                      )}
-                      {getData('dance_song_2_title') && (
-                        <div>{t('arts.music')} 2: {getData('dance_song_2_title')}{getData('dance_song_2_owner') ? ` (${getData('dance_song_2_owner')})` : ''}</div>
-                      )}
-                      {getData('dance_song_3_title') && (
-                        <div>{t('arts.music')} 3: {getData('dance_song_3_title')}{getData('dance_song_3_owner') ? ` (${getData('dance_song_3_owner')})` : ''}</div>
-                      )}
-                    </div>
-                  )}
-                  {/* Spoken Word details in Live View (2026-02-28) */}
-                  {arts.includes('SPOKEN_WORD') && (
-                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
-                      {getData('spoken_word_speaker') && <div className="font-semibold">{getData('spoken_word_speaker')}</div>}
-                      {getData('spoken_word_description') && <div>{getData('spoken_word_description')}</div>}
-                      {getData('spoken_word_mic_position') && <div>Mic: {getData('spoken_word_mic_position')}</div>}
-                      {getData('spoken_word_has_music') && getData('spoken_word_music_title') && (
-                        <div>🎵 {getData('spoken_word_music_title')}</div>
-                      )}
-                    </div>
-                  )}
-                  {/* Painting details in Live View (2026-02-28) */}
-                  {arts.includes('PAINTING') && (
-                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
-                      {getData('painting_canvas_size') && <div>Canvas: {getData('painting_canvas_size')}</div>}
-                      {getData('painting_needs_easel') && <div>Easel ✓</div>}
-                      {getData('painting_needs_drop_cloth') && <div>Drop cloth ✓</div>}
-                      {getData('painting_needs_lighting') && <div>{language === 'es' ? 'Iluminación especial' : 'Special lighting'} ✓</div>}
-                      {getData('painting_other_setup') && <div>{getData('painting_other_setup')}</div>}
-                    </div>
-                  )}
-                  {hasOther && getData('art_other_description') && (
-                    <div className="mt-1 text-gray-700">{getData('art_other_description')}</div>
                   )}
                 </div>
               );
