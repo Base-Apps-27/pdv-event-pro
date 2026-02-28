@@ -33,7 +33,15 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = await req.json();
+        const body = await req.json();
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = body;
+
+        // ── HONEYPOT CHECK (2026-02-28) ──
+        // Hidden "website" field that humans never fill. Bots get fake success.
+        if (body.website) {
+            console.warn(`[SpeakerSubmission] Honeypot triggered from ${clientIp}`);
+            return Response.json({ success: true }, { headers: corsHeaders });
+        }
 
         // Validate Input First
         if (!segment_id) {

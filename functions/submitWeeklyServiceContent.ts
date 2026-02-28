@@ -177,6 +177,13 @@ Deno.serve(async (req) => {
         const mirror_target_ids = body.mirror_target_ids || [];
         const apply_to_both_services = body.apply_to_both_services || false;
 
+        // ── HONEYPOT CHECK (2026-02-28) ──
+        // Hidden "website" field that humans never fill. Bots get fake success.
+        if (body.website) {
+            console.warn(`[WeeklySubmission] Honeypot triggered from ${clientIp}`);
+            return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
         if (!segment_id) {
             return Response.json({ error: "Missing required fields: segment_id" }, { status: 400, headers: corsHeaders });
         }

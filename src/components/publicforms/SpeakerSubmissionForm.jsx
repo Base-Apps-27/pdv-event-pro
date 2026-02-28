@@ -26,6 +26,7 @@ export default function SpeakerSubmissionForm({ options }) {
     const [content, setContent] = useState('');
     const [presentationUrl, setPresentationUrl] = useState('');
     const [notesUrl, setNotesUrl] = useState('');
+    const [website, setWebsite] = useState(''); // Honeypot: hidden from humans, bots auto-fill
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -65,7 +66,9 @@ export default function SpeakerSubmissionForm({ options }) {
             presentation_url: presentationUrl,
             notes_url: notesUrl,
             content_is_slides_only: slidesOnly,
-            idempotencyKey: idempotencyKey
+            idempotencyKey: idempotencyKey,
+            // Honeypot: backend silently accepts but discards if filled (2026-02-28)
+            ...(website ? { website } : {}),
         });
 
         if (response.data?.error) {
@@ -101,6 +104,10 @@ export default function SpeakerSubmissionForm({ options }) {
 
     return (
         <form onSubmit={handleSubmit}>
+            {/* Honeypot: invisible to humans, bots auto-fill. aria-hidden + tabIndex=-1 + offscreen (2026-02-28) */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} aria-hidden="true">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} />
+            </div>
             {/* Status messages */}
             {status === 'loading' && (
                 <div className="flex items-center gap-3 p-4 rounded-lg mb-6 bg-blue-50 text-blue-800 border border-blue-200 font-medium">

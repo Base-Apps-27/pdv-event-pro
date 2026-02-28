@@ -28,6 +28,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
     const [presentationUrl, setPresentationUrl] = useState('');
     const [notesUrl, setNotesUrl] = useState('');
     const [mirrorTargets, setMirrorTargets] = useState({}); // { siblingId: boolean }
+    const [website, setWebsite] = useState(''); // Honeypot: hidden from humans, bots auto-fill
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -78,7 +79,9 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             notes_url: notesUrl,
             content_is_slides_only: slidesOnly,
             mirror_target_ids: checkedTargets,
-            idempotencyKey: idempotencyKey
+            idempotencyKey: idempotencyKey,
+            // Honeypot: backend silently accepts but discards if filled (2026-02-28)
+            ...(website ? { website } : {}),
         });
 
         if (response.data?.error) {
@@ -110,6 +113,10 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
 
     return (
         <form onSubmit={handleSubmit}>
+            {/* Honeypot: invisible to humans, bots auto-fill. aria-hidden + tabIndex=-1 + offscreen (2026-02-28) */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} aria-hidden="true">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} />
+            </div>
             {status === 'error' && (
                 <div className="p-4 rounded-lg mb-6 bg-red-50 text-red-800 border border-red-200 font-medium">
                     {errorMsg || t('Error al enviar. Intente nuevamente.', 'Error submitting. Please try again.')}
