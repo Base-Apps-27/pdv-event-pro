@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
+import ArtsTypeOrderEditor from "@/components/session/ArtsTypeOrderEditor";
 
 // Toggle helper for Artes multiselect
 const toggleArtType = (formData, setFormData, val) => {
@@ -284,9 +285,43 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
         </div>
       )}
 
-      {/* Video hint */}
+      {/* VIDEO Block — 2026-02-28: inlined per parity audit (was just a redirect hint before) */}
       {hasArtVideo && (
-        <p className="text-xs text-pink-700">Este segmento incluye VIDEO; añade detalles en la sección "Video" arriba.</p>
+        <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+          <Label className="text-xs font-semibold text-pink-800">🎬 VIDEO</Label>
+          <div className="space-y-2">
+            <Label className="text-xs">{language === 'es' ? 'Nombre del Video' : 'Video Name'}</Label>
+            <Input value={formData.video_name || ""} onChange={(e) => setFormData({ ...formData, video_name: e.target.value })} placeholder="Video de Apertura" className="h-8 text-sm" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{language === 'es' ? 'Ubicación' : 'Location'}</Label>
+            <Input value={formData.video_location || ""} onChange={(e) => setFormData({ ...formData, video_location: e.target.value })} placeholder="ProPresenter > Videos > Opening.mp4" className="h-8 text-sm" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">{language === 'es' ? 'Responsable' : 'Owner'}</Label>
+              <Input value={formData.video_owner || ""} onChange={(e) => setFormData({ ...formData, video_owner: e.target.value })} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{language === 'es' ? 'Duración (seg)' : 'Duration (sec)'}</Label>
+              <Input type="number" value={formData.video_length_sec ?? ''} onChange={(e) => setFormData({ ...formData, video_length_sec: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-8 text-sm" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
+            <Input value={formData.video_url || ""} onChange={(e) => setFormData({ ...formData, video_url: e.target.value, video_url_meta: null })} placeholder="https://youtube.com/watch?v=..." className="h-8 text-sm" />
+          </div>
+        </div>
+      )}
+
+      {/* Performance order — drag-to-reorder when 2+ types selected (2026-02-28) */}
+      {(formData.art_types?.length || 0) >= 2 && (
+        <ArtsTypeOrderEditor
+          artTypes={formData.art_types || []}
+          artTypeOrder={formData.arts_type_order || []}
+          onChange={(newOrder) => setFormData({ ...formData, arts_type_order: newOrder })}
+          language={language}
+        />
       )}
 
       {/* Arts Directions PDF - simple input */}
