@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import CompactFileAttach from './CompactFileAttach';
+import AutoGrowTextarea from './AutoGrowTextarea';
 import { usePublicLang } from './PublicFormLangContext';
 
 export default function ArtsTypeSpokenWord({ seg, updateField }) {
@@ -18,9 +19,8 @@ export default function ArtsTypeSpokenWord({ seg, updateField }) {
       </div>
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Descripción / Título de la Pieza', 'Description / Piece Title')}</label>
-        <textarea rows={2} value={seg.spoken_word_description || ''} onChange={e => updateField('spoken_word_description', e.target.value)}
-          placeholder={t('Título, tema y contexto...', 'Title, theme, and context...')}
-          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+        <AutoGrowTextarea value={seg.spoken_word_description || ''} onChange={e => updateField('spoken_word_description', e.target.value)}
+          placeholder={t('Título, tema y contexto...', 'Title, theme, and context...')} minRows={2} />
       </div>
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
@@ -66,9 +66,8 @@ export default function ArtsTypeSpokenWord({ seg, updateField }) {
       )}
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label>
-        <textarea rows={2} value={seg.spoken_word_notes || ''} onChange={e => updateField('spoken_word_notes', e.target.value)}
-          placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')}
-          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+        <AutoGrowTextarea value={seg.spoken_word_notes || ''} onChange={e => updateField('spoken_word_notes', e.target.value)}
+          placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')} minRows={2} />
       </div>
     </>
   );

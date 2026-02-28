@@ -22,6 +22,7 @@ import ArtsTypeOther from './ArtsTypeOther';
 import CompactFileAttach from './CompactFileAttach';
 import ArtsTypeOrderEditor from '@/components/session/ArtsTypeOrderEditor';
 import ArtsTypeRemoveConfirm, { countFilledFieldsForType } from './ArtsTypeRemoveConfirm';
+import AutoGrowTextarea from './AutoGrowTextarea';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', SPOKEN_WORD: '🎤 Spoken Word', PAINTING: '🎨 Pintura', OTHER: '✨ Otro' };
 
@@ -339,9 +340,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
               />
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label>
-                <textarea rows={2} value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)}
-                  placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')}
-                  className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+                <AutoGrowTextarea value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)}
+                  placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')} minRows={2} />
               </div>
             </div>
           )}

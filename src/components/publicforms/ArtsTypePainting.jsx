@@ -3,6 +3,7 @@
  * 2026-02-28: Hybrid UX refactor — isolated per-type form content.
  */
 import React from 'react';
+import AutoGrowTextarea from './AutoGrowTextarea';
 import { usePublicLang } from './PublicFormLangContext';
 
 export default function ArtsTypePainting({ seg, updateField }) {
@@ -32,14 +33,12 @@ export default function ArtsTypePainting({ seg, updateField }) {
       </div>
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Otros Requisitos de Montaje', 'Other Setup Requirements')}</label>
-        <textarea rows={2} value={seg.painting_other_setup || ''} onChange={e => updateField('painting_other_setup', e.target.value)}
-          placeholder={t('Mesa, agua, toallas, etc.', 'Table, water, towels, etc.')}
-          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+        <AutoGrowTextarea value={seg.painting_other_setup || ''} onChange={e => updateField('painting_other_setup', e.target.value)}
+          placeholder={t('Mesa, agua, toallas, etc.', 'Table, water, towels, etc.')} minRows={2} />
       </div>
       <div>
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label>
-        <textarea rows={2} value={seg.painting_notes || ''} onChange={e => updateField('painting_notes', e.target.value)}
-          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+        <AutoGrowTextarea value={seg.painting_notes || ''} onChange={e => updateField('painting_notes', e.target.value)} minRows={2} />
       </div>
     </>
   );
