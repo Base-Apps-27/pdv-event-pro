@@ -89,10 +89,29 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
         setSaveMsg(null);
         const saveStart = Date.now();
 
-        // Analytics: track save attempt (fires BEFORE backend call)
+        // Analytics: track save attempt with field-presence summary (2026-02-28).
+        // Answers "was data actually entered when Save was run?" without tracking keystrokes.
+        // Each boolean indicates whether the field has a truthy value at save time.
+        const d = payload.data;
+        const filledFields = Object.entries(d).filter(([_, v]) => {
+            if (typeof v === 'boolean') return v;
+            if (typeof v === 'number') return v > 0;
+            if (Array.isArray(v)) return v.length > 0;
+            return !!v && v !== '';
+        }).map(([k]) => k);
+
         base44.analytics.track({
             eventName: 'arts_save_attempt',
-            properties: { segment_id: seg.id, segment_title: seg.title || '', art_types: (seg.art_types || []).join(',') }
+            properties: {
+                segment_id: seg.id,
+                segment_title: seg.title || '',
+                art_types: (seg.art_types || []).join(','),
+                filled_field_count: filledFields.length,
+                total_field_count: Object.keys(d).length,
+                filled_fields: filledFields.join(','),
+                touched_field_count: touchedFieldsRef.current.size,
+                touched_fields: Array.from(touchedFieldsRef.current).join(',')
+            }
         });
 
         const payload = {
