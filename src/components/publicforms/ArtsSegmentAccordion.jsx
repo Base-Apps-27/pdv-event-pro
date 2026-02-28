@@ -9,7 +9,6 @@ import React, { useState, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ArtsSongSlots from './ArtsSongSlots';
-import FileOrLinkInput from './FileOrLinkInput';
 import CompactFileAttach from './CompactFileAttach';
 import { usePublicLang } from './PublicFormLangContext';
 
