@@ -164,8 +164,13 @@ Deno.serve(async (req) => {
             return Response.json({ message: 'Already processed', skipped: true });
         }
 
-        if (!submission.segment_id || !submission.content) {
-            return Response.json({ message: 'Invalid submission data' });
+        // 2026-02-28 BUGFIX: When content_is_slides_only=true, content is "" (falsy).
+        // Must allow empty content when slides-only flag is set.
+        if (!submission.segment_id) {
+            return Response.json({ message: 'Invalid submission data: missing segment_id' });
+        }
+        if (!submission.content && !submission.content_is_slides_only) {
+            return Response.json({ message: 'Invalid submission data: missing content' });
         }
 
         // PIPELINE 1: Parse verses (Synchronous Regex - Absolute Priority)
