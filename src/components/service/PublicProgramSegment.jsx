@@ -56,8 +56,24 @@ export default function PublicProgramSegment({
   const notesUrl = getData('notes_url');
   const isSlidesOnly = getData('content_is_slides_only');
 
-  // Check if segment has any resource links (Expanded to include Speaker Resources)
-  const hasResourceLinks = segment.video_url || 
+  // 2026-02-28: Resources button visibility — show whenever the modal would contain
+  // anything beyond what the slim surface summary shows (types + order + media names).
+  // This includes: arts operational data (mics, cues, setup, scripts, audio),
+  // speaker resources (slides, notes), video URLs, song URLs, run-of-show PDF.
+  const hasArtsOperationalData = (segment.art_types?.length > 0) && (
+    segment.drama_handheld_mics > 0 || segment.drama_headset_mics > 0 ||
+    segment.drama_start_cue || segment.drama_end_cue ||
+    segment.dance_handheld_mics > 0 || segment.dance_headset_mics > 0 ||
+    segment.dance_start_cue || segment.dance_end_cue ||
+    segment.spoken_word_speaker || segment.spoken_word_mic_position || segment.spoken_word_script_url || segment.spoken_word_audio_url ||
+    segment.painting_needs_easel || segment.painting_needs_drop_cloth || segment.painting_needs_lighting || segment.painting_canvas_size || segment.painting_other_setup ||
+    segment.drama_song_title || segment.dance_song_title ||
+    segment.video_url || segment.video_name ||
+    segment.arts_run_of_show_url ||
+    segment.art_other_description
+  );
+  const hasResourceLinks = hasArtsOperationalData ||
+    segment.video_url || 
     segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
     segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
     segment.arts_run_of_show_url ||

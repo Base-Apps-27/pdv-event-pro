@@ -63,14 +63,23 @@ function DanceSection({ seg, lang }) {
   if (seg.dance_handheld_mics > 0) mics.push(`${seg.dance_handheld_mics} handheld`);
   if (seg.dance_headset_mics > 0) mics.push(`${seg.dance_headset_mics} headset`);
 
+  // 2026-02-28: Show songs based on data presence, NOT the dance_has_song checkbox.
+  // The checkbox may not be set even when song data was submitted via the public form.
+  const songs = [
+    { title: seg.dance_song_title, url: seg.dance_song_source, owner: seg.dance_song_owner },
+    { title: seg.dance_song_2_title, url: seg.dance_song_2_url, owner: seg.dance_song_2_owner },
+    { title: seg.dance_song_3_title, url: seg.dance_song_3_url, owner: seg.dance_song_3_owner },
+  ].filter(s => s.title || s.url);
+
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {seg.dance_start_cue && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={seg.dance_start_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {seg.dance_end_cue && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={seg.dance_end_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
-      <LinkRow label={seg.dance_song_title || (es ? 'Canción 1' : 'Song 1')} url={seg.dance_song_source} type="song" />
-      <LinkRow label={seg.dance_song_2_title || (es ? 'Canción 2' : 'Song 2')} url={seg.dance_song_2_url} type="song" />
-      <LinkRow label={seg.dance_song_3_title || (es ? 'Canción 3' : 'Song 3')} url={seg.dance_song_3_url} type="song" />
+      {songs.map((s, i) => s.url
+        ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
+        : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
+      )}
     </div>
   );
 }
@@ -81,14 +90,23 @@ function DramaSection({ seg, lang }) {
   if (seg.drama_handheld_mics > 0) mics.push(`${seg.drama_handheld_mics} handheld`);
   if (seg.drama_headset_mics > 0) mics.push(`${seg.drama_headset_mics} headset`);
 
+  // 2026-02-28: Show songs based on data presence, NOT the drama_has_song checkbox.
+  // The checkbox may not be set even when song data was submitted via the public form.
+  const songs = [
+    { title: seg.drama_song_title, url: seg.drama_song_source, owner: seg.drama_song_owner },
+    { title: seg.drama_song_2_title, url: seg.drama_song_2_url, owner: seg.drama_song_2_owner },
+    { title: seg.drama_song_3_title, url: seg.drama_song_3_url, owner: seg.drama_song_3_owner },
+  ].filter(s => s.title || s.url);
+
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {seg.drama_start_cue && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={seg.drama_start_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {seg.drama_end_cue && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={seg.drama_end_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
-      <LinkRow label={seg.drama_song_title || (es ? 'Canción 1' : 'Song 1')} url={seg.drama_song_source} type="song" />
-      <LinkRow label={seg.drama_song_2_title || (es ? 'Canción 2' : 'Song 2')} url={seg.drama_song_2_url} type="song" />
-      <LinkRow label={seg.drama_song_3_title || (es ? 'Canción 3' : 'Song 3')} url={seg.drama_song_3_url} type="song" />
+      {songs.map((s, i) => s.url
+        ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
+        : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
+      )}
     </div>
   );
 }
@@ -116,8 +134,12 @@ function SpokenWordSection({ seg, lang }) {
       {seg.spoken_word_mic_position && <InfoRow label={es ? 'Micrófono' : 'Mic'} value={micLabels[seg.spoken_word_mic_position] || seg.spoken_word_mic_position} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       <LinkRow label={es ? 'Guión / Script' : 'Script'} url={seg.spoken_word_script_url} type="pdf" />
       <LinkRow label={es ? 'Audio del Spoken Word' : 'Spoken Word Audio'} url={seg.spoken_word_audio_url} type="audio" />
-      {seg.spoken_word_has_music && seg.spoken_word_music_url && (
-        <LinkRow label={seg.spoken_word_music_title || (es ? 'Música de fondo' : 'Background Music')} url={seg.spoken_word_music_url} type="song" />
+      {/* 2026-02-28: Show music based on data presence, NOT the spoken_word_has_music checkbox.
+       * The checkbox may not be set even when music data was submitted. */}
+      {(seg.spoken_word_music_title || seg.spoken_word_music_url) && (
+        seg.spoken_word_music_url
+          ? <LinkRow label={seg.spoken_word_music_title || (es ? 'Música de fondo' : 'Background Music')} url={seg.spoken_word_music_url} type="song" />
+          : <InfoRow label={es ? 'Música' : 'Music'} value={`${seg.spoken_word_music_title}${seg.spoken_word_music_owner ? ` — ${seg.spoken_word_music_owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
       )}
       {seg.spoken_word_notes && <InfoRow label={es ? 'Notas' : 'Notes'} value={seg.spoken_word_notes} />}
     </div>
