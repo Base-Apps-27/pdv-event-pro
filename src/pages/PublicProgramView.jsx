@@ -163,19 +163,17 @@ export default function PublicProgramView() {
     }
   }, [cacheContextType, cacheContextId, isCacheLoading, autoDetected, preloadedEventId, preloadedServiceId, preloadedDate, preloadedSlug]);
 
-  // Determine if the current selection matches the cached program.
-  // DECISION (2026-02-27): Services ALWAYS fetch fresh via getPublicProgramData,
-  // just like events do. The cache snapshot was causing stale data issues —
-  // newly created services had no actions in the snapshot because the cache
-  // hadn't been rebuilt yet. Events already worked this way (fresh fetch on select).
-  // Cache is still used for: auto-detection, selector options, TV Display, MyProgram.
+  // PERF (2026-02-28): Stale-while-revalidate for BOTH events and services.
+  // Previous decision (2026-02-27) always fetched fresh for services, causing 5-7s delays.
+  // Now: if the cache has the selected program, show it INSTANTLY and revalidate in background.
+  // Entity automations rebuild the cache on every change, so it's almost always current.
+  // The explicit fetch still runs as a background revalidation — user sees data in <500ms.
   const isCachedSelection = useMemo(() => {
-    if (!cacheContextId) return false;
-    // Events: use cache when it matches (events are rebuilt by entity automations)
+    if (!cacheContextId || !cacheProgramData) return false;
     if (viewType === 'event' && selectedEventId === cacheContextId) return true;
-    // Services: NEVER use cache in Live View — always fetch fresh
+    if (viewType === 'service' && selectedServiceId === cacheContextId) return true;
     return false;
-  }, [viewType, selectedEventId, cacheContextId]);
+  }, [viewType, selectedEventId, selectedServiceId, cacheContextId, cacheProgramData]);
 
   // When selection matches cache → use cached snapshot directly (zero latency)
   // When user picks a DIFFERENT event/service → fetch via getPublicProgramData
