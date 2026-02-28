@@ -9,6 +9,7 @@ import React, { useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ArtsSongSlots from './ArtsSongSlots';
+import FileOrLinkInput from './FileOrLinkInput';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', OTHER: '✨ Otro' };
 
@@ -172,7 +173,16 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                     : <><strong>General:</strong> Google Drive, OneDrive o Dropbox (acceso "público" requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox ("public" access required). Spotify/YouTube accepted but not recommended.</em></>
                                 }
                             </div>
-                            <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Enlace / Link</label><input type="url" value={seg.video_url || ''} onChange={e => updateField('video_url', e.target.value)} placeholder="https://drive.google.com/..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                            <div className="mb-3">
+                                <FileOrLinkInput
+                                    value={seg.video_url || ''}
+                                    onChange={v => updateField('video_url', v)}
+                                    label="Enlace / Link"
+                                    accept=".mp4,.mov,.webm"
+                                    placeholder="https://drive.google.com/..."
+                                    helpText="Suba un video (≤50MB) o pegue un enlace a Drive/Dropbox. / Upload a video (≤50MB) or paste a Drive/Dropbox link."
+                                />
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Duración (seg) / Length (sec)</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Responsable / Owner</label><input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
@@ -195,8 +205,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         <div className="text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 bg-blue-50 border-[#1F8A70] text-blue-800">
                             <strong>Instrucción:</strong> Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc. / <em>Ensure the link has public permissions. Preferred: PDF or Google Doc.</em>
                         </div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Enlace (PDF/Documento) / Link</label>
-                        <input type="url" value={seg.arts_run_of_show_url || ''} onChange={e => updateField('arts_run_of_show_url', e.target.value)} placeholder="https://drive.google.com/..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
+                        <FileOrLinkInput
+                            value={seg.arts_run_of_show_url || ''}
+                            onChange={v => updateField('arts_run_of_show_url', v)}
+                            label="Enlace (PDF/Documento) / Link"
+                            accept=".pdf,.doc,.docx,image/*"
+                            placeholder="https://drive.google.com/..."
+                            helpText="Suba un PDF/imagen o pegue un enlace. / Upload a PDF/image or paste a link."
+                        />
                     </div>
 
                     {/* Notes */}

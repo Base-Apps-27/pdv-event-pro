@@ -3,8 +3,10 @@
  * 
  * Song slot cards for dance/drama sections in the arts form.
  * CSP Migration (2026-02-27): Replaces inline JS renderSongSlots from serveArtsSubmission.
+ * 2026-02-28: Song URL fields upgraded to FileOrLinkInput (upload + link hybrid).
  */
 import React from 'react';
+import FileOrLinkInput from './FileOrLinkInput';
 
 function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChange, onOwnerChange }) {
     return (
@@ -17,18 +19,19 @@ function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChang
                 <input type="text" value={titleVal} onChange={e => onTitleChange(e.target.value)}
                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Responsable / Owner</label>
-                    <input type="text" value={ownerVal} onChange={e => onOwnerChange(e.target.value)}
-                        className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
-                </div>
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Enlace / Link</label>
-                    <input type="url" value={urlVal} onChange={e => onUrlChange(e.target.value)} placeholder="https://drive.google.com/..."
-                        className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
-                </div>
+            <div className="mb-2">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Responsable / Owner</label>
+                <input type="text" value={ownerVal} onChange={e => onOwnerChange(e.target.value)}
+                    className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
+            <FileOrLinkInput
+                value={urlVal}
+                onChange={onUrlChange}
+                label="Enlace / Link"
+                accept=".mp3,.wav,.mp4,.ogg,.webm"
+                placeholder="https://drive.google.com/..."
+                helpText="Suba un archivo de audio/video o pegue un enlace. / Upload an audio/video file or paste a link."
+            />
         </div>
     );
 }
