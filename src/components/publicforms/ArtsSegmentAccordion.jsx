@@ -295,35 +295,26 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         </div>
                     )}
 
-                    {/* Spoken Word Section — expanded 2026-02-28 with description, speaker, script per arts admin feedback */}
+                    {/* Spoken Word Section — expanded 2026-02-28 with description, speaker, script, audio per arts admin feedback
+                       File uploads use CompactFileAttach (Option A) to reduce visual noise while keeping contextual placement. */}
                     {types.includes('SPOKEN_WORD') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
                             <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎤 SPOKEN WORD', '🎤 SPOKEN WORD')}</h5>
-                            {/* New: Speaker name */}
+                            {/* Speaker name */}
                             <div className="mb-3">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Nombre del Orador', 'Speaker Name')}</label>
                                 <input type="text" value={seg.spoken_word_speaker || ''} onChange={e => updateField('spoken_word_speaker', e.target.value)}
                                     placeholder={t('¿Quién presentará el spoken word?', 'Who will perform the spoken word?')}
                                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
                             </div>
-                            {/* New: Description (title, theme, context) */}
+                            {/* Description (title, theme, context) */}
                             <div className="mb-3">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Descripción / Título de la Pieza', 'Description / Piece Title')}</label>
                                 <textarea rows={2} value={seg.spoken_word_description || ''} onChange={e => updateField('spoken_word_description', e.target.value)}
                                     placeholder={t('Título, tema y contexto de la pieza...', 'Title, theme, and context of the piece...')}
                                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                             </div>
-                            {/* New: Script upload */}
-                            <div className="mb-3">
-                                <FileOrLinkInput
-                                    value={seg.spoken_word_script_url || ''}
-                                    onChange={v => updateField('spoken_word_script_url', v)}
-                                    label={t('Guión / Script', 'Script / Guide')}
-                                    accept=".pdf,.doc,.docx,.txt"
-                                    placeholder="https://drive.google.com/..."
-                                    helpText={t('Suba el guión (≤50MB) o pegue un enlace.', 'Upload the script (≤50MB) or paste a link.')}
-                                />
-                            </div>
+                            {/* Mic position */}
                             <div className="mb-3">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
                                 <select value={seg.spoken_word_mic_position || ''} onChange={e => updateField('spoken_word_mic_position', e.target.value)}
@@ -337,6 +328,29 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                     <option value="podium">{t('Podio', 'Podium')}</option>
                                 </select>
                             </div>
+
+                            {/* File attachments — CompactFileAttach (Option A): collapsed by default, expands inline on click */}
+                            <div className="space-y-2 mb-3">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{t('📎 ARCHIVOS ADJUNTOS', '📎 ATTACHMENTS')}</p>
+                                <CompactFileAttach
+                                    value={seg.spoken_word_script_url || ''}
+                                    onChange={v => updateField('spoken_word_script_url', v)}
+                                    label={t('Guión / Script', 'Script / Guide')}
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    placeholder="https://drive.google.com/..."
+                                    helpText={t('Suba el guión (≤50MB) o pegue un enlace.', 'Upload the script (≤50MB) or paste a link.')}
+                                />
+                                <CompactFileAttach
+                                    value={seg.spoken_word_audio_url || ''}
+                                    onChange={v => updateField('spoken_word_audio_url', v)}
+                                    label={t('Audio del Spoken Word', 'Spoken Word Audio')}
+                                    accept=".mp3,.wav,.ogg,.webm,.mp4"
+                                    placeholder="https://drive.google.com/..."
+                                    helpText={t('Suba la grabación de audio (≤50MB) o pegue un enlace.', 'Upload the audio recording (≤50MB) or paste a link.')}
+                                />
+                            </div>
+
+                            {/* Background music toggle */}
                             <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
                                 <input type="checkbox" checked={seg.spoken_word_has_music || false} onChange={e => updateField('spoken_word_has_music', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
                                 {t('Incluye música de fondo', 'Includes background music')}
@@ -344,8 +358,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                             {seg.spoken_word_has_music && (
                                 <div className="space-y-3 mb-3 pl-3 border-l-2 border-[#8DC63F]">
                                     <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Título de la Pista', 'Track Title')}</label><input type="text" value={seg.spoken_word_music_title || ''} onChange={e => updateField('spoken_word_music_title', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
-                                    <FileOrLinkInput value={seg.spoken_word_music_url || ''} onChange={v => updateField('spoken_word_music_url', v)} label={t('Archivo de Música', 'Music File')} accept=".mp3,.wav,.mp4,.ogg,.webm" placeholder="https://drive.google.com/..." />
-                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label><input type="text" value={seg.spoken_word_music_owner || ''} onChange={e => updateField('spoken_word_music_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                    <CompactFileAttach
+                                        value={seg.spoken_word_music_url || ''}
+                                        onChange={v => updateField('spoken_word_music_url', v)}
+                                        label={t('Archivo de Música', 'Music File')}
+                                        accept=".mp3,.wav,.mp4,.ogg,.webm"
+                                        placeholder="https://drive.google.com/..."
+                                    />
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Persona a cargo', 'Person in charge')}</label><input type="text" value={seg.spoken_word_music_owner || ''} onChange={e => updateField('spoken_word_music_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 </div>
                             )}
                             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label><textarea rows={2} value={seg.spoken_word_notes || ''} onChange={e => updateField('spoken_word_notes', e.target.value)} placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
