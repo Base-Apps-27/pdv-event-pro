@@ -320,11 +320,10 @@ export default function PublicProgramView() {
     refetchInterval: 30000,  // Safety net: 30s poll (not time-critical, only for history modal)
   });
 
-  // LiveTimeAdjustment subscription for explicit-fetch path only.
-  // Cached path: handled by entity automation → refreshActiveProgram → ActiveProgramCache sub.
+  // LiveTimeAdjustment subscription — invalidates explicit fetch on adjustment changes.
+  // PERF (2026-02-28): Always subscribe (explicit fetch now runs for all selections as revalidation).
   useEffect(() => {
     if (!currentUser || viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
-    if (isCachedSelection) return; // Cached path already handles this
 
     const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
       if (event.data?.date === rawServiceData.date && event.data?.service_id === selectedServiceId) {
