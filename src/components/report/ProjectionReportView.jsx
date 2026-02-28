@@ -8,6 +8,8 @@ import React from "react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
 import PreSessionDetailsBlock from "./PreSessionDetailsBlock";
+// 2026-02-28: Smart routing surfaces arts data relevant to projection (video, cues, scripts)
+import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 
 export default function ProjectionReportView({ eventSessions, getSessionSegments, allPreSessionDetails }) {
   const { t } = useLanguage();
@@ -56,33 +58,26 @@ export default function ProjectionReportView({ eventSessions, getSessionSegments
                           </div>
                         )}
 
-                        {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
-                          <div className="bg-pink-50 px-1 py-0.5 rounded border border-pink-200 text-[10px]">
-                            <span className="font-bold text-pink-700">ARTES:</span>
-                            <span className="text-gray-700 ml-1">{segment.art_types.map(at => at === "DANCE" ? "Danza" : at === "DRAMA" ? "Drama" : at === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
-                            {/* DRAMA: cues + optional song title for projection */}
-                            {segment.art_types.includes("DRAMA") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300 space-y-0.5">
-                                {segment.drama_start_cue && <div>{t('arts.cues.start')}: {segment.drama_start_cue}</div>}
-                                {segment.drama_end_cue && <div>{t('arts.cues.end')}: {segment.drama_end_cue}</div>}
-                                {segment.drama_has_song && segment.drama_song_title && (
-                                  <div>{t('arts.song')}: {segment.drama_song_title}</div>
-                                )}
+                        {/* 2026-02-28: Replaced hardcoded arts rendering with smart routing.
+                         * getArtsSmartNotes('projection') returns only projection-relevant items:
+                         * video info, cues, scripts, run-of-show. Complete coverage of all art types. */}
+                        {(() => {
+                          const artsItems = getArtsSmartNotes(segment, 'projection', language);
+                          if (artsItems.length === 0) return null;
+                          return (
+                            <div className="bg-pink-50 px-1 py-0.5 rounded border border-dashed border-pink-300 text-[10px]">
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <span className="font-bold text-pink-700">🎭 ARTES</span>
+                                <span className="text-[8px] bg-white/80 border border-gray-200 text-gray-400 px-1 rounded-full">AUTO</span>
                               </div>
-                            )}
-                            {/* DANCE: song title for projection */}
-                            {segment.art_types.includes("DANCE") && (
-                              <div className="mt-0.5 pl-2 border-l-2 border-pink-300">
-                                {segment.dance_has_song && segment.dance_song_title && (
-                                  <div>{t('arts.music')}: {segment.dance_song_title}</div>
-                                )}
-                              </div>
-                            )}
-                            {segment.art_types.includes("OTHER") && segment.art_other_description && (
-                              <div className="mt-0.5 text-gray-600">{segment.art_other_description}</div>
-                            )}
-                          </div>
-                        )}
+                              {artsItems.map((item, i) => (
+                                <div key={i} className="leading-tight text-gray-700">
+                                  {item.icon} {item.label}: {item.value}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
 
                         {segment.projection_notes && (
                           <div className="bg-slate-100 px-1 py-0.5 rounded border border-slate-300">
@@ -91,7 +86,7 @@ export default function ProjectionReportView({ eventSessions, getSessionSegments
                           </div>
                         )}
 
-                        {!segment.has_video && !(segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0) && !segment.projection_notes && (
+                        {!segment.has_video && getArtsSmartNotes(segment, 'projection', language).length === 0 && !segment.projection_notes && (
                           <span className="italic text-gray-400">Sin notas específicas</span>
                         )}
                       </div>
