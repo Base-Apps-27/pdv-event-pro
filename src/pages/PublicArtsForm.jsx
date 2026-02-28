@@ -15,6 +15,7 @@ import ArtsGateForm from '@/components/publicforms/ArtsGateForm';
 import ArtsSegmentAccordion, { calcSegmentStatus } from '@/components/publicforms/ArtsSegmentAccordion';
 import ArtsProgressStrip from '@/components/publicforms/ArtsProgressStrip';
 import ArtsStickyBar from '@/components/publicforms/ArtsStickyBar';
+import ArtsChangeHistory from '@/components/publicforms/ArtsChangeHistory';
 import { PublicFormLangProvider, usePublicLang } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
@@ -86,7 +87,7 @@ export default function PublicArtsForm() {
           {!gateUser ? (
             <ArtsGateForm onEnter={setGateUser} />
           ) : (
-            <ArtsFormContent segments={segments} gateUser={gateUser} isUnica={isUnica} />
+            <ArtsFormContent segments={segments} gateUser={gateUser} isUnica={isUnica} eventId={event?.id} />
           )}
         </div>
       </div>
@@ -103,7 +104,7 @@ export default function PublicArtsForm() {
  * - handleSave exposed from children is stable (useCallback + ref pattern in accordion)
  * - Sticky bar correctly wired via save state collection
  */
-function ArtsFormContent({ segments: initialSegments, gateUser, isUnica }) {
+function ArtsFormContent({ segments: initialSegments, gateUser, isUnica, eventId }) {
   const { t } = usePublicLang();
   const [openSegmentId, setOpenSegmentId] = useState(null);
   const [saveStates, setSaveStates] = useState({}); // { [segId]: { saving, saveMsg, handleSave, segmentTitle } }
@@ -160,6 +161,9 @@ function ArtsFormContent({ segments: initialSegments, gateUser, isUnica }) {
         )}
       </div>
 
+      {/* Change history — collapsible panel for collaborative visibility */}
+      {eventId && <ArtsChangeHistory eventId={eventId} />}
+
       {/* Progress strip — scrollable pill bar for quick navigation */}
       <ArtsProgressStrip segments={stripData} activeSegmentId={openSegmentId} onSegmentTap={handleStripTap} />
 
@@ -176,6 +180,7 @@ function ArtsFormContent({ segments: initialSegments, gateUser, isUnica }) {
               segment={seg}
               submitterName={gateUser.name}
               submitterEmail={gateUser.email}
+              honeypot={gateUser.website || ''}
               isUnica={isUnica}
               isOpen={openSegmentId === seg.id}
               onToggle={handleToggle}

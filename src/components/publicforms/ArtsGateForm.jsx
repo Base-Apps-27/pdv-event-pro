@@ -12,6 +12,7 @@ export default function ArtsGateForm({ onEnter }) {
     const { t } = usePublicLang();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [website, setWebsite] = useState(''); // Honeypot field — hidden from humans, bots fill it
     const [error, setError] = useState('');
 
     const handleSubmit = () => {
@@ -28,7 +29,7 @@ export default function ArtsGateForm({ onEnter }) {
             eventName: 'arts_gate_entered',
             properties: { success: true }
         });
-        onEnter({ name, email });
+        onEnter({ name, email, website });
     };
 
     return (
@@ -53,6 +54,17 @@ export default function ArtsGateForm({ onEnter }) {
                 placeholder={t('Correo electrónico', 'Email')}
                 className="w-full p-3 border border-gray-200 rounded-md text-sm bg-white mb-3 focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
             />
+            {/* Honeypot: invisible to humans, bots auto-fill it. aria-hidden + tabIndex=-1 + absolute offscreen */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} aria-hidden="true">
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={e => setWebsite(e.target.value)}
+              />
+            </div>
             {error && <p className="text-red-700 text-sm mb-3">{error}</p>}
             <button
                 onClick={handleSubmit}

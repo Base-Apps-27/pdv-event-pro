@@ -96,7 +96,7 @@ function formatTime(t) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
 
-export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica, isOpen, onToggle, onSaveStateChange, onSegmentDataChange }) {
+export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, honeypot, isUnica, isOpen, onToggle, onSaveStateChange, onSegmentDataChange }) {
   const { t, lang } = usePublicLang();
   const [seg, setSeg] = useState({ ...initialSeg });
   const [saving, setSaving] = useState(false);
@@ -142,6 +142,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
       segment_id: currentSeg.id,
       submitter_name: submitterName,
       submitter_email: submitterEmail,
+      // Honeypot: passed through from gate form. Backend silently rejects if filled.
+      ...(honeypot ? { website: honeypot } : {}),
       data: {
         art_types: currentSeg.art_types || [],
         dance_has_song: currentSeg.dance_has_song || false, dance_handheld_mics: currentSeg.dance_handheld_mics ?? '', dance_headset_mics: currentSeg.dance_headset_mics ?? '',
@@ -202,7 +204,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     } finally {
       setSaving(false);
     }
-  }, [submitterName, submitterEmail]);
+  }, [submitterName, submitterEmail, honeypot]);
 
   // Expose save handler + state to parent (for sticky bar).
   // Uses handleSave ref via useCallback — must be below handleSave definition.
