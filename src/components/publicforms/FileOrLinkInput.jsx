@@ -22,6 +22,7 @@
 import React, { useState, useRef, useContext } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Upload, Link2, X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { PublicFormLangContext } from './PublicFormLangContext';
 
 // Supported upload formats on Base44 (from platform docs)
 const SUPPORTED_EXTENSIONS = [
@@ -59,7 +60,6 @@ export default function FileOrLinkInput({
 
   // Direct context consumption — safe outside the Provider (falls back to ES default).
   // When rendered on admin pages without PublicFormLangProvider, default context value is used.
-  const { PublicFormLangContext } = require('./PublicFormLangContext');
   const langCtx = useContext(PublicFormLangContext);
   const tFn = langCtx.t;
 
