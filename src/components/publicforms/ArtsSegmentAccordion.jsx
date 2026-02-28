@@ -196,6 +196,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     }
   }, [submitterName, submitterEmail]);
 
+  // Expose save handler + state to parent (for sticky bar).
+  // Uses handleSave ref via useCallback — must be below handleSave definition.
+  useEffect(() => {
+    if (onSaveStateChange) {
+      onSaveStateChange(seg.id, { saving, saveMsg, handleSave, segmentTitle: seg.title });
+    }
+  }, [saving, saveMsg, seg.title, handleSave, onSaveStateChange, seg.id]);
+
   const status = calcSegmentStatus(seg);
   const types = seg.art_types || [];
   const statusColors = { incomplete: 'bg-red-100 text-red-800', minimum: 'bg-yellow-100 text-yellow-800', complete: 'bg-green-100 text-green-800' };
