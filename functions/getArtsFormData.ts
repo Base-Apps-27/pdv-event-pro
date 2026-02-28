@@ -140,9 +140,30 @@ Deno.serve(async (req) => {
                 video_owner: seg.video_owner || '',
                 video_length_sec: seg.video_length_sec || 0,
                 video_location: seg.video_location || '',
+                // Spoken Word (2026-02-28: added per Hybrid UX refactor)
+                spoken_word_mic_position: seg.spoken_word_mic_position || '',
+                spoken_word_has_music: seg.spoken_word_has_music || false,
+                spoken_word_music_title: seg.spoken_word_music_title || '',
+                spoken_word_music_url: seg.spoken_word_music_url || '',
+                spoken_word_music_owner: seg.spoken_word_music_owner || '',
+                spoken_word_notes: seg.spoken_word_notes || '',
+                spoken_word_description: seg.spoken_word_description || '',
+                spoken_word_speaker: seg.spoken_word_speaker || '',
+                spoken_word_script_url: seg.spoken_word_script_url || '',
+                spoken_word_audio_url: seg.spoken_word_audio_url || '',
+                // Painting (2026-02-28: added per Hybrid UX refactor)
+                painting_needs_easel: seg.painting_needs_easel || false,
+                painting_needs_drop_cloth: seg.painting_needs_drop_cloth || false,
+                painting_needs_lighting: seg.painting_needs_lighting || false,
+                painting_canvas_size: seg.painting_canvas_size || '',
+                painting_other_setup: seg.painting_other_setup || '',
+                painting_notes: seg.painting_notes || '',
                 // Other
                 art_other_description: seg.art_other_description || '',
                 arts_run_of_show_url: seg.arts_run_of_show_url || '',
+                // Last submission info
+                arts_last_submitted_by: seg.arts_last_submitted_by || '',
+                arts_last_submitted_at: seg.arts_last_submitted_at || '',
             };
         });
 
