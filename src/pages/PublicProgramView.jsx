@@ -175,8 +175,10 @@ export default function PublicProgramView() {
     return false;
   }, [viewType, selectedEventId, selectedServiceId, cacheContextId, cacheProgramData]);
 
-  // When selection matches cache → use cached snapshot directly (zero latency)
-  // When user picks a DIFFERENT event/service → fetch via getPublicProgramData
+  // PERF (2026-02-28): Two-tier data strategy:
+  // Tier 1 (instant): Cache snapshot from ActiveProgramCache — shown immediately.
+  // Tier 2 (background): Fresh fetch from getPublicProgramData — replaces cache data when ready.
+  // For non-cached selections (user picked a different event/service), Tier 2 is the only source.
   const { data: explicitFetchData, isLoading: isExplicitLoading, refetch: refetchExplicit } = useQuery({
     queryKey: ['publicProgramData-explicit', selectedEventId, selectedServiceId, viewType, preloadedDate, preloadedSlug],
     queryFn: async () => {
@@ -194,17 +196,30 @@ export default function PublicProgramView() {
       if (response.status >= 400) throw new Error("Failed to fetch program data");
       return response.data;
     },
-    // Enable when user picks something NOT in cache.
-    // Services always fresh-fetch (isCachedSelection is always false for services).
-    enabled: !isCachedSelection && !!(selectedEventId || selectedServiceId || preloadedDate),
-    staleTime: 30 * 1000,    // Fresh for 30s (entity subs handle live updates)
-    refetchInterval: 30000,  // Safety net: 30s poll (subs are primary update channel)
+    // Always fetch fresh in background, even for cached selection (revalidation).
+    // But for cached selections, this runs in the background — user sees cache instantly.
+    enabled: !!(selectedEventId || selectedServiceId || preloadedDate),
+    staleTime: 30 * 1000,
+    refetchInterval: 30000,
   });
 
-  // Merge: cache-first, fallback to explicit fetch
-  const programData = isCachedSelection ? cacheProgramData : (explicitFetchData || null);
-  const isLoadingProgram = isCachedSelection ? isCacheLoading : isExplicitLoading;
-  const refetchProgram = isCachedSelection ? (() => {}) : refetchExplicit;
+  // Merge: cache-first with background revalidation
+  // If we have cache data for this selection, show it instantly. 
+  // Once explicit fetch completes, it takes over (fresher data).
+  const programData = useMemo(() => {
+    // Tier 2 (fresh) takes priority when available
+    if (explicitFetchData) return explicitFetchData;
+    // Tier 1 (cache) for instant display while Tier 2 loads
+    if (isCachedSelection && cacheProgramData) return cacheProgramData;
+    return null;
+  }, [explicitFetchData, isCachedSelection, cacheProgramData]);
+
+  // Loading state: only show skeleton when we have NO data at all
+  // If cache provides data, loading is false even while explicit fetch runs in background
+  const isLoadingProgram = isCachedSelection
+    ? (isCacheLoading && !cacheProgramData) // Cache: only loading on first fetch
+    : (isExplicitLoading && !explicitFetchData); // Non-cache: only loading on first fetch
+  const refetchProgram = refetchExplicit;
 
   // Derived state from programData — works for both cache snapshot and explicit fetch shapes
   const sessions = programData?.sessions || [];
