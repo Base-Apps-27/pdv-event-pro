@@ -142,6 +142,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 spoken_word_description: seg.spoken_word_description || '',
                 spoken_word_speaker: seg.spoken_word_speaker || '',
                 spoken_word_script_url: seg.spoken_word_script_url || '',
+                spoken_word_audio_url: seg.spoken_word_audio_url || '',
                 // Painting
                 painting_needs_easel: seg.painting_needs_easel || false, painting_needs_drop_cloth: seg.painting_needs_drop_cloth || false,
                 painting_needs_lighting: seg.painting_needs_lighting || false, painting_canvas_size: seg.painting_canvas_size || '',
@@ -279,7 +280,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                 }
                             </div>
                             <div className="mb-3">
-                                <FileOrLinkInput
+                                <CompactFileAttach
                                     value={seg.video_url || ''}
                                     onChange={v => updateField('video_url', v)}
                                     label={t('Video Final', 'Final Video')}
@@ -406,7 +407,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                 'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
                             )}
                         </div>
-                        <FileOrLinkInput
+                        <CompactFileAttach
                             value={seg.arts_run_of_show_url || ''}
                             onChange={v => updateField('arts_run_of_show_url', v)}
                             label={t('Guía Final (PDF/Documento)', 'Final Run of Show (PDF/Document)')}
