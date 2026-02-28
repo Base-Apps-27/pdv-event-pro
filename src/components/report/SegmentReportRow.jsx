@@ -189,7 +189,7 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
         {segment.segment_type === "Artes" && segment.art_types && segment.art_types.length > 0 && (
           <div className="text-[9px] bg-pink-50 px-0.5 py-0.5 rounded border border-pink-200 leading-tight">
             <span className="text-pink-700 font-bold">ARTES:</span>
-            <span className="text-gray-700 ml-0.5">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : "Otro").join(", ")}</span>
+            <span className="text-gray-700 ml-0.5">{segment.art_types.map(t => t === "DANCE" ? "Danza" : t === "DRAMA" ? "Drama" : t === "VIDEO" ? "Video" : t === "SPOKEN_WORD" ? "Spoken Word" : t === "PAINTING" ? "Pintura" : "Otro").join(", ")}</span>
 
             {segment.art_types.includes("DRAMA") && (
               <div className="mt-0.5 pl-1 border-l border-pink-300">
@@ -213,6 +213,29 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
                 )}
                 {segment.dance_handheld_mics > 0 && <span className="inline">{t('arts.mics.handheld')}: {segment.dance_handheld_mics} • </span>}
                 {segment.dance_headset_mics > 0 && <span className="inline">{t('arts.mics.headset')}: {segment.dance_headset_mics}</span>}
+              </div>
+            )}
+
+            {/* Spoken Word details in report (2026-02-28) */}
+            {segment.art_types.includes("SPOKEN_WORD") && (
+              <div className="mt-0.5 pl-1 border-l border-pink-300">
+                {segment.spoken_word_speaker && <span className="inline font-semibold">{segment.spoken_word_speaker} • </span>}
+                {segment.spoken_word_description && <span className="inline">{segment.spoken_word_description} • </span>}
+                {segment.spoken_word_mic_position && <span className="inline">Mic: {segment.spoken_word_mic_position} • </span>}
+                {segment.spoken_word_has_music && segment.spoken_word_music_title && (
+                  <span className="inline">🎵 {segment.spoken_word_music_title}</span>
+                )}
+              </div>
+            )}
+
+            {/* Painting details in report (2026-02-28) */}
+            {segment.art_types.includes("PAINTING") && (
+              <div className="mt-0.5 pl-1 border-l border-pink-300">
+                {segment.painting_canvas_size && <span className="inline">Canvas: {segment.painting_canvas_size} • </span>}
+                {segment.painting_needs_easel && <span className="inline">Easel • </span>}
+                {segment.painting_needs_drop_cloth && <span className="inline">Drop cloth • </span>}
+                {segment.painting_needs_lighting && <span className="inline">Special lighting • </span>}
+                {segment.painting_other_setup && <span className="inline">{segment.painting_other_setup}</span>}
               </div>
             )}
 

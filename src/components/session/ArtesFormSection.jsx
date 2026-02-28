@@ -111,6 +111,8 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
   const hasDance = formData.art_types?.includes("DANCE");
   const hasDrama = formData.art_types?.includes("DRAMA");
   const hasArtVideo = formData.art_types?.includes("VIDEO");
+  const hasSpokenWord = formData.art_types?.includes("SPOKEN_WORD");
+  const hasPainting = formData.art_types?.includes("PAINTING");
   const hasOtherArt = formData.art_types?.includes("OTHER");
 
   return (
@@ -119,9 +121,9 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
         <Label className="font-semibold">Artes</Label>
       </div>
 
-      {/* Art Types Selection */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {['DANCE', 'DRAMA', 'VIDEO', 'OTHER'].map((opt) => (
+      {/* Art Types Selection — 2026-02-28: added SPOKEN_WORD + PAINTING to match public form */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {['DANCE', 'DRAMA', 'VIDEO', 'SPOKEN_WORD', 'PAINTING', 'OTHER'].map((opt) => (
           <label key={opt} className="flex items-center gap-2 text-sm">
             <Checkbox
               checked={Array.isArray(formData.art_types) && formData.art_types.includes(opt)}
@@ -191,6 +193,80 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           {formData.drama_has_song && (
             <SongList prefix="drama" formData={formData} setFormData={setFormData} language={language} />
           )}
+        </div>
+      )}
+
+      {/* SPOKEN_WORD Block — 2026-02-28: wired to match public form fields */}
+      {hasSpokenWord && (
+        <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+          <Label className="text-xs font-semibold text-pink-800">🎤 SPOKEN WORD</Label>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Orador' : 'Speaker'}</Label>
+            <Input value={formData.spoken_word_speaker || ""} onChange={(e) => setFormData({ ...formData, spoken_word_speaker: e.target.value })} placeholder={language === 'es' ? 'Nombre del orador' : 'Speaker name'} className="h-8 text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Descripción / Título de la pieza' : 'Description / Piece title'}</Label>
+            <Textarea rows={2} value={formData.spoken_word_description || ""} onChange={(e) => setFormData({ ...formData, spoken_word_description: e.target.value })} placeholder={language === 'es' ? 'Tema, contexto...' : 'Theme, context...'} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Posición del Micrófono' : 'Mic Position'}</Label>
+            <select value={formData.spoken_word_mic_position || ""} onChange={(e) => setFormData({ ...formData, spoken_word_mic_position: e.target.value })} className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md">
+              <option value="">{language === 'es' ? 'Seleccione...' : 'Select...'}</option>
+              <option value="headset">Headset</option>
+              <option value="handheld">Handheld</option>
+              <option value="stand">{language === 'es' ? 'Atril / Stand' : 'Stand'}</option>
+              <option value="off_stage">{language === 'es' ? 'Fuera del escenario' : 'Off Stage'}</option>
+              <option value="lapel">Lapel</option>
+              <option value="podium">{language === 'es' ? 'Podio' : 'Podium'}</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Guión / Script (URL)' : 'Script / Guide (URL)'}</Label>
+            <Input value={formData.spoken_word_script_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_script_url: e.target.value })} placeholder="https://..." className="h-8 text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Audio del Spoken Word (URL)' : 'Spoken Word Audio (URL)'}</Label>
+            <Input value={formData.spoken_word_audio_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_audio_url: e.target.value })} placeholder="https://..." className="h-8 text-sm" />
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Checkbox id="spoken_word_has_music" checked={formData.spoken_word_has_music} onCheckedChange={(checked) => setFormData({ ...formData, spoken_word_has_music: checked })} />
+            <label htmlFor="spoken_word_has_music" className="text-xs">{language === 'es' ? 'Incluye música de fondo' : 'Includes background music'}</label>
+          </div>
+          {formData.spoken_word_has_music && (
+            <div className="space-y-2 pl-3 border-l-2 border-pink-200">
+              <Input value={formData.spoken_word_music_title || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_title: e.target.value })} placeholder={language === 'es' ? 'Título de la pista' : 'Track title'} className="h-8 text-sm" />
+              <Input value={formData.spoken_word_music_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_url: e.target.value })} placeholder={language === 'es' ? 'Enlace al archivo de música' : 'Music file URL'} className="h-8 text-sm" />
+              <Input value={formData.spoken_word_music_owner || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_owner: e.target.value })} placeholder={language === 'es' ? 'Persona a cargo' : 'Person in charge'} className="h-8 text-sm" />
+            </div>
+          )}
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Notas adicionales' : 'Additional notes'}</Label>
+            <Textarea rows={2} value={formData.spoken_word_notes || ""} onChange={(e) => setFormData({ ...formData, spoken_word_notes: e.target.value })} className="text-sm" />
+          </div>
+        </div>
+      )}
+
+      {/* PAINTING Block — 2026-02-28: wired to match public form fields */}
+      {hasPainting && (
+        <div className="space-y-3 bg-white p-3 rounded border border-pink-100">
+          <Label className="text-xs font-semibold text-pink-800">🎨 {language === 'es' ? 'PINTURA' : 'PAINTING'}</Label>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs"><Checkbox checked={formData.painting_needs_easel} onCheckedChange={(c) => setFormData({ ...formData, painting_needs_easel: c })} />{language === 'es' ? 'Caballete' : 'Easel'}</label>
+            <label className="flex items-center gap-2 text-xs"><Checkbox checked={formData.painting_needs_drop_cloth} onCheckedChange={(c) => setFormData({ ...formData, painting_needs_drop_cloth: c })} />{language === 'es' ? 'Protección de piso' : 'Drop Cloth'}</label>
+            <label className="flex items-center gap-2 text-xs"><Checkbox checked={formData.painting_needs_lighting} onCheckedChange={(c) => setFormData({ ...formData, painting_needs_lighting: c })} />{language === 'es' ? 'Iluminación especial' : 'Special Lighting'}</label>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Tamaño del lienzo' : 'Canvas size'}</Label>
+            <Input value={formData.painting_canvas_size || ""} onChange={(e) => setFormData({ ...formData, painting_canvas_size: e.target.value })} placeholder={language === 'es' ? 'Ej: 24x36 pulgadas' : 'E.g. 24x36 inches'} className="h-8 text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Otros requisitos de montaje' : 'Other setup requirements'}</Label>
+            <Textarea rows={2} value={formData.painting_other_setup || ""} onChange={(e) => setFormData({ ...formData, painting_other_setup: e.target.value })} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Notas adicionales' : 'Additional notes'}</Label>
+            <Textarea rows={2} value={formData.painting_notes || ""} onChange={(e) => setFormData({ ...formData, painting_notes: e.target.value })} className="text-sm" />
+          </div>
         </div>
       )}
 

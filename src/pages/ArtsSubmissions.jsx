@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Palette, Search, User, Clock, FileText, ChevronDown, ChevronRight } from "lucide-react";
 
 // ART_TYPE display labels (bilingual)
-const ART_TYPE_LABELS = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', OTHER: 'Otro' };
+const ART_TYPE_LABELS = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
 
 function SubmissionRow({ log, language }) {
   const [expanded, setExpanded] = useState(false);
@@ -76,6 +76,15 @@ function SubmissionRow({ log, language }) {
                 {log.data_snapshot.dance_song_title && <p><span className="font-medium">Dance song:</span> {log.data_snapshot.dance_song_title}</p>}
                 {log.data_snapshot.arts_run_of_show_url && <p><span className="font-medium">Run of show:</span> <a href={log.data_snapshot.arts_run_of_show_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline truncate">{log.data_snapshot.arts_run_of_show_url}</a></p>}
                 {log.data_snapshot.art_other_description && <p><span className="font-medium">Other:</span> {log.data_snapshot.art_other_description}</p>}
+                {/* Spoken Word snapshot fields (2026-02-28) */}
+                {log.data_snapshot.spoken_word_speaker && <p><span className="font-medium">Speaker:</span> {log.data_snapshot.spoken_word_speaker}</p>}
+                {log.data_snapshot.spoken_word_description && <p><span className="font-medium">Spoken Word:</span> {log.data_snapshot.spoken_word_description}</p>}
+                {log.data_snapshot.spoken_word_script_url && <p><span className="font-medium">Script:</span> <a href={log.data_snapshot.spoken_word_script_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline truncate">{log.data_snapshot.spoken_word_script_url}</a></p>}
+                {log.data_snapshot.spoken_word_audio_url && <p><span className="font-medium">Audio:</span> <a href={log.data_snapshot.spoken_word_audio_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline truncate">{log.data_snapshot.spoken_word_audio_url}</a></p>}
+                {log.data_snapshot.spoken_word_mic_position && <p><span className="font-medium">Mic:</span> {log.data_snapshot.spoken_word_mic_position}</p>}
+                {/* Painting snapshot fields (2026-02-28) */}
+                {log.data_snapshot.painting_canvas_size && <p><span className="font-medium">Canvas:</span> {log.data_snapshot.painting_canvas_size}</p>}
+                {log.data_snapshot.painting_notes && <p><span className="font-medium">Painting notes:</span> {log.data_snapshot.painting_notes}</p>}
               </div>
             </div>
           )}
