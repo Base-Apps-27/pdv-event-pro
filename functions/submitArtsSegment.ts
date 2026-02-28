@@ -23,35 +23,88 @@ Deno.serve(async (req) => {
         return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Rate limiting: 10 requests per minute per IP
+    // ── RATE LIMITING (2026-02-28: hardened with dual keys — IP + email) ──
     const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
-    const windowMs = 60000;
-    const maxAttempts = 10;
+    const windowMs = 60000; // 1 minute window
+    const maxPerIp = 8;     // 8 saves per minute per IP (down from 10)
 
     if (!rateLimiter.has(clientIp)) rateLimiter.set(clientIp, []);
-    const attempts = rateLimiter.get(clientIp).filter(t => now - t < windowMs);
-    if (attempts.length >= maxAttempts) {
-        return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+    const ipAttempts = rateLimiter.get(clientIp).filter(t => now - t < windowMs);
+    if (ipAttempts.length >= maxPerIp) {
+        console.warn(`[ArtsSubmission] IP rate limit hit: ${clientIp}`);
+        return Response.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429, headers: corsHeaders });
     }
-    attempts.push(now);
-    rateLimiter.set(clientIp, attempts);
+    ipAttempts.push(now);
+    rateLimiter.set(clientIp, ipAttempts);
+
+    // Periodic cleanup of stale rate limiter entries (every 100 requests, prevent memory leak)
+    if (Math.random() < 0.01) {
+        for (const [key, arr] of rateLimiter.entries()) {
+            const fresh = arr.filter(t => now - t < windowMs * 5);
+            if (fresh.length === 0) rateLimiter.delete(key);
+            else rateLimiter.set(key, fresh);
+        }
+    }
 
     try {
         const base44 = createClientFromRequest(req);
-        const { segment_id, submitter_name, submitter_email, data } = await req.json();
 
-        if (!segment_id) {
+        // ── PARSE & VALIDATE BODY (2026-02-28: size guard) ──
+        const rawBody = await req.text();
+        const MAX_BODY_SIZE = 100_000; // 100KB — generous for form data, blocks blob injection
+        if (rawBody.length > MAX_BODY_SIZE) {
+            console.warn(`[ArtsSubmission] Payload too large: ${rawBody.length} bytes from ${clientIp}`);
+            return Response.json({ error: 'Payload too large' }, { status: 413, headers: corsHeaders });
+        }
+        const body = JSON.parse(rawBody);
+        const { segment_id, submitter_name, submitter_email, data } = body;
+
+        // ── HONEYPOT CHECK (2026-02-28) ──
+        // The frontend includes a hidden "website" field that humans never fill.
+        // If it has a value, this is almost certainly a bot.
+        if (body.website) {
+            console.warn(`[ArtsSubmission] Honeypot triggered from ${clientIp}, email: ${submitter_email}`);
+            // Return fake success to not reveal detection — bot thinks it worked
+            return Response.json({ success: true, fields_changed: 0 }, { headers: corsHeaders });
+        }
+
+        // ── INPUT VALIDATION (2026-02-28: hardened) ──
+        if (!segment_id || typeof segment_id !== 'string') {
             return Response.json({ error: 'Missing segment_id' }, { status: 400, headers: corsHeaders });
         }
-        if (!data || typeof data !== 'object') {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
             return Response.json({ error: 'Missing data payload' }, { status: 400, headers: corsHeaders });
         }
+        if (!submitter_name || typeof submitter_name !== 'string' || submitter_name.length < 2 || submitter_name.length > 200) {
+            return Response.json({ error: 'Invalid submitter name' }, { status: 400, headers: corsHeaders });
+        }
+        if (!submitter_email || typeof submitter_email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitter_email)) {
+            return Response.json({ error: 'Invalid email' }, { status: 400, headers: corsHeaders });
+        }
+
+        // ── PER-EMAIL RATE LIMIT (2026-02-28: prevents a single identity from rapid-fire saves) ──
+        const emailKey = `email:${submitter_email.toLowerCase()}`;
+        const maxPerEmail = 6; // 6 saves per minute per email
+        if (!rateLimiter.has(emailKey)) rateLimiter.set(emailKey, []);
+        const emailAttempts = rateLimiter.get(emailKey).filter(t => now - t < windowMs);
+        if (emailAttempts.length >= maxPerEmail) {
+            console.warn(`[ArtsSubmission] Email rate limit hit: ${submitter_email}`);
+            return Response.json({ error: 'Too many saves. Please wait a moment.' }, { status: 429, headers: corsHeaders });
+        }
+        emailAttempts.push(now);
+        rateLimiter.set(emailKey, emailAttempts);
 
         // Verify segment exists
         const segment = await base44.asServiceRole.entities.Segment.get(segment_id);
         if (!segment) {
             return Response.json({ error: 'Segment not found' }, { status: 404, headers: corsHeaders });
+        }
+
+        // ── SEGMENT TYPE GUARD (2026-02-28: only allow writes to Artes segments) ──
+        if (segment.segment_type !== 'Artes') {
+            console.warn(`[ArtsSubmission] Rejected: segment ${segment_id} is type "${segment.segment_type}", not Artes. IP: ${clientIp}`);
+            return Response.json({ error: 'This segment does not accept arts data' }, { status: 403, headers: corsHeaders });
         }
 
         // Whitelist of allowed arts fields to prevent overwriting non-arts data
