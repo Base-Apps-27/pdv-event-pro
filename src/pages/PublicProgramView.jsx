@@ -65,6 +65,8 @@ export default function PublicProgramView() {
   const isStreamMode = viewParam === 'livestream';
   
   // Top-level state for view type selection and entity selection
+  // PERF (2026-02-28): Initialize viewType from cache detection if no URL params.
+  // This avoids the "default to event → detect service → switch" flash.
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
