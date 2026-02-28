@@ -10,6 +10,7 @@ import { ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ArtsSongSlots from './ArtsSongSlots';
 import FileOrLinkInput from './FileOrLinkInput';
+import CompactFileAttach from './CompactFileAttach';
 import { usePublicLang } from './PublicFormLangContext';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', SPOKEN_WORD: '🎤 Spoken Word', PAINTING: '🎨 Pintura', OTHER: '✨ Otro' };
