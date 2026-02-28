@@ -10,6 +10,7 @@ import { ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ArtsSongSlots from './ArtsSongSlots';
 import FileOrLinkInput from './FileOrLinkInput';
+import { usePublicLang } from './PublicFormLangContext';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', OTHER: '✨ Otro' };
 
@@ -40,6 +41,7 @@ function formatTime(t) {
 }
 
 export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica }) {
+    const { t } = usePublicLang();
     const [seg, setSeg] = useState({ ...initialSeg });
     const [open, setOpen] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -118,13 +120,15 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 <div className="border-t border-gray-200 p-5 space-y-5">
                     {/* Ready-to-install guidance banner */}
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs leading-relaxed text-blue-800">
-                        <strong>⚠️ Solo material final y listo para instalar.</strong> Este formulario es para entregar archivos terminados (canciones, videos, documentos) que serán cargados en los sistemas de producción. No es un espacio para solicitar ideas o diseños creativos. Si necesita que se cree algo, coordine con la oficina para que el equipo lo prepare y luego suba el archivo final aquí.<br/>
-                        <em>Final, ready-to-install files only (songs, videos, documents). This is not a place to request ideas — if something needs to be created, contact the office to arrange it first, then upload here.</em>
+                        {t(
+                            '⚠️ Solo material final y listo para instalar. Este formulario es para entregar archivos terminados (canciones, videos, documentos) que serán cargados en los sistemas de producción. Si necesita que se cree algo, coordine con la oficina primero.',
+                            '⚠️ Final, ready-to-install files only (songs, videos, documents). This form is for delivering finished files that will be loaded into production systems. If something needs to be created, contact the office first.'
+                        )}
                     </div>
 
                     {/* Art Type Selection */}
                     <div>
-                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>TIPO DE ARTE / ART TYPE</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('TIPO DE ARTE', 'ART TYPE')}</h4>
                         <div className="flex flex-wrap gap-3">
                             {['DANCE', 'DRAMA', 'VIDEO', 'OTHER'].map(t => (
                                 <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer px-3 py-2 rounded-md border transition-all ${types.includes(t) ? 'bg-blue-50 border-[#1F8A70] text-blue-800 font-semibold' : 'border-gray-200 hover:border-[#1F8A70]'}`}>
@@ -138,10 +142,10 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     {/* Dance Section — songs are primary (no toggle), cues for coordination */}
                     {types.includes('DANCE') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
-                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🩰 DANZA / DANCE</h5>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🩰 DANZA', '🩰 DANCE')}</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Inicio / Start Cue</label><textarea rows={2} value={seg.dance_start_cue || ''} onChange={e => updateField('dance_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Fin / End Cue</label><textarea rows={2} value={seg.dance_end_cue || ''} onChange={e => updateField('dance_end_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Inicio', 'Start Cue')}</label><textarea rows={2} value={seg.dance_start_cue || ''} onChange={e => updateField('dance_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Fin', 'End Cue')}</label><textarea rows={2} value={seg.dance_end_cue || ''} onChange={e => updateField('dance_end_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                             {/* Songs always shown for dance — dance primarily uses songs */}
                             <ArtsSongSlots prefix="dance" segment={seg} onFieldChange={updateField} isUnica={isUnica} />
@@ -151,18 +155,18 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     {/* Drama Section */}
                     {types.includes('DRAMA') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
-                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🎭 DRAMA</h5>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎭 DRAMA', '🎭 DRAMA')}</h5>
                             <div className="grid grid-cols-2 gap-3 mb-3">
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Handheld Mics</label><input type="number" min="0" value={seg.drama_handheld_mics || ''} onChange={e => updateField('drama_handheld_mics', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Headset Mics</label><input type="number" min="0" value={seg.drama_headset_mics || ''} onChange={e => updateField('drama_headset_mics', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Inicio / Start Cue</label><textarea rows={2} value={seg.drama_start_cue || ''} onChange={e => updateField('drama_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cue de Fin / End Cue</label><textarea rows={2} value={seg.drama_end_cue || ''} onChange={e => updateField('drama_end_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Inicio', 'Start Cue')}</label><textarea rows={2} value={seg.drama_start_cue || ''} onChange={e => updateField('drama_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Fin', 'End Cue')}</label><textarea rows={2} value={seg.drama_end_cue || ''} onChange={e => updateField('drama_end_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                             <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
                                 <input type="checkbox" checked={seg.drama_has_song || false} onChange={e => updateField('drama_has_song', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
-                                Incluye playlist/canción(es) / Includes playlist/song(s)
+                                {t('Incluye playlist/canción(es)', 'Includes playlist/song(s)')}
                             </label>
                             {seg.drama_has_song && <ArtsSongSlots prefix="drama" segment={seg} onFieldChange={updateField} isUnica={isUnica} />}
                         </div>
@@ -171,27 +175,27 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     {/* Video Section */}
                     {types.includes('VIDEO') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
-                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>🎬 VIDEO</h5>
-                            <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre del Video / Video Name</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎬 VIDEO', '🎬 VIDEO')}</h5>
+                            <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Nombre del Video', 'Video Name')}</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
                                 {isUnica
-                                    ? <><strong>Única:</strong> Suba el video final directamente o enlace desde Drive/OneDrive/Dropbox (acceso público). No Spotify/YouTube. / <em>Upload the final video directly, or link from Drive/OneDrive/Dropbox (public access). No Spotify/YouTube.</em></>
-                                    : <><strong>General:</strong> Suba el video directamente (≤50MB) o enlace desde Drive/OneDrive/Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Upload directly (≤50MB) or link from Drive/OneDrive/Dropbox (public access). Spotify/YouTube accepted but not recommended.</em></>
+                                    ? t('Suba el video final directamente o enlace desde Drive/OneDrive/Dropbox (acceso público). No Spotify/YouTube.', 'Upload the final video directly, or link from Drive/OneDrive/Dropbox (public access). No Spotify/YouTube.')
+                                    : t('Suba el video directamente (≤50MB) o enlace desde Drive/OneDrive/Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados.', 'Upload directly (≤50MB) or link from Drive/OneDrive/Dropbox (public access required). Spotify/YouTube accepted but not recommended.')
                                 }
                             </div>
                             <div className="mb-3">
                                 <FileOrLinkInput
                                     value={seg.video_url || ''}
                                     onChange={v => updateField('video_url', v)}
-                                    label="Video Final / Final Video"
+                                    label={t('Video Final', 'Final Video')}
                                     accept=".mp4,.mov,.webm"
                                     placeholder="https://drive.google.com/..."
-                                    helpText="Suba el video final (≤50MB) o pegue un enlace de descarga (Drive/Dropbox). / Upload the final video or paste a download link."
+                                    helpText={t('Suba el video final (≤50MB) o pegue un enlace de descarga.', 'Upload the final video (≤50MB) or paste a download link.')}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Duración (seg) / Length (sec)</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Responsable / Owner</label><input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label><input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                         </div>
                     )}
@@ -199,41 +203,43 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     {/* Other Section */}
                     {types.includes('OTHER') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
-                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>✨ OTRO / OTHER</h5>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción / Description</label>
-                            <textarea rows={3} value={seg.art_other_description || ''} onChange={e => updateField('art_other_description', e.target.value)} placeholder="Describe la presentación..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('✨ OTRO', '✨ OTHER')}</h5>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Descripción', 'Description')}</label>
+                            <textarea rows={3} value={seg.art_other_description || ''} onChange={e => updateField('art_other_description', e.target.value)} placeholder={t('Describe la presentación...', 'Describe the presentation...')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                         </div>
                     )}
 
                     {/* Arts Run of Show */}
                     <div>
-                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📋 GUÍA DE ARTES / ARTS RUN OF SHOW</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('📋 GUÍA DE ARTES', '📋 ARTS RUN OF SHOW')}</h4>
                         <div className="text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 bg-blue-50 border-[#1F8A70] text-blue-800">
-                            <strong>Instrucción:</strong> Suba el documento final con la guía de su presentación. El enlace debe tener permisos públicos. / <em>Upload the final run-of-show document. Links must have public access permissions.</em>
+                            {t('Suba el documento final con la guía de su presentación. El enlace debe tener permisos públicos.', 'Upload the final run-of-show document. Links must have public access permissions.')}
                         </div>
                         <FileOrLinkInput
                             value={seg.arts_run_of_show_url || ''}
                             onChange={v => updateField('arts_run_of_show_url', v)}
-                            label="Guía Final (PDF/Documento) / Final Run of Show"
+                            label={t('Guía Final (PDF/Documento)', 'Final Run of Show (PDF/Document)')}
                             accept=".pdf,.doc,.docx,image/*"
                             placeholder="https://drive.google.com/..."
-                            helpText="Suba el archivo final (≤50MB) o pegue un enlace al documento terminado. / Upload the final file or paste a link to the finished document."
+                            helpText={t('Suba el archivo final (≤50MB) o pegue un enlace.', 'Upload the final file (≤50MB) or paste a link.')}
                         />
                     </div>
 
                     {/* Notes */}
                     <div>
-                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📝 NOTAS ADICIONALES / ADDITIONAL NOTES</h4>
-                        <textarea rows={3} value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)} placeholder="Cualquier detalle adicional para el equipo técnico..." className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('📝 NOTAS ADICIONALES', '📝 ADDITIONAL NOTES')}</h4>
+                        <textarea rows={3} value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)} placeholder={t('Cualquier detalle adicional para el equipo técnico...', 'Any additional details for the technical team...')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
                     </div>
 
                     {/* Save Button — inline gradient for reliable rendering on public pages */}
                     <button onClick={handleSave} disabled={saving}
                         className="w-full py-3.5 text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         style={{ background: 'linear-gradient(90deg, #0F5C4D 0%, #4A7C2F 50%, #7A8C1A 100%)' }}>
-                        {saving ? '⏳ Guardando...' : '💾 GUARDAR PROGRESO / SAVE PROGRESS'}
+                        {saving ? t('⏳ Guardando...', '⏳ Saving...') : t('💾 GUARDAR PROGRESO', '💾 SAVE PROGRESS')}
                     </button>
-                    {saveMsg && <p className={`text-center text-sm font-medium mt-2 ${saveMsg.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>{saveMsg.text}</p>}
+                    {saveMsg && <p className={`text-center text-sm font-medium mt-2 ${saveMsg.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                        {saveMsg.type === 'success' ? t('✅ Guardado exitosamente', '✅ Saved successfully') : saveMsg.text}
+                    </p>}
                 </div>
             )}
         </div>
