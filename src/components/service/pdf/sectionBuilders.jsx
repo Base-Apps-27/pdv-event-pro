@@ -27,7 +27,9 @@ export function buildNotesCell(seg) {
   // - Translation & Stage & Decor: purple (#7C3AED text, #F5F3FF bg)
   // - Sound: red
   // - Ujieres: green
+  // 2026-02-28: Added COORDINACIÓN — was missing from event reports (present in weekly PDF + entity schema)
   const notes = [
+    { label: 'COORDINACIÓN', val: seg.coordinator_notes, color: '#F97316', bg: '#FFF7ED' },
     { label: 'PROYECCIÓN', val: seg.projection_notes, color: '#475569', bg: '#F1F5F9' },
     { label: 'SONIDO', val: seg.sound_notes, color: '#DC2626', bg: '#FEF2F2' },
     { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },

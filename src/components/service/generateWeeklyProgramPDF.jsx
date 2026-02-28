@@ -372,7 +372,8 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
     items.push({
       text: [
         { text: timeStr, bold: true, color: slotColor || BRAND.RED, fontSize: 10 * scale },
-        isSpecialSegment ? { text: '  ★ ', bold: true, color: '#F59E0B', fontSize: 10.5 * scale } : '',
+        // pdfmake: ★ replaced with ASCII-safe marker — Roboto doesn't include ★ reliably
+        isSpecialSegment ? { text: '  * ', bold: true, color: '#F59E0B', fontSize: 10.5 * scale } : '',
         { text: (isSpecialSegment ? '' : '  ') + (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
         seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
@@ -611,9 +612,10 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
       const parts = [];
       if (prepCount > 0) parts.push(`${prepCount} prep`);
       if (duringCount > 0) parts.push(`${duringCount} cue${duringCount > 1 ? 's' : ''}`);
+      // pdfmake: replaced ⚠ emoji with ASCII '!' — default Roboto font lacks ⚠ glyph
       items.push({
         text: [
-          { text: '⚠ ', bold: true, color: '#EA580C', fontSize: 7.5 * scale },
+          { text: '(!) ', bold: true, color: '#EA580C', fontSize: 7.5 * scale },
           { text: parts.join(' + '), color: '#92400E', fontSize: 7.5 * scale, italics: true, background: '#FEF3C7' }
         ],
         margin: [8, 0, 0, 2]

@@ -340,12 +340,13 @@ function buildFixedAnnouncements(announcements, globalScale = 1) {
       });
     }
 
-    // Video indicator
+    // Video indicator — pdfmake: replaced emoji with ASCII-safe marker (no NotoEmoji in announcements PDF)
     if (ann.has_video) {
       items.push({
-        text: '📹 Video',
+        text: '[VIDEO]',
         fontSize: 8 * globalScale,
         color: '#8B5CF6',
+        bold: true,
         margin: [0, 2, 0, 0]
       });
     }
@@ -431,12 +432,13 @@ function buildDynamicAnnouncements(announcements, globalScale = 1) {
       });
     }
 
-    // Video indicator
+    // Video indicator — pdfmake: replaced emoji with ASCII-safe marker (no NotoEmoji in announcements PDF)
     if (ann.has_video || ann.announcement_has_video) {
       eventItems.push({
-        text: '📹 Video',
+        text: '[VIDEO]',
         fontSize: 8 * globalScale,
         color: '#8B5CF6',
+        bold: true,
         margin: [0, 2, 0, 0]
       });
     }
