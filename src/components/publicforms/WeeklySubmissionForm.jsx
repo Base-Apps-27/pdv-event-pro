@@ -259,8 +259,6 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                 </>
             )}
 
-            </>)}  {/* end submissionPath gate */}
-
             {/* Apply to siblings — only show when path is selected */}
             {submissionPath && currentSiblings.length > 0 && (
                 <div className="mb-6">
@@ -298,6 +296,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                     {status === 'loading' ? t('Enviando...', 'Submitting...') : t('ENVIAR Y PROCESAR', 'SUBMIT & PROCESS')}
                 </button>
             )}
+
+            </>)}  {/* end submissionPath gate */}
         </form>
     );
 }
