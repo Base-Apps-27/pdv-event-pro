@@ -126,12 +126,25 @@ export default function PublicProgramView() {
   const overrideServiceId = urlParams.get('override_service_id');
   const overrideEventId = urlParams.get('override_event_id');
 
+  // MULTI-SLOT WARM CACHE (2026-02-28):
+  // Compute a dynamic cache key for the user's current selection.
+  // - 'current_display' = auto-detected (default, before user picks anything)
+  // - 'event_{id}' / 'service_{id}' = user-selected program (warm cache)
+  // This way, if another user already viewed Única, the cache has its snapshot.
+  const programCacheKey = useMemo(() => {
+    if (viewType === 'event' && selectedEventId) return `event_${selectedEventId}`;
+    if (viewType === 'service' && selectedServiceId) return `service_${selectedServiceId}`;
+    return 'current_display'; // Default: auto-detected program
+  }, [viewType, selectedEventId, selectedServiceId]);
+
   // ── CACHE-FIRST: Read from ActiveProgramCache (instant, no backend call) ──
   // This provides the auto-detected program, selector options, and full snapshot.
+  // MULTI-SLOT (2026-02-28): First try the program-specific cache key.
+  // Also always read 'current_display' for auto-detection + selector options.
   const {
     contextType: cacheContextType,
     contextId: cacheContextId,
-    programData: cacheProgramData,
+    programData: defaultCacheProgramData,
     selectorOptions: cacheSelectorOptions,
     isLoading: isCacheLoading,
     _isOverride,
@@ -139,6 +152,17 @@ export default function PublicProgramView() {
     overrideServiceId,
     overrideEventId,
   });
+
+  // Read the program-specific warm cache entry (if different from current_display)
+  const {
+    programData: warmCacheProgramData,
+    isLoading: isWarmCacheLoading,
+  } = useActiveProgramCache({
+    programCacheKey: programCacheKey !== 'current_display' ? programCacheKey : undefined,
+  });
+
+  // Merge: warm cache takes priority for the selected program's data
+  const cacheProgramData = warmCacheProgramData || defaultCacheProgramData;
 
   // Selector options always come from cache (wider window: 90d events, 7d services)
   const publicEvents = cacheSelectorOptions?.events || [];
