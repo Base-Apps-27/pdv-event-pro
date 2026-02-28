@@ -10,6 +10,7 @@
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
+import FileOrLinkInput from './FileOrLinkInput';
 
 export default function SpeakerSubmissionForm({ options }) {
     const [segmentId, setSegmentId] = useState('');
@@ -153,15 +154,13 @@ export default function SpeakerSubmissionForm({ options }) {
                     MATERIAL VISUAL Y NOTAS
                 </h3>
                 <div className="mb-4">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        Enlace a Presentación / Imágenes (Opcional)
-                    </label>
-                    <input
-                        type="url"
+                    <FileOrLinkInput
                         value={presentationUrl}
-                        onChange={e => setPresentationUrl(e.target.value)}
+                        onChange={setPresentationUrl}
+                        label="Enlace a Presentación / Imágenes (Opcional)"
+                        accept="image/*,.pdf,.pptx"
                         placeholder="https://drive.google.com/..."
-                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                        helpText="Suba un PDF/imagen o pegue un enlace a Google Slides, Canva, etc. / Upload a PDF/image or paste a link."
                     />
                 </div>
                 <div className="flex items-center gap-2 mb-3">
@@ -178,15 +177,13 @@ export default function SpeakerSubmissionForm({ options }) {
                 </div>
                 {slidesOnly && (
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                            Link de Bosquejo / Notas (PDF o Doc)
-                        </label>
-                        <input
-                            type="url"
+                        <FileOrLinkInput
                             value={notesUrl}
-                            onChange={e => setNotesUrl(e.target.value)}
+                            onChange={setNotesUrl}
+                            label="Link de Bosquejo / Notas (PDF o Doc)"
+                            accept=".pdf,.doc,.docx"
                             placeholder="Enlace a notas para el equipo de medios (Opcional)"
-                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                            helpText="Suba un PDF o pegue un enlace a un documento. / Upload a PDF or paste a document link."
                         />
                     </div>
                 )}
