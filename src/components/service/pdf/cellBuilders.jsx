@@ -308,6 +308,41 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
       }
     }
 
+    // Spoken Word details (2026-02-28: added for full arts parity in PDF)
+    if (seg.art_types.includes('SPOKEN_WORD')) {
+      const swParts = [];
+      if (seg.spoken_word_speaker) swParts.push(seg.spoken_word_speaker);
+      if (seg.spoken_word_description) swParts.push(seg.spoken_word_description);
+      if (seg.spoken_word_mic_position) swParts.push(`Mic: ${seg.spoken_word_mic_position}`);
+      if (seg.spoken_word_has_music && seg.spoken_word_music_title) swParts.push(`🎵 ${seg.spoken_word_music_title}`);
+      if (swParts.length) {
+        stack.push({
+          text: swParts.join(' • '),
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
+      }
+    }
+
+    // Painting details (2026-02-28: added for full arts parity in PDF)
+    if (seg.art_types.includes('PAINTING')) {
+      const paintParts = [];
+      if (seg.painting_canvas_size) paintParts.push(`Canvas: ${seg.painting_canvas_size}`);
+      if (seg.painting_needs_easel) paintParts.push('Easel');
+      if (seg.painting_needs_drop_cloth) paintParts.push('Drop cloth');
+      if (seg.painting_needs_lighting) paintParts.push('Special lighting');
+      if (seg.painting_other_setup) paintParts.push(seg.painting_other_setup);
+      if (paintParts.length) {
+        stack.push({
+          text: paintParts.join(' • '),
+          color: pdfTheme.text.secondary,
+          fontSize: pdfTheme.fontSize.xs,
+          margin: [0, 0, 0, 1],
+        });
+      }
+    }
+
     // Other art description
     if (seg.art_types.includes('OTHER') && seg.art_other_description) {
       stack.push({
