@@ -108,8 +108,10 @@ export function buildPdfData({ existingService, sessions, segmentsBySession, chi
       }
 
       // Sub-assignment person fields → data
+      // 2026-02-28: BUGFIX — person_field_name can be "" (empty string), which is falsy.
+      // Must check with !== undefined instead of truthiness to allow empty-string keys.
       subAssignments.forEach(sub => {
-        if (sub.person_field_name && sub._childPresenter) {
+        if (sub.person_field_name !== undefined && sub.person_field_name !== null && sub._childPresenter) {
           data[sub.person_field_name] = sub._childPresenter;
         }
       });
