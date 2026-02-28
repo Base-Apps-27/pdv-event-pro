@@ -20,6 +20,7 @@ import ArtsTypeSpokenWord from './ArtsTypeSpokenWord';
 import ArtsTypePainting from './ArtsTypePainting';
 import ArtsTypeOther from './ArtsTypeOther';
 import CompactFileAttach from './CompactFileAttach';
+import ArtsTypeOrderEditor from '@/components/session/ArtsTypeOrderEditor';
 
 const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', SPOKEN_WORD: '🎤 Spoken Word', PAINTING: '🎨 Pintura', OTHER: '✨ Otro' };
 
@@ -278,6 +279,17 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
               </ArtsTypeSection>
             );
           })}
+
+          {/* Performance order — drag-to-reorder when 2+ types selected (2026-02-28) */}
+          {types.length >= 2 && (
+            <ArtsTypeOrderEditor
+              artTypes={types}
+              artTypeOrder={seg.arts_type_order || []}
+              onChange={(newOrder) => updateField('arts_type_order', newOrder)}
+              language={lang}
+              isPublicForm={true}
+            />
+          )}
 
           {/* Common section: Run of Show + Notes — always visible when types are selected */}
           {types.length > 0 && (
