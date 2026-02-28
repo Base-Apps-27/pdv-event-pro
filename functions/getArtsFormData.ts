@@ -158,6 +158,8 @@ Deno.serve(async (req) => {
                 painting_canvas_size: seg.painting_canvas_size || '',
                 painting_other_setup: seg.painting_other_setup || '',
                 painting_notes: seg.painting_notes || '',
+                // Ordering (2026-02-28: art type performance sequence)
+                arts_type_order: seg.arts_type_order || [],
                 // Other
                 art_other_description: seg.art_other_description || '',
                 arts_run_of_show_url: seg.arts_run_of_show_url || '',
