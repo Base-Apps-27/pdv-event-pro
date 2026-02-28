@@ -100,11 +100,25 @@ Deno.serve(async (req) => {
         if (data.dance_song_source !== undefined) {
             updatePayload.dance_song_1_url_meta = null;
         }
+        if (data.dance_song_2_url !== undefined) {
+            updatePayload.dance_song_2_url_meta = null;
+        }
+        if (data.dance_song_3_url !== undefined) {
+            updatePayload.dance_song_3_url_meta = null;
+        }
         if (data.drama_song_source !== undefined) {
             updatePayload.drama_song_1_url_meta = null;
         }
-        // Clear spoken word script meta when URL changes (future-proofing)
-        // No meta field exists yet, but pattern is consistent with other URL fields
+        if (data.drama_song_2_url !== undefined) {
+            updatePayload.drama_song_2_url_meta = null;
+        }
+        if (data.drama_song_3_url !== undefined) {
+            updatePayload.drama_song_3_url_meta = null;
+        }
+        if (data.video_url !== undefined) {
+            updatePayload.video_url_meta = null;
+        }
+        // 2026-02-28 audit: clear meta for all URL fields that have _meta counterparts
 
         // ── ARTS SUBMISSION TRACKING (2026-02-27) ──
         // 1. Stamp the segment with who submitted and when
