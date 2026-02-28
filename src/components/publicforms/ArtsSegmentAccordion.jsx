@@ -178,10 +178,10 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                             <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎬 VIDEO', '🎬 VIDEO')}</h5>
                             <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Nombre del Video', 'Video Name')}</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
-                                {t(
-                                    'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
-                                    'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
-                                )}
+                                {isUnica
+                                    ? t('Solo archivos descargables: Google Drive, OneDrive o Dropbox (acceso público requerido). No Spotify/YouTube.', 'Downloadable files only: Google Drive, OneDrive, or Dropbox (public access required). No Spotify/YouTube.')
+                                    : t('Google Drive, OneDrive o Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados.', 'Google Drive, OneDrive, or Dropbox (public access required). Spotify/YouTube accepted but not recommended.')
+                                }
                             </div>
                             <div className="mb-3">
                                 <FileOrLinkInput
