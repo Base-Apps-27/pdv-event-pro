@@ -29,6 +29,13 @@ export default function ArtsTypeVideo({ seg, updateField, isUnica }) {
         placeholder="https://drive.google.com/..."
         helpText={t('Suba el video final (≤50MB) o pegue un enlace.', 'Upload the final video (≤50MB) or paste a download link.')}
       />
+      {/* Location field — parity with admin editor (2026-02-28) */}
+      <div>
+        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Ubicación', 'Location')}</label>
+        <input type="text" value={seg.video_location || ''} onChange={e => updateField('video_location', e.target.value)}
+          placeholder="ProPresenter > Videos > Opening.mp4"
+          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label>
