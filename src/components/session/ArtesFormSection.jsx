@@ -139,11 +139,11 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           <div className="grid grid-cols-2 gap-2 md:max-w-md">
             <div className="space-y-1">
               <Label className="text-xs">Handheld</Label>
-              <Input type="number" value={formData.dance_handheld_mics || ''} onChange={(e) => setFormData({ ...formData, dance_handheld_mics: e.target.value === '' ? 0 : parseInt(e.target.value) })} className="h-9 text-sm" />
+              <Input type="number" value={formData.dance_handheld_mics ?? ''} onChange={(e) => setFormData({ ...formData, dance_handheld_mics: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-9 text-sm" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Headset</Label>
-              <Input type="number" value={formData.dance_headset_mics || ''} onChange={(e) => setFormData({ ...formData, dance_headset_mics: e.target.value === '' ? 0 : parseInt(e.target.value) })} className="h-9 text-sm" />
+              <Input type="number" value={formData.dance_headset_mics ?? ''} onChange={(e) => setFormData({ ...formData, dance_headset_mics: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-9 text-sm" />
             </div>
           </div>
           <div className="space-y-1">
@@ -170,11 +170,11 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           <div className="grid grid-cols-2 gap-2 md:max-w-md">
             <div className="space-y-1">
               <Label className="text-xs">Handheld</Label>
-              <Input type="number" value={formData.drama_handheld_mics || ''} onChange={(e) => setFormData({ ...formData, drama_handheld_mics: e.target.value === '' ? 0 : parseInt(e.target.value) })} className="h-9 text-sm" />
+              <Input type="number" value={formData.drama_handheld_mics ?? ''} onChange={(e) => setFormData({ ...formData, drama_handheld_mics: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-9 text-sm" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Headset</Label>
-              <Input type="number" value={formData.drama_headset_mics || ''} onChange={(e) => setFormData({ ...formData, drama_headset_mics: e.target.value === '' ? 0 : parseInt(e.target.value) })} className="h-9 text-sm" />
+              <Input type="number" value={formData.drama_headset_mics ?? ''} onChange={(e) => setFormData({ ...formData, drama_headset_mics: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-9 text-sm" />
             </div>
           </div>
           <div className="space-y-1">

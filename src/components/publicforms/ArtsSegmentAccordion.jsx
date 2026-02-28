@@ -68,18 +68,18 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
             submitter_email: submitterEmail,
             data: {
                 art_types: seg.art_types || [],
-                dance_has_song: seg.dance_has_song || false, dance_handheld_mics: seg.dance_handheld_mics || 0, dance_headset_mics: seg.dance_headset_mics || 0,
+                dance_has_song: seg.dance_has_song || false, dance_handheld_mics: seg.dance_handheld_mics ?? '', dance_headset_mics: seg.dance_headset_mics ?? '',
                 dance_start_cue: seg.dance_start_cue || '', dance_end_cue: seg.dance_end_cue || '',
                 dance_song_title: seg.dance_song_title || '', dance_song_source: seg.dance_song_source || '', dance_song_owner: seg.dance_song_owner || '',
                 dance_song_2_title: seg.dance_song_2_title || '', dance_song_2_url: seg.dance_song_2_url || '', dance_song_2_owner: seg.dance_song_2_owner || '',
                 dance_song_3_title: seg.dance_song_3_title || '', dance_song_3_url: seg.dance_song_3_url || '', dance_song_3_owner: seg.dance_song_3_owner || '',
-                drama_has_song: seg.drama_has_song || false, drama_handheld_mics: seg.drama_handheld_mics || 0, drama_headset_mics: seg.drama_headset_mics || 0,
+                drama_has_song: seg.drama_has_song || false, drama_handheld_mics: seg.drama_handheld_mics ?? '', drama_headset_mics: seg.drama_headset_mics ?? '',
                 drama_start_cue: seg.drama_start_cue || '', drama_end_cue: seg.drama_end_cue || '',
                 drama_song_title: seg.drama_song_title || '', drama_song_source: seg.drama_song_source || '', drama_song_owner: seg.drama_song_owner || '',
                 drama_song_2_title: seg.drama_song_2_title || '', drama_song_2_url: seg.drama_song_2_url || '', drama_song_2_owner: seg.drama_song_2_owner || '',
                 drama_song_3_title: seg.drama_song_3_title || '', drama_song_3_url: seg.drama_song_3_url || '', drama_song_3_owner: seg.drama_song_3_owner || '',
                 has_video: (seg.art_types || []).includes('VIDEO'), video_name: seg.video_name || '', video_url: seg.video_url || '',
-                video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec || 0, video_location: seg.video_location || '',
+                video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec ?? '', video_location: seg.video_location || '',
                 art_other_description: seg.art_other_description || '', arts_run_of_show_url: seg.arts_run_of_show_url || '',
                 description_details: seg.description_details || '',
                 // Spoken Word
@@ -165,8 +165,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
                             <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎭 DRAMA', '🎭 DRAMA')}</h5>
                             <div className="grid grid-cols-2 gap-3 mb-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Handheld Mics</label><input type="number" min="0" value={seg.drama_handheld_mics || ''} onChange={e => updateField('drama_handheld_mics', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Headset Mics</label><input type="number" min="0" value={seg.drama_headset_mics || ''} onChange={e => updateField('drama_headset_mics', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Handheld Mics</label><input type="number" min="0" value={seg.drama_handheld_mics || ''} onChange={e => updateField('drama_handheld_mics', e.target.value === '' ? '' : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Headset Mics</label><input type="number" min="0" value={seg.drama_headset_mics || ''} onChange={e => updateField('drama_headset_mics', e.target.value === '' ? '' : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Inicio', 'Start Cue')}</label><textarea rows={2} value={seg.drama_start_cue || ''} onChange={e => updateField('drama_start_cue', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
@@ -202,7 +202,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? '' : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label><input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
                         </div>
