@@ -95,7 +95,7 @@ function formatTime(t) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
 
-export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica, isOpen, onToggle, onSaveStateChange }) {
+export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica, isOpen, onToggle, onSaveStateChange, onSegmentDataChange }) {
   const { t, lang } = usePublicLang();
   const [seg, setSeg] = useState({ ...initialSeg });
   const [saving, setSaving] = useState(false);
@@ -105,6 +105,13 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
   // Ref to always hold the latest seg for save closure (fixes stale closure bug)
   const segRef = useRef(seg);
   useEffect(() => { segRef.current = seg; }, [seg]);
+
+  // Propagate live data to parent for progress strip status calculation
+  useEffect(() => {
+    if (onSegmentDataChange) {
+      onSegmentDataChange(seg.id, seg);
+    }
+  }, [seg, onSegmentDataChange]);
 
   const updateField = useCallback((field, value) => {
     setSeg(prev => ({ ...prev, [field]: value }));
