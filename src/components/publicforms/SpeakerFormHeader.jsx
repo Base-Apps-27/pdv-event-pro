@@ -8,8 +8,10 @@
  */
 import React from 'react';
 import { Calendar, MapPin } from 'lucide-react';
+import { usePublicLang } from './PublicFormLangContext';
 
 export default function SpeakerFormHeader({ event }) {
+    const { t } = usePublicLang();
     const eventDate = event?.start_date
         ? new Date(event.start_date + 'T12:00:00').toLocaleDateString('es-ES', {
             day: 'numeric', month: 'long', year: 'numeric'
@@ -26,14 +28,13 @@ export default function SpeakerFormHeader({ event }) {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
-                    MATERIAL DE SU MENSAJE
+                    {t('MATERIAL DE SU MENSAJE', 'YOUR MESSAGE MATERIAL')}
                 </h1>
                 <h3 className="text-lg text-gray-500 tracking-wide mb-1">
-                    {event?.name || 'Evento'}
+                    {event?.name || t('Evento', 'Event')}
                 </h3>
                 <p className="text-xs text-gray-400 max-w-md mx-auto leading-snug">
-                    Entregue versículos y material final listo para proyección.<br/>
-                    <em>Submit verses and final presentation-ready material.</em>
+                    {t('Entregue versículos y material final listo para proyección.', 'Submit verses and final presentation-ready material.')}
                 </p>
                 <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (

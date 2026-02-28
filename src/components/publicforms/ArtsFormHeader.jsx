@@ -7,8 +7,10 @@
  */
 import React from 'react';
 import { Calendar, MapPin } from 'lucide-react';
+import { usePublicLang } from './PublicFormLangContext';
 
 export default function ArtsFormHeader({ event }) {
+    const { t } = usePublicLang();
     const eventDate = event?.start_date
         ? new Date(event.start_date + 'T12:00:00').toLocaleDateString('es-ES', {
             day: 'numeric', month: 'long', year: 'numeric'
@@ -23,14 +25,16 @@ export default function ArtsFormHeader({ event }) {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
-                    ENTREGA DE MATERIAL ARTÍSTICO
+                    {t('ENTREGA DE MATERIAL ARTÍSTICO', 'ARTS MATERIAL SUBMISSION')}
                 </h1>
                 <h3 className="text-lg text-gray-500 tracking-wide mb-1">
-                    {event?.name || 'Evento'}
+                    {event?.name || t('Evento', 'Event')}
                 </h3>
                 <p className="text-xs text-gray-400 max-w-md mx-auto leading-snug">
-                    Suba archivos finales listos para instalar: canciones, videos, documentos de guía.<br/>
-                    <em>Upload final, ready-to-install files: songs, videos, run-of-show documents.</em>
+                    {t(
+                        'Suba archivos finales listos para instalar: canciones, videos, documentos de guía.',
+                        'Upload final, ready-to-install files: songs, videos, run-of-show documents.'
+                    )}
                 </p>
                 <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (
