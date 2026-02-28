@@ -12,7 +12,7 @@ import PreSessionDetailsBlock from "./PreSessionDetailsBlock";
 import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 
 export default function ProjectionReportView({ eventSessions, getSessionSegments, allPreSessionDetails }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <div className="space-y-6">
