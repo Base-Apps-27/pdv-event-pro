@@ -264,6 +264,132 @@ Deno.serve(async (req) => {
       console.log(`[refreshActiveProgram] Created new cache record`);
     }
 
+    // ─── STEP 6: Rebuild warm cache entries for actively-worked programs ───
+    // MULTI-SLOT WARM CACHE (2026-02-28): When entity automations fire,
+    // also rebuild any warm cache entries (event_{id} / service_{id}) that
+    // reference the changed entity. This keeps warm caches fresh without
+    // requiring users to open the page again.
+    // Only runs on entity triggers (not manual or midnight — those handle current_display only).
+    if (trigger !== 'manual' && trigger !== 'midnight') {
+      try {
+        const allCacheEntries = await withRetry(() =>
+          base44.asServiceRole.entities.ActiveProgramCache.list('-last_refresh_at')
+        );
+
+        // Find warm cache entries (not current_display) that might need rebuilding.
+        // Filter to entries refreshed within last 7 days (stale entries ignored).
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const warmEntries = allCacheEntries.filter(entry => {
+          if (entry.cache_key === 'current_display') return false;
+          if (!entry.last_refresh_at) return false;
+          return new Date(entry.last_refresh_at) > sevenDaysAgo;
+        });
+
+        // Rebuild entries that match the changed entity or the auto-detected program
+        for (const entry of warmEntries) {
+          const entryIsEvent = entry.program_type === 'event';
+          const entryProgramId = entry.program_id;
+
+          // Check if this entry's program was affected by the trigger
+          let shouldRebuild = false;
+
+          if (changedEntityType === 'Service' && !entryIsEvent && entryProgramId === changedEntityId) {
+            shouldRebuild = true;
+          } else if (changedEntityType === 'Event' && entryIsEvent && entryProgramId === changedEntityId) {
+            shouldRebuild = true;
+          } else if (changedEntityType === 'LiveTimeAdjustment') {
+            // LiveTimeAdjustments: rebuild if the entry is a service (adjustments only apply to services)
+            shouldRebuild = !entryIsEvent;
+          } else if (['Segment', 'Session', 'SegmentAction', 'PreSessionDetails', 'StreamBlock'].includes(changedEntityType)) {
+            // For these entities, we can't cheaply check parentage without fetching.
+            // Rebuild all warm entries (capped at 5, so this is bounded).
+            shouldRebuild = true;
+          }
+
+          if (!shouldRebuild) continue;
+
+          console.log(`[refreshActiveProgram] Rebuilding warm cache: ${entry.cache_key}`);
+          try {
+            // Find the program entity
+            let programEntity = null;
+            if (entryIsEvent) {
+              const events = await withRetry(() =>
+                base44.asServiceRole.entities.Event.filter({ id: entryProgramId })
+              );
+              programEntity = events?.[0];
+            } else {
+              const services = await withRetry(() =>
+                base44.asServiceRole.entities.Service.filter({ id: entryProgramId })
+              );
+              programEntity = services?.[0];
+            }
+
+            if (!programEntity) {
+              console.log(`[refreshActiveProgram] Warm cache ${entry.cache_key}: program not found, deleting stale entry`);
+              await withRetry(() =>
+                base44.asServiceRole.entities.ActiveProgramCache.delete(entry.id)
+              );
+              continue;
+            }
+
+            const warmSnapshot = await buildProgramSnapshot(base44, programEntity, entryIsEvent);
+            await withRetry(() =>
+              base44.asServiceRole.entities.ActiveProgramCache.update(entry.id, {
+                program_snapshot: warmSnapshot,
+                program_name: programEntity.name || '',
+                last_refresh_trigger: `entity_${changedEntityType}`,
+                last_refresh_at: new Date().toISOString(),
+              })
+            );
+            console.log(`[refreshActiveProgram] Rebuilt warm cache: ${entry.cache_key}`);
+          } catch (warmErr) {
+            console.error(`[refreshActiveProgram] Failed to rebuild warm cache ${entry.cache_key}:`, warmErr.message);
+            // Non-fatal: warm cache miss just means slower first load
+          }
+        }
+      } catch (warmScanErr) {
+        console.error('[refreshActiveProgram] Warm cache scan failed (non-fatal):', warmScanErr.message);
+      }
+    }
+
+    // ─── STEP 7: Midnight cleanup — evict stale warm cache entries (>7 days) ───
+    if (trigger === 'midnight') {
+      try {
+        const allEntries = await withRetry(() =>
+          base44.asServiceRole.entities.ActiveProgramCache.list()
+        );
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        for (const entry of allEntries) {
+          if (entry.cache_key === 'current_display') continue; // Never evict auto-detected
+          if (!entry.last_refresh_at || new Date(entry.last_refresh_at) < sevenDaysAgo) {
+            console.log(`[refreshActiveProgram] Evicting stale warm cache: ${entry.cache_key} (last refresh: ${entry.last_refresh_at})`);
+            await withRetry(() =>
+              base44.asServiceRole.entities.ActiveProgramCache.delete(entry.id)
+            );
+          }
+        }
+
+        // Also clear admin override at midnight (existing behavior)
+        if (existing?.[0]?.admin_override_id) {
+          await withRetry(() =>
+            base44.asServiceRole.entities.ActiveProgramCache.update(existing[0].id, {
+              admin_override_type: null,
+              admin_override_id: null,
+              admin_override_by: null,
+              admin_override_at: null,
+            })
+          );
+          console.log('[refreshActiveProgram] Cleared admin override at midnight');
+        }
+      } catch (cleanupErr) {
+        console.error('[refreshActiveProgram] Midnight cleanup failed (non-fatal):', cleanupErr.message);
+      }
+    }
+
     return Response.json({
       success: true,
       program_type: cacheData.program_type,
