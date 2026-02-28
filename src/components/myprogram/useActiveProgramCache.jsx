@@ -16,8 +16,16 @@
  *   edits) coalesce into a single refetch after a short settle period.
  * - Safety-net poll every 2 min catches any missed subscription events.
  *
+ * MULTI-SLOT WARM CACHE (2026-02-28):
+ * - Supports dynamic cache_key via programCacheKey param.
+ * - "current_display" = auto-detected program (default, used by MyProgram/TV).
+ * - "event_{id}" / "service_{id}" = user-viewed programs (warm cache for Live View).
+ * - Entity automations rebuild ALL matching cache entries when segments change.
+ * - Stale entries (>7 days) are cleaned by midnight job.
+ *
  * Decision: "Cache-first architecture for display surfaces"
  * Decision: "Single-subscription pattern to prevent invalidation storms"
+ * Decision: "Multi-slot warm cache for actively-worked programs"
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -29,7 +37,11 @@ export default function useActiveProgramCache(overrideParams = {}) {
   const debounceRef = useRef(null);
   
   // Testing override: force a specific service or event ID
-  const { overrideServiceId, overrideEventId } = overrideParams;
+  // programCacheKey: dynamic cache key for multi-slot warm cache.
+  // Defaults to 'current_display' for auto-detected program.
+  // Live View passes 'event_{id}' or 'service_{id}' for user-selected programs.
+  const { overrideServiceId, overrideEventId, programCacheKey } = overrideParams;
+  const activeCacheKey = programCacheKey || 'current_display';
 
   // Debounced invalidation: coalesces rapid-fire updates into one refetch.
   // Settle time: 800ms — fast enough for user-perceived real-time,
