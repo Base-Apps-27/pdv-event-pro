@@ -186,6 +186,7 @@ export default function useActiveProgramCache(overrideParams = {}) {
   // All entity automations (Service, Event, Segment, LiveTimeAdjustment)
   // trigger refreshActiveProgram → updates this record → triggers this sub.
   // This single-subscription pattern eliminates redundant refetches.
+  // MULTI-SLOT (2026-02-28): Invalidates the specific cache key we're watching.
   useEffect(() => {
     const unsub = base44.entities.ActiveProgramCache.subscribe(() => {
       debouncedInvalidate();
