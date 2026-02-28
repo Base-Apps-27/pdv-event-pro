@@ -157,8 +157,8 @@ export default function SpeakerSubmissionForm({ options }) {
                 </h3>
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
                     {t(
-                        '⚠️ Solo material terminado y listo para instalar. Suba o enlace archivos finales (presentaciones, imágenes, PDFs) que serán cargados en los sistemas de proyección. Si necesita crear algo nuevo, coordine con la oficina primero.',
-                        '⚠️ Ready-to-install files only. Upload or link final files (slides, images, PDFs) that will be loaded into the projection systems. If something needs to be created, contact the office first.'
+                        'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+                        'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
                     )}
                 </div>
                 <div className="mb-4">

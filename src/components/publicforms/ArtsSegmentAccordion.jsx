@@ -121,8 +121,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     {/* Ready-to-install guidance banner */}
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs leading-relaxed text-blue-800">
                         {t(
-                            '⚠️ Solo material final y listo para instalar. Este formulario es para entregar archivos terminados (canciones, videos, documentos) que serán cargados en los sistemas de producción. Si necesita que se cree algo, coordine con la oficina primero.',
-                            '⚠️ Final, ready-to-install files only (songs, videos, documents). This form is for delivering finished files that will be loaded into production systems. If something needs to be created, contact the office first.'
+                            'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+                            'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
                         )}
                     </div>
 
@@ -178,10 +178,10 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                             <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎬 VIDEO', '🎬 VIDEO')}</h5>
                             <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Nombre del Video', 'Video Name')}</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
-                                {isUnica
-                                    ? t('Suba el video final directamente o enlace desde Drive/OneDrive/Dropbox (acceso público). No Spotify/YouTube.', 'Upload the final video directly, or link from Drive/OneDrive/Dropbox (public access). No Spotify/YouTube.')
-                                    : t('Suba el video directamente (≤50MB) o enlace desde Drive/OneDrive/Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados.', 'Upload directly (≤50MB) or link from Drive/OneDrive/Dropbox (public access required). Spotify/YouTube accepted but not recommended.')
-                                }
+                                {t(
+                                    'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+                                    'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
+                                )}
                             </div>
                             <div className="mb-3">
                                 <FileOrLinkInput
@@ -213,7 +213,10 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     <div>
                         <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('📋 GUÍA DE ARTES', '📋 ARTS RUN OF SHOW')}</h4>
                         <div className="text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 bg-blue-50 border-[#1F8A70] text-blue-800">
-                            {t('Suba el documento final con la guía de su presentación. El enlace debe tener permisos públicos.', 'Upload the final run-of-show document. Links must have public access permissions.')}
+                            {t(
+                                'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+                                'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
+                            )}
                         </div>
                         <FileOrLinkInput
                             value={seg.arts_run_of_show_url || ''}

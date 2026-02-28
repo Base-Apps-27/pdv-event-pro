@@ -131,8 +131,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             <div className="mb-6">
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
                     {t(
-                        '⚠️ Solo material terminado y listo para instalar. Suba o enlace presentaciones, imágenes, o PDFs finales que serán cargados directamente en los sistemas. Si necesita crear algo, coordine con la oficina primero.',
-                        '⚠️ Ready-to-install files only. Upload or link final presentations, images, or PDFs that will be loaded directly into the systems. If something needs to be created, contact the office first.'
+                        'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+                        'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
                     )}
                 </div>
                 <FileOrLinkInput
