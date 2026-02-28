@@ -36,14 +36,14 @@ const ROUTING = {
       const MIC_LABELS = { headset: 'Headset', handheld: 'Handheld', stand: 'Stand/Atril', off_stage: 'Off Stage', lapel: 'Lapel', podium: 'Podium/Podio' };
       return MIC_LABELS[s.spoken_word_mic_position] || s.spoken_word_mic_position;
     }},
-    // Spoken word background music
-    { check: (s) => s.spoken_word_has_music && s.spoken_word_music_title, icon: '🎵', labelEs: 'Música fondo (Spoken Word)', labelEn: 'BG Music (Spoken Word)', value: (s) => s.spoken_word_music_title },
-    // Drama songs to queue
-    { check: (s) => s.drama_has_song && s.drama_song_title, icon: '🎵', labelEs: 'Pista (Drama)', labelEn: 'Track (Drama)', value: (s) => s.drama_song_title },
+    // Spoken word background music — check data presence, not checkbox (may not be set via public form)
+    { check: (s) => !!s.spoken_word_music_title, icon: '🎵', labelEs: 'Música fondo (Spoken Word)', labelEn: 'BG Music (Spoken Word)', value: (s) => s.spoken_word_music_title },
+    // Drama songs to queue — check data presence, not drama_has_song checkbox
+    { check: (s) => !!s.drama_song_title, icon: '🎵', labelEs: 'Pista (Drama)', labelEn: 'Track (Drama)', value: (s) => s.drama_song_title },
     { check: (s) => !!s.drama_song_2_title, icon: '🎵', labelEs: 'Pista 2 (Drama)', labelEn: 'Track 2 (Drama)', value: (s) => s.drama_song_2_title },
     { check: (s) => !!s.drama_song_3_title, icon: '🎵', labelEs: 'Pista 3 (Drama)', labelEn: 'Track 3 (Drama)', value: (s) => s.drama_song_3_title },
-    // Dance songs to queue
-    { check: (s) => s.dance_has_song && s.dance_song_title, icon: '🎵', labelEs: 'Música (Danza)', labelEn: 'Music (Dance)', value: (s) => s.dance_song_title },
+    // Dance songs to queue — check data presence, not dance_has_song checkbox
+    { check: (s) => !!s.dance_song_title, icon: '🎵', labelEs: 'Música (Danza)', labelEn: 'Music (Dance)', value: (s) => s.dance_song_title },
     { check: (s) => !!s.dance_song_2_title, icon: '🎵', labelEs: 'Música 2 (Danza)', labelEn: 'Music 2 (Dance)', value: (s) => s.dance_song_2_title },
     { check: (s) => !!s.dance_song_3_title, icon: '🎵', labelEs: 'Música 3 (Danza)', labelEn: 'Music 3 (Dance)', value: (s) => s.dance_song_3_title },
     // Video duration (sound routing / muting)
