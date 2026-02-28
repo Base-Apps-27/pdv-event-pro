@@ -10,7 +10,7 @@
  * 
  * UX Refactor (2026-02-28): 2-step path fork replaces flat form layout.
  * Path A ("notes") = paste message + optional slides. Path B ("slides") = upload deck + optional outline.
- * The slidesOnly checkbox is eliminated — path choice sets content_is_slides_only implicitly.
+ * The slidesOnly checkbox is eliminated. Path choice sets content_is_slides_only implicitly.
  */
 import React, { useState, useMemo, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';

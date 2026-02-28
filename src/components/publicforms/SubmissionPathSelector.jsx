@@ -4,12 +4,12 @@
  * 2-step fork: asks the user upfront what type of submission they're making.
  * Eliminates confusion between "paste your message" vs "upload your slideshow".
  * 
- * Path A ("notes"): User has a sermon/outline with verse references → paste is primary
- * Path B ("slides"): User has a finished presentation/slideshow → upload is primary
+ * Path A ("notes"): User has a sermon/outline with verse references. Paste is primary.
+ * Path B ("slides"): User has a finished presentation/slideshow. Upload is primary.
  * 
  * UX Decision (2026-02-28): Created to prevent users from uploading Word docs
  * in the file upload area instead of pasting their message content.
- * The slides-only checkbox is eliminated — path choice sets content_is_slides_only implicitly.
+ * The slides-only checkbox is eliminated. Path choice sets content_is_slides_only implicitly.
  * 
  * Used by: SpeakerSubmissionForm, WeeklySubmissionForm
  */
