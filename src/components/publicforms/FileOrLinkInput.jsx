@@ -245,8 +245,8 @@ export default function FileOrLinkInput({
       {!hasValue && !uploadError && !helpText && (
         <p className="text-[10px] text-gray-400 italic leading-snug">
           {tFn(
-            'Solo material terminado y listo para instalar. ¿Necesita crear algo nuevo? Contacte la oficina.',
-            'Ready-to-install files only. Need something created? Contact the office first.'
+            'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
+            'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
           )}
         </p>
       )}
