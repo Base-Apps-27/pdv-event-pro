@@ -15,7 +15,7 @@ import { base44 } from '@/api/base44Client';
 import ArtsFormHeader from '@/components/publicforms/ArtsFormHeader';
 import ArtsGateForm from '@/components/publicforms/ArtsGateForm';
 import ArtsSegmentAccordion from '@/components/publicforms/ArtsSegmentAccordion';
-import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
+import { PublicFormLangProvider, usePublicLang } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
 export default function PublicArtsForm() {
@@ -90,17 +90,15 @@ export default function PublicArtsForm() {
     );
 }
 
-// Extracted to a component so it can use the hook
+// Extracted so it can use the lang hook inside the provider
 function ArtsFormContent({ segments, gateUser, isUnica }) {
-    const { usePublicLang: _unused, ...rest } = {};
-    // We import at top level so just use the hook
-    const { t } = require('@/components/publicforms/PublicFormLangContext').usePublicLang();
+    const { t } = usePublicLang();
     return (
         <>
             <div className="bg-white rounded-lg border border-gray-200 border-l-4 p-5 mb-6 text-sm text-gray-500 leading-relaxed" style={{ borderLeftColor: '#8DC63F' }}>
                 {t(
                     'A continuación encontrará los segmentos de Artes para este evento. Abra cada uno para ingresar los detalles de su presentación. Puede guardar progreso parcial y regresar luego para completar.',
-                    'Below you\'ll find the Arts segments for this event. Open each one to enter your presentation details. You can save partial progress and return later to complete.'
+                    "Below you'll find the Arts segments for this event. Open each one to enter your presentation details. You can save partial progress and return later to complete."
                 )}
             </div>
 
@@ -109,21 +107,17 @@ function ArtsFormContent({ segments, gateUser, isUnica }) {
                     <h2 className="text-2xl text-gray-500 mb-2">{t('NO HAY SEGMENTOS DE ARTES', 'NO ARTS SEGMENTS')}</h2>
                     <p>{t('No se encontraron segmentos de tipo "Artes" para este evento.', 'No "Arts" type segments were found for this event.')}</p>
                 </div>
-                        ) : (
-                            segments.map(seg => (
-                                <ArtsSegmentAccordion
-                                    key={seg.id}
-                                    segment={seg}
-                                    submitterName={gateUser.name}
-                                    submitterEmail={gateUser.email}
-                                    isUnica={isUnica}
-                                />
-                            ))
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
-        </PublicFormLangProvider>
+            ) : (
+                segments.map(seg => (
+                    <ArtsSegmentAccordion
+                        key={seg.id}
+                        segment={seg}
+                        submitterName={gateUser.name}
+                        submitterEmail={gateUser.email}
+                        isUnica={isUnica}
+                    />
+                ))
+            )}
+        </>
     );
 }
