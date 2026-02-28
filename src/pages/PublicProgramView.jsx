@@ -190,16 +190,18 @@ export default function PublicProgramView() {
   }, [cacheContextType, cacheContextId, isCacheLoading, autoDetected, preloadedEventId, preloadedServiceId, preloadedDate, preloadedSlug]);
 
   // PERF (2026-02-28): Stale-while-revalidate for BOTH events and services.
-  // Previous decision (2026-02-27) always fetched fresh for services, causing 5-7s delays.
-  // Now: if the cache has the selected program, show it INSTANTLY and revalidate in background.
-  // Entity automations rebuild the cache on every change, so it's almost always current.
-  // The explicit fetch still runs as a background revalidation — user sees data in <500ms.
+  // MULTI-SLOT (2026-02-28): A selection is "cached" if EITHER:
+  //   1. It matches the auto-detected current_display, OR
+  //   2. A warm cache entry exists for this program (event_{id} / service_{id})
   const isCachedSelection = useMemo(() => {
-    if (!cacheContextId || !cacheProgramData) return false;
+    // Warm cache hit (from multi-slot)
+    if (warmCacheProgramData) return true;
+    // Auto-detected cache hit (current_display)
+    if (!cacheContextId || !defaultCacheProgramData) return false;
     if (viewType === 'event' && selectedEventId === cacheContextId) return true;
     if (viewType === 'service' && selectedServiceId === cacheContextId) return true;
     return false;
-  }, [viewType, selectedEventId, selectedServiceId, cacheContextId, cacheProgramData]);
+  }, [viewType, selectedEventId, selectedServiceId, cacheContextId, defaultCacheProgramData, warmCacheProgramData]);
 
   // PERF (2026-02-28): Two-tier data strategy:
   // Tier 1 (instant): Cache snapshot from ActiveProgramCache — shown immediately.
