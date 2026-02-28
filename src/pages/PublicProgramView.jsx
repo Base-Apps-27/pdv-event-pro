@@ -589,9 +589,11 @@ export default function PublicProgramView() {
     return <LiveViewSkeleton />;
   }
 
-  // Show skeleton loading state when primary data is loading
-  // For cached selection: only show skeleton on initial cache load, not on revalidation
-  const isContentLoading = (selectedEventId || selectedServiceId) && isLoadingProgram && !programData;
+  // PERF (2026-02-28): Only show full-page skeleton when we truly have NO data at all.
+  // With cache-first architecture, this should almost never happen on a normal day
+  // (cache is pre-populated by midnight refresh / entity automations).
+  // Never show skeleton when cache already has data for this selection.
+  const isContentLoading = !programData && isLoadingProgram && (selectedEventId || selectedServiceId);
 
   if (isContentLoading) {
     return <LiveViewSkeleton />;
