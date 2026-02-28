@@ -9,7 +9,7 @@
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-const PublicFormLangContext = createContext({ lang: 'es', setLang: () => {}, t: (es, en) => es });
+export const PublicFormLangContext = createContext({ lang: 'es', setLang: () => {}, t: (es, en) => es });
 
 const STORAGE_KEY = 'pdv_public_form_lang';
 

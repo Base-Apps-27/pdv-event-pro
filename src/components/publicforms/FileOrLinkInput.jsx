@@ -57,11 +57,11 @@ export default function FileOrLinkInput({
   const [uploadedFileName, setUploadedFileName] = useState('');
   const fileInputRef = useRef(null);
 
-  // Import context directly to avoid hook-in-try-catch issue.
-  // When rendered outside PublicFormLangProvider (e.g. admin pages), context is undefined → fallback to ES.
+  // Direct context consumption — safe outside the Provider (falls back to ES default).
+  // When rendered on admin pages without PublicFormLangProvider, default context value is used.
   const { PublicFormLangContext } = require('./PublicFormLangContext');
   const langCtx = useContext(PublicFormLangContext);
-  const tFn = langCtx?.t || ((es) => es);
+  const tFn = langCtx.t;
 
   const isCompact = variant === 'compact';
   const inputClass = isCompact
