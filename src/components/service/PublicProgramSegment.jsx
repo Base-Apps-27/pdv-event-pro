@@ -5,6 +5,7 @@ import { Clock, Sparkles, Languages, Mic, Users, MapPin, BookOpen, ExternalLink,
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
+import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import SegmentResourcesModal from "./SegmentResourcesModal";
@@ -667,6 +668,39 @@ export default function PublicProgramSegment({
           {/* Team Notes (Operational Instructions) */}
           {/* These are critical for staff execution, always shown when details are visible */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {/* 2026-02-28: Smart-routed arts data — auto-surfaces relevant arts info per department */}
+            {(() => {
+              const SMART_DEPTS = [
+                { key: 'sound', labelEs: 'Sonido (Artes)', labelEn: 'Sound (Arts)', bg: 'bg-red-50', border: 'border-red-400', label: 'text-red-800', text: 'text-red-900' },
+                { key: 'projection', labelEs: 'Proyección (Artes)', labelEn: 'Projection (Arts)', bg: 'bg-slate-100', border: 'border-slate-500', label: 'text-slate-700', text: 'text-slate-800' },
+                { key: 'livestream', labelEs: 'Livestream (Artes)', labelEn: 'Livestream (Arts)', bg: 'bg-cyan-50', border: 'border-cyan-400', label: 'text-cyan-700', text: 'text-cyan-800' },
+                { key: 'stage_decor', labelEs: 'Stage & Decor (Artes)', labelEn: 'Stage & Decor (Arts)', bg: 'bg-purple-50', border: 'border-purple-400', label: 'text-purple-800', text: 'text-purple-900' },
+                { key: 'coordination', labelEs: 'Coordinación (Artes)', labelEn: 'Coordination (Arts)', bg: 'bg-orange-50', border: 'border-orange-400', label: 'text-orange-800', text: 'text-orange-900' },
+              ];
+              return SMART_DEPTS.map(dept => {
+                const items = getArtsSmartNotes(segment, dept.key, language);
+                if (items.length === 0) return null;
+                return (
+                  <div key={dept.key} className={`${dept.bg} border-l-4 border-dashed ${dept.border} pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r`}>
+                    <div className="flex items-center gap-1.5 mb-0.5 sm:mb-1">
+                      <span className={`font-bold ${dept.label} block uppercase text-[10px]`}>
+                        🎭 {language === 'es' ? dept.labelEs : dept.labelEn}
+                      </span>
+                      <span className="text-[8px] font-semibold bg-white/80 border border-gray-200 text-gray-400 px-1 rounded-full uppercase">AUTO</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {items.map((item, i) => (
+                        <div key={i} className={`flex items-start gap-1 ${dept.text} leading-snug`}>
+                          <span className="shrink-0 w-4 text-center">{item.icon}</span>
+                          <span className="font-medium">{item.label}:</span>
+                          <span>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
             {/* Item 4: Tighter note card padding on mobile (pl-2 py-1.5 → sm:pl-3 sm:py-2) */}
             {getData('coordinator_notes') && (
               <div className="bg-orange-50 border-l-4 border-orange-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">

@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Languages, Mic, Utensils } from "lucide-react";
 // Phase 3D: calculateActionTime deduplicated — single source in reportHelpers
 import { calculateActionTime } from "./reportHelpers";
+// 2026-02-28: Smart field routing — arts data auto-surfaced in department notes
+import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 
 // Phase 7: Memoized — pure display component, re-renders only on prop changes
 const SegmentReportRow = React.memo(function SegmentReportRow({
@@ -82,7 +84,47 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
             <span className="ml-0.5">{segment.other_notes}</span>
           </div>
         )}
-        {!segment.coordinator_notes && !segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && !segment.livestream_notes && !segment.microphone_assignments && !segment.other_notes && (
+        {/* 2026-02-28: Smart-routed arts data per department — rendered in notes column with AUTO badge */}
+        {(() => {
+          // Map report departments to routing keys for relevant notes
+          const DEPT_MAP = {
+            sound_notes: 'sound',
+            projection_notes: 'projection',
+            livestream_notes: 'livestream',
+            stage_decor_notes: 'stage_decor',
+            coordinator_notes: 'coordination',
+          };
+          // Collect all arts items across departments relevant to the notes column
+          const allArtsItems = [];
+          for (const [field, deptKey] of Object.entries(DEPT_MAP)) {
+            const items = getArtsSmartNotes(segment, deptKey, 'es');
+            if (items.length > 0) {
+              allArtsItems.push({ deptKey, items });
+            }
+          }
+          if (allArtsItems.length === 0) return null;
+          // Deduplicate: group by department
+          return allArtsItems.map(({ deptKey, items }) => {
+            const COLORS = {
+              sound: 'bg-red-50 border-red-200 text-red-700',
+              projection: 'bg-slate-100 border-slate-300 text-slate-700',
+              livestream: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+              stage_decor: 'bg-purple-50 border-purple-200 text-purple-700',
+              coordination: 'bg-orange-50 border-orange-200 text-orange-700',
+            };
+            const LABELS = { sound: 'SONIDO', projection: 'PROYECCIÓN', livestream: 'LIVESTREAM', stage_decor: 'STAGE', coordination: 'COORD' };
+            return (
+              <div key={deptKey} className={`px-0.5 py-0.5 rounded border border-dashed text-[9px] ${COLORS[deptKey] || 'bg-gray-50 border-gray-200 text-gray-700'}`}>
+                <span className="font-bold">{LABELS[deptKey] || deptKey}</span>
+                <span className="ml-0.5 text-[8px] bg-white/80 border border-gray-200 text-gray-400 px-1 rounded-full">AUTO</span>
+                {items.map((item, i) => (
+                  <div key={i} className="leading-tight">{item.icon} {item.label}: {item.value}</div>
+                ))}
+              </div>
+            );
+          });
+        })()}
+        {!segment.coordinator_notes && !segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && !segment.livestream_notes && !segment.microphone_assignments && !segment.other_notes && getArtsSmartNotes(segment, 'sound', 'es').length === 0 && (
           <span className="text-gray-400 text-[9px]">-</span>
         )}
       </div>

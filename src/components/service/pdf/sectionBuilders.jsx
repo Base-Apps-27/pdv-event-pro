@@ -14,6 +14,8 @@
 // Phase 3 cleanup: removed unused getSegmentColor import
 import { pdfTheme, toESTTimeStr } from '../pdfThemeSystem';
 import { calculateActionTimeForPDF } from './cellBuilders';
+// 2026-02-28: Smart field routing — arts data auto-surfaced in department notes cells
+import { getArtsSmartNotes } from '@/components/utils/artsSmartRouting';
 
 export function buildNotesCell(seg) {
   const stack = [];
@@ -97,6 +99,33 @@ export function buildNotesCell(seg) {
       fillColor: '#F5F3FF',
       margin: [0, 0, 0, 1],
     });
+  }
+
+  // 2026-02-28: Smart-routed arts data — auto-surfaced per department in notes cell
+  const SMART_PDF_DEPTS = [
+    { key: 'sound', label: 'SONIDO', color: '#DC2626', bg: '#FEF2F2' },
+    { key: 'projection', label: 'PROYECCIÓN', color: '#475569', bg: '#F1F5F9' },
+    { key: 'livestream', label: 'LIVESTREAM', color: '#0891B2', bg: '#ECFEFF' },
+    { key: 'stage_decor', label: 'STAGE', color: '#7C3AED', bg: '#F5F3FF' },
+    { key: 'coordination', label: 'COORD', color: '#F97316', bg: '#FFF7ED' },
+  ];
+  for (const dept of SMART_PDF_DEPTS) {
+    const items = getArtsSmartNotes(seg, dept.key, 'es');
+    if (items.length > 0) {
+      const textParts = [
+        { text: `${dept.label} `, bold: true, color: dept.color, fontSize: pdfTheme.fontSize.xs },
+        { text: '[AUTO] ', bold: true, color: '#9CA3AF', fontSize: 5 },
+      ];
+      items.forEach((item, idx) => {
+        textParts.push({ text: `${item.icon} ${item.label}: ${item.value}`, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.xs });
+        if (idx < items.length - 1) textParts.push({ text: ' • ', color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs });
+      });
+      stack.push({
+        text: textParts,
+        fillColor: dept.bg,
+        margin: [0, 0, 0, 1],
+      });
+    }
   }
 
   return {

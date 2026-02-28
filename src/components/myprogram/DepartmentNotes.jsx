@@ -9,6 +9,7 @@
 import React from 'react';
 import { useLanguage } from '@/components/utils/i18n';
 import { getSegmentData } from '@/components/utils/segmentDataUtils';
+import { getArtsSmartNotes } from '@/components/utils/artsSmartRouting';
 
 // Maps department key → segment field(s) to display
 const DEPT_FIELD_MAP = {
@@ -72,10 +73,14 @@ export default function DepartmentNotes({ segment, department }) {
     .map((field) => ({ field, value: getData(field) }))
     .filter((item) => item.value);
 
-  if (notesContent.length === 0) return null;
+  // 2026-02-28: Smart-routed arts data for this department (computed, no double-entry)
+  const artsItems = getArtsSmartNotes(segment, department, language);
+
+  if (notesContent.length === 0 && artsItems.length === 0) return null;
 
   return (
     <div className="space-y-2 mt-2">
+      {/* Manual department notes */}
       {notesContent.map(({ field, value }) => (
         <div
           key={field}
@@ -87,6 +92,26 @@ export default function DepartmentNotes({ segment, department }) {
           <p className={`${colors.text} leading-relaxed whitespace-pre-wrap font-medium`}>{value}</p>
         </div>
       ))}
+      {/* 2026-02-28: Auto-routed arts data — visually distinct with dashed border + AUTO badge */}
+      {artsItems.length > 0 && (
+        <div className={`${colors.bg} border-l-[4px] border-dashed ${colors.border} pl-3 py-2 rounded-r-md text-xs shadow-sm`}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className={`font-bold ${colors.label} uppercase tracking-wider text-[10px]`}>
+              🎭 {language === 'es' ? 'Artes' : 'Arts'}
+            </span>
+            <span className="text-[9px] font-semibold bg-white/80 border border-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider">AUTO</span>
+          </div>
+          <div className="space-y-1">
+            {artsItems.map((item, idx) => (
+              <div key={idx} className={`flex items-start gap-1.5 ${colors.text}`}>
+                <span className="shrink-0 w-4 text-center">{item.icon}</span>
+                <span className="font-medium">{item.label}:</span>
+                <span>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
