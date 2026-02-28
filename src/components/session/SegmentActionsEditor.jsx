@@ -144,8 +144,8 @@ export default function SegmentActionsEditor({ actions, onChange, formData, lang
                     <Input
                       type="number"
                       className="h-8 text-xs w-16 bg-white"
-                      value={action.offset_min || 0}
-                      onChange={(e) => handleUpdate(idx, 'offset_min', parseInt(e.target.value) || 0)}
+                      value={action.offset_min ?? ''}
+                      onChange={(e) => handleUpdate(idx, 'offset_min', e.target.value === '' ? '' : parseInt(e.target.value))}
                     />
                     <span className="text-xs text-gray-500">min</span>
                   </div>

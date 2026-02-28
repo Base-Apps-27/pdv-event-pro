@@ -318,7 +318,7 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs">Duración (min) <span className="text-red-500">*</span></Label>
-                      <Input type="number" value={formData.duration_min} onChange={(e) => setFormData({...formData, duration_min: parseInt(e.target.value)})} className="h-9" min="1" required />
+                      <Input type="number" value={formData.duration_min ?? ''} onChange={(e) => setFormData({...formData, duration_min: e.target.value === '' ? '' : parseInt(e.target.value)})} className="h-9" min="1" required />
                     </div>
                   </div>
                   {times.end_time && (

@@ -40,7 +40,7 @@ export default function VideoSection({ formData, setFormData, isVideoType, isBre
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Duración (seg)</Label>
-            <Input type="number" value={formData.video_length_sec || ''} onChange={(e) => setFormData({...formData, video_length_sec: e.target.value === '' ? 0 : parseInt(e.target.value)})} placeholder="120" className="text-sm" />
+            <Input type="number" value={formData.video_length_sec ?? ''} onChange={(e) => setFormData({...formData, video_length_sec: e.target.value === '' ? '' : parseInt(e.target.value)})} placeholder="120" className="text-sm" />
           </div>
         </div>
         <div className="space-y-2">
