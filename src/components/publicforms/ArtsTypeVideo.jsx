@@ -5,6 +5,7 @@
 import React from 'react';
 import CompactFileAttach from './CompactFileAttach';
 import { usePublicLang } from './PublicFormLangContext';
+import VideoDurationInput from './VideoDurationInput';
 
 export default function ArtsTypeVideo({ seg, updateField, isUnica }) {
   const { t } = usePublicLang();
@@ -37,11 +38,13 @@ export default function ArtsTypeVideo({ seg, updateField, isUnica }) {
           className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label>
-          <input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? '' : parseInt(e.target.value))}
-            className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
-        </div>
+        <VideoDurationInput
+          value={seg.video_length_sec}
+          onChange={v => updateField('video_length_sec', v)}
+          labelEs="Duración"
+          labelEn="Duration"
+          t={t}
+        />
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label>
           <input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)}

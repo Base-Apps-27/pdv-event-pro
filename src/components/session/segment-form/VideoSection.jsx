@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, X } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
+import VideoDurationInput from "@/components/publicforms/VideoDurationInput";
 
 export default function VideoSection({ formData, setFormData, isVideoType, isBreakType, isTechOnly }) {
   const { language } = useLanguage();
@@ -38,10 +39,14 @@ export default function VideoSection({ formData, setFormData, isVideoType, isBre
             <Label className="text-xs">Propietario</Label>
             <Input value={formData.video_owner} onChange={(e) => setFormData({...formData, video_owner: e.target.value})} placeholder="PDV Media" className="text-sm" />
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Duración (seg)</Label>
-            <Input type="number" value={formData.video_length_sec ?? ''} onChange={(e) => setFormData({...formData, video_length_sec: e.target.value === '' ? '' : parseInt(e.target.value)})} placeholder="120" className="text-sm" />
-          </div>
+          <VideoDurationInput
+            value={formData.video_length_sec}
+            onChange={v => setFormData({...formData, video_length_sec: v})}
+            labelEs="Duración"
+            labelEn="Duration"
+            t={(es, en) => language === 'es' ? es : en}
+            className="h-9 text-sm w-full p-2.5 border border-gray-200 rounded-md bg-white focus:outline-none focus:border-[#1F8A70]"
+          />
         </div>
         <div className="space-y-2">
           <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
