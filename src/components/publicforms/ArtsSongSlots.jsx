@@ -6,7 +6,7 @@
  * 2026-02-28: Song URL fields upgraded to FileOrLinkInput (upload + link hybrid).
  */
 import React from 'react';
-import FileOrLinkInput from './FileOrLinkInput';
+import CompactFileAttach from './CompactFileAttach';
 import { usePublicLang } from './PublicFormLangContext';
 
 function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChange, onOwnerChange, t }) {
@@ -25,7 +25,7 @@ function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChang
                 <input type="text" value={ownerVal} onChange={e => onOwnerChange(e.target.value)}
                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
-            <FileOrLinkInput
+            <CompactFileAttach
                 value={urlVal}
                 onChange={onUrlChange}
                 label={t('Archivo Final', 'Final File')}
