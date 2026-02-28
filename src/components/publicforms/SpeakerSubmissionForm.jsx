@@ -164,7 +164,7 @@ export default function SpeakerSubmissionForm({ options }) {
                 </div>
             </div>
 
-            {/* ── PATH A ("notes"): Paste first, optional slides second ── */}
+            {/* PATH A ("notes"): Paste first, optional slides second */}
             {submissionPath === 'notes' && (
                 <>
                     {/* Primary: Verses / Paste content */}
@@ -221,7 +221,7 @@ export default function SpeakerSubmissionForm({ options }) {
                 </>
             )}
 
-            {/* ── PATH B ("slides"): Upload deck first, optional outline second ── */}
+            {/* PATH B ("slides"): Upload deck first, optional outline second */}
             {submissionPath === 'slides' && (
                 <>
                     {/* Primary: Upload the finished presentation */}

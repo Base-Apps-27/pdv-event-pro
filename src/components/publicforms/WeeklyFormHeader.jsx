@@ -17,7 +17,7 @@ export default function WeeklyFormHeader() {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl text-[#1A1A1A] mb-2 leading-none">
-                    {t('MATERIAL - MENSAJE SEMANAL', 'MATERIAL - WEEKLY MESSAGE')}
+                    {t('MATERIAL: MENSAJE SEMANAL', 'MATERIAL: WEEKLY MESSAGE')}
                 </h1>
                 <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
                     {t('Entregue versículos y material final para proyección', 'Submit verses and final material for projection')}

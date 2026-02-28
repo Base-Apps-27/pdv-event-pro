@@ -141,7 +141,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                     className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
 
-            {/* ── PATH A ("notes"): Paste first, optional slides second ── */}
+            {/* PATH A ("notes"): Paste first, optional slides second */}
             {submissionPath === 'notes' && (
                 <>
                     {/* Primary: Verses / Paste content */}
@@ -186,7 +186,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                 </>
             )}
 
-            {/* ── PATH B ("slides"): Upload deck first, optional outline second ── */}
+            {/* PATH B ("slides"): Upload deck first, optional slides second */}
             {submissionPath === 'slides' && (
                 <>
                     {/* Primary: Upload the finished presentation */}
