@@ -844,6 +844,27 @@ export default function PublicProgramSegment({
                       )}
                     </div>
                   )}
+                  {/* Spoken Word details in Live View (2026-02-28) */}
+                  {arts.includes('SPOKEN_WORD') && (
+                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
+                      {getData('spoken_word_speaker') && <div className="font-semibold">{getData('spoken_word_speaker')}</div>}
+                      {getData('spoken_word_description') && <div>{getData('spoken_word_description')}</div>}
+                      {getData('spoken_word_mic_position') && <div>Mic: {getData('spoken_word_mic_position')}</div>}
+                      {getData('spoken_word_has_music') && getData('spoken_word_music_title') && (
+                        <div>🎵 {getData('spoken_word_music_title')}</div>
+                      )}
+                    </div>
+                  )}
+                  {/* Painting details in Live View (2026-02-28) */}
+                  {arts.includes('PAINTING') && (
+                    <div className="pl-2 border-l-2 border-pink-300 space-y-0.5 mt-1">
+                      {getData('painting_canvas_size') && <div>Canvas: {getData('painting_canvas_size')}</div>}
+                      {getData('painting_needs_easel') && <div>Easel ✓</div>}
+                      {getData('painting_needs_drop_cloth') && <div>Drop cloth ✓</div>}
+                      {getData('painting_needs_lighting') && <div>{language === 'es' ? 'Iluminación especial' : 'Special lighting'} ✓</div>}
+                      {getData('painting_other_setup') && <div>{getData('painting_other_setup')}</div>}
+                    </div>
+                  )}
                   {hasOther && getData('art_other_description') && (
                     <div className="mt-1 text-gray-700">{getData('art_other_description')}</div>
                   )}
