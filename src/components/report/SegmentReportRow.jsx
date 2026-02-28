@@ -20,6 +20,13 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
   if (showOnlyTeamNotes) {
     return (
       <div className="space-y-0.5">
+        {/* 2026-02-28: Added COORDINACIÓN — was missing from HTML report (present in PDF + entity) */}
+        {segment.coordinator_notes && (
+          <div className="bg-orange-50 px-0.5 py-0.5 rounded border border-orange-200 text-[9px]">
+            <span className="font-bold text-orange-600">COORDINACIÓN:</span>
+            <span className="ml-0.5">{segment.coordinator_notes}</span>
+          </div>
+        )}
         {segment.projection_notes && (
           <div className="bg-slate-100 px-0.5 py-0.5 rounded border border-slate-300 text-[9px]">
             <span className="font-bold text-slate-700">PROYECCIÓN:</span>
@@ -56,6 +63,13 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
             )}
           </div>
         )}
+        {/* 2026-02-28: Added LIVESTREAM — was missing from HTML report (present in PDF + entity) */}
+        {segment.livestream_notes && (
+          <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-200 text-[9px]">
+            <span className="font-bold text-cyan-700">LIVESTREAM:</span>
+            <span className="ml-0.5">{segment.livestream_notes}</span>
+          </div>
+        )}
         {segment.microphone_assignments && (
           <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px]">
             <span className="font-bold text-red-700">MICS:</span>
@@ -68,7 +82,7 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
             <span className="ml-0.5">{segment.other_notes}</span>
           </div>
         )}
-        {!segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && !segment.microphone_assignments && !segment.other_notes && (
+        {!segment.coordinator_notes && !segment.projection_notes && !segment.sound_notes && !segment.ushers_notes && !segment.requires_translation && !segment.stage_decor_notes && !segment.livestream_notes && !segment.microphone_assignments && !segment.other_notes && (
           <span className="text-gray-400 text-[9px]">-</span>
         )}
       </div>
@@ -207,6 +221,24 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
                 {segment.art_other_description}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Sub-Assignments (Ministración / worship sub-roles) — matching editor + PDF */}
+        {/* 2026-02-28: Added — was present in editor + weekly PDF but missing from HTML report */}
+        {Array.isArray(segment.ui_sub_assignments) && segment.ui_sub_assignments.length > 0 && (
+          <div className="text-[9px] bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200">
+            {segment.ui_sub_assignments.map((sub, subIdx) => {
+              const val = segment[sub.person_field_name] || '';
+              if (!val) return null;
+              return (
+                <div key={subIdx}>
+                  <span className="font-bold text-purple-700">{sub.label}:</span>
+                  <span className="text-purple-900 ml-0.5">{val}</span>
+                  {sub.duration_min ? <span className="text-gray-500 ml-0.5">({sub.duration_min}m)</span> : null}
+                </div>
+              );
+            })}
           </div>
         )}
 
