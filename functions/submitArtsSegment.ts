@@ -72,6 +72,13 @@ Deno.serve(async (req) => {
             // Video
             'has_video', 'video_name', 'video_url', 'video_owner',
             'video_length_sec', 'video_location',
+            // Spoken Word (2026-02-28)
+            'spoken_word_mic_position', 'spoken_word_has_music',
+            'spoken_word_music_title', 'spoken_word_music_url', 'spoken_word_music_owner',
+            'spoken_word_notes',
+            // Painting (2026-02-28)
+            'painting_needs_easel', 'painting_needs_drop_cloth', 'painting_needs_lighting',
+            'painting_canvas_size', 'painting_other_setup', 'painting_notes',
             // Other / General
             'art_other_description', 'arts_run_of_show_url', 'description_details',
         ];

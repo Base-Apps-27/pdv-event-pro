@@ -82,6 +82,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec || 0, video_location: seg.video_location || '',
                 art_other_description: seg.art_other_description || '', arts_run_of_show_url: seg.arts_run_of_show_url || '',
                 description_details: seg.description_details || '',
+                // Spoken Word
+                spoken_word_mic_position: seg.spoken_word_mic_position || '', spoken_word_has_music: seg.spoken_word_has_music || false,
+                spoken_word_music_title: seg.spoken_word_music_title || '', spoken_word_music_url: seg.spoken_word_music_url || '',
+                spoken_word_music_owner: seg.spoken_word_music_owner || '', spoken_word_notes: seg.spoken_word_notes || '',
+                // Painting
+                painting_needs_easel: seg.painting_needs_easel || false, painting_needs_drop_cloth: seg.painting_needs_drop_cloth || false,
+                painting_needs_lighting: seg.painting_needs_lighting || false, painting_canvas_size: seg.painting_canvas_size || '',
+                painting_other_setup: seg.painting_other_setup || '', painting_notes: seg.painting_notes || '',
             }
         };
         const res = await base44.functions.invoke('submitArtsSegment', payload);
@@ -197,6 +205,54 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Duración (seg)', 'Length (sec)')}</label><input type="number" min="0" value={seg.video_length_sec || ''} onChange={e => updateField('video_length_sec', e.target.value === '' ? 0 : parseInt(e.target.value))} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label><input type="text" value={seg.video_owner || ''} onChange={e => updateField('video_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Spoken Word Section */}
+                    {types.includes('SPOKEN_WORD') && (
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎤 SPOKEN WORD', '🎤 SPOKEN WORD')}</h5>
+                            <div className="mb-3">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
+                                <select value={seg.spoken_word_mic_position || ''} onChange={e => updateField('spoken_word_mic_position', e.target.value)}
+                                    className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]">
+                                    <option value="">{t('Seleccione...', 'Select...')}</option>
+                                    <option value="headset">Headset</option>
+                                    <option value="handheld">Handheld</option>
+                                    <option value="stand">{t('En atril / Stand', 'On a Stand')}</option>
+                                    <option value="off_stage">{t('Fuera del escenario', 'Off Stage')}</option>
+                                    <option value="lapel">Lapel</option>
+                                    <option value="podium">{t('Podio', 'Podium')}</option>
+                                </select>
+                            </div>
+                            <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
+                                <input type="checkbox" checked={seg.spoken_word_has_music || false} onChange={e => updateField('spoken_word_has_music', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
+                                {t('Incluye música de fondo', 'Includes background music')}
+                            </label>
+                            {seg.spoken_word_has_music && (
+                                <div className="space-y-3 mb-3 pl-3 border-l-2 border-[#8DC63F]">
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Título de la Pista', 'Track Title')}</label><input type="text" value={seg.spoken_word_music_title || ''} onChange={e => updateField('spoken_word_music_title', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                    <FileOrLinkInput value={seg.spoken_word_music_url || ''} onChange={v => updateField('spoken_word_music_url', v)} label={t('Archivo de Música', 'Music File')} accept=".mp3,.wav,.mp4,.ogg,.webm" placeholder="https://drive.google.com/..." />
+                                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Responsable', 'Owner')}</label><input type="text" value={seg.spoken_word_music_owner || ''} onChange={e => updateField('spoken_word_music_owner', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                                </div>
+                            )}
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label><textarea rows={2} value={seg.spoken_word_notes || ''} onChange={e => updateField('spoken_word_notes', e.target.value)} placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                        </div>
+                    )}
+
+                    {/* Painting Section */}
+                    {types.includes('PAINTING') && (
+                        <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
+                            <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎨 PINTURA', '🎨 PAINTING')}</h5>
+                            <p className="text-xs text-gray-500 mb-3">{t('Seleccione lo que necesita para su presentación:', 'Select what you need for your presentation:')}</p>
+                            <div className="space-y-2 mb-3">
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={seg.painting_needs_easel || false} onChange={e => updateField('painting_needs_easel', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />{t('Caballete / Easel', 'Easel')}</label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={seg.painting_needs_drop_cloth || false} onChange={e => updateField('painting_needs_drop_cloth', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />{t('Protección de piso / Drop Cloth', 'Drop Cloth / Floor Protection')}</label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={seg.painting_needs_lighting || false} onChange={e => updateField('painting_needs_lighting', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />{t('Iluminación especial', 'Special Lighting')}</label>
+                            </div>
+                            <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Tamaño del Lienzo', 'Canvas Size')}</label><input type="text" value={seg.painting_canvas_size || ''} onChange={e => updateField('painting_canvas_size', e.target.value)} placeholder={t('Ej: 24x36 pulgadas', 'E.g. 24x36 inches')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
+                            <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Otros Requisitos de Montaje', 'Other Setup Requirements')}</label><textarea rows={2} value={seg.painting_other_setup || ''} onChange={e => updateField('painting_other_setup', e.target.value)} placeholder={t('Mesa, agua, toallas, etc.', 'Table, water, towels, etc.')} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label><textarea rows={2} value={seg.painting_notes || ''} onChange={e => updateField('painting_notes', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" /></div>
                         </div>
                     )}
 
