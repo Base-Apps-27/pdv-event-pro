@@ -221,6 +221,7 @@ export default function MessageProcessingPage() {
                         onProcess={handleProcess}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
+                        onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
                         emptyMessage="No hay mensajes pendientes de revisión."
                     />
                 </TabsContent>
@@ -232,6 +233,7 @@ export default function MessageProcessingPage() {
                         onProcess={handleProcess}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
+                        onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
                         emptyMessage="No hay historial de mensajes procesados."
                     />
                 </TabsContent>
