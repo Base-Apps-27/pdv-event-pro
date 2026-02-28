@@ -5,7 +5,7 @@
  * dance/drama/video/other sub-sections, notes, and save button.
  * CSP Migration (2026-02-27): Replaces inline JS accordion from serveArtsSubmission.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ArtsSongSlots from './ArtsSongSlots';
