@@ -808,7 +808,7 @@ export default function PublicProgramSegment({
               return (
                 <div className="bg-pink-50 p-2 rounded border border-pink-200 text-xs">
                   <p className="font-semibold text-pink-800 mb-1">
-                    Artes: {arts.map(a => a === 'DANCE' ? 'Danza' : a === 'DRAMA' ? 'Drama' : a === 'VIDEO' ? 'Video' : 'Otro').join(', ')}
+                    Artes: {arts.map(a => ({ DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' }[a] || a)).join(', ')}
                   </p>
                   {hasDrama && (
                     <div className="pl-2 border-l-2 border-pink-300 space-y-0.5">

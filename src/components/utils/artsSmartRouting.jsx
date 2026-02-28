@@ -78,7 +78,7 @@ const ROUTING = {
     // Performance sequence for camera blocking
     { check: (s) => Array.isArray(s.arts_type_order) && s.arts_type_order.length > 1, icon: '📋', labelEs: 'Orden de presentación', labelEn: 'Performance order', value: (s) => {
       const TYPE_SHORT = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
-      return s.arts_type_order.sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => TYPE_SHORT[i.type] || i.type).join(' → ');
+      return [...s.arts_type_order].sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => TYPE_SHORT[i.type] || i.type).join(' → ');
     }},
     // Run of show
     { check: (s) => !!s.arts_run_of_show_url, icon: '📋', labelEs: 'Guía de Artes', labelEn: 'Arts Run of Show', value: () => 'Ver enlace' },
@@ -102,7 +102,7 @@ const ROUTING = {
     // Performance order
     { check: (s) => Array.isArray(s.arts_type_order) && s.arts_type_order.length > 1, icon: '📋', labelEs: 'Orden', labelEn: 'Order', value: (s) => {
       const TYPE_SHORT = { DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' };
-      return s.arts_type_order.sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => TYPE_SHORT[i.type] || i.type).join(' → ');
+      return [...s.arts_type_order].sort((a, b) => (a.order || 0) - (b.order || 0)).map(i => TYPE_SHORT[i.type] || i.type).join(' → ');
     }},
     // Spoken word speaker
     { check: (s) => !!s.spoken_word_speaker, icon: '🎤', labelEs: 'Orador (Spoken Word)', labelEn: 'Speaker (Spoken Word)', value: (s) => s.spoken_word_speaker },
