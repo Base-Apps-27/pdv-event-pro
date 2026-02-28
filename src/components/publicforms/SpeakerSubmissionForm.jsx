@@ -174,10 +174,10 @@ export default function SpeakerSubmissionForm({ options }) {
                         </h3>
                         {/* Instruction banner — makes the primary action crystal clear */}
                         <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-amber-800">
-                            <span className="font-bold">{t('📋 Pegue su texto aquí', '📋 Paste your text here')}</span>{' — '}
+                            <span className="font-bold">{t('📋 Pegue su texto aquí', '📋 Paste your text here')}</span>{' '}
                             {t(
-                                'Copie y pegue sus notas, bosquejo o documento completo. Nuestro sistema identificará y extraerá automáticamente todos los versículos bíblicos para proyección. No suba un archivo Word aquí — use el campo de abajo solo para slides complementarios.',
-                                'Copy and paste your notes, outline, or full document. Our system will automatically identify and extract all Bible verses for projection. Do not upload a Word file here — use the field below only for supplemental slides.'
+                                'Copie y pegue sus notas, bosquejo o documento completo. Nuestro sistema identificará y extraerá automáticamente todos los versículos bíblicos para proyección.',
+                                'Copy and paste your notes, outline, or full document. Our system will automatically identify and extract all Bible verses for projection.'
                             )}
                         </div>
                         <div>
@@ -205,8 +205,8 @@ export default function SpeakerSubmissionForm({ options }) {
                         </h3>
                         <p className="text-xs text-gray-400 mb-4 leading-relaxed">
                             {t(
-                                'Si tiene slides o imágenes complementarias listas para proyección, súbalas aquí. NO suba su documento de notas/bosquejo — ya lo pegó arriba.',
-                                'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document — you already pasted it above.'
+                                'Si tiene slides o imágenes complementarias listas para proyección, súbalas aquí. NO suba su documento de notas/bosquejo, ya lo pegó arriba.',
+                                'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document. You already pasted it above.'
                             )}
                         </p>
                         <FileOrLinkInput
@@ -231,8 +231,8 @@ export default function SpeakerSubmissionForm({ options }) {
                         </h3>
                         <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
                             {t(
-                                'Suba su presentación terminada (PowerPoint, Keynote, PDF o imágenes). Este archivo se usará directamente para la proyección — asegúrese de que esté en su versión final.',
-                                'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection — make sure it is the final version.'
+                                'Suba su presentación terminada (PowerPoint, Keynote, PDF o imágenes). Este archivo se usará directamente para la proyección. Asegúrese de que esté en su versión final.',
+                                'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection. Make sure it is the final version.'
                             )}
                         </div>
                         <FileOrLinkInput
@@ -281,8 +281,8 @@ export default function SpeakerSubmissionForm({ options }) {
                             value={content}
                             onChange={e => setContent(e.target.value)}
                             placeholder={t(
-                                "Opcional — solo si tiene texto adicional fuera de la presentación.",
-                                "Optional — only if you have additional text outside the presentation."
+                                "Opcional: solo si tiene texto adicional fuera de la presentación.",
+                                "Optional: only if you have additional text outside the presentation."
                             )}
                             className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                         />

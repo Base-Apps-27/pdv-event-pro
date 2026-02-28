@@ -29,8 +29,8 @@ export default function SubmissionPathSelector({ value, onChange }) {
                 'I have notes or an outline for my message'
             ),
             description: t(
-                'Pegue su contenido y el sistema extraerá los versículos automáticamente para proyección. Opcionalmente puede adjuntar slides complementarios.',
-                'Paste your content and the system will automatically extract verses for projection. You can optionally attach supplemental slides.'
+                'Pegue su contenido y el sistema extraerá los versículos automáticamente para proyección.',
+                'Paste your content and the system will automatically extract verses for projection.'
             ),
             color: 'teal',
         },
@@ -42,8 +42,8 @@ export default function SubmissionPathSelector({ value, onChange }) {
                 'I have a finished presentation (PowerPoint / Keynote)'
             ),
             description: t(
-                'Suba su presentación final lista para proyección. No se requiere extracción de versículos — todo el contenido está en los slides.',
-                'Upload your final presentation ready for projection. No verse extraction needed — all content is in the slides.'
+                'Suba su presentación final lista para proyección. No se requiere extracción de versículos, todo el contenido está en los slides.',
+                'Upload your final presentation ready for projection. No verse extraction needed. All content is in the slides.'
             ),
             color: 'blue',
         },

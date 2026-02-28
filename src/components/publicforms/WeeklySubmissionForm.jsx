@@ -170,8 +170,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                         </h3>
                         <p className="text-xs text-gray-400 mb-4 leading-relaxed">
                             {t(
-                                'Si tiene slides o imágenes complementarias listas para proyección, súbalas aquí. NO suba su documento de notas/bosquejo — ya lo pegó arriba.',
-                                'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document — you already pasted it above.'
+                                'Si tiene slides o imágenes complementarias listas para proyección, súbalas aquí. NO suba su documento de notas/bosquejo, ya lo pegó arriba.',
+                                'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document. You already pasted it above.'
                             )}
                         </p>
                         <FileOrLinkInput
@@ -196,8 +196,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                         </h3>
                         <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
                             {t(
-                                'Suba su presentación terminada (PowerPoint, Keynote, PDF o imágenes). Este archivo se usará directamente para la proyección — asegúrese de que esté en su versión final.',
-                                'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection — make sure it is the final version.'
+                                'Suba su presentación terminada (PowerPoint, Keynote, PDF o imágenes). Este archivo se usará directamente para la proyección. Asegúrese de que esté en su versión final.',
+                                'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection. Make sure it is the final version.'
                             )}
                         </div>
                         <FileOrLinkInput
@@ -244,8 +244,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                         </p>
                         <textarea value={content} onChange={e => setContent(e.target.value)}
                             placeholder={t(
-                                "Opcional — solo si tiene texto adicional fuera de la presentación.",
-                                "Optional — only if you have additional text outside the presentation."
+                                "Opcional: solo si tiene texto adicional fuera de la presentación.",
+                                "Optional: only if you have additional text outside the presentation."
                             )}
                             className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                         />
