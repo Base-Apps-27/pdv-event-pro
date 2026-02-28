@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
+import ArtsResourcesSection from "@/components/service/ArtsResourcesSection";
 
 /**
  * ResourceCard - Displays a single resource with thumbnail and metadata
@@ -172,8 +173,12 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
     });
   }
 
-  // Video
-  if (segment.video_url) {
+  // --- ARTS RESOURCES (2026-02-28: unified section with ordering + summary cards) ---
+  // Check if this is an Artes segment with art types
+  const hasArtsData = (segment.art_types?.length > 0);
+  
+  // For non-Artes segments that happen to have video, show legacy video card
+  if (!hasArtsData && segment.video_url) {
     resources.push({
       category: t('resources.video'),
       items: [{
@@ -187,95 +192,11 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
     });
   }
 
-  // Drama Songs (up to 3)
-  const dramaSongs = [];
-  if (segment.drama_song_source) {
-    dramaSongs.push({
-      title: segment.drama_song_1_url_meta?.title || segment.drama_song_title || `${t('resources.songNumber').replace('{n}', '1')}`,
-      url: segment.drama_song_source,
-      thumbnail: segment.drama_song_1_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.drama_song_owner
-    });
-  }
-  if (segment.drama_song_2_url) {
-    dramaSongs.push({
-      title: segment.drama_song_2_url_meta?.title || segment.drama_song_2_title || `${t('resources.songNumber').replace('{n}', '2')}`,
-      url: segment.drama_song_2_url,
-      thumbnail: segment.drama_song_2_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.drama_song_2_owner
-    });
-  }
-  if (segment.drama_song_3_url) {
-    dramaSongs.push({
-      title: segment.drama_song_3_url_meta?.title || segment.drama_song_3_title || `${t('resources.songNumber').replace('{n}', '3')}`,
-      url: segment.drama_song_3_url,
-      thumbnail: segment.drama_song_3_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.drama_song_3_owner
-    });
-  }
-  if (dramaSongs.length > 0) {
-    resources.push({
-      category: t('resources.dramaSongs'),
-      items: dramaSongs
-    });
-  }
-
-  // Dance Songs (up to 3)
-  const danceSongs = [];
-  if (segment.dance_song_source) {
-    danceSongs.push({
-      title: segment.dance_song_1_url_meta?.title || segment.dance_song_title || `${t('resources.songNumber').replace('{n}', '1')}`,
-      url: segment.dance_song_source,
-      thumbnail: segment.dance_song_1_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.dance_song_owner
-    });
-  }
-  if (segment.dance_song_2_url) {
-    danceSongs.push({
-      title: segment.dance_song_2_url_meta?.title || segment.dance_song_2_title || `${t('resources.songNumber').replace('{n}', '2')}`,
-      url: segment.dance_song_2_url,
-      thumbnail: segment.dance_song_2_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.dance_song_2_owner
-    });
-  }
-  if (segment.dance_song_3_url) {
-    danceSongs.push({
-      title: segment.dance_song_3_url_meta?.title || segment.dance_song_3_title || `${t('resources.songNumber').replace('{n}', '3')}`,
-      url: segment.dance_song_3_url,
-      thumbnail: segment.dance_song_3_url_meta?.thumbnail,
-      type: 'song',
-      owner: segment.dance_song_3_owner
-    });
-  }
-  if (danceSongs.length > 0) {
-    resources.push({
-      category: t('resources.danceSongs'),
-      items: danceSongs
-    });
-  }
-
-  // Arts Directions PDF
-  if (segment.arts_run_of_show_url) {
-    resources.push({
-      category: language === 'es' ? 'Guía de Artes' : 'Arts Directions',
-      items: [{
-        title: segment.arts_run_of_show_url_meta?.title || (language === 'es' ? 'Guía de Artes' : 'Arts Directions'),
-        url: segment.arts_run_of_show_url,
-        type: 'pdf'
-      }]
-    });
-  }
-
   const hasResources = resources.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <ExternalLink className="w-4 h-4 text-pdv-teal" />
@@ -284,24 +205,31 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
         </DialogHeader>
 
         <div className="space-y-4 mt-1">
-          {!hasResources ? (
+          {/* Speaker / non-arts resources (legacy cards) */}
+          {resources.length > 0 && resources.map((group, idx) => (
+            <div key={idx} className="space-y-2">
+              <Badge variant="outline" className="text-xs">
+                {group.category}
+              </Badge>
+              <div className="space-y-2">
+                {group.items.map((item, itemIdx) => (
+                  <ResourceCard key={itemIdx} {...item} />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Arts-specific resources section (2026-02-28: ordered by performance sequence) */}
+          {hasArtsData && (
+            <ArtsResourcesSection segment={segment} language={language} />
+          )}
+
+          {/* Empty state only if nothing at all */}
+          {!hasResources && !hasArtsData && (
             <div className="text-center py-6 text-gray-500">
               <ExternalLink className="w-10 h-10 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">{t('resources.noResources')}</p>
             </div>
-          ) : (
-            resources.map((group, idx) => (
-              <div key={idx} className="space-y-2">
-                <Badge variant="outline" className="text-xs">
-                  {group.category}
-                </Badge>
-                <div className="space-y-2">
-                  {group.items.map((item, itemIdx) => (
-                    <ResourceCard key={itemIdx} {...item} />
-                  ))}
-                </div>
-              </div>
-            ))
           )}
         </div>
       </DialogContent>
