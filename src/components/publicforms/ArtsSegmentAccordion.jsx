@@ -47,9 +47,22 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     const [saving, setSaving] = useState(false);
     const [saveMsg, setSaveMsg] = useState(null);
 
+    // Track which fields the user has actually touched (edited at least once).
+    // Used at save-time to attach a field-presence summary to analytics,
+    // answering "did the user enter data before saving?" without per-keystroke noise.
+    const touchedFieldsRef = useRef(new Set());
+
     const updateField = useCallback((field, value) => {
         setSeg(prev => ({ ...prev, [field]: value }));
-    }, []);
+        // Record first touch per field (fires once per field, not per keystroke)
+        if (!touchedFieldsRef.current.has(field)) {
+            touchedFieldsRef.current.add(field);
+            base44.analytics.track({
+                eventName: 'arts_field_edited',
+                properties: { segment_id: initialSeg.id, field_name: field }
+            });
+        }
+    }, [initialSeg.id]);
 
     const toggleType = useCallback((type, checked) => {
         setSeg(prev => {
