@@ -607,15 +607,18 @@ export default function PublicProgramView() {
         {/* Compact Navigation Bar */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {/* View Type Toggle (Segmented Control style) */}
+          {/* PERF (2026-02-28): Switching view type clears opposite selection
+            * to prevent stale data flash. React-query will not re-fetch the cleared
+            * selection's key (enabled becomes false), so no wasted API calls. */}
           <div className="bg-gray-200 p-1 rounded-xl flex shrink-0 shadow-inner">
             <button
-              onClick={() => setViewType("event")}
+              onClick={() => { setViewType("event"); setSelectedServiceId(""); }}
               className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "bg-white text-pdv-teal shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             >
               {t('public.events')}
             </button>
             <button
-              onClick={() => setViewType("service")}
+              onClick={() => { setViewType("service"); setSelectedEventId(""); }}
               className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "bg-white text-pdv-green shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
             >
               {t('public.services')}
