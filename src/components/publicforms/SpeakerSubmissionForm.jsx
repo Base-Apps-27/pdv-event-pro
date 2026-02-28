@@ -292,13 +292,15 @@ export default function SpeakerSubmissionForm({ options }) {
 
             </>)}  {/* end submissionPath gate */}
 
-            <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-                {status === 'loading' ? t('Enviando...', 'Submitting...') : t('ENVIAR MENSAJE', 'SUBMIT MESSAGE')}
-            </button>
+            {submissionPath && (
+                <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {status === 'loading' ? t('Enviando...', 'Submitting...') : t('ENVIAR MENSAJE', 'SUBMIT MESSAGE')}
+                </button>
+            )}
         </form>
     );
 }

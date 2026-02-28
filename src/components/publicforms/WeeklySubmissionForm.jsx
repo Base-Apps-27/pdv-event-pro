@@ -259,8 +259,10 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                 </>
             )}
 
-            {/* Apply to siblings */}
-            {currentSiblings.length > 0 && (
+            </>)}  {/* end submissionPath gate */}
+
+            {/* Apply to siblings — only show when path is selected */}
+            {submissionPath && currentSiblings.length > 0 && (
                 <div className="mb-6">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         {currentSiblings.length === 1 ? (
@@ -290,10 +292,12 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                 </div>
             )}
 
-            <button type="submit" disabled={status === 'loading'}
-                className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
-                {status === 'loading' ? t('Enviando...', 'Submitting...') : t('ENVIAR Y PROCESAR', 'SUBMIT & PROCESS')}
-            </button>
+            {submissionPath && (
+                <button type="submit" disabled={status === 'loading'}
+                    className="w-full py-3.5 brand-gradient text-white font-bold text-sm uppercase tracking-wider rounded-lg hover:shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                    {status === 'loading' ? t('Enviando...', 'Submitting...') : t('ENVIAR Y PROCESAR', 'SUBMIT & PROCESS')}
+                </button>
+            )}
         </form>
     );
 }
