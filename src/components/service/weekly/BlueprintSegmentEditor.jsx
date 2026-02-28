@@ -113,8 +113,8 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
           />
           <Input
             type="number"
-            value={segment.duration || 0}
-            onChange={(e) => update("duration", parseInt(e.target.value) || 0)}
+            value={segment.duration ?? ''}
+            onChange={(e) => update("duration", e.target.value === '' ? '' : parseInt(e.target.value))}
             className="text-sm h-8 w-16"
             title="Duración (min)"
           />
@@ -226,8 +226,8 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
                   />
                   <Input
                     type="number"
-                    value={sub.duration_min || 5}
-                    onChange={(e) => updateSubAssignment(idx, "duration_min", parseInt(e.target.value) || 0)}
+                    value={sub.duration_min ?? ''}
+                    onChange={(e) => updateSubAssignment(idx, "duration_min", e.target.value === '' ? '' : parseInt(e.target.value))}
                     className="text-xs h-7 w-14"
                   />
                   <span className="text-[10px] text-gray-400">min</span>
@@ -270,8 +270,8 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
                   </Select>
                   <Input
                     type="number"
-                    value={action.offset_min || 0}
-                    onChange={(e) => updateAction(idx, "offset_min", parseInt(e.target.value) || 0)}
+                    value={action.offset_min ?? ''}
+                    onChange={(e) => updateAction(idx, "offset_min", e.target.value === '' ? '' : parseInt(e.target.value))}
                     className="text-xs h-7 w-14"
                     title="Offset (min)"
                   />

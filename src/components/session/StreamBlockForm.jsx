@@ -34,7 +34,7 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
     if (block) {
       setFormData({
         ...block,
-        offset_min: block.offset_min || 0,
+        offset_min: block.offset_min ?? '',
         stream_actions: block.stream_actions || []
       });
     } else {
@@ -294,8 +294,8 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
                       </Select>
                       <Input 
                         type="number"
-                        value={action.offset_min}
-                        onChange={(e) => updateAction(idx, 'offset_min', parseInt(e.target.value))}
+                        value={action.offset_min ?? ''}
+                        onChange={(e) => updateAction(idx, 'offset_min', e.target.value === '' ? '' : parseInt(e.target.value))}
                         className="h-8 w-16 text-sm"
                         placeholder="Min"
                       />
