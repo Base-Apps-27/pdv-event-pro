@@ -26,6 +26,7 @@ const translations = {
     'nav.collapseMenu': 'Colapsar Menú',
     'nav.expandMenu': 'Expandir',
     'nav.dependencies': 'Dependencias',
+    'nav.artsSubmissions': 'Envíos de Artes',
 
     // Sections
     'section.main': 'Panel Principal',
@@ -514,6 +515,7 @@ const translations = {
     'nav.expandMenu': 'Expand',
     'nav.dependencies': 'Dependencies',
     'nav.activityLog': 'Activity Log',
+    'nav.artsSubmissions': 'Arts Submissions',
 
     // Sections
     'section.main': 'Main Panel',
