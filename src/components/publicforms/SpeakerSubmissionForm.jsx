@@ -6,23 +6,31 @@
  * 
  * CSP Migration (2026-02-27): Replaces inline JS from serveSpeakerSubmission.
  * Uses base44 SDK invoke (same-origin, trusted shell) instead of raw fetch.
+ * 
+ * UX Refactor (2026-02-28): 2-step path fork replaces flat form layout.
+ * Path A ("notes") = paste message + optional slides. Path B ("slides") = upload deck + optional outline.
+ * The slidesOnly checkbox is eliminated — path choice sets content_is_slides_only implicitly.
  */
 import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
 import FileOrLinkInput from './FileOrLinkInput';
 import { usePublicLang } from './PublicFormLangContext';
+import SubmissionPathSelector from './SubmissionPathSelector';
 
 export default function SpeakerSubmissionForm({ options }) {
     const { t } = usePublicLang();
+    const [submissionPath, setSubmissionPath] = useState(''); // 'notes' | 'slides'
     const [segmentId, setSegmentId] = useState('');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [presentationUrl, setPresentationUrl] = useState('');
     const [notesUrl, setNotesUrl] = useState('');
-    const [slidesOnly, setSlidesOnly] = useState(false);
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
+
+    // Derived from path choice — replaces the old slidesOnly checkbox
+    const slidesOnly = submissionPath === 'slides';
 
     // Generate a stable idempotency key per mount
     const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
@@ -101,6 +109,12 @@ export default function SpeakerSubmissionForm({ options }) {
                 </div>
             )}
 
+            {/* Step 1: Path Selection — determines which fields appear below */}
+            <SubmissionPathSelector value={submissionPath} onChange={setSubmissionPath} />
+
+            {/* Everything below only shows once a path is selected */}
+            {submissionPath && (<>
+
             {/* Section 1: Session Info */}
             <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
                 <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
@@ -150,81 +164,133 @@ export default function SpeakerSubmissionForm({ options }) {
                 </div>
             </div>
 
-            {/* Section 2: Visual Material */}
-            <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
-                <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
-                    {t('MATERIAL VISUAL Y NOTAS', 'VISUAL MATERIAL & NOTES')}
-                </h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
-                    {t(
-                        'Por favor suba únicamente material final listo para proyección. Si necesita crear o ajustar algún contenido, le pedimos coordinar primero con la oficina para asegurar que todo esté preparado correctamente.',
-                        'Please upload only final material ready for projection. If you need to create or adjust any content, please coordinate with the office first to ensure everything is properly prepared.'
-                    )}
-                </div>
-                <div className="mb-4">
-                    <FileOrLinkInput
-                        value={presentationUrl}
-                        onChange={setPresentationUrl}
-                        label={t('Presentación / Slides Finales (Opcional)', 'Final Presentation / Slides (Optional)')}
-                        accept="image/*,.pdf,.pptx"
-                        placeholder="https://drive.google.com/..."
-                        helpText={t('Suba el archivo final (≤50MB) o pegue un enlace.', 'Upload the final file (≤50MB) or paste a link.')}
-                    />
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                    <input
-                        type="checkbox"
-                        id="slidesOnly"
-                        checked={slidesOnly}
-                        onChange={e => setSlidesOnly(e.target.checked)}
-                        className="w-4.5 h-4.5 accent-[#1F8A70]"
-                    />
-                    <label htmlFor="slidesOnly" className="text-sm font-medium text-gray-700 cursor-pointer">
-                        {t('Este material contiene todo el contenido (No se requieren versículos aparte)', 'This material contains all the content (No separate verses needed)')}
-                    </label>
-                </div>
-                {slidesOnly && (
-                    <div>
+            {/* ── PATH A ("notes"): Paste first, optional slides second ── */}
+            {submissionPath === 'notes' && (
+                <>
+                    {/* Primary: Verses / Paste content */}
+                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
+                        <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
+                            {t('VERSÍCULOS PARA PROYECCIÓN', 'VERSES FOR PROJECTION')}
+                        </h3>
+                        {/* Instruction banner — makes the primary action crystal clear */}
+                        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-amber-800">
+                            <span className="font-bold">{t('📋 Pegue su texto aquí', '📋 Paste your text here')}</span>{' — '}
+                            {t(
+                                'Copie y pegue sus notas, bosquejo o documento completo. Nuestro sistema identificará y extraerá automáticamente todos los versículos bíblicos para proyección. No suba un archivo Word aquí — use el campo de abajo solo para slides complementarios.',
+                                'Copy and paste your notes, outline, or full document. Our system will automatically identify and extract all Bible verses for projection. Do not upload a Word file here — use the field below only for supplemental slides.'
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                                {t('Pegue sus notas aquí (El sistema detectará los versículos)', 'Paste your notes here (The system will detect the verses)')}
+                                <span className="text-red-600 ml-1">*</span>
+                            </label>
+                            <textarea
+                                value={content}
+                                onChange={e => setContent(e.target.value)}
+                                required
+                                placeholder={t(
+                                    "No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto.",
+                                    "No need to separate the verses. You can paste your entire document here and we'll do the rest."
+                                )}
+                                className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[180px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Secondary: Optional supplemental slides */}
+                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-gray-300 p-6 mb-6">
+                        <h3 className="text-xl text-gray-500 tracking-wide mb-2">
+                            {t('MATERIAL COMPLEMENTARIO (OPCIONAL)', 'SUPPLEMENTAL MATERIAL (OPTIONAL)')}
+                        </h3>
+                        <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                            {t(
+                                'Si tiene slides o imágenes complementarias listas para proyección, súbalas aquí. NO suba su documento de notas/bosquejo — ya lo pegó arriba.',
+                                'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document — you already pasted it above.'
+                            )}
+                        </p>
+                        <FileOrLinkInput
+                            value={presentationUrl}
+                            onChange={setPresentationUrl}
+                            label={t('Slides Complementarios (Opcional)', 'Supplemental Slides (Optional)')}
+                            accept="image/*,.pdf,.pptx"
+                            placeholder="https://drive.google.com/..."
+                            helpText={t('Solo presentaciones o imágenes (≤50MB). No documentos Word.', 'Presentations or images only (≤50MB). Not Word documents.')}
+                        />
+                    </div>
+                </>
+            )}
+
+            {/* ── PATH B ("slides"): Upload deck first, optional outline second ── */}
+            {submissionPath === 'slides' && (
+                <>
+                    {/* Primary: Upload the finished presentation */}
+                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-blue-400 p-6 mb-6">
+                        <h3 className="text-xl text-blue-600 tracking-wide mb-4">
+                            {t('PRESENTACIÓN FINAL', 'FINAL PRESENTATION')}
+                        </h3>
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
+                            {t(
+                                'Suba su presentación terminada (PowerPoint, Keynote, PDF o imágenes). Este archivo se usará directamente para la proyección — asegúrese de que esté en su versión final.',
+                                'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection — make sure it is the final version.'
+                            )}
+                        </div>
+                        <FileOrLinkInput
+                            value={presentationUrl}
+                            onChange={setPresentationUrl}
+                            label={t('Presentación / Slides Finales', 'Final Presentation / Slides')}
+                            accept="image/*,.pdf,.pptx"
+                            placeholder="https://drive.google.com/..."
+                            helpText={t('Suba el archivo final (≤50MB) o pegue un enlace.', 'Upload the final file (≤50MB) or paste a link.')}
+                        />
+                    </div>
+
+                    {/* Secondary: Optional outline/notes for the media team */}
+                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-gray-300 p-6 mb-6">
+                        <h3 className="text-xl text-gray-500 tracking-wide mb-2">
+                            {t('BOSQUEJO / NOTAS (OPCIONAL)', 'OUTLINE / NOTES (OPTIONAL)')}
+                        </h3>
+                        <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                            {t(
+                                'Si tiene un bosquejo o guía para que el equipo de medios pueda seguir la presentación, súbalo aquí.',
+                                'If you have an outline or guide so the media team can follow the presentation, upload it here.'
+                            )}
+                        </p>
                         <FileOrLinkInput
                             value={notesUrl}
                             onChange={setNotesUrl}
-                            label={t('Bosquejo / Notas Finales (PDF o Doc)', 'Final Outline / Notes (PDF or Doc)')}
+                            label={t('Bosquejo / Notas (Opcional)', 'Outline / Notes (Optional)')}
                             accept=".pdf,.doc,.docx"
-                            placeholder={t('Enlace a notas (Opcional)', 'Link to notes (Optional)')}
-                            helpText={t('Suba el PDF final o pegue un enlace.', 'Upload the final PDF or paste a link.')}
+                            placeholder={t('Enlace a notas', 'Link to notes')}
+                            helpText={t('PDF, Word o enlace.', 'PDF, Word, or link.')}
                         />
                     </div>
-                )}
-            </div>
 
-            {/* Section 3: Verses */}
-            <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-pdv-teal p-6 mb-6">
-                <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
-                    {t('VERSÍCULOS PARA PROYECCIÓN', 'VERSES FOR PROJECTION')}
-                </h3>
-                <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-                    {t(
-                        'Para proyectar sus textos bíblicos en pantalla, necesitamos identificarlos. Por favor, pegue aquí sus notas o bosquejo completo. Nuestro sistema identificará y extraerá automáticamente todos los versículos por usted.',
-                        'To display your Bible texts on screen, we need to identify them. Please paste your complete notes or outline here. Our system will automatically identify and extract all the verses for you.'
-                    )}
-                </p>
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        {t('Pegue sus notas aquí (El sistema detectará los versículos)', 'Paste your notes here (The system will detect the verses)')}
-                        {!slidesOnly && <span className="text-red-600 ml-1">*</span>}
-                    </label>
-                    <textarea
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
-                        required={!slidesOnly}
-                        placeholder={slidesOnly
-                            ? t("Si marcó 'Solo Slides', este campo es opcional.", "If you checked 'Slides Only', this field is optional.")
-                            : t("No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto.", "No need to separate the verses. You can paste your entire document here and we'll do the rest.")
-                        }
-                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[180px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
-                    />
-                </div>
-            </div>
+                    {/* Optional paste — truly secondary for path B */}
+                    <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-gray-200 p-6 mb-6">
+                        <h3 className="text-xl text-gray-400 tracking-wide mb-2">
+                            {t('TEXTO ADICIONAL (OPCIONAL)', 'ADDITIONAL TEXT (OPTIONAL)')}
+                        </h3>
+                        <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                            {t(
+                                'Si desea agregar notas o texto adicional que no está en la presentación, puede pegarlo aquí.',
+                                'If you want to add notes or additional text not in the presentation, you can paste it here.'
+                            )}
+                        </p>
+                        <textarea
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            placeholder={t(
+                                "Opcional — solo si tiene texto adicional fuera de la presentación.",
+                                "Optional — only if you have additional text outside the presentation."
+                            )}
+                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                        />
+                    </div>
+                </>
+            )}
+
+            </>)}  {/* end submissionPath gate */}
 
             <button
                 type="submit"
