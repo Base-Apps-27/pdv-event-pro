@@ -694,43 +694,43 @@ export default function PublicProgramSegment({
             {getData('coordinator_notes') && (
               <div className="bg-orange-50 border-l-4 border-orange-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-orange-800 block mb-0.5 sm:mb-1">{t('live.coordination')}:</span>
-                <p className="text-orange-900 leading-snug">{getData('coordinator_notes')}</p>
+                <p className="text-orange-900 leading-snug whitespace-pre-wrap">{getData('coordinator_notes')}</p>
               </div>
             )}
             {getData('projection_notes') && (
               <div className="bg-slate-100 border-l-4 border-slate-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-slate-700 block mb-0.5 sm:mb-1">{t('live.projection')}:</span>
-                <p className="text-slate-800 leading-snug">{getData('projection_notes')}</p>
+                <p className="text-slate-800 leading-snug whitespace-pre-wrap">{getData('projection_notes')}</p>
               </div>
             )}
             {getData('sound_notes') && (
               <div className="bg-red-50 border-l-4 border-red-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-red-800 block mb-0.5 sm:mb-1">{t('live.sound')}:</span>
-                <p className="text-red-900 leading-snug">{getData('sound_notes')}</p>
+                <p className="text-red-900 leading-snug whitespace-pre-wrap">{getData('sound_notes')}</p>
               </div>
             )}
             {getData('ushers_notes') && (
               <div className="bg-green-50 border-l-4 border-green-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-green-800 block mb-0.5 sm:mb-1">{t('live.ushers')}:</span>
-                <p className="text-green-900 leading-snug">{getData('ushers_notes')}</p>
+                <p className="text-green-900 leading-snug whitespace-pre-wrap">{getData('ushers_notes')}</p>
               </div>
             )}
             {getData('translation_notes') && (
               <div className="bg-purple-50 border-l-4 border-purple-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-purple-800 block mb-0.5 sm:mb-1">{t('live.translation')}:</span>
-                <p className="text-purple-900 leading-snug">{getData('translation_notes')}</p>
+                <p className="text-purple-900 leading-snug whitespace-pre-wrap">{getData('translation_notes')}</p>
               </div>
             )}
             {getData('stage_decor_notes') && (
               <div className="bg-purple-50 border-l-4 border-purple-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-purple-800 block mb-0.5 sm:mb-1">{t('live.stageDecor')}:</span>
-                <p className="text-purple-900 leading-snug">{getData('stage_decor_notes')}</p>
+                <p className="text-purple-900 leading-snug whitespace-pre-wrap">{getData('stage_decor_notes')}</p>
               </div>
             )}
             {getData('other_notes') && (
               <div className="bg-gray-50 border-l-4 border-gray-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-gray-800 block mb-0.5 sm:mb-1">{t('live.other') || 'Otro'}:</span>
-                <p className="text-gray-900 leading-snug">{getData('other_notes')}</p>
+                <p className="text-gray-900 leading-snug whitespace-pre-wrap">{getData('other_notes')}</p>
               </div>
             )}
             {getData('prep_instructions') && (
@@ -742,7 +742,7 @@ export default function PublicProgramSegment({
             {getData('microphone_assignments') && (
               <div className="bg-red-50 border-l-4 border-red-500 pl-2 sm:pl-3 py-1.5 sm:py-2 text-xs rounded-r">
                 <span className="font-bold text-red-800 block mb-0.5 sm:mb-1">Mics:</span>
-                <p className="text-red-900 leading-snug">{getData('microphone_assignments')}</p>
+                <p className="text-red-900 leading-snug whitespace-pre-wrap">{getData('microphone_assignments')}</p>
               </div>
             )}
           </div>
@@ -877,7 +877,7 @@ export default function PublicProgramSegment({
             {/* General Description/Details */}
             {(getData('description_details') || getData('description')) && (
               <div className="bg-gray-100 border-l-4 border-gray-500 p-2 mt-2 rounded-r">
-                <p className="text-xs text-gray-900 font-medium">
+                <p className="text-xs text-gray-900 font-medium whitespace-pre-wrap">
                   <strong>📝 {t('live.notes')}:</strong> {getData('description_details') || getData('description')}
                 </p>
               </div>
