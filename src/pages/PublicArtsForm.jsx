@@ -10,7 +10,7 @@
  * 
  * Build: 2026-02-27T18:00Z — forced deploy
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import ArtsFormHeader from '@/components/publicforms/ArtsFormHeader';
 import ArtsGateForm from '@/components/publicforms/ArtsGateForm';
@@ -42,6 +42,11 @@ export default function PublicArtsForm() {
                 setEvent(data.event);
                 setSegments(data.segments || []);
                 setIsUnica(data.isUnicaEvent || false);
+                // Analytics: track form load with segment count
+                base44.analytics.track({
+                    eventName: 'arts_form_loaded',
+                    properties: { segment_count: (data.segments || []).length, event_name: data.event?.name || '' }
+                });
             }
             setLoading(false);
         };

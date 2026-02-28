@@ -5,6 +5,7 @@
  * CSP Migration (2026-02-27): Replaces inline JS gate from serveArtsSubmission.
  */
 import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import { usePublicLang } from './PublicFormLangContext';
 
 export default function ArtsGateForm({ onEnter }) {
@@ -22,6 +23,11 @@ export default function ArtsGateForm({ onEnter }) {
             setError(t('Por favor ingrese un correo válido.', 'Please enter a valid email.'));
             return;
         }
+        // Analytics: track gate entry (user identified themselves)
+        base44.analytics.track({
+            eventName: 'arts_gate_entered',
+            properties: { success: true }
+        });
         onEnter({ name, email });
     };
 
