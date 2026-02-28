@@ -246,9 +246,10 @@ export default function PublicProgramView() {
   useEffect(() => {
     if (!currentUser) return;
 
-    // Only subscribe to entity changes when viewing a NON-cached selection
-    // (cached path is fully handled by useActiveProgramCache → ActiveProgramCache sub)
-    if (isCachedSelection) return;
+    // PERF (2026-02-28): Always subscribe to entity changes — even for cached selections.
+    // The explicit fetch now always runs as background revalidation, so we need subs
+    // to invalidate it when entities change. The cache sub (useActiveProgramCache)
+    // handles instant updates; these subs keep the explicit fetch current too.
 
     const unsubscribers = [];
 
