@@ -100,7 +100,7 @@ function VideoSection({ seg, lang }) {
       {seg.video_name && <InfoRow label={es ? 'Nombre' : 'Name'} value={seg.video_name} />}
       {seg.video_owner && <InfoRow label={es ? 'Responsable' : 'Owner'} value={seg.video_owner} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
       {seg.video_location && <InfoRow label={es ? 'Ubicación' : 'Location'} value={seg.video_location} />}
-      {seg.video_length_sec > 0 && <InfoRow label={es ? 'Duración' : 'Duration'} value={`${seg.video_length_sec}s`} />}
+      {seg.video_length_sec > 0 && <InfoRow label={es ? 'Duración' : 'Duration'} value={`${Math.floor(seg.video_length_sec / 60)}:${String(seg.video_length_sec % 60).padStart(2, '0')}`} />}
       <LinkRow label={seg.video_url_meta?.title || seg.video_name || 'Video'} url={seg.video_url} type="video" />
     </div>
   );

@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import ArtsTypeOrderEditor from "@/components/session/ArtsTypeOrderEditor";
+import VideoDurationInput from "@/components/publicforms/VideoDurationInput";
 
 // Toggle helper for Artes multiselect
 const toggleArtType = (formData, setFormData, val) => {
@@ -302,10 +303,14 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
               <Label className="text-xs">{language === 'es' ? 'Responsable' : 'Owner'}</Label>
               <Input value={formData.video_owner || ""} onChange={(e) => setFormData({ ...formData, video_owner: e.target.value })} className="h-8 text-sm" />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{language === 'es' ? 'Duración (seg)' : 'Duration (sec)'}</Label>
-              <Input type="number" value={formData.video_length_sec ?? ''} onChange={(e) => setFormData({ ...formData, video_length_sec: e.target.value === '' ? '' : parseInt(e.target.value) })} className="h-8 text-sm" />
-            </div>
+            <VideoDurationInput
+              value={formData.video_length_sec}
+              onChange={v => setFormData({ ...formData, video_length_sec: v })}
+              labelEs="Duración"
+              labelEn="Duration"
+              t={(es, en) => language === 'es' ? es : en}
+              className="h-8 text-sm w-full p-2 border border-gray-200 rounded-md bg-white focus:outline-none focus:border-[#1F8A70]"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>

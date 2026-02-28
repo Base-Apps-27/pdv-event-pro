@@ -252,7 +252,7 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
 
   // Artes - full details matching HTML (types, mics, cues, songs)
   if (seg.segment_type === 'Artes' && Array.isArray(seg.art_types) && seg.art_types.length) {
-    const artLabels = seg.art_types.map(t => (t === 'DANCE' ? 'Danza' : t === 'DRAMA' ? 'Drama' : t === 'VIDEO' ? 'Video' : 'Otro')).join(', ');
+    const artLabels = seg.art_types.map(t => ({ DANCE: 'Danza', DRAMA: 'Drama', VIDEO: 'Video', SPOKEN_WORD: 'Spoken Word', PAINTING: 'Pintura', OTHER: 'Otro' }[t] || t)).join(', ');
     stack.push({
       text: [{ text: 'ARTES: ', bold: true, color: '#831843', fontSize: pdfTheme.fontSize.sm }, { text: artLabels, fontSize: pdfTheme.fontSize.sm }],
       margin: [0, 0, 0, 1],
