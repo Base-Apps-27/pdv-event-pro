@@ -114,7 +114,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec ?? '', video_location: seg.video_location || '',
                 art_other_description: seg.art_other_description || '', arts_run_of_show_url: seg.arts_run_of_show_url || '',
                 description_details: seg.description_details || '',
-                // Spoken Word (expanded 2026-02-28 with description, speaker, script)
+                // Spoken Word (expanded 2026-02-28 with description, speaker, script, audio)
                 spoken_word_mic_position: seg.spoken_word_mic_position || '', spoken_word_has_music: seg.spoken_word_has_music || false,
                 spoken_word_music_title: seg.spoken_word_music_title || '', spoken_word_music_url: seg.spoken_word_music_url || '',
                 spoken_word_music_owner: seg.spoken_word_music_owner || '', spoken_word_notes: seg.spoken_word_notes || '',
@@ -128,6 +128,29 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 painting_other_setup: seg.painting_other_setup || '', painting_notes: seg.painting_notes || '',
             }
         };
+
+        // Analytics: track save attempt with field-presence summary (2026-02-28).
+        const d = payload.data;
+        const filledFields = Object.entries(d).filter(([_, v]) => {
+            if (typeof v === 'boolean') return v;
+            if (typeof v === 'number') return v > 0;
+            if (Array.isArray(v)) return v.length > 0;
+            return !!v && v !== '';
+        }).map(([k]) => k);
+
+        base44.analytics.track({
+            eventName: 'arts_save_attempt',
+            properties: {
+                segment_id: seg.id,
+                segment_title: seg.title || '',
+                art_types: (seg.art_types || []).join(','),
+                filled_field_count: filledFields.length,
+                total_field_count: Object.keys(d).length,
+                filled_fields: filledFields.join(','),
+                touched_field_count: touchedFieldsRef.current.size,
+                touched_fields: Array.from(touchedFieldsRef.current).join(',')
+            }
+        });
 
         try {
             const res = await base44.functions.invoke('submitArtsSegment', payload);
