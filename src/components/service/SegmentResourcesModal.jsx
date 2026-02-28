@@ -39,7 +39,7 @@ import ArtsResourcesSection from "@/components/service/ArtsResourcesSection";
  * ResourceCard - Displays a single resource with thumbnail and metadata
  */
 function ResourceCard({ title, subtitle, url, thumbnail, type, owner, icon, action }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   if (!url && !action) return null;
 
