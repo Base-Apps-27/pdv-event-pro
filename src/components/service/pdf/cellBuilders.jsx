@@ -319,6 +319,26 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
+  // Sub-Assignments (Ministración / worship sub-roles) — matching weekly PDF + editor UI
+  // 2026-02-28: Added — was missing from event reports (present in weekly PDF + editor)
+  // Uses purple family to match editor's SubAssignmentRow (bg-purple-50, text-purple-800)
+  if (Array.isArray(seg.ui_sub_assignments) && seg.ui_sub_assignments.length > 0) {
+    seg.ui_sub_assignments.forEach(sub => {
+      // Look for child entity presenter (populated by buildPdfData or direct entity fields)
+      const val = sub._childPresenter || seg[sub.person_field_name] || '';
+      if (val) {
+        stack.push({
+          text: [
+            { text: `${sub.label}: `, bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
+            { text: val, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm },
+            sub.duration_min ? { text: ` (${sub.duration_min}m)`, color: pdfTheme.text.muted, fontSize: pdfTheme.fontSize.xs } : '',
+          ],
+          margin: [0, 0, 0, pdfTheme.spacing.textMarginBottom],
+        });
+      }
+    });
+  }
+
   // Message (Plenaria) - full title
   if (seg.segment_type === 'Plenaria' && seg.message_title) {
     stack.push({
