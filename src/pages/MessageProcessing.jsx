@@ -102,6 +102,8 @@ export default function MessageProcessingPage() {
             ]);
             
             // Standardize structure
+            // 2026-02-28: Added presentation_url, notes_url, content_is_slides_only
+            // so they are visible in Message Processing cards.
             const all = [...pendingSeg, ...processedSeg].map(seg => ({
                 id: seg.id,
                 title: seg.title,
@@ -110,6 +112,10 @@ export default function MessageProcessingPage() {
                 parsed_verse_data: seg.parsed_verse_data,
                 submission_status: seg.submission_status,
                 updated_date: seg.updated_date,
+                presentation_url: seg.presentation_url,
+                notes_url: seg.notes_url,
+                content_is_slides_only: seg.content_is_slides_only,
+                message_title: seg.message_title,
             }));
 
             // Sort by most recently updated
@@ -314,7 +320,22 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                             <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 min-h-[5rem] border border-gray-100 relative overflow-hidden">
                                 {segment.submitted_content ? (
                                     <p className="line-clamp-3 italic">"{segment.submitted_content}"</p>
-                                ) : segment.parsed_verse_data ? (
+                                ) : segment.content_is_slides_only ? (
+                                    <div className="flex flex-col gap-1.5">
+                                        <Badge className="bg-blue-100 text-blue-800 w-fit text-[10px]">Solo Slides</Badge>
+                                        {segment.message_title && <div className="font-semibold text-gray-700 truncate">{segment.message_title}</div>}
+                                        {segment.presentation_url && (
+                                            <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
+                                                📎 Presentación
+                                            </a>
+                                        )}
+                                        {segment.notes_url && (
+                                            <a href={segment.notes_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
+                                                📄 Notas
+                                            </a>
+                                        )}
+                                    </div>
+                                ) : segment.parsed_verse_data && segment.parsed_verse_data.type !== 'empty' ? (
                                     <div className="flex flex-col gap-1">
                                         <div className="font-semibold text-gray-700">Contenido Procesado:</div>
                                         <div className="line-clamp-2">
@@ -322,7 +343,24 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-gray-400 text-center py-4">Sin contenido</p>
+                                    <div className="flex flex-col gap-1.5">
+                                        {(segment.presentation_url || segment.notes_url) ? (
+                                            <>
+                                                {segment.presentation_url && (
+                                                    <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
+                                                        📎 Presentación
+                                                    </a>
+                                                )}
+                                                {segment.notes_url && (
+                                                    <a href={segment.notes_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
+                                                        📄 Notas
+                                                    </a>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p className="text-gray-400 text-center py-4">Sin contenido</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
 

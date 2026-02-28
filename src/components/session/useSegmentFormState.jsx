@@ -107,6 +107,11 @@ function buildFormData(segment, suggestedStartTime) {
     announcement_series_id: segment?.announcement_series_id || "",
     segment_actions: segment?.segment_actions || [],
     parsed_verse_data: segment?.parsed_verse_data || null,
+    // 2026-02-28: These fields were missing, causing segment editor to show empty
+    // even though the data was correctly saved on the entity by submitSpeakerContent.
+    presentation_url: segment?.presentation_url || "",
+    notes_url: segment?.notes_url || "",
+    content_is_slides_only: segment?.content_is_slides_only || false,
   };
 }
 
