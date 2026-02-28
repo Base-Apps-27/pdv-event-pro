@@ -124,7 +124,6 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
   }, [initialSeg.id]);
 
   // handleSave reads from segRef.current to always get latest state (not stale closure)
-  // handleSave reads from segRef.current to always get latest state (not stale closure)
   const handleSave = useCallback(async () => {
     const currentSeg = segRef.current; // always-fresh reference
     setSaving(true);
@@ -219,7 +218,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
   };
 
   return (
-    <div ref={segmentRef} className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4 hover:border-gray-300 transition-colors" id={`seg-${seg.id}`}>
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4 hover:border-gray-300 transition-colors" id={`seg-${seg.id}`}>
       {/* Accordion header */}
       <button onClick={() => {
         onToggle(seg.id);
