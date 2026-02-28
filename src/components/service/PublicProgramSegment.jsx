@@ -809,6 +809,8 @@ export default function PublicProgramSegment({
               // Collect key media items per type (song/video name + person — the "survive without modal" data)
               const mediaItems = [];
               allTypes.forEach(type => {
+                // 2026-02-28: All media checks use data presence, NOT checkboxes
+                // (drama_has_song, dance_has_song, spoken_word_has_music may not be set)
                 if (type === 'DRAMA') {
                   if (getData('drama_song_title')) mediaItems.push({ type: 'Drama', label: getData('drama_song_title'), person: getData('drama_song_owner') });
                   if (getData('drama_song_2_title')) mediaItems.push({ type: 'Drama', label: getData('drama_song_2_title'), person: getData('drama_song_2_owner') });
