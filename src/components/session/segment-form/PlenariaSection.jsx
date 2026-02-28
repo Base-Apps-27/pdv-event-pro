@@ -54,24 +54,39 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
           </Label>
         </div>
       </div>
-      <div className="space-y-2 pt-2 border-t border-orange-200">
-        <div className="flex items-center justify-between">
-          <Label>Citas Bíblicas</Label>
-        </div>
-        {formData.parsed_verse_data ? (
-          <div className="mt-3 bg-white p-3 rounded-md border border-orange-100 shadow-sm">
-            <ParsedContentPreview parsedData={formData.parsed_verse_data} language={language} />
+      {/* 2026-02-28: Hide Citas Bíblicas section entirely for slides-only submissions.
+          When content_is_slides_only=true, parsed_verse_data is always {type:'empty'} by design.
+          Showing "No processed content" is misleading — the submission was processed correctly. */}
+      {!formData.content_is_slides_only && (
+        <div className="space-y-2 pt-2 border-t border-orange-200">
+          <div className="flex items-center justify-between">
+            <Label>Citas Bíblicas</Label>
           </div>
-        ) : (
-          <div className="mt-2 border border-dashed border-orange-200 rounded-md p-4 text-center bg-orange-50/50">
-            <BookOpen className="w-6 h-6 text-orange-200 mx-auto mb-2" />
-            <p className="text-xs text-gray-500">{language === 'es' ? 'Sin contenido procesado' : 'No processed content'}</p>
-            <p className="text-[10px] text-gray-400 mt-1">
-              {language === 'es' ? 'Las citas bíblicas son de solo lectura aquí. Ve a Procesamiento de Mensajes para modificar.' : 'Verses are read-only here. Go to Message Processing to modify.'}
+          {formData.parsed_verse_data && formData.parsed_verse_data.type !== 'empty' ? (
+            <div className="mt-3 bg-white p-3 rounded-md border border-orange-100 shadow-sm">
+              <ParsedContentPreview parsedData={formData.parsed_verse_data} language={language} />
+            </div>
+          ) : (
+            <div className="mt-2 border border-dashed border-orange-200 rounded-md p-4 text-center bg-orange-50/50">
+              <BookOpen className="w-6 h-6 text-orange-200 mx-auto mb-2" />
+              <p className="text-xs text-gray-500">{language === 'es' ? 'Sin contenido procesado' : 'No processed content'}</p>
+              <p className="text-[10px] text-gray-400 mt-1">
+                {language === 'es' ? 'Las citas bíblicas son de solo lectura aquí. Ve a Procesamiento de Mensajes para modificar.' : 'Verses are read-only here. Go to Message Processing to modify.'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      {formData.content_is_slides_only && (
+        <div className="mt-2 pt-2 border-t border-orange-200">
+          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+            <Sparkles className="w-4 h-4 text-green-600 shrink-0" />
+            <p className="text-xs text-green-800">
+              {language === 'es' ? 'Contenido de solo slides — las citas bíblicas se manejan dentro de la presentación.' : 'Slides-only content — scripture references are handled within the presentation.'}
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
