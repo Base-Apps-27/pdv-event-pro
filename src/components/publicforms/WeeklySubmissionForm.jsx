@@ -149,13 +149,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                         <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
                             {t('VERSÍCULOS PARA PROYECCIÓN', 'VERSES FOR PROJECTION')}
                         </h3>
-                        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-amber-800">
-                            <span className="font-bold">{t('📋 Pegue su texto aquí', '📋 Paste your text here')}</span>{' — '}
-                            {t(
-                                'Copie y pegue sus notas, bosquejo o documento completo. Nuestro sistema identificará y extraerá automáticamente todos los versículos bíblicos para proyección. No suba un archivo Word aquí — use el campo de abajo solo para slides complementarios.',
-                                'Copy and paste your notes, outline, or full document. Our system will automatically identify and extract all Bible verses for projection. Do not upload a Word file here — use the field below only for supplemental slides.'
-                            )}
-                        </div>
+
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                             {t('Pegue su mensaje completo (para extracción de versículos)', 'Paste your complete message (for verse extraction)')}
                             <span className="text-red-600 ml-1">*</span>
