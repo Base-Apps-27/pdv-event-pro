@@ -11,6 +11,7 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
 import ParsedContentPreview from "@/components/service/ParsedContentPreview";
 import AdminSubmissionGate from "@/components/message-processing/AdminSubmissionGate";
+import MessageMaterialSection from "@/components/message-processing/MessageMaterialSection";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { toast } from "sonner";
@@ -269,7 +270,7 @@ export default function MessageProcessingPage() {
     );
 }
 
-function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, emptyMessage }) {
+function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, emptyMessage, onMaterialUpdated }) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
@@ -317,24 +318,9 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                         
                         <CardContent className="flex-1 flex flex-col justify-end space-y-4">
                             {/* Preview Snippet */}
-                            <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 min-h-[5rem] border border-gray-100 relative overflow-hidden">
+                            <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 min-h-[3rem] border border-gray-100 relative overflow-hidden">
                                 {segment.submitted_content ? (
                                     <p className="line-clamp-3 italic">"{segment.submitted_content}"</p>
-                                ) : segment.content_is_slides_only ? (
-                                    <div className="flex flex-col gap-1.5">
-                                        <Badge className="bg-blue-100 text-blue-800 w-fit text-[10px]">Solo Slides</Badge>
-                                        {segment.message_title && <div className="font-semibold text-gray-700 truncate">{segment.message_title}</div>}
-                                        {segment.presentation_url && (
-                                            <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
-                                                📎 Presentación
-                                            </a>
-                                        )}
-                                        {segment.notes_url && (
-                                            <a href={segment.notes_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
-                                                📄 Notas
-                                            </a>
-                                        )}
-                                    </div>
                                 ) : segment.parsed_verse_data && segment.parsed_verse_data.type !== 'empty' ? (
                                     <div className="flex flex-col gap-1">
                                         <div className="font-semibold text-gray-700">Contenido Procesado:</div>
@@ -343,26 +329,12 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col gap-1.5">
-                                        {(segment.presentation_url || segment.notes_url) ? (
-                                            <>
-                                                {segment.presentation_url && (
-                                                    <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
-                                                        📎 Presentación
-                                                    </a>
-                                                )}
-                                                {segment.notes_url && (
-                                                    <a href={segment.notes_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline truncate block">
-                                                        📄 Notas
-                                                    </a>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <p className="text-gray-400 text-center py-4">Sin contenido</p>
-                                        )}
-                                    </div>
+                                    <p className="text-gray-400 text-center py-2">Sin contenido de texto</p>
                                 )}
                             </div>
+
+                            {/* Material section with upload/link support */}
+                            <MessageMaterialSection segment={segment} onUpdated={onMaterialUpdated} />
 
                             <div className="flex gap-2 mt-auto">
                                 <Button 

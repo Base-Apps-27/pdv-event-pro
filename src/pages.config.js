@@ -49,6 +49,7 @@
  */
 import ActivityLog from './pages/ActivityLog';
 import AnnouncementsReport from './pages/AnnouncementsReport';
+import ArtsSubmissions from './pages/ArtsSubmissions';
 import BuildMemory from './pages/BuildMemory';
 import Calendar from './pages/Calendar';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
@@ -91,13 +92,13 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import ArtsSubmissions from './pages/ArtsSubmissions';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "ActivityLog": ActivityLog,
     "AnnouncementsReport": AnnouncementsReport,
+    "ArtsSubmissions": ArtsSubmissions,
     "BuildMemory": BuildMemory,
     "Calendar": Calendar,
     "CustomServiceBuilder": CustomServiceBuilder,
@@ -140,7 +141,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "ArtsSubmissions": ArtsSubmissions,
 }
 
 export const pagesConfig = {
