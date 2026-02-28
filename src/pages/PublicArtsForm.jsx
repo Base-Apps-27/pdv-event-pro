@@ -15,6 +15,8 @@ import { base44 } from '@/api/base44Client';
 import ArtsFormHeader from '@/components/publicforms/ArtsFormHeader';
 import ArtsGateForm from '@/components/publicforms/ArtsGateForm';
 import ArtsSegmentAccordion from '@/components/publicforms/ArtsSegmentAccordion';
+import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
+import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
 export default function PublicArtsForm() {
     const [loading, setLoading] = useState(true);
@@ -69,8 +71,12 @@ export default function PublicArtsForm() {
     }
 
     return (
+        <PublicFormLangProvider>
         <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
             <div className="w-full max-w-[720px] mx-auto">
+                <div className="flex justify-end mb-2">
+                    <PublicFormLangToggle />
+                </div>
                 <ArtsFormHeader event={event} />
 
                 {!gateUser ? (
@@ -106,5 +112,6 @@ export default function PublicArtsForm() {
                 )}
             </div>
         </div>
+        </PublicFormLangProvider>
     );
 }

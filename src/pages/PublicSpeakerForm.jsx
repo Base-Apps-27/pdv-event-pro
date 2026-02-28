@@ -15,6 +15,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import SpeakerFormHeader from '@/components/publicforms/SpeakerFormHeader';
 import SpeakerSubmissionForm from '@/components/publicforms/SpeakerSubmissionForm';
+import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
+import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
 export default function PublicSpeakerForm() {
     const [loading, setLoading] = useState(true);
@@ -70,14 +72,16 @@ export default function PublicSpeakerForm() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
-            <div className="w-full max-w-[640px] mx-auto">
-                <SpeakerFormHeader event={event} />
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                    Comparta sus notas o bosquejo para la proyección de versículos.
-                </p>
-                <SpeakerSubmissionForm options={options} />
+        <PublicFormLangProvider>
+            <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+                <div className="w-full max-w-[640px] mx-auto">
+                    <div className="flex justify-end mb-2">
+                        <PublicFormLangToggle />
+                    </div>
+                    <SpeakerFormHeader event={event} />
+                    <SpeakerSubmissionForm options={options} />
+                </div>
             </div>
-        </div>
+        </PublicFormLangProvider>
     );
 }

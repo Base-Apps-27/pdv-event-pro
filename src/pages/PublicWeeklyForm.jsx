@@ -14,6 +14,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import WeeklyFormHeader from '@/components/publicforms/WeeklyFormHeader';
 import WeeklySubmissionForm from '@/components/publicforms/WeeklySubmissionForm';
+import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
+import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
 export default function PublicWeeklyForm() {
     const [loading, setLoading] = useState(true);
@@ -50,8 +52,12 @@ export default function PublicWeeklyForm() {
     }
 
     return (
+        <PublicFormLangProvider>
         <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
             <div className="w-full max-w-[640px] mx-auto">
+                <div className="flex justify-end mb-2">
+                    <PublicFormLangToggle />
+                </div>
                 <WeeklyFormHeader />
 
                 {error && serviceGroups.length === 0 ? (
@@ -61,5 +67,6 @@ export default function PublicWeeklyForm() {
                 )}
             </div>
         </div>
+        </PublicFormLangProvider>
     );
 }
