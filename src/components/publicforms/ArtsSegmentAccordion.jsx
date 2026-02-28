@@ -95,19 +95,16 @@ function formatTime(t) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
 
-export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica, isOpen, onToggle, onSaveStateChange, segmentRef }) {
+export default function ArtsSegmentAccordion({ segment: initialSeg, submitterName, submitterEmail, isUnica, isOpen, onToggle, onSaveStateChange }) {
   const { t, lang } = usePublicLang();
   const [seg, setSeg] = useState({ ...initialSeg });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
   const touchedFieldsRef = useRef(new Set());
 
-  // Expose save handler + state to parent (for sticky bar)
-  useEffect(() => {
-    if (onSaveStateChange) {
-      onSaveStateChange(seg.id, { saving, saveMsg, handleSave, segmentTitle: seg.title });
-    }
-  }, [saving, saveMsg, seg.title]);
+  // Ref to always hold the latest seg for save closure (fixes stale closure bug)
+  const segRef = useRef(seg);
+  useEffect(() => { segRef.current = seg; }, [seg]);
 
   const updateField = useCallback((field, value) => {
     setSeg(prev => ({ ...prev, [field]: value }));
@@ -126,39 +123,42 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     base44.analytics.track({ eventName: 'arts_type_toggled', properties: { segment_id: initialSeg.id, type, action: checked ? 'add' : 'remove' } });
   }, [initialSeg.id]);
 
-  const handleSave = async () => {
+  // handleSave reads from segRef.current to always get latest state (not stale closure)
+  // handleSave reads from segRef.current to always get latest state (not stale closure)
+  const handleSave = useCallback(async () => {
+    const currentSeg = segRef.current; // always-fresh reference
     setSaving(true);
     setSaveMsg(null);
     const saveStart = Date.now();
 
     const payload = {
-      segment_id: seg.id,
+      segment_id: currentSeg.id,
       submitter_name: submitterName,
       submitter_email: submitterEmail,
       data: {
-        art_types: seg.art_types || [],
-        dance_has_song: seg.dance_has_song || false, dance_handheld_mics: seg.dance_handheld_mics ?? '', dance_headset_mics: seg.dance_headset_mics ?? '',
-        dance_start_cue: seg.dance_start_cue || '', dance_end_cue: seg.dance_end_cue || '',
-        dance_song_title: seg.dance_song_title || '', dance_song_source: seg.dance_song_source || '', dance_song_owner: seg.dance_song_owner || '',
-        dance_song_2_title: seg.dance_song_2_title || '', dance_song_2_url: seg.dance_song_2_url || '', dance_song_2_owner: seg.dance_song_2_owner || '',
-        dance_song_3_title: seg.dance_song_3_title || '', dance_song_3_url: seg.dance_song_3_url || '', dance_song_3_owner: seg.dance_song_3_owner || '',
-        drama_has_song: seg.drama_has_song || false, drama_handheld_mics: seg.drama_handheld_mics ?? '', drama_headset_mics: seg.drama_headset_mics ?? '',
-        drama_start_cue: seg.drama_start_cue || '', drama_end_cue: seg.drama_end_cue || '',
-        drama_song_title: seg.drama_song_title || '', drama_song_source: seg.drama_song_source || '', drama_song_owner: seg.drama_song_owner || '',
-        drama_song_2_title: seg.drama_song_2_title || '', drama_song_2_url: seg.drama_song_2_url || '', drama_song_2_owner: seg.drama_song_2_owner || '',
-        drama_song_3_title: seg.drama_song_3_title || '', drama_song_3_url: seg.drama_song_3_url || '', drama_song_3_owner: seg.drama_song_3_owner || '',
-        has_video: (seg.art_types || []).includes('VIDEO'), video_name: seg.video_name || '', video_url: seg.video_url || '',
-        video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec ?? '', video_location: seg.video_location || '',
-        art_other_description: seg.art_other_description || '', arts_run_of_show_url: seg.arts_run_of_show_url || '',
-        description_details: seg.description_details || '',
-        spoken_word_mic_position: seg.spoken_word_mic_position || '', spoken_word_has_music: seg.spoken_word_has_music || false,
-        spoken_word_music_title: seg.spoken_word_music_title || '', spoken_word_music_url: seg.spoken_word_music_url || '',
-        spoken_word_music_owner: seg.spoken_word_music_owner || '', spoken_word_notes: seg.spoken_word_notes || '',
-        spoken_word_description: seg.spoken_word_description || '', spoken_word_speaker: seg.spoken_word_speaker || '',
-        spoken_word_script_url: seg.spoken_word_script_url || '', spoken_word_audio_url: seg.spoken_word_audio_url || '',
-        painting_needs_easel: seg.painting_needs_easel || false, painting_needs_drop_cloth: seg.painting_needs_drop_cloth || false,
-        painting_needs_lighting: seg.painting_needs_lighting || false, painting_canvas_size: seg.painting_canvas_size || '',
-        painting_other_setup: seg.painting_other_setup || '', painting_notes: seg.painting_notes || '',
+        art_types: currentSeg.art_types || [],
+        dance_has_song: currentSeg.dance_has_song || false, dance_handheld_mics: currentSeg.dance_handheld_mics ?? '', dance_headset_mics: currentSeg.dance_headset_mics ?? '',
+        dance_start_cue: currentSeg.dance_start_cue || '', dance_end_cue: currentSeg.dance_end_cue || '',
+        dance_song_title: currentSeg.dance_song_title || '', dance_song_source: currentSeg.dance_song_source || '', dance_song_owner: currentSeg.dance_song_owner || '',
+        dance_song_2_title: currentSeg.dance_song_2_title || '', dance_song_2_url: currentSeg.dance_song_2_url || '', dance_song_2_owner: currentSeg.dance_song_2_owner || '',
+        dance_song_3_title: currentSeg.dance_song_3_title || '', dance_song_3_url: currentSeg.dance_song_3_url || '', dance_song_3_owner: currentSeg.dance_song_3_owner || '',
+        drama_has_song: currentSeg.drama_has_song || false, drama_handheld_mics: currentSeg.drama_handheld_mics ?? '', drama_headset_mics: currentSeg.drama_headset_mics ?? '',
+        drama_start_cue: currentSeg.drama_start_cue || '', drama_end_cue: currentSeg.drama_end_cue || '',
+        drama_song_title: currentSeg.drama_song_title || '', drama_song_source: currentSeg.drama_song_source || '', drama_song_owner: currentSeg.drama_song_owner || '',
+        drama_song_2_title: currentSeg.drama_song_2_title || '', drama_song_2_url: currentSeg.drama_song_2_url || '', drama_song_2_owner: currentSeg.drama_song_2_owner || '',
+        drama_song_3_title: currentSeg.drama_song_3_title || '', drama_song_3_url: currentSeg.drama_song_3_url || '', drama_song_3_owner: currentSeg.drama_song_3_owner || '',
+        has_video: (currentSeg.art_types || []).includes('VIDEO'), video_name: currentSeg.video_name || '', video_url: currentSeg.video_url || '',
+        video_owner: currentSeg.video_owner || '', video_length_sec: currentSeg.video_length_sec ?? '', video_location: currentSeg.video_location || '',
+        art_other_description: currentSeg.art_other_description || '', arts_run_of_show_url: currentSeg.arts_run_of_show_url || '',
+        description_details: currentSeg.description_details || '',
+        spoken_word_mic_position: currentSeg.spoken_word_mic_position || '', spoken_word_has_music: currentSeg.spoken_word_has_music || false,
+        spoken_word_music_title: currentSeg.spoken_word_music_title || '', spoken_word_music_url: currentSeg.spoken_word_music_url || '',
+        spoken_word_music_owner: currentSeg.spoken_word_music_owner || '', spoken_word_notes: currentSeg.spoken_word_notes || '',
+        spoken_word_description: currentSeg.spoken_word_description || '', spoken_word_speaker: currentSeg.spoken_word_speaker || '',
+        spoken_word_script_url: currentSeg.spoken_word_script_url || '', spoken_word_audio_url: currentSeg.spoken_word_audio_url || '',
+        painting_needs_easel: currentSeg.painting_needs_easel || false, painting_needs_drop_cloth: currentSeg.painting_needs_drop_cloth || false,
+        painting_needs_lighting: currentSeg.painting_needs_lighting || false, painting_canvas_size: currentSeg.painting_canvas_size || '',
+        painting_other_setup: currentSeg.painting_other_setup || '', painting_notes: currentSeg.painting_notes || '',
       }
     };
 
@@ -173,8 +173,8 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
     base44.analytics.track({
       eventName: 'arts_save_attempt',
       properties: {
-        segment_id: seg.id, segment_title: seg.title || '',
-        art_types: (seg.art_types || []).join(','),
+        segment_id: currentSeg.id, segment_title: currentSeg.title || '',
+        art_types: (currentSeg.art_types || []).join(','),
         filled_field_count: filledFields.length, total_field_count: Object.keys(d).length,
       }
     });
@@ -183,18 +183,18 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
       const res = await base44.functions.invoke('submitArtsSegment', payload);
       if (res.data?.error) {
         setSaveMsg({ type: 'error', text: '❌ ' + res.data.error });
-        base44.analytics.track({ eventName: 'arts_save_error', properties: { segment_id: seg.id, error_message: res.data.error, duration_ms: Date.now() - saveStart } });
+        base44.analytics.track({ eventName: 'arts_save_error', properties: { segment_id: currentSeg.id, error_message: res.data.error, duration_ms: Date.now() - saveStart } });
       } else {
         setSaveMsg({ type: 'success', text: '✅' });
-        base44.analytics.track({ eventName: 'arts_save_success', properties: { segment_id: seg.id, duration_ms: Date.now() - saveStart } });
+        base44.analytics.track({ eventName: 'arts_save_success', properties: { segment_id: currentSeg.id, duration_ms: Date.now() - saveStart } });
       }
     } catch (err) {
       setSaveMsg({ type: 'error', text: '❌ ' + (err.message || 'Connection error') });
-      base44.analytics.track({ eventName: 'arts_save_error', properties: { segment_id: seg.id, error_message: err.message || 'unknown', duration_ms: Date.now() - saveStart } });
+      base44.analytics.track({ eventName: 'arts_save_error', properties: { segment_id: currentSeg.id, error_message: err.message || 'unknown', duration_ms: Date.now() - saveStart } });
     } finally {
       setSaving(false);
     }
-  };
+  }, [submitterName, submitterEmail]);
 
   const status = calcSegmentStatus(seg);
   const types = seg.art_types || [];
