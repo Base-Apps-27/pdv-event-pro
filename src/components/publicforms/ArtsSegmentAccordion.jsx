@@ -57,11 +57,31 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
             if (checked) set.add(type); else set.delete(type);
             return { ...prev, art_types: Array.from(set) };
         });
-    }, []);
+        // Analytics: track art type toggle for interaction visibility
+        base44.analytics.track({
+            eventName: 'arts_type_toggled',
+            properties: { segment_id: initialSeg.id, type, action: checked ? 'add' : 'remove' }
+        });
+    }, [initialSeg.id]);
 
+    /**
+     * handleSave — CRITICAL BUG FIX (2026-02-28):
+     * Previously had NO try/catch. If the backend threw or the network failed,
+     * setSaving(false) never ran → button stuck at "Guardando..." forever.
+     * This caused ghost failures on "Hosanna" and "Can't Steal My Joy" segments.
+     * Now wrapped in try/catch + analytics tracking for full observability.
+     */
     const handleSave = async () => {
         setSaving(true);
         setSaveMsg(null);
+        const saveStart = Date.now();
+
+        // Analytics: track save attempt (fires BEFORE backend call)
+        base44.analytics.track({
+            eventName: 'arts_save_attempt',
+            properties: { segment_id: seg.id, segment_title: seg.title || '', art_types: (seg.art_types || []).join(',') }
+        });
+
         const payload = {
             segment_id: seg.id,
             submitter_name: submitterName,
@@ -82,22 +102,46 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 video_owner: seg.video_owner || '', video_length_sec: seg.video_length_sec ?? '', video_location: seg.video_location || '',
                 art_other_description: seg.art_other_description || '', arts_run_of_show_url: seg.arts_run_of_show_url || '',
                 description_details: seg.description_details || '',
-                // Spoken Word
+                // Spoken Word (expanded 2026-02-28 with description, speaker, script)
                 spoken_word_mic_position: seg.spoken_word_mic_position || '', spoken_word_has_music: seg.spoken_word_has_music || false,
                 spoken_word_music_title: seg.spoken_word_music_title || '', spoken_word_music_url: seg.spoken_word_music_url || '',
                 spoken_word_music_owner: seg.spoken_word_music_owner || '', spoken_word_notes: seg.spoken_word_notes || '',
+                spoken_word_description: seg.spoken_word_description || '',
+                spoken_word_speaker: seg.spoken_word_speaker || '',
+                spoken_word_script_url: seg.spoken_word_script_url || '',
                 // Painting
                 painting_needs_easel: seg.painting_needs_easel || false, painting_needs_drop_cloth: seg.painting_needs_drop_cloth || false,
                 painting_needs_lighting: seg.painting_needs_lighting || false, painting_canvas_size: seg.painting_canvas_size || '',
                 painting_other_setup: seg.painting_other_setup || '', painting_notes: seg.painting_notes || '',
             }
         };
-        const res = await base44.functions.invoke('submitArtsSegment', payload);
-        setSaving(false);
-        if (res.data?.error) {
-            setSaveMsg({ type: 'error', text: '❌ Error: ' + res.data.error });
-        } else {
-            setSaveMsg({ type: 'success', text: '✅ Guardado exitosamente / Saved successfully' });
+
+        try {
+            const res = await base44.functions.invoke('submitArtsSegment', payload);
+
+            if (res.data?.error) {
+                setSaveMsg({ type: 'error', text: '❌ Error: ' + res.data.error });
+                base44.analytics.track({
+                    eventName: 'arts_save_error',
+                    properties: { segment_id: seg.id, error_message: res.data.error, duration_ms: Date.now() - saveStart }
+                });
+            } else {
+                setSaveMsg({ type: 'success', text: '✅ Guardado exitosamente / Saved successfully' });
+                base44.analytics.track({
+                    eventName: 'arts_save_success',
+                    properties: { segment_id: seg.id, duration_ms: Date.now() - saveStart }
+                });
+            }
+        } catch (err) {
+            // CRITICAL: This catch ensures the button ALWAYS resets.
+            // Before this fix, network errors left the form permanently frozen.
+            setSaveMsg({ type: 'error', text: '❌ Error de conexión / Connection error. ' + (err.message || '') });
+            base44.analytics.track({
+                eventName: 'arts_save_error',
+                properties: { segment_id: seg.id, error_message: err.message || 'unknown', duration_ms: Date.now() - saveStart }
+            });
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -107,7 +151,17 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4 hover:border-gray-300 transition-colors">
-            <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+            <button onClick={() => {
+                const willOpen = !open;
+                setOpen(willOpen);
+                // Analytics: track segment open/close for interaction visibility
+                if (willOpen) {
+                    base44.analytics.track({
+                        eventName: 'arts_segment_opened',
+                        properties: { segment_id: seg.id, segment_title: seg.title || '' }
+                    });
+                }
+            }} className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
                 <div className="flex-1 min-w-0">
                     <div className="font-semibold text-gray-900 truncate">{seg.title}</div>
                     <div className="text-xs text-gray-400 mt-0.5">{seg.session_name}{seg.start_time ? ` • ${formatTime(seg.start_time)}` : ''}{seg.presenter ? ` • ${seg.presenter}` : ''}</div>
@@ -208,10 +262,35 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         </div>
                     )}
 
-                    {/* Spoken Word Section */}
+                    {/* Spoken Word Section — expanded 2026-02-28 with description, speaker, script per arts admin feedback */}
                     {types.includes('SPOKEN_WORD') && (
                         <div className="bg-gray-50 border border-gray-200 border-l-4 rounded-lg p-5" style={{ borderLeftColor: '#8DC63F' }}>
                             <h5 className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('🎤 SPOKEN WORD', '🎤 SPOKEN WORD')}</h5>
+                            {/* New: Speaker name */}
+                            <div className="mb-3">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Nombre del Orador', 'Speaker Name')}</label>
+                                <input type="text" value={seg.spoken_word_speaker || ''} onChange={e => updateField('spoken_word_speaker', e.target.value)}
+                                    placeholder={t('¿Quién presentará el spoken word?', 'Who will perform the spoken word?')}
+                                    className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" />
+                            </div>
+                            {/* New: Description (title, theme, context) */}
+                            <div className="mb-3">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Descripción / Título de la Pieza', 'Description / Piece Title')}</label>
+                                <textarea rows={2} value={seg.spoken_word_description || ''} onChange={e => updateField('spoken_word_description', e.target.value)}
+                                    placeholder={t('Título, tema y contexto de la pieza...', 'Title, theme, and context of the piece...')}
+                                    className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white resize-y focus:outline-none focus:border-[#1F8A70]" />
+                            </div>
+                            {/* New: Script upload */}
+                            <div className="mb-3">
+                                <FileOrLinkInput
+                                    value={seg.spoken_word_script_url || ''}
+                                    onChange={v => updateField('spoken_word_script_url', v)}
+                                    label={t('Guión / Script', 'Script / Guide')}
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    placeholder="https://drive.google.com/..."
+                                    helpText={t('Suba el guión (≤50MB) o pegue un enlace.', 'Upload the script (≤50MB) or paste a link.')}
+                                />
+                            </div>
                             <div className="mb-3">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
                                 <select value={seg.spoken_word_mic_position || ''} onChange={e => updateField('spoken_word_mic_position', e.target.value)}

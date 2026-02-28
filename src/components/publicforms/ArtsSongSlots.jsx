@@ -21,7 +21,7 @@ function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChang
                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
             <div className="mb-2">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('Responsable', 'Owner')}</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('Persona a cargo', 'Person in charge')}</label>
                 <input type="text" value={ownerVal} onChange={e => onOwnerChange(e.target.value)}
                     className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>

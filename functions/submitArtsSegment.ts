@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
             'spoken_word_mic_position', 'spoken_word_has_music',
             'spoken_word_music_title', 'spoken_word_music_url', 'spoken_word_music_owner',
             'spoken_word_notes',
+            'spoken_word_description', 'spoken_word_speaker', 'spoken_word_script_url',
             // Painting (2026-02-28)
             'painting_needs_easel', 'painting_needs_drop_cloth', 'painting_needs_lighting',
             'painting_canvas_size', 'painting_other_setup', 'painting_notes',
@@ -101,6 +102,8 @@ Deno.serve(async (req) => {
         if (data.drama_song_source !== undefined) {
             updatePayload.drama_song_1_url_meta = null;
         }
+        // Clear spoken word script meta when URL changes (future-proofing)
+        // No meta field exists yet, but pattern is consistent with other URL fields
 
         // ── ARTS SUBMISSION TRACKING (2026-02-27) ──
         // 1. Stamp the segment with who submitted and when
