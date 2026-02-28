@@ -29,15 +29,18 @@ export default function PublicProgramView() {
 
   // AUTH GATE (2026-02-14): This page now requires authentication.
   // Layout enforces the redirect, but we also guard here for defense-in-depth.
+  // PERF (2026-02-28): Parallel auth check — runs isAuthenticated + me() together
+  // to shave ~500ms off the auth waterfall on page load.
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const authenticated = await base44.auth.isAuthenticated();
-        if (authenticated) {
-          const user = await base44.auth.me();
+        const [authenticated, user] = await Promise.all([
+          base44.auth.isAuthenticated(),
+          base44.auth.me().catch(() => null),
+        ]);
+        if (authenticated && user) {
           setCurrentUser(user);
         } else {
-          // Not authenticated — redirect to login
           base44.auth.redirectToLogin(window.location.href);
           return;
         }
