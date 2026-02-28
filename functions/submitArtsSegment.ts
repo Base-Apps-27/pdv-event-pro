@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
             'spoken_word_music_title', 'spoken_word_music_url', 'spoken_word_music_owner',
             'spoken_word_notes',
             'spoken_word_description', 'spoken_word_speaker', 'spoken_word_script_url',
+            'spoken_word_audio_url',
             // Painting (2026-02-28)
             'painting_needs_easel', 'painting_needs_drop_cloth', 'painting_needs_lighting',
             'painting_canvas_size', 'painting_other_setup', 'painting_notes',
