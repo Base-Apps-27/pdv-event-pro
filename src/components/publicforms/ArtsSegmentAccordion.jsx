@@ -157,6 +157,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
         has_video: (currentSeg.art_types || []).includes('VIDEO'), video_name: currentSeg.video_name || '', video_url: currentSeg.video_url || '',
         video_owner: currentSeg.video_owner || '', video_length_sec: currentSeg.video_length_sec ?? '', video_location: currentSeg.video_location || '',
         art_other_description: currentSeg.art_other_description || '', arts_run_of_show_url: currentSeg.arts_run_of_show_url || '',
+        arts_type_order: currentSeg.arts_type_order || [],
         description_details: currentSeg.description_details || '',
         spoken_word_mic_position: currentSeg.spoken_word_mic_position || '', spoken_word_has_music: currentSeg.spoken_word_has_music || false,
         spoken_word_music_title: currentSeg.spoken_word_music_title || '', spoken_word_music_url: currentSeg.spoken_word_music_url || '',
