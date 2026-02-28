@@ -97,12 +97,23 @@ export default function PublicArtsForm() {
 /**
  * ArtsFormContent — manages accordion open state, progress strip, and sticky save bar.
  * Extracted so it can use lang context inside the provider.
+ * 
+ * 2026-02-28 audit fixes:
+ * - Progress strip status is now live (segmentSnapshots updated by children on every field edit)
+ * - handleSave exposed from children is stable (useCallback + ref pattern in accordion)
+ * - Sticky bar correctly wired via save state collection
  */
-function ArtsFormContent({ segments, gateUser, isUnica }) {
+function ArtsFormContent({ segments: initialSegments, gateUser, isUnica }) {
   const { t } = usePublicLang();
   const [openSegmentId, setOpenSegmentId] = useState(null);
   const [saveStates, setSaveStates] = useState({}); // { [segId]: { saving, saveMsg, handleSave, segmentTitle } }
-  const segmentRefs = useRef({});
+  // Live snapshots of each segment's art data for progress strip status calculation.
+  // Keyed by segment id, seeded from initialSegments, updated by children via onSegmentDataChange.
+  const [segmentSnapshots, setSegmentSnapshots] = useState(() => {
+    const map = {};
+    initialSegments.forEach(s => { map[s.id] = s; });
+    return map;
+  });
 
   // Toggle accordion: only one open at a time
   const handleToggle = useCallback((segId) => {
@@ -124,9 +135,15 @@ function ArtsFormContent({ segments, gateUser, isUnica }) {
     setSaveStates(prev => ({ ...prev, [segId]: state }));
   }, []);
 
-  // Build progress strip data
-  const stripData = segments.map(seg => {
-    const status = calcSegmentStatus(seg);
+  // Receive live data snapshot from each accordion child (called on every field edit)
+  const handleSegmentDataChange = useCallback((segId, data) => {
+    setSegmentSnapshots(prev => ({ ...prev, [segId]: data }));
+  }, []);
+
+  // Build progress strip data from live snapshots
+  const stripData = initialSegments.map(seg => {
+    const liveSeg = segmentSnapshots[seg.id] || seg;
+    const status = calcSegmentStatus(liveSeg);
     return { id: seg.id, title: seg.title, statusLevel: status.level };
   });
 
@@ -146,14 +163,14 @@ function ArtsFormContent({ segments, gateUser, isUnica }) {
       {/* Progress strip — scrollable pill bar for quick navigation */}
       <ArtsProgressStrip segments={stripData} activeSegmentId={openSegmentId} onSegmentTap={handleStripTap} />
 
-      {segments.length === 0 ? (
+      {initialSegments.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           <h2 className="text-2xl text-gray-500 mb-2">{t('NO HAY SEGMENTOS DE ARTES', 'NO ARTS SEGMENTS')}</h2>
           <p>{t('No se encontraron segmentos de tipo "Artes" para este evento.', 'No "Arts" type segments were found for this event.')}</p>
         </div>
       ) : (
         <div className="mt-3">
-          {segments.map(seg => (
+          {initialSegments.map(seg => (
             <ArtsSegmentAccordion
               key={seg.id}
               segment={seg}
@@ -163,6 +180,7 @@ function ArtsFormContent({ segments, gateUser, isUnica }) {
               isOpen={openSegmentId === seg.id}
               onToggle={handleToggle}
               onSaveStateChange={handleSaveStateChange}
+              onSegmentDataChange={handleSegmentDataChange}
             />
           ))}
         </div>
