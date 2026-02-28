@@ -12,7 +12,7 @@ import ArtsSongSlots from './ArtsSongSlots';
 import FileOrLinkInput from './FileOrLinkInput';
 import { usePublicLang } from './PublicFormLangContext';
 
-const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', OTHER: '✨ Otro' };
+const TYPE_LABELS = { DANCE: '🩰 Danza', DRAMA: '🎭 Drama', VIDEO: '🎬 Video', SPOKEN_WORD: '🎤 Spoken Word', PAINTING: '🎨 Pintura', OTHER: '✨ Otro' };
 
 function calcStatus(seg) {
     const types = seg.art_types || [];
@@ -130,7 +130,7 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                     <div>
                         <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>{t('TIPO DE ARTE', 'ART TYPE')}</h4>
                         <div className="flex flex-wrap gap-3">
-                            {['DANCE', 'DRAMA', 'VIDEO', 'OTHER'].map(t => (
+                            {['DANCE', 'DRAMA', 'VIDEO', 'SPOKEN_WORD', 'PAINTING', 'OTHER'].map(t => (
                                 <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer px-3 py-2 rounded-md border transition-all ${types.includes(t) ? 'bg-blue-50 border-[#1F8A70] text-blue-800 font-semibold' : 'border-gray-200 hover:border-[#1F8A70]'}`}>
                                     <input type="checkbox" checked={types.includes(t)} onChange={e => toggleType(t, e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
                                     {TYPE_LABELS[t]}
