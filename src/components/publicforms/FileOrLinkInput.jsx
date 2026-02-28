@@ -163,10 +163,10 @@ export default function FileOrLinkInput({
                 <>
                   <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
                   <p className="text-sm text-gray-600 font-medium">
-                    Haga clic o arrastre un archivo / Click or drag a file
+                    Suba su archivo final aquí / Upload your final file here
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Máx {maxSizeMB}MB • PDF, imágenes, MP4, MP3
+                    Máx {maxSizeMB}MB · PDF, imágenes, MP4, MP3
                   </p>
                 </>
               )}
@@ -233,6 +233,14 @@ export default function FileOrLinkInput({
       {/* Help text */}
       {helpText && !uploadError && (
         <p className="text-xs text-gray-400">{helpText}</p>
+      )}
+
+      {/* Standing guidance: ready-to-install only */}
+      {!hasValue && !uploadError && !helpText && (
+        <p className="text-[10px] text-gray-400 italic leading-snug">
+          Solo material terminado y listo para instalar. ¿Necesita crear algo nuevo? Contacte la oficina. /
+          Ready-to-install files only. Need something created? Contact the office first.
+        </p>
       )}
     </div>
   );

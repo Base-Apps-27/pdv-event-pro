@@ -116,6 +116,12 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
 
             {open && (
                 <div className="border-t border-gray-200 p-5 space-y-5">
+                    {/* Ready-to-install guidance banner */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs leading-relaxed text-blue-800">
+                        <strong>⚠️ Solo material final y listo para instalar.</strong> Este formulario es para entregar archivos terminados (canciones, videos, documentos) que serán cargados en los sistemas de producción. No es un espacio para solicitar ideas o diseños creativos. Si necesita que se cree algo, coordine con la oficina para que el equipo lo prepare y luego suba el archivo final aquí.<br/>
+                        <em>Final, ready-to-install files only (songs, videos, documents). This is not a place to request ideas — if something needs to be created, contact the office to arrange it first, then upload here.</em>
+                    </div>
+
                     {/* Art Type Selection */}
                     <div>
                         <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>TIPO DE ARTE / ART TYPE</h4>
@@ -169,18 +175,18 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                             <div className="mb-3"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre del Video / Video Name</label><input type="text" value={seg.video_name || ''} onChange={e => updateField('video_name', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]" /></div>
                             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
                                 {isUnica
-                                    ? <><strong>Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
-                                    : <><strong>General:</strong> Google Drive, OneDrive o Dropbox (acceso "público" requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox ("public" access required). Spotify/YouTube accepted but not recommended.</em></>
+                                    ? <><strong>Única:</strong> Suba el video final directamente o enlace desde Drive/OneDrive/Dropbox (acceso público). No Spotify/YouTube. / <em>Upload the final video directly, or link from Drive/OneDrive/Dropbox (public access). No Spotify/YouTube.</em></>
+                                    : <><strong>General:</strong> Suba el video directamente (≤50MB) o enlace desde Drive/OneDrive/Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Upload directly (≤50MB) or link from Drive/OneDrive/Dropbox (public access). Spotify/YouTube accepted but not recommended.</em></>
                                 }
                             </div>
                             <div className="mb-3">
                                 <FileOrLinkInput
                                     value={seg.video_url || ''}
                                     onChange={v => updateField('video_url', v)}
-                                    label="Enlace / Link"
+                                    label="Video Final / Final Video"
                                     accept=".mp4,.mov,.webm"
                                     placeholder="https://drive.google.com/..."
-                                    helpText="Suba un video (≤50MB) o pegue un enlace a Drive/Dropbox. / Upload a video (≤50MB) or paste a Drive/Dropbox link."
+                                    helpText="Suba el video final (≤50MB) o pegue un enlace de descarga (Drive/Dropbox). / Upload the final video or paste a download link."
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -199,19 +205,19 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                         </div>
                     )}
 
-                    {/* Arts Directions */}
+                    {/* Arts Run of Show */}
                     <div>
-                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📋 GUÍA DE ARTES / ARTS DIRECTIONS</h4>
+                        <h4 className="text-lg tracking-wide mb-3" style={{ color: '#1F8A70' }}>📋 GUÍA DE ARTES / ARTS RUN OF SHOW</h4>
                         <div className="text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 bg-blue-50 border-[#1F8A70] text-blue-800">
-                            <strong>Instrucción:</strong> Asegúrese de que el enlace tenga permisos públicos. Preferible: PDF o Google Doc. / <em>Ensure the link has public permissions. Preferred: PDF or Google Doc.</em>
+                            <strong>Instrucción:</strong> Suba el documento final con la guía de su presentación. El enlace debe tener permisos públicos. / <em>Upload the final run-of-show document. Links must have public access permissions.</em>
                         </div>
                         <FileOrLinkInput
                             value={seg.arts_run_of_show_url || ''}
                             onChange={v => updateField('arts_run_of_show_url', v)}
-                            label="Enlace (PDF/Documento) / Link"
+                            label="Guía Final (PDF/Documento) / Final Run of Show"
                             accept=".pdf,.doc,.docx,image/*"
                             placeholder="https://drive.google.com/..."
-                            helpText="Suba un PDF/imagen o pegue un enlace. / Upload a PDF/image or paste a link."
+                            helpText="Suba el archivo final (≤50MB) o pegue un enlace al documento terminado. / Upload the final file or paste a link to the finished document."
                         />
                     </div>
 

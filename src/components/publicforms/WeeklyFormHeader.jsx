@@ -15,10 +15,14 @@ export default function WeeklyFormHeader() {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl text-[#1A1A1A] mb-2 leading-none">
-                    VERSÍCULOS - MENSAJE SEMANAL
+                    MATERIAL - MENSAJE SEMANAL
                 </h1>
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                    Envíe sus notas para extracción de versículos
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                    Entregue versículos y material final para proyección
+                </p>
+                <p className="text-xs text-gray-400 max-w-md mx-auto leading-snug">
+                    Solo archivos terminados y listos para instalar. /
+                    <em> Final, ready-to-install files only.</em>
                 </p>
             </div>
         </div>

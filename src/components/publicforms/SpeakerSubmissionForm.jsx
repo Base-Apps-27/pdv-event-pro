@@ -153,14 +153,18 @@ export default function SpeakerSubmissionForm({ options }) {
                 <h3 className="text-xl text-pdv-teal tracking-wide mb-4">
                     MATERIAL VISUAL Y NOTAS
                 </h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
+                    <strong>⚠️ Solo material terminado y listo para instalar.</strong> Suba o enlace archivos finales (presentaciones, imágenes, PDFs) que serán cargados en los sistemas de proyección. Este formulario no es para solicitar ideas o diseños — si necesita crear algo nuevo, coordine con la oficina para que el equipo creativo lo prepare y luego súbalo aquí.<br/>
+                    <em>Ready-to-install files only (slides, images, PDFs). This is not a place to request ideas or designs — if something needs to be created, contact the office to arrange for the creative team first, then upload the final file here.</em>
+                </div>
                 <div className="mb-4">
                     <FileOrLinkInput
                         value={presentationUrl}
                         onChange={setPresentationUrl}
-                        label="Enlace a Presentación / Imágenes (Opcional)"
+                        label="Presentación / Slides Finales (Opcional)"
                         accept="image/*,.pdf,.pptx"
                         placeholder="https://drive.google.com/..."
-                        helpText="Suba un PDF/imagen o pegue un enlace a Google Slides, Canva, etc. / Upload a PDF/image or paste a link."
+                        helpText="Suba el archivo final (PDF/imagen ≤50MB) o pegue un enlace a Google Slides, Canva, etc. / Upload the final file or paste a link."
                     />
                 </div>
                 <div className="flex items-center gap-2 mb-3">
@@ -180,10 +184,10 @@ export default function SpeakerSubmissionForm({ options }) {
                         <FileOrLinkInput
                             value={notesUrl}
                             onChange={setNotesUrl}
-                            label="Link de Bosquejo / Notas (PDF o Doc)"
+                            label="Bosquejo / Notas Finales (PDF o Doc)"
                             accept=".pdf,.doc,.docx"
                             placeholder="Enlace a notas para el equipo de medios (Opcional)"
-                            helpText="Suba un PDF o pegue un enlace a un documento. / Upload a PDF or paste a document link."
+                            helpText="Suba el PDF final o pegue un enlace al documento terminado. / Upload the final PDF or paste a link to the finished document."
                         />
                     </div>
                 )}

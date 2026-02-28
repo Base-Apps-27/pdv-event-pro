@@ -127,13 +127,17 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
 
             {/* Presentation URL + Slides Only */}
             <div className="mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-blue-800">
+                    <strong>⚠️ Solo material terminado y listo para instalar.</strong> Suba o enlace presentaciones, imágenes, o PDFs finales que serán cargados directamente en los sistemas. No es un espacio para solicitar diseños — si necesita crear algo, coordine con la oficina primero.<br/>
+                    <em>Ready-to-install files only. Upload or link final presentations, images, or PDFs. Not a place for design requests — contact the office if something needs to be created first.</em>
+                </div>
                 <FileOrLinkInput
                     value={presentationUrl}
                     onChange={setPresentationUrl}
-                    label="Enlace a Presentación / Imágenes (Opcional)"
+                    label="Presentación / Slides Finales (Opcional)"
                     accept="image/*,.pdf,.pptx"
                     placeholder="https://dropbox.com/..."
-                    helpText="Suba un PDF/imagen o pegue un enlace a Google Slides, Canva, etc. / Upload a PDF/image or paste a link."
+                    helpText="Suba el archivo final (≤50MB) o pegue un enlace a Google Slides, Canva, etc. / Upload the final file or paste a link."
                 />
                 <div className="mt-3" />
                 <label className="flex items-center gap-2 text-sm cursor-pointer mb-3">
@@ -145,10 +149,10 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                         <FileOrLinkInput
                             value={notesUrl}
                             onChange={setNotesUrl}
-                            label="Link de Bosquejo / Notas (PDF o Doc)"
+                            label="Bosquejo / Notas Finales (PDF o Doc)"
                             accept=".pdf,.doc,.docx"
                             placeholder="Enlace a notas para el equipo de medios (Opcional)"
-                            helpText="Suba un PDF o pegue un enlace a un documento. / Upload a PDF or paste a document link."
+                            helpText="Suba el PDF final o pegue un enlace al documento terminado. / Upload the final PDF or paste a link to the finished document."
                         />
                     </div>
                 )}

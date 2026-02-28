@@ -106,18 +106,20 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
       <FileOrLinkInput
         value={presentationUrl}
         onChange={setPresentationUrl}
-        label="Presentación / Slides"
+        label="Presentación / Slides Finales"
         accept="image/*,.pdf"
         placeholder="https://drive.google.com/..."
+        helpText="Archivo final listo para proyección. / Final file ready for projection."
         variant="compact"
       />
 
       <FileOrLinkInput
         value={notesUrl}
         onChange={setNotesUrl}
-        label="Bosquejo / Notas (PDF o Doc)"
+        label="Bosquejo / Notas Finales (PDF o Doc)"
         accept=".pdf,.doc,.docx"
         placeholder="https://..."
+        helpText="Documento terminado para el equipo. / Finished document for the team."
         variant="compact"
       />
 

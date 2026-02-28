@@ -23,11 +23,15 @@ export default function ArtsFormHeader({ event }) {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
-                    FORMULARIO DE ARTES / ARTS FORM
+                    ENTREGA DE MATERIAL ARTÍSTICO
                 </h1>
-                <h3 className="text-lg text-gray-500 tracking-wide">
+                <h3 className="text-lg text-gray-500 tracking-wide mb-1">
                     {event?.name || 'Evento'}
                 </h3>
+                <p className="text-xs text-gray-400 max-w-md mx-auto leading-snug">
+                    Suba archivos finales listos para instalar: canciones, videos, documentos de guía.<br/>
+                    <em>Upload final, ready-to-install files: songs, videos, run-of-show documents.</em>
+                </p>
                 <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (
                         <div className="flex items-center gap-1.5">

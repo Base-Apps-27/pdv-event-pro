@@ -27,10 +27,10 @@ function SongCard({ label, titleVal, urlVal, ownerVal, onTitleChange, onUrlChang
             <FileOrLinkInput
                 value={urlVal}
                 onChange={onUrlChange}
-                label="Enlace / Link"
+                label="Archivo Final / Final File"
                 accept=".mp3,.wav,.mp4,.ogg,.webm"
                 placeholder="https://drive.google.com/..."
-                helpText="Suba un archivo de audio/video o pegue un enlace. / Upload an audio/video file or paste a link."
+                helpText="Suba el archivo final (≤50MB) o pegue un enlace de descarga. / Upload the final file or paste a download link."
             />
         </div>
     );
@@ -42,8 +42,8 @@ export default function ArtsSongSlots({ prefix, segment, onFieldChange, isUnica 
         <div>
             <div className={`text-sm leading-relaxed p-3 rounded-md mb-3 border-l-4 ${isUnica ? 'bg-orange-50 border-amber-400 text-amber-800' : 'bg-blue-50 border-[#1F8A70] text-blue-800'}`}>
                 {isUnica
-                    ? <><strong>Única:</strong> Solo archivos descargables (Drive/OneDrive/Dropbox, acceso público). No Spotify/YouTube. / <em>Downloadable files only (Drive/OneDrive/Dropbox, public access). No Spotify/YouTube.</em></>
-                    : <><strong>General:</strong> Google Drive, OneDrive o Dropbox (acceso "público" requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Google Drive, OneDrive, or Dropbox ("public" access required). Spotify/YouTube accepted but not recommended.</em></>
+                    ? <><strong>Única:</strong> Suba el archivo final de audio/video directamente o enlace desde Drive/OneDrive/Dropbox (acceso público). No Spotify/YouTube. / <em>Upload the final audio/video file directly, or link from Drive/OneDrive/Dropbox (public access). No Spotify/YouTube.</em></>
+                    : <><strong>General:</strong> Suba el audio/video directamente (≤50MB) o enlace desde Drive/OneDrive/Dropbox (acceso público requerido). Spotify/YouTube aceptados pero no recomendados. / <em>Upload directly (≤50MB) or link from Drive/OneDrive/Dropbox (public access). Spotify/YouTube accepted but not recommended.</em></>
                 }
             </div>
             <SongCard label="Canción 1 / Song 1"

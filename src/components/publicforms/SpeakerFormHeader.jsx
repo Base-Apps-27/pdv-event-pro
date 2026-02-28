@@ -26,11 +26,15 @@ export default function SpeakerFormHeader({ event }) {
                     PALABRAS DE VIDA
                 </p>
                 <h1 className="text-4xl md:text-5xl text-[#1A1A1A] mb-2 leading-none">
-                    VERSÍCULOS DE SU MENSAJE
+                    MATERIAL DE SU MENSAJE
                 </h1>
-                <h3 className="text-lg text-gray-500 tracking-wide">
+                <h3 className="text-lg text-gray-500 tracking-wide mb-1">
                     {event?.name || 'Evento'}
                 </h3>
+                <p className="text-xs text-gray-400 max-w-md mx-auto leading-snug">
+                    Entregue versículos y material final listo para proyección.<br/>
+                    <em>Submit verses and final presentation-ready material.</em>
+                </p>
                 <div className="flex justify-center flex-wrap gap-4 mt-3 text-sm text-gray-400 font-medium">
                     {eventDate && (
                         <div className="flex items-center gap-1.5">
