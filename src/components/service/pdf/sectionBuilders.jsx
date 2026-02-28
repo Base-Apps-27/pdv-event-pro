@@ -35,6 +35,8 @@ export function buildNotesCell(seg) {
     { label: 'UJIERES', val: seg.ushers_notes, color: '#16A34A', bg: '#F0FDF4' },
     { label: 'STAGE & DECOR', val: seg.stage_decor_notes, color: '#7C3AED', bg: '#F5F3FF' },
     { label: 'TRAD', val: seg.translation_notes, color: '#7C3AED', bg: '#F5F3FF' },
+    // 2026-02-28: Added LIVESTREAM — was missing (present on entity + weekly PDF)
+    { label: 'LIVESTREAM', val: seg.livestream_notes, color: '#0891B2', bg: '#ECFEFF' },
     { label: 'OTRO', val: seg.other_notes, color: '#6B7280', bg: '#F9FAFB' },
   ].filter(n => n.val);
 

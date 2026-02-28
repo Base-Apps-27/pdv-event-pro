@@ -89,6 +89,8 @@ export function buildPdfData({ existingService, sessions, segmentsBySession, chi
       if (seg.ushers_notes) data.ushers_notes = seg.ushers_notes;
       if (seg.translation_notes) data.translation_notes = seg.translation_notes;
       if (seg.stage_decor_notes) data.stage_decor_notes = seg.stage_decor_notes;
+      // 2026-02-28: Added livestream_notes — was missing from PDF data bridge (present on entity)
+      if (seg.livestream_notes) data.livestream_notes = seg.livestream_notes;
       if (seg.panel_moderators) data.panel_moderators = seg.panel_moderators;
       if (seg.panel_panelists) data.panel_panelists = seg.panel_panelists;
       if (seg.parsed_verse_data) data.parsed_verse_data = seg.parsed_verse_data;
