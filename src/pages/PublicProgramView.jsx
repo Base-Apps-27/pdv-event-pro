@@ -229,16 +229,65 @@ export default function PublicProgramView() {
     refetchInterval: 30000,
   });
 
+  // MULTI-SLOT WARM CACHE (2026-02-28): Write-back after explicit fetch.
+  // When getPublicProgramData returns fresh data, write it to the warm cache
+  // slot so the NEXT user who opens this program gets it instantly.
+  // This is the "cache on first open" mechanism.
+  const lastWrittenRef = React.useRef(null); // Prevent duplicate writes
+  useEffect(() => {
+    if (!explicitFetchData || !programCacheKey || programCacheKey === 'current_display') return;
+
+    // Dedupe: only write if data changed (use a simple hash of program_id + segment count)
+    const dataFingerprint = `${programCacheKey}_${explicitFetchData?.segments?.length || 0}_${explicitFetchData?.sessions?.length || 0}`;
+    if (lastWrittenRef.current === dataFingerprint) return;
+    lastWrittenRef.current = dataFingerprint;
+
+    // Determine program metadata from the fetched data
+    const isEvent = programCacheKey.startsWith('event_');
+    const programObj = explicitFetchData?.program || explicitFetchData?.event;
+    const programId = isEvent ? selectedEventId : selectedServiceId;
+
+    const cachePayload = {
+      cache_key: programCacheKey,
+      program_type: isEvent ? 'event' : 'service',
+      program_id: programId || '',
+      program_name: programObj?.name || '',
+      program_date: isEvent ? (programObj?.start_date || '') : (programObj?.date || ''),
+      detected_date: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()),
+      program_snapshot: explicitFetchData,
+      last_refresh_trigger: 'user_view',
+      last_refresh_at: new Date().toISOString(),
+    };
+
+    // Write-back: upsert the warm cache entry
+    (async () => {
+      try {
+        const existing = await base44.entities.ActiveProgramCache.filter({ cache_key: programCacheKey });
+        if (existing?.[0]) {
+          await base44.entities.ActiveProgramCache.update(existing[0].id, cachePayload);
+        } else {
+          await base44.entities.ActiveProgramCache.create(cachePayload);
+        }
+        // Invalidate the warm cache query so it picks up the fresh data
+        queryClient.invalidateQueries({ queryKey: ['activeProgramCache', programCacheKey] });
+      } catch (err) {
+        console.warn('[WarmCache] Write-back failed (non-critical):', err.message);
+      }
+    })();
+  }, [explicitFetchData, programCacheKey, selectedEventId, selectedServiceId, queryClient]);
+
   // Merge: cache-first with background revalidation
   // If we have cache data for this selection, show it instantly. 
   // Once explicit fetch completes, it takes over (fresher data).
   const programData = useMemo(() => {
     // Tier 2 (fresh) takes priority when available
     if (explicitFetchData) return explicitFetchData;
-    // Tier 1 (cache) for instant display while Tier 2 loads
+    // Tier 1 (warm cache or auto-detected cache) for instant display while Tier 2 loads
     if (isCachedSelection && cacheProgramData) return cacheProgramData;
+    // Tier 1b: warm cache hit even if not the "auto-detected" program
+    if (warmCacheProgramData) return warmCacheProgramData;
     return null;
-  }, [explicitFetchData, isCachedSelection, cacheProgramData]);
+  }, [explicitFetchData, isCachedSelection, cacheProgramData, warmCacheProgramData]);
 
   // Loading state: only show skeleton when we have NO data at all
   // If cache provides data, loading is false even while explicit fetch runs in background
