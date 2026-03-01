@@ -317,6 +317,8 @@ export default function PublicCountdownDisplay() {
               <CoordinatorActionsDisplay
                 currentSegment={currentSegment}
                 nextSegment={nextSegment}
+                allSegments={segments}
+                preSessionData={activePreSessionData}
                 currentTime={currentTime}
                 serviceDate={serviceDate}
                 layout="grid"
