@@ -286,7 +286,7 @@ export default function ServiceProgramView({
         {canAccessLiveOps && (
           <StickyOpsDeck
             segments={adjustedAllSegments}
-            preSessionData={preSessionData}
+            preSessionData={activePreSessionData}
             sessionDate={actualServiceData.date}
             currentTime={currentTime}
             onScrollToSegment={scrollToSegment}
@@ -387,7 +387,7 @@ export default function ServiceProgramView({
       {canAccessLiveOps && (
         <StickyOpsDeck
           segments={adjustedAllSegments}
-          preSessionData={preSessionData}
+          preSessionData={activePreSessionData}
           sessionDate={actualServiceData.date}
           currentTime={currentTime}
           onScrollToSegment={scrollToSegment}
