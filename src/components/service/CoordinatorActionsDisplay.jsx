@@ -350,9 +350,10 @@ export default function CoordinatorActionsDisplay({
                         {/* Meta */}
                         <div className="flex items-center gap-1 text-[7px]">
                           <span className={`font-bold uppercase px-1 py-0.5 rounded ${
-                            action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                            action.isPreSession ? 'bg-slate-200 text-slate-700'
+                            : action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                           }`}>
-                            {action.isPrep ? 'PREP' : 'LIVE'}
+                            {action.isPreSession ? 'PRE' : action.isPrep ? 'PREP' : 'LIVE'}
                           </span>
                           <span className="text-slate-500 truncate">{action.type}</span>
                         </div>
