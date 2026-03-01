@@ -8,12 +8,15 @@ import { AlertCircle, Clock } from "lucide-react";
  * 
  * TV-optimized display of upcoming coordinator actions.
  * Shows DURANTE actions from current segment + PREP actions from next segment.
- * Reuses timing logic from StickyOpsDeck.
+ * Also shows pre-session actions (registration, library, facility, general notes)
+ * matching the same data contract as StickyOpsDeck.
  * Sorted by time, highlighted by urgency.
  */
 export default function CoordinatorActionsDisplay({
   currentSegment,
   nextSegment,
+  allSegments = [],       // All segments (for pre-session time fallbacks)
+  preSessionData = null,  // PreSessionDetails for the active session
   currentTime,
   serviceDate,
   layout = 'grid' // 'grid' | 'vertical'
@@ -31,18 +34,115 @@ export default function CoordinatorActionsDisplay({
       return new Date(y, m - 1, d, h, min, 0, 0);
     };
 
-    // Helper to process segment actions
+    const activeDateStr = serviceDate || new Date().toISOString().split('T')[0];
+
+    // ── 1. Process PreSession Actions (mirrors StickyOpsDeck logic) ──
+    if (preSessionData) {
+      const addPreAction = (timeStr, label, type = 'facility') => {
+        if (!timeStr) return;
+        const date = parseDateTime(activeDateStr, timeStr);
+        if (!date) return;
+        actions.push({
+          id: `pre-${label}-${timeStr}`,
+          time: date,
+          label,
+          segmentTitle: "Pre-Session",
+          type,
+          isPrep: false,
+          isPreSession: true,
+          isNext: false,
+          notes: null
+        });
+      };
+
+      addPreAction(preSessionData.registration_desk_open_time, "Mesa de Registro Abre", "admin");
+      addPreAction(preSessionData.library_open_time, "Librería Abre", "admin");
+
+      // Facility Notes
+      if (preSessionData.facility_notes) {
+        let timeStr = [preSessionData.registration_desk_open_time, preSessionData.library_open_time]
+          .filter(Boolean).sort()[0];
+
+        if (!timeStr) {
+          const timeMatch = preSessionData.facility_notes.match(/\b(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?\b/i);
+          if (timeMatch) {
+            let [_, h, m, meridiem] = timeMatch;
+            h = parseInt(h); m = parseInt(m);
+            if (meridiem) {
+              const isPM = meridiem.toLowerCase().includes('p');
+              if (isPM && h < 12) h += 12;
+              if (!isPM && h === 12) h = 0;
+            }
+            timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+          }
+        }
+
+        const firstSeg = allSegments.find(s => s.start_time) || currentSegment || nextSegment;
+        if (!timeStr && firstSeg?.start_time) {
+          const [h, m] = firstSeg.start_time.split(':').map(Number);
+          const d = new Date(); d.setHours(h, m - 60, 0, 0);
+          timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        if (timeStr) {
+          const noteTime = parseDateTime(activeDateStr, timeStr);
+          if (noteTime) actions.push({
+            id: `pre-facility-${timeStr}`,
+            time: noteTime,
+            label: "Facility Prep",
+            segmentTitle: "Pre-Session",
+            type: "facility",
+            isPrep: false,
+            isPreSession: true,
+            isNext: false,
+            notes: preSessionData.facility_notes
+          });
+        }
+      }
+
+      // General Notes — show actual note text as label (mirrors StickyOpsDeck 2026-03-01)
+      if (preSessionData.general_notes) {
+        let timeStr = [preSessionData.registration_desk_open_time, preSessionData.library_open_time]
+          .filter(Boolean).sort()[0];
+
+        const firstSeg = allSegments.find(s => s.start_time) || currentSegment || nextSegment;
+        if (!timeStr && firstSeg?.start_time) {
+          const [h, m] = firstSeg.start_time.split(':').map(Number);
+          const d = new Date(); d.setHours(h, m - 30, 0, 0);
+          timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        if (timeStr) {
+          const noteTime = parseDateTime(activeDateStr, timeStr);
+          if (noteTime) actions.push({
+            id: `pre-general-notes-${timeStr}`,
+            time: noteTime,
+            label: preSessionData.general_notes.length > 80
+              ? preSessionData.general_notes.substring(0, 80) + '…'
+              : preSessionData.general_notes,
+            segmentTitle: "Pre-Session",
+            type: "Coordinador",
+            isPrep: true,
+            isPreSession: true,
+            isNext: false,
+            notes: preSessionData.general_notes.length > 80 ? preSessionData.general_notes : null
+          });
+        }
+      }
+    }
+
+    // ── 2. Process Segment Actions ──
     const processSegment = (segment, isNext = false) => {
       const effectiveStart = segment?.actual_start_time || segment?.start_time;
       if (!segment || !effectiveStart) return;
 
-      const segStart = parseDateTime(serviceDate, effectiveStart);
+      const segStart = parseDateTime(activeDateStr, effectiveStart);
       if (!segStart) return;
 
       const effectiveEnd = segment.actual_end_time || segment.end_time;
       let segEnd;
       if (effectiveEnd) {
-        segEnd = parseDateTime(serviceDate, effectiveEnd);
+        segEnd = parseDateTime(activeDateStr, effectiveEnd);
       }
       if (!segEnd) {
         segEnd = new Date(segStart);
@@ -54,7 +154,6 @@ export default function CoordinatorActionsDisplay({
       segActions.forEach(action => {
         let actionTime = new Date(segStart);
         const offset = action.offset_min || 0;
-        // Permissive: default to 'after_start' if timing is missing (weekly service compat)
         const timing = action.timing || 'after_start';
 
         switch (timing) {
@@ -70,12 +169,11 @@ export default function CoordinatorActionsDisplay({
             break;
           case 'absolute':
             if (action.absolute_time) {
-              const absDate = parseDateTime(serviceDate, action.absolute_time);
+              const absDate = parseDateTime(activeDateStr, action.absolute_time);
               if (absDate) actionTime = absDate;
             }
             break;
           default:
-            // Fallback: treat as start + offset instead of dropping
             actionTime.setMinutes(segStart.getMinutes() + offset);
             break;
         }
@@ -85,16 +183,14 @@ export default function CoordinatorActionsDisplay({
         // FILTERING LOGIC:
         // - For CURRENT segment: only show DURANTE actions (not prep)
         // - For NEXT segment: only show PREP actions
+        // - Pre-session actions are already added above, no filter needed
         if (isNext) {
-          // Next segment: only PREP
           if (!isPrep) return;
         } else {
-          // Current segment: only DURANTE (in-segment or ongoing)
           if (isPrep) return;
         }
 
-        // Only include actions that haven't happened yet (or are happening now)
-        if (actionTime.getTime() >= now - 60000) { // Include if within last 1 min (ongoing)
+        if (actionTime.getTime() >= now - 60000) {
           actions.push({
             id: `${segment.id}-${action.label}-${action.timing}`,
             time: actionTime,
@@ -110,13 +206,14 @@ export default function CoordinatorActionsDisplay({
       });
     };
 
-    // Process current and next segments
     processSegment(currentSegment, false);
     processSegment(nextSegment, true);
 
-    // Sort by time
-    return actions.sort((a, b) => a.time.getTime() - b.time.getTime());
-  }, [currentSegment, nextSegment, currentTime, serviceDate]);
+    // Sort by time, filter out past pre-session actions (keep recent segment actions)
+    return actions
+      .filter(a => a.isPreSession ? a.time.getTime() >= now - 60000 : true)
+      .sort((a, b) => a.time.getTime() - b.time.getTime());
+  }, [currentSegment, nextSegment, allSegments, preSessionData, currentTime, serviceDate]);
 
   if (upcomingActions.length === 0) {
     return null;
