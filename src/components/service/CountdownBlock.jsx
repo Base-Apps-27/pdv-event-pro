@@ -126,10 +126,14 @@ export default function CountdownBlock({
 
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
+  // CLIPPING FIX (2026-03-01): Removed overflow-hidden from the outer container.
+  // It was clipping the ring-4 glow (in-progress mode) and the absolute-positioned
+  // label badge (-top-2.5). Instead, the parent column now uses p-1 padding to give
+  // the shadow/ring room to paint within the column's clip boundary.
   return (
-    <div className={`relative bg-white rounded-2xl border-3 ${config.borderColor} p-3 md:p-4 shadow-xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900 overflow-hidden min-w-0`}>
+    <div className={`relative bg-white rounded-2xl border-3 ${config.borderColor} p-3 md:p-4 shadow-xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900 min-w-0`}>
       
-      {/* Label */}
+      {/* Label — floats above the card border; parent padding prevents clip */}
       <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
         {config.label}
       </div>
