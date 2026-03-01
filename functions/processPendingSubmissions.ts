@@ -142,6 +142,63 @@ async function processSubmission(base44, submission) {
     if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
       scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
     }
+
+    // 2026-03-01: Bilingual takeaways via LLM (safety net copy — Anti-Drift Protocol)
+    // Kept in sync with submitWeeklyServiceContent + processNewSubmissionVersion.
+    try {
+      if (submission.content && submission.content.length > 100) {
+        console.log(`[SAFETY_NET_LLM] Starting bilingual LLM extraction for ${submission.id}`);
+        const prompt = `
+You are an expert bilingual (English/Spanish) sermon analysis assistant.
+
+STEP 1: Detect the primary language of the speaker notes below. It will be either English ("en") or Spanish ("es").
+
+STEP 2: Extract the main key takeaways (3-5 bullet points) in BOTH English AND Spanish.
+  - If the notes are in English, write the English takeaways first, then translate them to Spanish.
+  - If the notes are in Spanish, write the Spanish takeaways first, then translate them to English.
+  - Each takeaway should be a concise, complete sentence.
+
+STEP 3: Identify all actual biblical scripture references mentioned.
+   IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
+   Format each scripture reference EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
+   If there are no verses, return an empty array for verses.
+
+Text to analyze:
+${submission.content.substring(0, 15000)}`;
+
+        const llmResponse = await base44.integrations.Core.InvokeLLM({
+          prompt: prompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              source_language: { type: "string", description: "Detected language: 'en' or 'es'" },
+              key_takeaways_en: { type: "array", items: { type: "string" }, description: "Key takeaways in English" },
+              key_takeaways_es: { type: "array", items: { type: "string" }, description: "Key takeaways in Spanish" },
+              verses: { type: "array", items: { type: "object", properties: { content: { type: "string" } } } }
+            },
+            required: ["source_language", "key_takeaways_en", "key_takeaways_es", "verses"]
+          }
+        });
+
+        const aiVerses = llmResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
+        const aiTakeawaysEn = llmResponse?.key_takeaways_en || [];
+        const aiTakeawaysEs = llmResponse?.key_takeaways_es || [];
+        const detectedLang = llmResponse?.source_language || 'es';
+
+        if (aiVerses.length > 0) {
+          parsedData.sections = aiVerses;
+          parsedData.type = 'verse_list';
+          scriptureReferences = aiVerses.map(v => v.content).join('\n');
+        }
+        parsedData.source_language = detectedLang;
+        parsedData.key_takeaways_en = aiTakeawaysEn;
+        parsedData.key_takeaways_es = aiTakeawaysEs;
+        parsedData.key_takeaways = detectedLang === 'en' ? aiTakeawaysEn : aiTakeawaysEs;
+        console.log(`[SAFETY_NET_LLM] lang=${detectedLang}, EN=${aiTakeawaysEn.length}, ES=${aiTakeawaysEs.length}`);
+      }
+    } catch (llmErr) {
+      console.error(`[SAFETY_NET_LLM] Failed: ${llmErr.message}`);
+    }
   }
 
   const segmentId = submission.segment_id;
