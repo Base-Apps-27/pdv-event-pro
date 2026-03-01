@@ -209,13 +209,18 @@ export default function PublicCountdownDisplay() {
   const activeSession = useMemo(() => {
     const sessions = programData?.sessions || [];
     if (sessions.length === 0) return null;
-    // Use the first session if single-session program, otherwise find session containing current segment
     if (sessions.length === 1) return sessions[0];
     if (currentSegment?.session_id) {
       return sessions.find(s => s.id === currentSegment.session_id) || sessions[0];
     }
     return sessions[0];
   }, [programData?.sessions, currentSegment]);
+
+  // PreSessionDetails for the active session (used by CoordinatorActionsDisplay)
+  const activePreSessionData = useMemo(() => {
+    if (!activeSession || preSessionDetails.length === 0) return null;
+    return preSessionDetails.find(p => p.session_id === activeSession.id) || preSessionDetails[0] || null;
+  }, [activeSession, preSessionDetails]);
 
   // ── Loading ──
   if (isLoading) {
