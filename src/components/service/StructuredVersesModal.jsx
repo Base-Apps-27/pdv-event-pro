@@ -132,20 +132,45 @@ export default function StructuredVersesModal({
 
   /**
    * Key takeaways rendered BELOW verses with a mini ES/EN language toggle.
-   * Takeaways are too long for side-by-side bilingual display (unlike verses),
-   * so we provide a compact toggle to swap language in-place.
+   * 2026-03-01: Now uses bilingual data (key_takeaways_en / key_takeaways_es) from LLM.
+   * Falls back to legacy key_takeaways array if bilingual fields are absent (pre-upgrade data).
+   * source_language indicator shows what language the speaker submitted in.
    */
   const renderKeyTakeaways = () => {
-    if (!parsedData?.key_takeaways || parsedData.key_takeaways.length === 0) return null;
+    const hasEn = parsedData?.key_takeaways_en?.length > 0;
+    const hasEs = parsedData?.key_takeaways_es?.length > 0;
+    const hasLegacy = parsedData?.key_takeaways?.length > 0;
+    if (!hasEn && !hasEs && !hasLegacy) return null;
+
+    // Determine which takeaways to show based on toggle + available data
+    let activeTakeaways;
+    if (hasEn || hasEs) {
+      // Bilingual data available — use the toggled language
+      activeTakeaways = takeawayLang === 'en' 
+        ? (parsedData.key_takeaways_en || parsedData.key_takeaways_es) 
+        : (parsedData.key_takeaways_es || parsedData.key_takeaways_en);
+    } else {
+      // Legacy: only key_takeaways exists (pre-bilingual upgrade)
+      activeTakeaways = parsedData.key_takeaways;
+    }
 
     const tkTexts = texts[takeawayLang] || texts.es;
+    const sourceLang = parsedData?.source_language;
+    const hasBilingual = hasEn || hasEs;
     
     return (
       <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h5 className="font-bold text-amber-900 text-lg flex items-center gap-2">
-            <span className="text-xl">💡</span> {tkTexts.keyPoints}
-          </h5>
+          <div className="flex items-center gap-2">
+            <h5 className="font-bold text-amber-900 text-lg flex items-center gap-2">
+              <span className="text-xl">💡</span> {tkTexts.keyPoints}
+            </h5>
+            {sourceLang && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200 text-amber-800 font-medium uppercase" title={`El orador envió en ${sourceLang === 'en' ? 'Inglés' : 'Español'}`}>
+                {sourceLang === 'en' ? '🇺🇸 src' : '🇲🇽 src'}
+              </span>
+            )}
+          </div>
           {/* Mini language toggle — compact pill switcher */}
           <div className="flex items-center gap-1 bg-amber-100 rounded-full p-0.5">
             <button
@@ -172,8 +197,11 @@ export default function StructuredVersesModal({
             </button>
           </div>
         </div>
+        {!hasBilingual && (
+          <p className="text-[10px] text-amber-600 mb-2 italic">Datos pre-bilingüe — solo idioma original disponible</p>
+        )}
         <ul className="space-y-2">
-          {parsedData.key_takeaways.map((point, idx) => (
+          {activeTakeaways.map((point, idx) => (
             <li key={idx} className="flex gap-2 items-start text-amber-900">
               <span className="font-bold text-amber-500 mt-1">•</span>
               <span className="flex-1 font-medium">{point}</span>
