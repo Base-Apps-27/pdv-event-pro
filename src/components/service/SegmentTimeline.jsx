@@ -115,9 +115,9 @@ export default function SegmentTimeline({
                   {segment.title}
                 </div>
 
-                {/* Speaker/presenter with role label */}
+                {/* Speaker/presenter — solid black to match editor main field */}
                 {responsible && (
-                  <div className={`text-[10px] truncate mt-0.5 ${isFirst ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <div className={`text-[10px] truncate mt-0.5 ${isFirst ? 'text-slate-900 font-bold' : 'text-slate-700 font-semibold'}`}>
                     {responsible.label && <span className="font-semibold">{responsible.label}</span>}
                     {responsible.value}
                   </div>
