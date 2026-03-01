@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const body = await req.json();
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = body;
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey, device_info } = body;
         // Dynamic mirror targets: array of composite IDs to also receive this submission
         // Backward compat: legacy apply_to_both_services boolean still works
         const mirror_target_ids = body.mirror_target_ids || [];
@@ -487,7 +487,9 @@ ${content.substring(0, 15000)}`;
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
             source: 'weekly_service_form',
-            processing_status: 'processed'
+            processing_status: 'processed',
+            // 2026-03-01: Browser/device metadata for audit trail
+            ...(device_info ? { device_info } : {}),
         });
 
         // Audit trail — mirrored submissions (dynamic)
@@ -503,7 +505,9 @@ ${content.substring(0, 15000)}`;
                 parsed_data_snapshot: parsedData,
                 submitted_at: new Date().toISOString(),
                 source: 'weekly_service_form_mirror',
-                processing_status: 'processed'
+                processing_status: 'processed',
+                // 2026-03-01: Same device_info for mirrored audit records
+                ...(device_info ? { device_info } : {}),
             });
         }
         console.log("[INLINE_PROCESS] Audit record(s) created");

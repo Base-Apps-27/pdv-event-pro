@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         
         const body = await req.json();
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey } = body;
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey, device_info } = body;
 
         // ── HONEYPOT CHECK (2026-02-28) ──
         // Hidden "website" field that humans never fill. Bots get fake success.
@@ -98,7 +98,9 @@ Deno.serve(async (req) => {
                 content_is_slides_only: !!content_is_slides_only,
                 submitted_at: new Date().toISOString(),
                 source: 'public_form',
-                processing_status: 'pending' 
+                processing_status: 'pending',
+                // 2026-03-01: Browser/device metadata for audit trail
+                ...(device_info ? { device_info } : {}),
             });
         } catch (verErr) {
             console.error("Failed to save submission version:", verErr);
