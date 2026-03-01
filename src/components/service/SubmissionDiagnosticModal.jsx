@@ -352,7 +352,44 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
 
                             {/* PARSING TAB */}
                             <TabsContent value="parsing" className="p-4 space-y-4">
-                                {submissionVersions.map((version) => (
+                                {/* Show segment-level parsed data first (the canonical result) */}
+                                {segment?.parsed_verse_data && segment.parsed_verse_data.type !== 'empty' && (
+                                    <div className="border-2 border-teal-200 rounded-lg p-4 space-y-3 bg-teal-50">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-semibold text-teal-800">Datos Procesados en Segmento (Actual)</p>
+                                            <Badge className="bg-teal-100 text-teal-800">Canónico</Badge>
+                                        </div>
+                                        {segment.parsed_verse_data.key_takeaways?.length > 0 && (
+                                            <div>
+                                                <p className="text-xs font-medium text-teal-700 mb-1">Puntos Clave:</p>
+                                                <ul className="text-xs text-teal-800 space-y-0.5">
+                                                    {segment.parsed_verse_data.key_takeaways.map((t, i) => (
+                                                        <li key={i}>• {t}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {segment.parsed_verse_data.sections?.length > 0 && (
+                                            <div>
+                                                <p className="text-xs font-medium text-teal-700 mb-1">Versículos ({segment.parsed_verse_data.sections.length}):</p>
+                                                <div className="text-xs text-teal-800 space-y-0.5">
+                                                    {segment.parsed_verse_data.sections.map((s, i) => (
+                                                        <p key={i}>{s.content}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <details className="text-[10px]">
+                                            <summary className="cursor-pointer text-teal-600">JSON Crudo</summary>
+                                            <pre className="bg-white border rounded p-2 mt-1 text-gray-700 max-h-40 overflow-y-auto whitespace-pre-wrap font-mono">
+                                                {JSON.stringify(segment.parsed_verse_data, null, 2)}
+                                            </pre>
+                                        </details>
+                                    </div>
+                                )}
+
+                                {/* Version-level snapshots */}
+                                {submissionVersions.length > 0 ? submissionVersions.map((version) => (
                                     <div key={version.id} className="border rounded-lg p-4 space-y-3 bg-gray-50">
                                         <div className="flex justify-between items-start">
                                             <p className="text-sm font-mono text-gray-600">
@@ -371,10 +408,14 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
                                                 {JSON.stringify(version.parsed_data_snapshot, null, 2)}
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-gray-500 italic">Sin análisis disponible</p>
+                                            <p className="text-sm text-gray-500 italic">Sin snapshot de análisis en esta versión</p>
                                         )}
                                     </div>
-                                ))}
+                                )) : (
+                                    !segment?.parsed_verse_data && (
+                                        <p className="text-center text-gray-500 py-8">Sin datos de análisis disponibles</p>
+                                    )
+                                )}
                             </TabsContent>
 
                             {/* HISTORY TAB */}
