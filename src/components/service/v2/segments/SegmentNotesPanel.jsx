@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { NOTES_FIELDS } from "../constants/fieldMap";
+import SegmentActionsEditor from "@/components/session/SegmentActionsEditor";
 
 const VISIBILITY_TOGGLES = [
   { column: 'show_in_general',    label: 'General' },
