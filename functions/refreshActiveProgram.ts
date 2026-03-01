@@ -688,6 +688,10 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
             return (a.order || 0) - (b.order || 0);
           });
 
+        // FIX (2026-03-01): Compute start/end times for segments that lack them.
+        // Same logic as event path — derive from session planned_start_time + cumulative durations.
+        segments = computeSegmentTimes(segments, sessions);
+
         // Bulk fetch SegmentActions for all segments
         if (segments.length > 0) {
           const segmentIds = segments.map(s => s.id).filter(Boolean);
