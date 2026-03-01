@@ -285,11 +285,13 @@ export default function CoordinatorActionsDisplay({
 
                       <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[8px] mb-0.5">
                         <span className={`font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-[7px] ${
-                          action.isPrep
+                          action.isPreSession
+                            ? 'bg-slate-200 text-slate-700 border border-slate-300'
+                            : action.isPrep
                             ? 'bg-amber-100 text-amber-700 border border-amber-200'
                             : 'bg-blue-100 text-blue-700 border border-blue-200'
                         }`}>
-                          {action.isPrep ? t('live.preparation') : t('live.during')}
+                          {action.isPreSession ? 'PRE' : action.isPrep ? t('live.preparation') : t('live.during')}
                         </span>
                         <span className="text-slate-600 font-medium">{action.type}</span>
                       </div>
