@@ -140,11 +140,11 @@ export default function SegmentTimeline({
                   </div>
                 ))}
 
-                {/* Translator badge — purple to match all other surfaces */}
+                {/* Translator badge — blue to match editor's blue translation section */}
                 {translator && (
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <Languages className="w-2.5 h-2.5 text-purple-500" />
-                    <span className="text-[8px] font-semibold text-purple-600 uppercase tracking-wide truncate">
+                    <Languages className="w-2.5 h-2.5 text-blue-500" />
+                    <span className="text-[8px] font-semibold text-blue-600 uppercase tracking-wide truncate">
                       @ {translator}
                     </span>
                   </div>
