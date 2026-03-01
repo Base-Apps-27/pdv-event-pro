@@ -222,6 +222,14 @@ export default function PublicCountdownDisplay() {
     return preSessionDetails.find(p => p.session_id === activeSession.id) || preSessionDetails[0] || null;
   }, [activeSession, preSessionDetails]);
 
+  // Segments scoped to the active session only (not all sessions in the day).
+  // CoordinatorActionsDisplay should only show actions for the current session
+  // (e.g. 9:30am), not bleed actions from a later session (e.g. 11:30am).
+  const activeSessionSegments = useMemo(() => {
+    if (!activeSession) return segments;
+    return segments.filter(s => s.session_id === activeSession.id);
+  }, [segments, activeSession]);
+
   // ── Loading ──
   if (isLoading) {
     return (
