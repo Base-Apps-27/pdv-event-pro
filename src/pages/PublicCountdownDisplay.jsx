@@ -305,7 +305,7 @@ export default function PublicCountdownDisplay() {
         >
           {/* Col 1: Countdown + Coordinator Actions */}
           <div className="flex flex-col gap-2 overflow-hidden min-w-0">
-            <div className="pt-2">
+            <div className="pt-4">
               {currentSegment ? (
                 <CountdownBlock
                   segment={currentSegment}
