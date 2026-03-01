@@ -18,15 +18,32 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-// History Dialog Component (Preserved)
+// History Dialog Component
+// 2026-03-01: Enhanced to find versions via both entity ID AND composite ID bridge.
+// Submissions use composite IDs (weekly_service|svcId|slot|idx|message) but
+// Message Processing cards use entity Segment IDs. We resolve both.
 function SubmissionHistoryDialog({ open, onOpenChange, segment, onRestore }) {
     const { data: versions = [], isLoading } = useQuery({
         queryKey: ['submissionHistory', segment?.id],
         queryFn: async () => {
             if (!segment) return [];
-            const res = await base44.entities.SpeakerSubmissionVersion.filter({ 
+            // Try direct entity ID match first
+            let res = await base44.entities.SpeakerSubmissionVersion.filter({ 
                 segment_id: segment.id 
             });
+            
+            // If no results and the segment has a service_id, search by composite ID pattern
+            if (res.length === 0 && segment.service_id) {
+                const allVersions = await base44.entities.SpeakerSubmissionVersion.list('-created_date', 100);
+                const compositePrefix = `weekly_service|${segment.service_id}|`;
+                res = allVersions.filter(v => v.segment_id?.startsWith(compositePrefix));
+            }
+
+            // Also use pre-resolved versions from the parent query if available
+            if (res.length === 0 && segment._versions?.length > 0) {
+                res = segment._versions;
+            }
+
             // Sort by submitted_at desc
             return res.sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
         },
