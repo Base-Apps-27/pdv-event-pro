@@ -17,6 +17,7 @@ import { CheckCircle2 } from 'lucide-react';
 import FileOrLinkInput from './FileOrLinkInput';
 import { usePublicLang } from './PublicFormLangContext';
 import SubmissionPathSelector from './SubmissionPathSelector';
+import { collectDeviceInfo } from './collectDeviceInfo';
 
 export default function SpeakerSubmissionForm({ options }) {
     const { t } = usePublicLang();
