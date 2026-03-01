@@ -40,19 +40,6 @@ function getCountdown(segment, currentTime, status, t) {
   return null;
 }
 
-// Map department IDs to internal labels for filtering actions
-const DEPT_LABEL_MAP = {
-  general: 'All',
-  projection: 'Projection',
-  sound: 'Sound',
-  ushers: 'Ushers', // Covers Ujieres
-  translation: 'Translation',
-  stage_decor: 'Stage & Decor',
-  hospitality: 'Hospitality',
-  coordination: 'Coordinador', // Coordinator
-  livestream: 'Livestream',
-};
-
 export default function MyProgramSegmentCard({ segment, status, department, currentTime, onOpenVerses }) {
   const { t, language } = useLanguage();
   const getData = (field) => getSegmentData(segment, field);
