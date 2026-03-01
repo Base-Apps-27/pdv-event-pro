@@ -254,7 +254,7 @@ export default function ArtsResourcesSection({ segment, language = 'es' }) {
 
       {/* Description/notes if present */}
       {segment.description_details && (
-        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-100 whitespace-pre-wrap">
           <span className="font-semibold text-gray-600">{es ? 'Notas:' : 'Notes:'}</span> {segment.description_details}
         </div>
       )}
