@@ -311,7 +311,9 @@ export default function StickyOpsDeck({
   // ICON VIEW (Stage 3)
   if (viewState === 'icon') {
     return (
-      <div className="fixed bottom-4 left-4 z-40 print:hidden flex flex-col justify-end items-start">
+      {/* 2026-03-01: bottom-[5.5rem] on mobile clears the 80px bottom tab bar from MobileNav.
+          On lg+ screens the tab bar is hidden so bottom-4 suffices. */}
+      <div className="fixed bottom-[5.5rem] lg:bottom-4 left-4 z-40 print:hidden flex flex-col justify-end items-start">
         <div className="relative group">
           <div
             onClick={() => setViewState('bar')}
@@ -352,8 +354,9 @@ export default function StickyOpsDeck({
 
   // BAR / EXPANDED VIEW (Stages 2 & 1)
   return (
-    // Floating container - LOWERED position (bottom-4 instead of bottom-20)
-    <div className="fixed bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
+    {/* 2026-03-01: bottom-[5.5rem] on mobile clears the 80px bottom tab bar from MobileNav.
+        On lg+ screens the tab bar is hidden so bottom-4 suffices. */}
+    <div className="fixed bottom-[5.5rem] lg:bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
       
       {/* Wrapper for the deck */}
       <div className="w-full relative pointer-events-auto">
