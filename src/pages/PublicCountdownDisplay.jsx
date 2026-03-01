@@ -247,11 +247,25 @@ export default function PublicCountdownDisplay() {
   // ── All done → Standby ──
   // FIX (ATT-014): When override is active (debug mode), never go to standby
   // so admins can inspect the TV layout for any service/event regardless of date.
+  //
+  // SAFETY (2026-03-01): Before declaring "all done", verify that ALL segment
+  // times are genuinely in the past. The previous logic relied solely on
+  // currentSegment/nextSegment/preLaunchSegment being null — but those can
+  // all be null if the segment detection has an edge-case miss. The explicit
+  // check here prevents the TV from going to standby when the service hasn't
+  // even started yet (e.g. midnight → 9:30 AM window).
+  const hasAnyFutureSegment = segments.some(s => {
+    const st = s.actual_start_time || s.start_time;
+    if (!st) return false;
+    const segTime = getTimeDate(st, s.date);
+    return segTime && segTime > currentTime;
+  });
   const allDone =
     !currentSegment &&
     !nextSegment &&
     !preLaunchSegment &&
-    segments.length > 0;
+    segments.length > 0 &&
+    !hasAnyFutureSegment; // Don't standby if segments are still upcoming
   if (allDone && !_isOverride) {
     return <StandbyScreen currentTime={currentTime} />;
   }
