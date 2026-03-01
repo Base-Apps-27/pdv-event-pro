@@ -250,6 +250,12 @@ Deno.serve(async (req) => {
     const selectorOptions = { events: selectorEvents, services: selectorServices };
 
     // ─── STEP 2b: Early exit for entity triggers outside display window ───
+    // BUG FIX (2026-03-01): Segment, Session, PreSessionDetails, SegmentAction,
+    // and StreamBlock automations were falling through to `return false`, causing
+    // the current_display cache to NEVER rebuild on child entity changes.
+    // This was the root cause of PWA/TV displays not updating after service edits.
+    // Only Service and Event entities can be checked against the display window
+    // by ID — child entities must always proceed to rebuild.
     if (changedEntityType && changedEntityId) {
       const isRelevant = (() => {
         if (changedEntityType === 'Service') {
@@ -260,7 +266,13 @@ Deno.serve(async (req) => {
         }
         // LiveTimeAdjustment — always refresh (they directly affect displayed timing)
         if (changedEntityType === 'LiveTimeAdjustment') return true;
-        // For any other entity type, skip (Segment automation is disabled)
+        // Child entities (Segment, Session, PreSessionDetails, SegmentAction, StreamBlock)
+        // cannot be cheaply checked by ID against the display window.
+        // Always proceed to rebuild — the snapshot builder handles scoping.
+        if (['Segment', 'Session', 'PreSessionDetails', 'SegmentAction', 'StreamBlock'].includes(changedEntityType)) {
+          return true;
+        }
+        // Unknown entity type — skip to avoid unnecessary rebuilds
         return false;
       })();
 
