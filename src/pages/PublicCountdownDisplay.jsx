@@ -69,6 +69,7 @@ export default function PublicCountdownDisplay() {
   );
   const service = normalizedData.program;
   const segments = normalizedData.segments;
+  const preSessionDetails = normalizedData.preSessionDetails || [];
 
   // ── Stream blocks (for livestream sidecar column) ──
   const streamBlocks = useMemo(
