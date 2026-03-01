@@ -1,10 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, List, FileText, X } from "lucide-react";
+import { BookOpen, FileText, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 import { Monitor } from "lucide-react";
 
 export default function StructuredVersesModal({ 
