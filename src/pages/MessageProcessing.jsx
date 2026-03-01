@@ -216,8 +216,16 @@ export default function MessageProcessingPage() {
     });
 
     const handleProcess = (segment, contentOverride = null) => {
+        // 2026-03-01: When submitted_content is null on the Segment entity (common for
+        // weekly service submissions stored via composite IDs), fall back to the most
+        // recent SpeakerSubmissionVersion.content so the parser dialog isn't empty.
+        let effectiveContent = contentOverride;
+        if (!effectiveContent && !segment.submitted_content && segment._versions?.length > 0) {
+            const sorted = [...segment._versions].sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
+            effectiveContent = sorted[0]?.content || null;
+        }
         setSelectedSegment(segment);
-        setRestoreContent(contentOverride);
+        setRestoreContent(effectiveContent);
         setIsParserOpen(true);
     };
 
