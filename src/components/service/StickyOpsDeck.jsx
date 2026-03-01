@@ -537,9 +537,14 @@ export default function StickyOpsDeck({
           {/* Expanded List - Rendered SECOND so it appears BELOW the bar */}
           {viewState === 'expanded' && (
             <div className={`border-t border-slate-200 px-5 py-4 space-y-4 max-h-[45vh] overflow-y-auto bg-slate-50/90`}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-500">
-                {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
-              </p>
+              {/* 2026-03-01: Visual separator so expanded list isn't confused with segment content above */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-slate-300" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0 px-1">
+                  {isPast ? 'Historial Reciente' : 'Siguientes Acciones'}
+                </p>
+                <div className="h-px flex-1 bg-slate-300" />
+              </div>
             
               {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => {
                 // Concurrent = within 5 min of the header action's time → highlight time the same way
