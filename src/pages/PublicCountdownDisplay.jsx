@@ -272,7 +272,7 @@ export default function PublicCountdownDisplay() {
 
   // ── Active program display ──
   return (
-    <div className="w-full h-screen bg-slate-50 p-1.5 md:p-2 flex flex-col items-center overflow-hidden relative light">
+    <div className="w-full h-screen max-w-[100vw] bg-slate-50 p-1.5 md:p-2 flex flex-col items-center overflow-hidden relative light box-border">
       {/* Top Gradient */}
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
@@ -298,13 +298,13 @@ export default function PublicCountdownDisplay() {
       </div>
 
       {/* Bento grid: 2-col or 3-col when livestream sidecar is present */}
-      <div className="w-full flex-1 overflow-hidden px-1 z-10">
+      <div className="w-full flex-1 overflow-hidden px-1 z-10 min-h-0">
         <div
           className="w-full h-full grid gap-2"
-          style={{ gridTemplateColumns: hasLivestreamSession ? '1fr 1fr minmax(200px, 0.5fr)' : '1fr 1fr' }}
+          style={{ gridTemplateColumns: hasLivestreamSession ? '1fr 1fr minmax(180px, 0.5fr)' : '1fr 1fr' }}
         >
           {/* Col 1: Countdown + Coordinator Actions */}
-          <div className="flex flex-col gap-2 overflow-visible min-w-0">
+          <div className="flex flex-col gap-2 overflow-hidden min-w-0">
             <div className="pt-2">
               {currentSegment ? (
                 <CountdownBlock
@@ -349,7 +349,7 @@ export default function PublicCountdownDisplay() {
           </div>
 
           {/* Col 2: Program Timeline + Team Servers */}
-          <div className="flex flex-col gap-2 overflow-hidden h-full">
+          <div className="flex flex-col gap-2 overflow-hidden h-full min-w-0">
             {/* Room Program — raised bottom via gap */}
             <div className="flex-1 flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm min-h-0">
               <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200 flex-shrink-0">
