@@ -57,6 +57,7 @@ export default function ServiceProgramView({
   sessions = [],
   liveAdjustments = [],
   preSessionData = null,
+  allPreSessionDetails = [],
   currentTime,
   isSegmentCurrent,
   isSegmentUpcoming,

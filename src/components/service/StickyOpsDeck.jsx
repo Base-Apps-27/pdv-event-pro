@@ -119,11 +119,6 @@ export default function StickyOpsDeck({
               const isPM = meridiem.toLowerCase().includes('p');
               if (isPM && h < 12) h += 12;
               if (!isPM && h === 12) h = 0;
-            } else {
-              // Heuristic: if no meridiem, and hour is small (1-6) but segments start late (e.g. 19:00), assume PM?
-              // For safety/simplicity, we'll assume the text matches the system format (usually 24h or clear context).
-              // If vague (e.g. "5:00"), we treat as 5:00 AM unless logic suggests otherwise.
-              // Given the constraints, literal interpretation is safest.
             }
             timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
           }
@@ -141,13 +136,48 @@ export default function StickyOpsDeck({
           const noteAction = {
             id: `pre-facility-${timeStr}`,
             time: parseDateTime(activeDateStr, timeStr),
-            label: "Facility Prep", // Generic label
+            label: "Facility Prep",
             segmentTitle: "Pre-Session",
             type: "facility",
             isPrep: false,
             isPreSession: true,
             segmentId: null,
-            notes: preSessionData.facility_notes // Full notes content
+            notes: preSessionData.facility_notes
+          };
+          if (noteAction.time) actions.push(noteAction);
+        }
+      }
+
+      // 2026-03-01: General Notes — show actual note text as the action label.
+      // This surfaces pre-service instructions (e.g. "Tener comunión lista") directly
+      // in the StickyOpsDeck instead of a generic "General Notes" label.
+      if (preSessionData.general_notes) {
+        let timeStr = [preSessionData.registration_desk_open_time, preSessionData.library_open_time]
+          .filter(Boolean)
+          .sort()[0];
+
+        if (!timeStr && segments.length > 0 && segments[0].start_time) {
+          // Fallback: 30 mins before first segment
+          const [h, m] = segments[0].start_time.split(':').map(Number);
+          const d = new Date();
+          d.setHours(h, m - 30, 0, 0);
+          timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        if (timeStr) {
+          const noteAction = {
+            id: `pre-general-notes-${timeStr}`,
+            time: parseDateTime(activeDateStr, timeStr),
+            // Use actual note text as label (truncated for display); full text in notes
+            label: preSessionData.general_notes.length > 80
+              ? preSessionData.general_notes.substring(0, 80) + '…'
+              : preSessionData.general_notes,
+            segmentTitle: "Pre-Session",
+            type: "Coordinador",
+            isPrep: true,
+            isPreSession: true,
+            segmentId: null,
+            notes: preSessionData.general_notes.length > 80 ? preSessionData.general_notes : null
           };
           if (noteAction.time) actions.push(noteAction);
         }
