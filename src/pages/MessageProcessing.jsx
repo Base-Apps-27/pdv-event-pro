@@ -343,43 +343,80 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {segments.map((segment) => {
                 const isProcessed = segment.submission_status === 'processed';
+                const pvd = segment.parsed_verse_data;
+                const hasVerses = pvd && pvd.type !== 'empty' && pvd.sections?.length > 0;
+                const hasTakeaways = pvd?.key_takeaways?.length > 0;
+                const versionCount = segment._versionCount || 0;
+
                 return (
                     <Card key={segment.id} className={`flex flex-col h-full border-t-4 hover:shadow-lg transition-all duration-200 ${
                         isProcessed ? 'border-t-green-500' : 'border-t-amber-500'
                     }`}>
                         <CardHeader className="pb-3">
                             <div className="flex justify-between items-start mb-2">
-                                <Badge className={isProcessed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
-                                    {isProcessed ? 'Procesado' : 'Pendiente'}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge className={isProcessed ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
+                                        {isProcessed ? 'Procesado' : 'Pendiente'}
+                                    </Badge>
+                                    {versionCount > 0 && (
+                                        <Badge variant="outline" className="text-[10px] font-mono">
+                                            {versionCount} envío{versionCount !== 1 ? 's' : ''}
+                                        </Badge>
+                                    )}
+                                </div>
                                 <span className="text-xs text-gray-400 font-mono">
                                     {segment.updated_date ? format(new Date(segment.updated_date), 'd MMM HH:mm', { locale: es }) : ''}
                                 </span>
                             </div>
                             <CardTitle className="text-lg leading-snug line-clamp-2 min-h-[3.5rem]">
-                                {segment.title || 'Sin Título'}
+                                {segment.message_title || segment.title || 'Sin Título'}
                             </CardTitle>
                             <CardDescription className="line-clamp-1">
                                 {normalizeName(segment.presenter || 'Orador no asignado')}
                             </CardDescription>
                         </CardHeader>
                         
-                        <CardContent className="flex-1 flex flex-col justify-end space-y-4">
-                            {/* Preview Snippet */}
-                            <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 min-h-[3rem] border border-gray-100 relative overflow-hidden">
-                                {segment.submitted_content ? (
-                                    <p className="line-clamp-3 italic">"{segment.submitted_content}"</p>
-                                ) : segment.parsed_verse_data && segment.parsed_verse_data.type !== 'empty' ? (
-                                    <div className="flex flex-col gap-1">
-                                        <div className="font-semibold text-gray-700">Contenido Procesado:</div>
-                                        <div className="line-clamp-2">
-                                            {segment.parsed_verse_data.key_takeaways?.[0] || 'Ver detalles...'}
-                                        </div>
+                        <CardContent className="flex-1 flex flex-col justify-end space-y-3">
+                            {/* Key Takeaways (most valuable info for admins) */}
+                            {hasTakeaways && (
+                                <div className="bg-teal-50 rounded-md p-3 text-xs border border-teal-100 space-y-1">
+                                    <div className="font-bold text-teal-800 uppercase tracking-wide text-[10px] mb-1">Puntos Clave</div>
+                                    {pvd.key_takeaways.slice(0, 2).map((t, i) => (
+                                        <p key={i} className="text-teal-700 line-clamp-2">• {t}</p>
+                                    ))}
+                                    {pvd.key_takeaways.length > 2 && (
+                                        <p className="text-teal-500 text-[10px]">+{pvd.key_takeaways.length - 2} más</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Scripture References */}
+                            {hasVerses && (
+                                <div className="bg-amber-50 rounded-md p-2.5 text-xs border border-amber-100">
+                                    <div className="font-bold text-amber-800 uppercase tracking-wide text-[10px] mb-1">
+                                        Versículos ({pvd.sections.length})
                                     </div>
-                                ) : (
-                                    <p className="text-gray-400 text-center py-2">Sin contenido de texto</p>
-                                )}
-                            </div>
+                                    <div className="text-amber-700 space-y-0.5">
+                                        {pvd.sections.slice(0, 3).map((s, i) => (
+                                            <p key={i} className="truncate">{s.content}</p>
+                                        ))}
+                                        {pvd.sections.length > 3 && (
+                                            <p className="text-amber-500 text-[10px]">+{pvd.sections.length - 3} más</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Fallback: raw content preview only when no parsed data */}
+                            {!hasTakeaways && !hasVerses && (
+                                <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 min-h-[3rem] border border-gray-100">
+                                    {segment.submitted_content ? (
+                                        <p className="line-clamp-3 italic">"{segment.submitted_content}"</p>
+                                    ) : (
+                                        <p className="text-gray-400 text-center py-2">Sin contenido de texto</p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Material section with upload/link support */}
                             <MessageMaterialSection segment={segment} onUpdated={onMaterialUpdated} />
