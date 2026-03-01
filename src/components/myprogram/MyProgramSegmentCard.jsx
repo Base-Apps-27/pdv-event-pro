@@ -276,25 +276,7 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
         {/* Department-specific notes */}
         <DepartmentNotes segment={segment} department={department} />
 
-        {/* Segment Actions (Filtered) */}
-        {deptActions.length > 0 && (
-          <div className="space-y-2 mt-3 pt-3 border-t border-gray-100">
-            {deptActions.map((action, idx) => (
-              <div key={idx} className="flex items-start gap-2.5 text-sm text-gray-600 bg-gray-50 p-2.5 rounded-lg">
-                <CheckCircle2 className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <span className="font-bold text-gray-700 mr-1">
-                    {action.department ? `[${action.department}]` : ''}
-                  </span>
-                  <span>{action.label}</span>
-                  {action.notes && (
-                    <p className="text-xs text-gray-500 mt-0.5 italic">{action.notes}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+
 
         {/* Breakout Groups (Visible to ALL departments) */}
         {segment.breakout_rooms && segment.breakout_rooms.length > 0 && (
