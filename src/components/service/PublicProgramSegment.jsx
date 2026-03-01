@@ -563,99 +563,16 @@ export default function PublicProgramSegment({
       {/* Shows conditionally for Events based on viewMode or isExpanded */}
       {showDetails && (
         <div className="space-y-3 mt-3">
-          {/* Prep Actions (Before-Start Tasks) */}
-          {/* Services (alwaysExpanded): muted style, no department labels (standard reminders) */}
-          {/* Events (!alwaysExpanded): highlighted style with department labels (unique callouts) */}
-          {/* Item 3: Stacked action layout on mobile — label on top, time below */}
-          {prepActions.length > 0 && (
-            <div className="space-y-1.5">
-              {prepActions.map((action, idx) => {
-                const actionTime = calculateActionTime(action);
-                return alwaysExpanded ? (
-                  <div key={idx} className="bg-amber-50 border border-amber-200 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
-                    <div className="flex items-start gap-1.5 sm:gap-2">
-                      <span className="bg-amber-400 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">⚠ PREP</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-amber-800 block leading-snug">
-                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {actionTime && (
-                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-amber-700 bg-amber-100 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                          )}
-                          {action.notes && <span className="text-amber-700 text-[10px] sm:text-xs">— {action.notes}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div key={idx} className="bg-amber-100 border border-amber-300 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
-                    <div className="flex items-start gap-1.5 sm:gap-2">
-                      <span className="bg-amber-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">⚠ PREP</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-amber-900 block leading-snug">
-                          {action.department && `[${action.department}] `}
-                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {actionTime && (
-                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-amber-700 bg-amber-200 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                          )}
-                          {action.notes && <span className="text-amber-800 text-[10px] sm:text-xs">— {action.notes}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* During Actions (In-Segment Cues) */}
-          {/* Services: muted style, no department labels */}
-          {/* Events: highlighted style with department labels */}
-          {duringActions.length > 0 && (
-            <div className="space-y-1.5">
-              {duringActions.map((action, idx) => {
-                const actionTime = calculateActionTime(action);
-                return alwaysExpanded ? (
-                  <div key={idx} className="bg-blue-50 border border-blue-200 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
-                    <div className="flex items-start gap-1.5 sm:gap-2">
-                      <span className="bg-blue-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">▶ DURANTE</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-blue-800 block leading-snug">
-                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {actionTime && (
-                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-blue-700 bg-blue-100 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                          )}
-                          {action.notes && <span className="text-blue-700 text-[10px] sm:text-xs">— {action.notes}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div key={idx} className="bg-blue-100 border border-blue-300 rounded px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
-                    <div className="flex items-start gap-1.5 sm:gap-2">
-                      <span className="bg-blue-600 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 leading-tight">▶ DURANTE</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-blue-900 block leading-snug">
-                          {action.department && `[${action.department}] `}
-                          {String(action.label || '').replace(/^\s*\[[^\]]+\]\s*/, '')}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {actionTime && (
-                            <span className="text-[10px] sm:text-xs font-mono font-semibold text-blue-700 bg-blue-200 px-1 sm:px-1.5 py-0.5 rounded">@ {actionTime}</span>
-                          )}
-                          {action.notes && <span className="text-blue-800 text-[10px] sm:text-xs">— {action.notes}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {/* 2026-03-01: Collapsible actions — single summary row that expands on tap.
+              Replaces individual action cards to reduce vertical real estate in Live View. */}
+          {(prepActions.length > 0 || duringActions.length > 0) && (
+            <CollapsibleActions
+              prepActions={prepActions}
+              duringActions={duringActions}
+              calculateActionTime={calculateActionTime}
+              alwaysExpanded={alwaysExpanded}
+              isCurrent={isCurrent}
+            />
           )}
 
           {/* Break-type segments (Receso/Almuerzo) - enhanced visual distinction */}
