@@ -690,7 +690,13 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
 
         // FIX (2026-03-01): Compute start/end times for segments that lack them.
         // Same logic as event path — derive from session planned_start_time + cumulative durations.
+        const beforeCount = segments.filter(s => !s.start_time).length;
         segments = computeSegmentTimes(segments, sessions);
+        const afterCount = segments.filter(s => !s.start_time).length;
+        console.log(`[refreshActiveProgram] Service time computation: ${beforeCount} segments without start_time → ${afterCount} after computation (${segments.length} total)`);
+        if (segments.length > 0) {
+          console.log(`[refreshActiveProgram] First segment times: start=${segments[0].start_time}, end=${segments[0].end_time}, title=${segments[0].title}`);
+        }
 
         // Bulk fetch SegmentActions for all segments
         if (segments.length > 0) {
