@@ -81,6 +81,8 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             content_is_slides_only: slidesOnly,
             mirror_target_ids: checkedTargets,
             idempotencyKey: idempotencyKey,
+            // 2026-03-01: Browser/device metadata for audit trail
+            device_info: collectDeviceInfo(),
             // Honeypot: backend silently accepts but discards if filled (2026-02-28)
             ...(website ? { website } : {}),
         });
