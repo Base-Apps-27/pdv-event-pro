@@ -232,8 +232,8 @@ export default function StructuredVersesModal({
               )}
             </div>
           )}
-          {renderKeyTakeaways()}
           {renderContent()}
+          {renderKeyTakeaways()}
         </div>
       </DialogContent>
     </Dialog>
