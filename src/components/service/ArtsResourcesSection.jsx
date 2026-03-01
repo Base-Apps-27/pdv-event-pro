@@ -33,7 +33,7 @@ function InfoRow({ label, value, icon }) {
     <div className="flex items-start gap-2 text-xs">
       {icon && <span className="mt-0.5 shrink-0">{icon}</span>}
       <span className="text-gray-500 shrink-0">{label}:</span>
-      <span className="text-gray-800 font-medium break-words">{value}</span>
+      <span className="text-gray-800 font-medium break-words whitespace-pre-wrap">{value}</span>
     </div>
   );
 }
