@@ -235,7 +235,7 @@ export default function CoordinatorActionsDisplay({
       <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 p-1.5">
         {upcomingActions.length > 0 && (() => {
           const heroAction = upcomingActions[0];
-          const secondaryActions = upcomingActions.slice(1, 4); // Show up to 3 more
+          const secondaryActions = upcomingActions.slice(1, 5); // Show up to 4 more (5 total)
           
           // Clustering logic: detect which secondary actions are within ±2 min of hero
           const heroTime = heroAction.time.getTime();
@@ -365,9 +365,9 @@ export default function CoordinatorActionsDisplay({
               )}
 
               {/* Overflow indicator */}
-              {upcomingActions.length > 4 && (
+              {upcomingActions.length > 5 && (
                 <div className="text-center py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  +{upcomingActions.length - 4} more in app
+                  +{upcomingActions.length - 5} more in app
                 </div>
               )}
             </>
