@@ -14,6 +14,7 @@ import AdminSubmissionGate from "@/components/message-processing/AdminSubmission
 import MessageMaterialSection from "@/components/message-processing/MessageMaterialSection";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
+import { DeviceInfoCompact, DeviceInfoPanel } from "@/components/message-processing/DeviceInfoBadge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -83,6 +84,12 @@ function SubmissionHistoryDialog({ open, onOpenChange, segment, onRestore }) {
                                 <div className="text-xs font-mono text-gray-600 bg-white p-2 rounded border h-20 overflow-y-auto whitespace-pre-wrap">
                                     {version.content}
                                 </div>
+                                {/* 2026-03-01: Device info for each version in history */}
+                                {version.device_info && (
+                                    <div className="mt-2">
+                                        <DeviceInfoPanel deviceInfo={version.device_info} />
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -179,6 +186,10 @@ export default function MessageProcessingPage() {
                     // Attach resolved versions for diagnostic and history lookups
                     _versions: versions,
                     _versionCount: versions.length,
+                    // 2026-03-01: Device info from the most recent submission version
+                    _latestDeviceInfo: versions.length > 0
+                        ? versions.sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0]?.device_info
+                        : null,
                 };
             });
 
@@ -391,6 +402,8 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                             <CardDescription className="line-clamp-1">
                                 {normalizeName(segment.presenter || 'Orador no asignado')}
                             </CardDescription>
+                            {/* 2026-03-01: Device info from most recent submission */}
+                            <DeviceInfoCompact deviceInfo={segment._latestDeviceInfo} />
                         </CardHeader>
                         
                         <CardContent className="flex-1 flex flex-col justify-end space-y-3">
