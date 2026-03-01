@@ -130,14 +130,48 @@ export default function StructuredVersesModal({
     );
   };
 
+  /**
+   * Key takeaways rendered BELOW verses with a mini ES/EN language toggle.
+   * Takeaways are too long for side-by-side bilingual display (unlike verses),
+   * so we provide a compact toggle to swap language in-place.
+   */
   const renderKeyTakeaways = () => {
     if (!parsedData?.key_takeaways || parsedData.key_takeaways.length === 0) return null;
+
+    const tkTexts = texts[takeawayLang] || texts.es;
     
     return (
-      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <h5 className="font-bold text-amber-900 text-lg mb-3 flex items-center gap-2">
-          <span className="text-xl">💡</span> Puntos Clave
-        </h5>
+      <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="font-bold text-amber-900 text-lg flex items-center gap-2">
+            <span className="text-xl">💡</span> {tkTexts.keyPoints}
+          </h5>
+          {/* Mini language toggle — compact pill switcher */}
+          <div className="flex items-center gap-1 bg-amber-100 rounded-full p-0.5">
+            <button
+              onClick={() => setTakeawayLang('es')}
+              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors ${
+                takeawayLang === 'es' 
+                  ? 'bg-white text-amber-900 shadow-sm' 
+                  : 'text-amber-700 hover:text-amber-900'
+              }`}
+              aria-label="Ver en Español"
+            >
+              ES
+            </button>
+            <button
+              onClick={() => setTakeawayLang('en')}
+              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors ${
+                takeawayLang === 'en' 
+                  ? 'bg-white text-amber-900 shadow-sm' 
+                  : 'text-amber-700 hover:text-amber-900'
+              }`}
+              aria-label="View in English"
+            >
+              EN
+            </button>
+          </div>
+        </div>
         <ul className="space-y-2">
           {parsedData.key_takeaways.map((point, idx) => (
             <li key={idx} className="flex gap-2 items-start text-amber-900">
