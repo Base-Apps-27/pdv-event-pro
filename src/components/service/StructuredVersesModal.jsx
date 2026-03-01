@@ -15,6 +15,9 @@ export default function StructuredVersesModal({
   isSlidesOnly,
   language = 'es' 
 }) {
+  // Language toggle for key takeaways only — verses are bilingual inline
+  const [takeawayLang, setTakeawayLang] = useState('es');
+
   const texts = {
     es: {
       title: "Versos y Puntos Clave",
@@ -25,7 +28,8 @@ export default function StructuredVersesModal({
       noData: "No hay datos disponibles",
       openSlides: "Abrir Slides",
       onlySlides: "Solo Slides",
-      addNotes: "Notas Adicionales"
+      addNotes: "Notas Adicionales",
+      keyPoints: "Puntos Clave",
     },
     en: {
       title: "Verses and Key Points",
@@ -36,7 +40,8 @@ export default function StructuredVersesModal({
       noData: "No data available",
       openSlides: "Open Slides",
       onlySlides: "Slides Only",
-      addNotes: "Additional Notes"
+      addNotes: "Additional Notes",
+      keyPoints: "Key Points",
     }
   };
 
