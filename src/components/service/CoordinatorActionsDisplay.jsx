@@ -221,7 +221,7 @@ export default function CoordinatorActionsDisplay({
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm overflow-hidden min-w-0">
       
       {/* Compact Header - matches Room Program style */}
       <div className="bg-slate-100/80 px-2 py-1 border-b border-slate-200 flex-shrink-0">

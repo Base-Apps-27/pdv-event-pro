@@ -23,7 +23,7 @@ export default function TeamServersDisplay({ session }) {
   if (teams.length === 0) return null;
 
   return (
-    <div className="w-full bg-white/80 rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm">
+    <div className="w-full bg-white/80 rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm overflow-hidden min-w-0">
       {/* Header */}
       <div className="bg-slate-100/80 px-1.5 py-0.5 border-b border-slate-200">
         <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-0.5">

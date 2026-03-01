@@ -127,7 +127,7 @@ export default function CountdownBlock({
   const config = modeConfig[displayMode] || modeConfig['upcoming'];
 
   return (
-    <div className={`relative bg-white rounded-2xl border-3 ${config.borderColor} p-3 md:p-4 shadow-xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900`}>
+    <div className={`relative bg-white rounded-2xl border-3 ${config.borderColor} p-3 md:p-4 shadow-xl ${config.containerClass || ''} transition-all duration-500 light text-slate-900 overflow-hidden min-w-0`}>
       
       {/* Label */}
       <div className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest ${config.labelBg} shadow-lg whitespace-nowrap z-10`}>
@@ -138,9 +138,9 @@ export default function CountdownBlock({
       <div className="space-y-1.5 md:space-y-2 mt-1">
         
         {/* Countdown Timer — HERO ELEMENT */}
-        <div className="text-center w-full overflow-hidden">
+        <div className="text-center w-full overflow-hidden min-w-0">
           {/* Responsive sizing accounts for 2-column split at md breakpoint */}
-          <div className={`${size === 'compact' ? 'text-3xl md:text-4xl lg:text-5xl' : 'text-4xl sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl'} font-black font-mono tracking-tighter leading-none mb-1 ${config.countdownColor} tabular-nums break-words`}>
+          <div className={`${size === 'compact' ? 'text-3xl md:text-4xl lg:text-5xl' : 'text-4xl sm:text-5xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl'} font-black font-mono tracking-tighter leading-none mb-1 ${config.countdownColor} tabular-nums break-all`}>
             {countdownText}
           </div>
           {isLiveAdjusted && (
@@ -184,8 +184,8 @@ export default function CountdownBlock({
         )}
 
         {/* Start Time Display */}
-        <div className="text-center pt-2 border-t border-slate-200">
-          <div className="text-xs md:text-sm text-slate-500 uppercase tracking-widest">
+        <div className="text-center pt-2 border-t border-slate-200 overflow-hidden">
+          <div className="text-xs md:text-sm text-slate-500 uppercase tracking-widest truncate">
             {displayMode === 'in-progress' ? (language === 'es' ? 'TERMINA' : 'ENDS') : t('live.start')}
           </div>
           <div className="text-2xl md:text-3xl font-black text-pdv-teal font-mono mt-1">
