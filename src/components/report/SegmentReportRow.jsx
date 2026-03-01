@@ -21,32 +21,34 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
     return (
       <div className="space-y-0.5">
         {/* 2026-02-28: Added COORDINACIÓN — was missing from HTML report (present in PDF + entity) */}
+        {/* 2026-03-01: All notes fields use whitespace-pre-wrap to preserve line breaks.
+         * Decision: "Notes fields must always preserve line breaks" */}
         {segment.coordinator_notes && (
-          <div className="bg-orange-50 px-0.5 py-0.5 rounded border border-orange-200 text-[9px]">
+          <div className="bg-orange-50 px-0.5 py-0.5 rounded border border-orange-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-orange-600">COORDINACIÓN:</span>
             <span className="ml-0.5">{segment.coordinator_notes}</span>
           </div>
         )}
         {segment.projection_notes && (
-          <div className="bg-slate-100 px-0.5 py-0.5 rounded border border-slate-300 text-[9px]">
+          <div className="bg-slate-100 px-0.5 py-0.5 rounded border border-slate-300 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-slate-700">PROYECCIÓN:</span>
             <span className="ml-0.5">{segment.projection_notes}</span>
           </div>
         )}
         {segment.sound_notes && (
-          <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px]">
+          <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-red-700">SONIDO:</span>
             <span className="ml-0.5">{segment.sound_notes}</span>
           </div>
         )}
         {segment.ushers_notes && (
-          <div className="bg-green-50 px-0.5 py-0.5 rounded border border-green-200 text-[9px]">
+          <div className="bg-green-50 px-0.5 py-0.5 rounded border border-green-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-green-700">UJIERES:</span>
             <span className="ml-0.5">{segment.ushers_notes}</span>
           </div>
         )}
         {segment.stage_decor_notes && (
-          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px]">
+          <div className="bg-purple-50 px-0.5 py-0.5 rounded border border-purple-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-purple-700">STAGE & DECOR:</span>
             <span className="ml-0.5">{segment.stage_decor_notes}</span>
           </div>
@@ -59,25 +61,25 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
               <span className="ml-0.5 font-semibold">{segment.translator_name}</span>
             )}
             {segment.translation_notes && (
-              <span className="ml-0.5 text-gray-600">- {segment.translation_notes}</span>
+              <span className="ml-0.5 text-gray-600 whitespace-pre-wrap">- {segment.translation_notes}</span>
             )}
           </div>
         )}
         {/* 2026-02-28: Added LIVESTREAM — was missing from HTML report (present in PDF + entity) */}
         {segment.livestream_notes && (
-          <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-200 text-[9px]">
+          <div className="bg-cyan-50 px-0.5 py-0.5 rounded border border-cyan-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-cyan-700">LIVESTREAM:</span>
             <span className="ml-0.5">{segment.livestream_notes}</span>
           </div>
         )}
         {segment.microphone_assignments && (
-          <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px]">
+          <div className="bg-red-50 px-0.5 py-0.5 rounded border border-red-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-red-700">MICS:</span>
             <span className="ml-0.5">{segment.microphone_assignments}</span>
           </div>
         )}
         {segment.other_notes && (
-          <div className="bg-gray-50 px-0.5 py-0.5 rounded border border-gray-200 text-[9px]">
+          <div className="bg-gray-50 px-0.5 py-0.5 rounded border border-gray-200 text-[9px] whitespace-pre-wrap">
             <span className="font-bold text-gray-700">OTRO:</span>
             <span className="ml-0.5">{segment.other_notes}</span>
           </div>
@@ -262,14 +264,14 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
         )}
 
         {segment.prep_instructions && (
-          <div className="text-[9px] bg-amber-50 px-0.5 py-0.5 rounded border border-amber-200">
+          <div className="text-[9px] bg-amber-50 px-0.5 py-0.5 rounded border border-amber-200 whitespace-pre-wrap">
             <span className="text-amber-700 font-bold">PREP:</span>
             <span className="text-gray-700 ml-0.5 italic">{segment.prep_instructions}</span>
           </div>
         )}
 
         {segment.description_details && (
-          <div className="text-gray-600 text-[9px]">
+          <div className="text-gray-600 text-[9px] whitespace-pre-wrap">
             {segment.description_details}
           </div>
         )}

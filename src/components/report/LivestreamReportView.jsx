@@ -85,7 +85,7 @@ function LivestreamSessionTable({ session }) {
               <td className="p-2 border">
                 <div className="font-bold">{block.title}</div>
                 {block.presenter && <div className="text-xs text-gray-600">{block.presenter}</div>}
-                {block.description && <div className="text-xs mt-1 italic">{block.description}</div>}
+                {block.description && <div className="text-xs mt-1 italic whitespace-pre-wrap">{block.description}</div>}
               </td>
               <td className="p-2 border">
                 {block.stream_actions?.map((action, i) => {
@@ -116,7 +116,7 @@ function LivestreamSessionTable({ session }) {
                   );
                 })}
               </td>
-              <td className="p-2 border text-xs text-blue-800 bg-blue-50/30">
+              <td className="p-2 border text-xs text-blue-800 bg-blue-50/30 whitespace-pre-wrap">
                 {block.stream_notes}
               </td>
             </tr>

@@ -37,7 +37,7 @@ export default function UshersReportView({ eventSessions, getSessionSegments, al
                   <tr key={segment.id} className={`border-b border-gray-200 ${segment.ushers_notes ? "bg-yellow-50" : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                     <td className="p-3 font-mono font-medium text-gray-900">{segment.start_time ? formatTimeToEST(segment.start_time) : "-"}</td>
                     <td className="p-3 font-semibold text-gray-900">{segment.title}</td>
-                    <td className="p-3 text-sm text-gray-700">
+                    <td className="p-3 text-sm text-gray-700 whitespace-pre-wrap">
                       {segment.ushers_notes || <span className="italic text-gray-400">Sin notas específicas</span>}
                     </td>
                   </tr>

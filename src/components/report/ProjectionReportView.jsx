@@ -80,7 +80,7 @@ export default function ProjectionReportView({ eventSessions, getSessionSegments
                         })()}
 
                         {segment.projection_notes && (
-                          <div className="bg-slate-100 px-1 py-0.5 rounded border border-slate-300">
+                          <div className="bg-slate-100 px-1 py-0.5 rounded border border-slate-300 whitespace-pre-wrap">
                             <span className="font-bold text-slate-700">PROYECCIÓN:</span>
                             <span className="ml-1">{segment.projection_notes}</span>
                           </div>

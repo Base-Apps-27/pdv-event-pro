@@ -80,7 +80,7 @@ export default function SoundReportView({ eventSessions, getSessionSegments, all
                         })()}
 
                         {segment.sound_notes && (
-                          <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200">
+                          <div className="bg-red-50 px-1 py-0.5 rounded border border-red-200 whitespace-pre-wrap">
                             <span className="font-bold text-red-700">SONIDO:</span>
                             <span className="ml-1">{segment.sound_notes}</span>
                           </div>
