@@ -491,6 +491,38 @@ Deno.serve(async (req) => {
                              return (a.order || 0) - (b.order || 0);
                          });
 
+                     // 2026-03-01: Compute start_time/end_time for service segments that lack them.
+                     // Service segments often only have duration_min and order; times must be derived
+                     // from session.planned_start_time + cumulative duration of preceding segments.
+                     // Without this, StickyOpsDeck sees no start_time and skips all segments → invisible.
+                     const sessionStartMap = new Map(sessions.map(s => [s.id, s.planned_start_time]));
+                     const segsBySession = {};
+                     for (const seg of segments) {
+                         if (!segsBySession[seg.session_id]) segsBySession[seg.session_id] = [];
+                         segsBySession[seg.session_id].push(seg);
+                     }
+                     for (const [sid, segs] of Object.entries(segsBySession)) {
+                         const baseTime = sessionStartMap.get(sid);
+                         if (!baseTime) continue;
+                         const [bH, bM] = baseTime.split(':').map(Number);
+                         let cumulativeMin = 0;
+                         for (const seg of segs) {
+                             if (!seg.start_time) {
+                                 const startTotal = bH * 60 + bM + cumulativeMin;
+                                 const sH = Math.floor(startTotal / 60);
+                                 const sM = startTotal % 60;
+                                 seg.start_time = `${String(sH).padStart(2, '0')}:${String(sM).padStart(2, '0')}`;
+                             }
+                             const dur = seg.duration_min || 0;
+                             if (!seg.end_time && seg.start_time) {
+                                 const [eH, eM] = seg.start_time.split(':').map(Number);
+                                 const endTotal = eH * 60 + eM + dur;
+                                 seg.end_time = `${String(Math.floor(endTotal / 60)).padStart(2, '0')}:${String(endTotal % 60).padStart(2, '0')}`;
+                             }
+                             cumulativeMin += dur;
+                         }
+                     }
+
                      // B. Inject break segment between service sessions if there's a time gap
                      if (sessions.length >= 2) {
                          const enrichedSegments = [];
