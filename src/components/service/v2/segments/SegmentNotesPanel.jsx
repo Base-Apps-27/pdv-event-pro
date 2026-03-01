@@ -49,23 +49,13 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
         </div>
       </div>
 
-      {/* Coordinator actions (read-only from entity) */}
-      {segment.segment_actions?.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-2">
-          <Label className="text-xs font-semibold text-amber-900 mb-2 block">⏰ Acciones para Coordinador</Label>
-          <div className="space-y-1">
-            {segment.segment_actions.map((action, idx) => (
-              <div key={idx} className="text-xs text-amber-800 flex items-start gap-1">
-                <span className="font-semibold">•</span>
-                <span>
-                  {action?.label || ''}
-                  {action?.department && <Badge variant="outline" className="ml-1 text-[9px] py-0">{action.department}</Badge>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Coordinator actions — editable (2026-03-01: replaced read-only display) */}
+      <SegmentActionsEditor
+        actions={segment.segment_actions || []}
+        onChange={(newActions) => onWrite(segment.id, 'segment_actions', newActions)}
+        formData={{ start_time: segment.start_time, duration_min: segment.duration_min }}
+        language="es"
+      />
 
       {/* Notes fields */}
       {NOTES_FIELDS.map(f => (
