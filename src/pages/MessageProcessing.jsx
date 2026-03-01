@@ -94,35 +94,81 @@ export default function MessageProcessingPage() {
     const [isGateOpen, setIsGateOpen] = useState(false);
 
     // Fetch ONLY pending and processed (Inbox model)
+    // 2026-03-01: Also fetch SpeakerSubmissionVersion records to get submission counts
+    // and bridge the ID gap (versions use composite IDs, segments use entity IDs).
     const { data: segments = [], isLoading } = useQuery({
         queryKey: ['messagesToProcessInbox'],
         queryFn: async () => {
-            const [pendingSeg, processedSeg] = await Promise.all([
+            const [pendingSeg, processedSeg, allVersions] = await Promise.all([
                 base44.entities.Segment.filter({ submission_status: 'pending' }),
-                base44.entities.Segment.filter({ submission_status: 'processed' })
+                base44.entities.Segment.filter({ submission_status: 'processed' }),
+                base44.entities.SpeakerSubmissionVersion.list('-created_date', 100),
             ]);
             
+            // Build a lookup: segment entity ID → versions
+            // Versions may use composite IDs (weekly_service|serviceId|slot|idx|message)
+            // or direct entity IDs. We need to match both.
+            // Strategy: Also index by service_id + session cross-reference.
+            const versionsBySegmentId = {};
+            const versionsByCompositeId = {};
+            allVersions.forEach(v => {
+                const sid = v.segment_id;
+                if (!sid) return;
+                if (sid.startsWith('weekly_service|')) {
+                    if (!versionsByCompositeId[sid]) versionsByCompositeId[sid] = [];
+                    versionsByCompositeId[sid].push(v);
+                } else {
+                    if (!versionsBySegmentId[sid]) versionsBySegmentId[sid] = [];
+                    versionsBySegmentId[sid].push(v);
+                }
+            });
+
             // Standardize structure
-            // 2026-02-28: Added presentation_url, notes_url, content_is_slides_only
-            // so they are visible in Message Processing cards.
-            const all = [...pendingSeg, ...processedSeg].map(seg => ({
-                id: seg.id,
-                title: seg.title,
-                presenter: seg.presenter,
-                submitted_content: seg.submitted_content,
-                parsed_verse_data: seg.parsed_verse_data,
-                submission_status: seg.submission_status,
-                updated_date: seg.updated_date,
-                presentation_url: seg.presentation_url,
-                notes_url: seg.notes_url,
-                content_is_slides_only: seg.content_is_slides_only,
-                message_title: seg.message_title,
-            }));
+            const all = [...pendingSeg, ...processedSeg].map(seg => {
+                // Find versions: direct entity ID match first
+                let versions = versionsBySegmentId[seg.id] || [];
+                
+                // If no direct match, try to find composite-ID versions that belong to this segment
+                // by matching service_id + session slot position.
+                if (versions.length === 0 && seg.service_id) {
+                    // Look for composite IDs containing this service_id
+                    const compositePrefix = `weekly_service|${seg.service_id}|`;
+                    const matchingKeys = Object.keys(versionsByCompositeId).filter(k => k.startsWith(compositePrefix));
+                    // Collect all versions from matching composite keys
+                    for (const key of matchingKeys) {
+                        versions = [...versions, ...versionsByCompositeId[key]];
+                    }
+                    // Deduplicate by ID
+                    const seen = new Set();
+                    versions = versions.filter(v => { if (seen.has(v.id)) return false; seen.add(v.id); return true; });
+                }
+
+                return {
+                    id: seg.id,
+                    title: seg.title,
+                    presenter: seg.presenter,
+                    submitted_content: seg.submitted_content,
+                    parsed_verse_data: seg.parsed_verse_data,
+                    submission_status: seg.submission_status,
+                    updated_date: seg.updated_date,
+                    presentation_url: seg.presentation_url,
+                    notes_url: seg.notes_url,
+                    content_is_slides_only: seg.content_is_slides_only,
+                    message_title: seg.message_title,
+                    scripture_references: seg.scripture_references,
+                    service_id: seg.service_id,
+                    session_id: seg.session_id,
+                    segment_type: seg.segment_type,
+                    // Attach resolved versions for diagnostic and history lookups
+                    _versions: versions,
+                    _versionCount: versions.length,
+                };
+            });
 
             // Sort by most recently updated
             return all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
         },
-        refetchInterval: 5000
+        refetchInterval: 15000 // 15s is enough, 5s was wasteful
     });
 
     const pendingSegments = segments.filter(s => s.submission_status === 'pending');
