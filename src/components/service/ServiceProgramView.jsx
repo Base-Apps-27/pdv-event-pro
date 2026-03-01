@@ -200,6 +200,59 @@ export default function ServiceProgramView({
   // ── JSON fallback: DISABLED ──
   const adjustedJsonSlots = useMemo(() => ({}), []);
 
+  // 2026-03-01: Compute current/upcoming session's preSessionData for StickyOpsDeck.
+  // Only show the notes for the session that's currently active or next up,
+  // so the ops deck isn't cluttered with notes from past sessions.
+  const activePreSessionData = useMemo(() => {
+    if (!sessions || sessions.length === 0) return preSessionData;
+    if (sessions.length === 1) {
+      // Single session: always use its details
+      return allPreSessionDetails.find(p => p.session_id === sessions[0].id) || preSessionData;
+    }
+    // Multi-session: find the session whose time range contains currentTime or is next
+    const now = currentTime;
+    const nowH = now.getHours();
+    const nowM = now.getMinutes();
+    const nowTotal = nowH * 60 + nowM;
+
+    // Check if today is the service day
+    const todayStr = now.toISOString().split('T')[0];
+    const serviceDate = actualServiceData?.date;
+    const isToday = !serviceDate || serviceDate === todayStr;
+
+    if (!isToday) {
+      // Preview mode: show first session's notes
+      return allPreSessionDetails.find(p => p.session_id === sessions[0].id) || preSessionData;
+    }
+
+    // Find session that's currently active or upcoming
+    for (const sess of sessions) {
+      if (!sess.planned_start_time) continue;
+      const [sh, sm] = sess.planned_start_time.split(':').map(Number);
+      const endTime = sess.planned_end_time ? sess.planned_end_time.split(':').map(Number) : null;
+      const startTotal = sh * 60 + sm;
+      const endTotal = endTime ? endTime[0] * 60 + endTime[1] : startTotal + 120;
+
+      // Current session: now is within its window (or up to 30min before start for prep)
+      if (nowTotal >= startTotal - 30 && nowTotal <= endTotal) {
+        return allPreSessionDetails.find(p => p.session_id === sess.id) || null;
+      }
+    }
+
+    // No session currently active — find the next upcoming one
+    for (const sess of sessions) {
+      if (!sess.planned_start_time) continue;
+      const [sh, sm] = sess.planned_start_time.split(':').map(Number);
+      if (sh * 60 + sm > nowTotal) {
+        return allPreSessionDetails.find(p => p.session_id === sess.id) || null;
+      }
+    }
+
+    // All sessions passed: show last session's notes (may still be relevant)
+    const lastSess = sessions[sessions.length - 1];
+    return allPreSessionDetails.find(p => p.session_id === lastSess.id) || preSessionData;
+  }, [sessions, allPreSessionDetails, preSessionData, currentTime, actualServiceData?.date]);
+
   // ═══════════════════════════════════════════════════════════════════
   // EMPTY STATE
   // ═══════════════════════════════════════════════════════════════════
@@ -422,8 +475,18 @@ export default function ServiceProgramView({
                   return <h3 className={`text-2xl font-bold uppercase mb-1 ${colors.text}`}>{parsed?.display || slot.name}</h3>;
                 })()}
 
-                {/* Pre-service notes — entity path uses PreSessionDetails which are rendered in StickyOpsDeck. 
-                    JSON fallback notes are REMOVED. */}
+                {/* 2026-03-01: Pre-service notes displayed in slot header.
+                    Matches PreSessionDetails.general_notes for this session. */}
+                {(() => {
+                  const psd = allPreSessionDetails.find(p => p.session_id === slot.sessionId);
+                  if (!psd?.general_notes) return null;
+                  return (
+                    <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs sm:text-sm text-amber-900">
+                      <span className="font-bold uppercase text-[10px] tracking-wider text-amber-700 block mb-0.5">📋 Nota Pre-Servicio</span>
+                      <span className="whitespace-pre-wrap">{psd.general_notes}</span>
+                    </div>
+                  );
+                })()}
 
                 {/* Team info — entity path ONLY */}
                 {sessionTeamInfo && <SessionTeamInfoRow teamInfo={sessionTeamInfo} />}
