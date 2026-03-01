@@ -115,11 +115,61 @@ function normalizeEntitySourcedSegments(programData) {
   });
   const sessionChronoIndex = new Map(sortedSessions.map((s, i) => [s.id, i]));
 
-  return segments
-    .filter(seg => seg.show_in_general !== false)
+  // FIX (2026-03-01): Compute start/end times for segments missing them.
+  // Entity segments often have start_time=null — derive from session's
+  // planned_start_time + cumulative durations (same logic as JSON path).
+  // Group segments by session, sort by order, then walk cumulatively.
+  const segsBySession = {};
+  const filteredSegments = segments.filter(seg => seg.show_in_general !== false);
+  filteredSegments.forEach(seg => {
+    const sid = seg.session_id || '_none';
+    if (!segsBySession[sid]) segsBySession[sid] = [];
+    segsBySession[sid].push(seg);
+  });
+  // Sort each group by order
+  Object.values(segsBySession).forEach(arr => arr.sort((a, b) => (a.order || 0) - (b.order || 0)));
+
+  // Build a map of computed times: segmentId → { start_time, end_time }
+  const computedTimes = {};
+  Object.entries(segsBySession).forEach(([sid, segs]) => {
+    const session = sessionMap[sid] || {};
+    let baseTime = session.planned_start_time || null;
+    let curH = 0, curM = 0;
+    if (baseTime) {
+      const [h, m] = baseTime.split(':').map(Number);
+      curH = h; curM = m;
+    }
+
+    segs.forEach(seg => {
+      // Use explicit start_time if present, otherwise use running cursor
+      let segStart = seg.start_time || null;
+      if (!segStart && baseTime) {
+        segStart = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
+      // If segment has explicit start_time, reset the cursor to it
+      if (seg.start_time) {
+        const [h, m] = seg.start_time.split(':').map(Number);
+        curH = h; curM = m;
+      }
+
+      const dur = seg.duration_min || 0;
+      const d = new Date(2000, 0, 1, curH, curM + dur);
+      curH = d.getHours(); curM = d.getMinutes();
+
+      let segEnd = seg.end_time || null;
+      if (!segEnd && baseTime) {
+        segEnd = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
+
+      computedTimes[seg.id] = { start_time: segStart, end_time: segEnd };
+    });
+  });
+
+  return filteredSegments
     .map(seg => {
       const session = sessionMap[seg.session_id] || {};
       const slotLabel = session.name || 'custom';
+      const times = computedTimes[seg.id] || {};
 
       // Resolve translation mode — entity segments should carry explicit mode;
       // fallback to 'RemoteBooth' (safe default) if not set.
@@ -130,8 +180,8 @@ function normalizeEntitySourcedSegments(programData) {
         id: seg.id,
         title: seg.title || 'Untitled',
         segment_type: seg.segment_type || 'Especial',
-        start_time: seg.start_time || null,
-        end_time: seg.end_time || null,
+        start_time: seg.start_time || times.start_time || null,
+        end_time: seg.end_time || times.end_time || null,
         duration_min: seg.duration_min || 0,
         presenter: seg.presenter || '',
         leader: seg.presenter || '', // Entity segments unify to presenter
