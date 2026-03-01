@@ -202,6 +202,23 @@ Deno.serve(async (req) => {
 
     console.log(`[refreshActiveProgram] Trigger: ${trigger}, Date: ${todayStr}, Entity: ${changedEntityType}/${changedEntityId}`);
 
+    // Debug mode: return snapshot of the current cache with segment time diagnostics
+    if (trigger === 'debug_times') {
+      const existing = await withRetry(() =>
+        base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+      );
+      const snapshot = existing?.[0]?.program_snapshot;
+      if (!snapshot) return Response.json({ error: 'No cache found' });
+      const segs = (snapshot.segments || []).slice(0, 5).map(s => ({
+        id: s.id, title: s.title, start_time: s.start_time, end_time: s.end_time,
+        duration_min: s.duration_min, session_id: s.session_id, order: s.order
+      }));
+      const sess = (snapshot.sessions || []).map(s => ({
+        id: s.id, name: s.name, planned_start_time: s.planned_start_time
+      }));
+      return Response.json({ total_segments: (snapshot.segments || []).length, sessions: sess, sample_segments: segs });
+    }
+
     // ─── STEP 1: Fetch all events and services ───
     const allEvents = await withRetry(() =>
       base44.asServiceRole.entities.Event.list('-start_date')
