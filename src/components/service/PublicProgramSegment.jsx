@@ -9,7 +9,7 @@ import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 import { ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import SegmentResourcesModal from "./SegmentResourcesModal";
-import CollapsibleActions from "./CollapsibleActions";
+import CollapsibleActions from "@/components/service/CollapsibleActions";
 
 /**
  * PublicProgramSegment Component
