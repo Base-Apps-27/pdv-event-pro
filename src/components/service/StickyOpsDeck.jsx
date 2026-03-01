@@ -310,9 +310,9 @@ export default function StickyOpsDeck({
 
   // ICON VIEW (Stage 3)
   if (viewState === 'icon') {
+    // 2026-03-01: bottom-[5.5rem] on mobile clears the 80px bottom tab bar from MobileNav.
+    // On lg+ screens the tab bar is hidden so bottom-4 suffices.
     return (
-      {/* 2026-03-01: bottom-[5.5rem] on mobile clears the 80px bottom tab bar from MobileNav.
-          On lg+ screens the tab bar is hidden so bottom-4 suffices. */}
       <div className="fixed bottom-[5.5rem] lg:bottom-4 left-4 z-40 print:hidden flex flex-col justify-end items-start">
         <div className="relative group">
           <div
@@ -354,8 +354,6 @@ export default function StickyOpsDeck({
 
   // BAR / EXPANDED VIEW (Stages 2 & 1)
   return (
-    {/* 2026-03-01: bottom-[5.5rem] on mobile clears the 80px bottom tab bar from MobileNav.
-        On lg+ screens the tab bar is hidden so bottom-4 suffices. */}
     <div className="fixed bottom-[5.5rem] lg:bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[650px] z-40 print:hidden flex flex-col justify-end items-center pointer-events-none transition-all duration-300">
       
       {/* Wrapper for the deck */}
