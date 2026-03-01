@@ -575,6 +575,12 @@ async function buildProgramSnapshot(base44, targetProgram, isEvent) {
           return (a.order || 0) - (b.order || 0);
         });
 
+      // FIX (2026-03-01): Compute start/end times for segments that lack them.
+      // Entity segments often have start_time=null — derive from session's
+      // planned_start_time + cumulative durations. Applied at cache-build time
+      // so ALL consumers (Live View, MyProgram, TV) get correct times.
+      segments = computeSegmentTimes(segments, sessions);
+
       // BULK FETCH: SegmentActions for ALL segments at once (batch of 10)
       if (segments.length > 0) {
         const segmentIds = segments.map(s => s.id).filter(Boolean);
