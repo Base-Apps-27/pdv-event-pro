@@ -71,6 +71,80 @@ function groupBy(arr, keyFn) {
 // The `order` field is unreliable (can be duplicated or wrong).
 // Inlined here because Deno backend cannot import frontend modules.
 // MUST stay in sync with components/utils/sessionSort.js
+// ═══════════════════════════════════════════════════════════════
+// COMPUTE SEGMENT TIMES — Derives start_time/end_time for segments
+// that don't have them, using session.planned_start_time + cumulative
+// durations. This is the SINGLE SOURCE OF TRUTH for timing computation.
+// Must be applied before writing to cache so ALL consumers get times.
+// Inlined here because Deno backend cannot import frontend modules.
+// ═══════════════════════════════════════════════════════════════
+function computeSegmentTimes(segments, sessions) {
+  if (!segments || segments.length === 0) return segments;
+
+  const sessionMap = {};
+  (sessions || []).forEach(s => { sessionMap[s.id] = s; });
+
+  // Group segments by session, preserving original array
+  const segsBySession = {};
+  segments.forEach(seg => {
+    const sid = seg.session_id || '_none';
+    if (!segsBySession[sid]) segsBySession[sid] = [];
+    segsBySession[sid].push(seg);
+  });
+
+  // Sort each group by order
+  Object.values(segsBySession).forEach(arr =>
+    arr.sort((a, b) => (a.order || 0) - (b.order || 0))
+  );
+
+  // Build computed times map: segmentId → { start_time, end_time }
+  const computedTimes = {};
+  Object.entries(segsBySession).forEach(([sid, segs]) => {
+    const session = sessionMap[sid] || {};
+    const baseTime = session.planned_start_time || null;
+    let curH = 0, curM = 0;
+    if (baseTime) {
+      const [h, m] = baseTime.split(':').map(Number);
+      curH = h; curM = m;
+    }
+
+    segs.forEach(seg => {
+      // Use explicit start_time if present, otherwise use running cursor
+      let segStart = seg.start_time || null;
+      if (!segStart && baseTime) {
+        segStart = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
+      // If segment has explicit start_time, reset the cursor to it
+      if (seg.start_time) {
+        const [h, m] = seg.start_time.split(':').map(Number);
+        curH = h; curM = m;
+      }
+
+      const dur = seg.duration_min || 0;
+      const d = new Date(2000, 0, 1, curH, curM + dur);
+      curH = d.getHours(); curM = d.getMinutes();
+
+      let segEnd = seg.end_time || null;
+      if (!segEnd && baseTime) {
+        segEnd = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
+
+      computedTimes[seg.id] = { start_time: segStart, end_time: segEnd };
+    });
+  });
+
+  // Return new array with computed times filled in (never mutates originals)
+  return segments.map(seg => {
+    const times = computedTimes[seg.id];
+    if (!times) return seg;
+    return {
+      ...seg,
+      start_time: seg.start_time || times.start_time || null,
+      end_time: seg.end_time || times.end_time || null,
+    };
+  });
+}
+
 function sortSessionsChronologically(sessions) {
   return [...sessions].sort((a, b) => {
     const aDate = a?.date || '';
