@@ -15,7 +15,7 @@ import { AlertCircle, Clock } from "lucide-react";
 export default function CoordinatorActionsDisplay({
   currentSegment,
   nextSegment,
-  allSegments = [],       // All segments (for pre-session time fallbacks)
+  allSegments = [],       // All session segments — used for look-ahead window + pre-session fallbacks
   preSessionData = null,  // PreSessionDetails for the active session
   currentTime,
   serviceDate,
