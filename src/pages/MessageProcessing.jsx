@@ -255,7 +255,7 @@ export default function MessageProcessingPage() {
                     <TabsTrigger value="history">
                         Historial
                         <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-800 border-none">
-                            {processedSegments.length}
+                            {processedSegments.length} seg · {processedSegments.reduce((sum, s) => sum + (s._versionCount || 0), 0)} env
                         </Badge>
                     </TabsTrigger>
                 </TabsList>
