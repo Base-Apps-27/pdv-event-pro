@@ -77,13 +77,8 @@ export default function MyProgramSegmentCard({ segment, status, department, curr
     }
   }
 
-  // Filter Actions based on department
-  // General view: no actions (only pre-service notes + segment notes shown)
-  const rawActions = segment.segment_actions || segment.actions || getData('actions') || [];
-  const deptActions = department === 'general' ? [] : rawActions.filter(action => {
-    const target = DEPT_LABEL_MAP[department];
-    return action.department === target || action.department === 'All' || !action.department;
-  });
+  // 2026-03-01: Actions are NOT shown in MyProgram — they are operational/internal only.
+  // They display in the Live View / Reports surfaces instead.
 
   // Container styles by status
   const containerClass = {
