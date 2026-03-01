@@ -132,7 +132,11 @@ export default function CoordinatorActionsDisplay({
     }
 
     // ── 2. Process Segment Actions ──
-    const processSegment = (segment, isNext = false) => {
+    // LOOK-AHEAD WINDOW (2026-03-01): Instead of only current+next segment,
+    // process ALL remaining session segments so upcoming actions continuously
+    // scroll into the display slots as earlier actions expire. The display
+    // cap (4 slots) remains — this just widens the data pipeline.
+    const processSegment = (segment) => {
       const effectiveStart = segment?.actual_start_time || segment?.start_time;
       if (!segment || !effectiveStart) return;
 
@@ -146,7 +150,7 @@ export default function CoordinatorActionsDisplay({
       }
       if (!segEnd) {
         segEnd = new Date(segStart);
-        segEnd.setMinutes(segStart.getMinutes() + (segment.duration_min || 0));
+        segEnd.setMinutes(segEnd.getMinutes() + (segment.duration_min || 0));
       }
 
       const segActions = segment.segment_actions || segment.actions || [];
@@ -179,37 +183,34 @@ export default function CoordinatorActionsDisplay({
         }
 
         const isPrep = timing === 'before_start';
-        
-        // FILTERING LOGIC:
-        // - For CURRENT segment: only show DURANTE actions (not prep)
-        // - For NEXT segment: only show PREP actions
-        // - Pre-session actions are already added above, no filter needed
-        if (isNext) {
-          if (!isPrep) return;
-        } else {
-          if (isPrep) return;
-        }
 
+        // Only include actions that haven't expired (allow 1min grace for "NOW" display)
         if (actionTime.getTime() >= now - 60000) {
           actions.push({
-            id: `${segment.id}-${action.label}-${action.timing}`,
+            id: `${segment.id}-${action.label}-${action.timing}-${actionTime.getTime()}`,
             time: actionTime,
             label: action.label,
             segmentTitle: segment.title,
             segmentId: segment.id,
             type: action.department || 'General',
-            isPrep: isPrep,
-            isNext: isNext,
+            isPrep,
+            isPreSession: false,
+            isNext: false, // No longer needed — actions self-sort by time
             notes: action.notes
           });
         }
       });
     };
 
-    processSegment(currentSegment, false);
-    processSegment(nextSegment, true);
+    // Process every segment in the session (allSegments), not just current+next.
+    // Skipped segments are excluded. Past-time filter above handles expiration.
+    const segsToProcess = allSegments.length > 0 ? allSegments : [currentSegment, nextSegment].filter(Boolean);
+    segsToProcess.forEach(seg => {
+      if (seg?.live_status === 'skipped') return;
+      processSegment(seg);
+    });
 
-    // Sort by time, filter out past pre-session actions (keep recent segment actions)
+    // Sort by time, filter out expired pre-session actions
     return actions
       .filter(a => a.isPreSession ? a.time.getTime() >= now - 60000 : true)
       .sort((a, b) => a.time.getTime() - b.time.getTime());
