@@ -34,13 +34,33 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
     }
 
     // Fetch submission versions
+    // 2026-03-01: Enhanced to bridge entity IDs to composite IDs.
+    // When segmentId is an entity ID (not composite), versions may use composite IDs.
+    // We fetch the segment to get its service_id and search by composite prefix.
     const { data: submissionVersions = [], isLoading: loadingVersions } = useQuery({
         queryKey: ['submissionVersions', segmentId],
         queryFn: async () => {
             if (!segmentId) return [];
-            const res = await base44.entities.SpeakerSubmissionVersion.filter({ 
+            
+            // Direct filter by segment_id
+            let res = await base44.entities.SpeakerSubmissionVersion.filter({ 
                 segment_id: segmentId 
             });
+            
+            // If no results and this is an entity ID (not composite), bridge via service_id
+            if (res.length === 0 && !segmentId.startsWith('weekly_service|')) {
+                try {
+                    const seg = await base44.entities.Segment.get(segmentId);
+                    if (seg?.service_id) {
+                        const allVersions = await base44.entities.SpeakerSubmissionVersion.list('-created_date', 100);
+                        const compositePrefix = `weekly_service|${seg.service_id}|`;
+                        res = allVersions.filter(v => v.segment_id?.startsWith(compositePrefix));
+                    }
+                } catch (e) {
+                    console.warn("[DiagnosticModal] Segment lookup for composite bridge failed:", e.message);
+                }
+            }
+            
             return res.sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
         },
         enabled: !!segmentId && open
