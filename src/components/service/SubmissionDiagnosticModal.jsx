@@ -192,6 +192,77 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
                                                     <p className="font-mono text-xs">{version.processing_error}</p>
                                                 </div>
                                             )}
+
+                                            {/* 2026-03-01: Device info collected at submission time */}
+                                            {version.device_info && (
+                                                <details className="text-xs">
+                                                    <summary className="cursor-pointer text-gray-500 hover:text-gray-700 font-medium">
+                                                        📱 Info del Dispositivo
+                                                    </summary>
+                                                    <div className="mt-2 bg-white border border-gray-200 rounded p-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+                                                        {version.device_info.timezone && (
+                                                            <div className="col-span-2 flex gap-1">
+                                                                <span className="text-gray-500">Zona Horaria:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.timezone}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.language && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Idioma:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.language}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.platform && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Plataforma:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.platform}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.screen_width && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Pantalla:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.screen_width}×{version.device_info.screen_height}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.viewport_width && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Viewport:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.viewport_width}×{version.device_info.viewport_height}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.connection_type && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Red:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.connection_type}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.max_touch_points != null && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">Touch:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.max_touch_points > 0 ? `Sí (${version.device_info.max_touch_points})` : 'No'}</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.device_pixel_ratio && (
+                                                            <div className="flex gap-1">
+                                                                <span className="text-gray-500">DPR:</span>
+                                                                <span className="text-gray-800 font-mono">{version.device_info.device_pixel_ratio}x</span>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.user_agent && (
+                                                            <div className="col-span-2">
+                                                                <span className="text-gray-500">User Agent:</span>
+                                                                <p className="text-gray-700 font-mono break-all mt-0.5">{version.device_info.user_agent}</p>
+                                                            </div>
+                                                        )}
+                                                        {version.device_info.referrer && (
+                                                            <div className="col-span-2">
+                                                                <span className="text-gray-500">Referrer:</span>
+                                                                <p className="text-gray-700 font-mono break-all mt-0.5">{version.device_info.referrer}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </details>
+                                            )}
                                         </div>
                                     ))
                                 )}
