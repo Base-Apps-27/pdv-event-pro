@@ -274,17 +274,26 @@ Deno.serve(async (req) => {
             }
             console.log(`[INLINE_PROCESS] Local regex parsed ${parsedData.sections.length} verse references`);
 
-            // PIPELINE 2: Extract Key Takeaways & Verses via LLM
+            // PIPELINE 2: Extract Key Takeaways (bilingual) & Verses via LLM
+            // 2026-03-01: Bilingual takeaways — LLM detects source language, returns EN + ES.
+            // Stored as key_takeaways_en, key_takeaways_es, source_language on parsed_verse_data.
+            // Legacy key_takeaways kept for backward compat (= source language version).
             try {
                 if (content && content.length > 100) {
-                    console.log(`[TAKEAWAYS_PIPELINE] Starting LLM extraction for submission`);
+                    console.log(`[TAKEAWAYS_PIPELINE] Starting bilingual LLM extraction for submission`);
                     const prompt = `
-You are an expert sermon analysis assistant. Analyze the following speaker notes.
+You are an expert bilingual (English/Spanish) sermon analysis assistant.
 
-1. Extract the main key takeaways (3-5 bullet points). 
-2. Identify all actual biblical scripture references mentioned. 
+STEP 1: Detect the primary language of the speaker notes below. It will be either English ("en") or Spanish ("es").
+
+STEP 2: Extract the main key takeaways (3-5 bullet points) in BOTH English AND Spanish.
+  - If the notes are in English, write the English takeaways first, then translate them to Spanish.
+  - If the notes are in Spanish, write the Spanish takeaways first, then translate them to English.
+  - Each takeaway should be a concise, complete sentence.
+
+STEP 3: Identify all actual biblical scripture references mentioned.
    IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
-   Format the scripture references EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
+   Format each scripture reference EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
    If there are no verses, return an empty array for verses.
 
 Text to analyze:
@@ -295,6 +304,17 @@ ${content.substring(0, 15000)}`;
                         response_json_schema: {
                             type: "object",
                             properties: {
+                                source_language: { type: "string", description: "Detected language: 'en' or 'es'" },
+                                key_takeaways_en: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    description: "Key takeaways in English"
+                                },
+                                key_takeaways_es: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    description: "Key takeaways in Spanish"
+                                },
                                 verses: {
                                     type: "array",
                                     items: {
@@ -303,18 +323,16 @@ ${content.substring(0, 15000)}`;
                                             content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
                                         }
                                     }
-                                },
-                                key_takeaways: {
-                                    type: "array",
-                                    items: { type: "string" }
                                 }
                             },
-                            required: ["verses", "key_takeaways"]
+                            required: ["source_language", "key_takeaways_en", "key_takeaways_es", "verses"]
                         }
                     });
 
                     const aiVerses = llmResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
-                    const aiTakeaways = llmResponse?.key_takeaways || [];
+                    const aiTakeawaysEn = llmResponse?.key_takeaways_en || [];
+                    const aiTakeawaysEs = llmResponse?.key_takeaways_es || [];
+                    const detectedLang = llmResponse?.source_language || 'es';
                     
                     // Trust AI verses over Regex if it found any
                     if (aiVerses.length > 0) {
@@ -324,10 +342,13 @@ ${content.substring(0, 15000)}`;
                         console.log(`[TAKEAWAYS_PIPELINE] LLM overrode regex with ${aiVerses.length} verses`);
                     }
 
-                    if (aiTakeaways.length > 0) {
-                        parsedData.key_takeaways = aiTakeaways;
-                        console.log(`[TAKEAWAYS_PIPELINE] Extracted ${aiTakeaways.length} takeaways`);
-                    }
+                    // Store bilingual takeaways + source language
+                    parsedData.source_language = detectedLang;
+                    parsedData.key_takeaways_en = aiTakeawaysEn;
+                    parsedData.key_takeaways_es = aiTakeawaysEs;
+                    // Backward compat: key_takeaways = source language version
+                    parsedData.key_takeaways = detectedLang === 'en' ? aiTakeawaysEn : aiTakeawaysEs;
+                    console.log(`[TAKEAWAYS_PIPELINE] Detected lang=${detectedLang}, EN=${aiTakeawaysEn.length}, ES=${aiTakeawaysEs.length} takeaways`);
                 }
             } catch (llmError) {
                 console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
