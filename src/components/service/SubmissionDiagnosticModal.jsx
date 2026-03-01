@@ -272,8 +272,12 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded text-blue-700">
-                                            <Badge className="bg-blue-100 text-blue-800">Event Segment</Badge>
-                                            <span className="text-sm">Segmento de evento</span>
+                                            <Badge className="bg-blue-100 text-blue-800">
+                                                {segment?.service_id ? 'Segmento de Servicio' : 'Segmento de Evento'}
+                                            </Badge>
+                                            <span className="text-sm">
+                                                {segment?.service_id ? 'Segmento basado en entidad (Session/Segment)' : 'Segmento de evento'}
+                                            </span>
                                         </div>
 
                                         {segment ? (
@@ -293,7 +297,48 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
                                                             {segment.submission_status || 'ignored'}
                                                         </Badge>
                                                     </div>
+                                                    {segment.message_title && (
+                                                        <div className="col-span-2">
+                                                            <p className="text-gray-600 font-medium">Título del Mensaje</p>
+                                                            <p className="text-gray-900">{segment.message_title}</p>
+                                                        </div>
+                                                    )}
+                                                    {segment.scripture_references && (
+                                                        <div className="col-span-2">
+                                                            <p className="text-gray-600 font-medium">Versículos</p>
+                                                            <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap bg-gray-50 rounded p-2 mt-1 max-h-40 overflow-y-auto">
+                                                                {segment.scripture_references}
+                                                            </pre>
+                                                        </div>
+                                                    )}
+                                                    {segment.parsed_verse_data?.key_takeaways?.length > 0 && (
+                                                        <div className="col-span-2">
+                                                            <p className="text-gray-600 font-medium">Puntos Clave</p>
+                                                            <ul className="text-xs text-gray-700 mt-1 space-y-1">
+                                                                {segment.parsed_verse_data.key_takeaways.map((t, i) => (
+                                                                    <li key={i} className="pl-2 border-l-2 border-teal-300">{t}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                 </div>
+                                                {(segment.presentation_url || segment.notes_url) && (
+                                                    <div className="border-t pt-3 mt-3 space-y-1">
+                                                        <p className="text-sm text-gray-600 font-medium">Material</p>
+                                                        {segment.presentation_url && (
+                                                            <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer"
+                                                                className="text-xs text-teal-700 hover:underline block truncate">
+                                                                📊 {segment.presentation_url}
+                                                            </a>
+                                                        )}
+                                                        {segment.notes_url && (
+                                                            <a href={segment.notes_url} target="_blank" rel="noopener noreferrer"
+                                                                className="text-xs text-teal-700 hover:underline block truncate">
+                                                                📄 {segment.notes_url}
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded text-red-700">
