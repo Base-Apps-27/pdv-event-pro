@@ -76,12 +76,13 @@ export default function SubmissionDiagnosticModal({ open, onOpenChange, segmentI
         enabled: !!serviceId && open
     });
 
-    // Fetch Segment (if event segment)
+    // Fetch Segment (if entity-based segment, not composite)
     const { data: segment, isLoading: loadingSegment } = useQuery({
         queryKey: ['segmentDetail', segmentId],
         queryFn: async () => {
             if (!segmentId || isCompositeId) return null;
-            return await base44.entities.Segment.get(segmentId);
+            const seg = await base44.entities.Segment.get(segmentId);
+            return seg;
         },
         enabled: !!segmentId && !isCompositeId && open
     });
