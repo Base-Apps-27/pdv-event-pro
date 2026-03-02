@@ -174,6 +174,8 @@ export default function WeeklyEditorV2({
   const [specialDetails, setSpecialDetails] = useState({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '' });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserSegmentId, setVerseParserSegmentId] = useState(null);
+  // BUGFIX (2026-03-02): Moved here from after early returns to respect Rules of Hooks
+  const [repairing, setRepairing] = useState(false);
 
   const slotNames = useMemo(() => sessions.map(s => s.name), [sessions]);
 
