@@ -188,31 +188,11 @@ export default function UserManagement() {
     return styles[role] || styles.EventDayViewer;
   };
 
-  const getRoleLabel = (role) => {
-    const labels = {
-      Admin: language === 'es' ? "Super Admin" : "Super Admin",
-      AdmAsst: language === 'es' ? "Asistente Admin" : "Assistant Admin",
-      LiveManager: language === 'es' ? "Gerente en Vivo" : "Live Manager",
-      LivestreamAdmin: language === 'es' ? "Admin Livestream" : "Livestream Admin",
-      EventDayCoordinator: language === 'es' ? "Coordinador del Día" : "Day Coordinator",
-      EventDayViewer: language === 'es' ? "Visualizador" : "Viewer"
-    };
-    return labels[role] || (language === 'es' ? "Visualizador" : "Viewer");
-  };
-
   const permissionsByCategory = allPermissions.reduce((acc, perm) => {
     if (!acc[perm.category]) acc[perm.category] = [];
     acc[perm.category].push(perm);
     return acc;
   }, {});
-
-  const categoryLabels = {
-    events: { en: 'Events', es: 'Eventos' },
-    services: { en: 'Services', es: 'Servicios' },
-    resources: { en: 'Resources', es: 'Recursos' },
-    settings: { en: 'Settings', es: 'Configuración' },
-    live: { en: 'Live View', es: 'Vista en Vivo' },
-  };
 
   // CRIT-8 FIX (2026-02-20): Import canonical role→permission map from permissions.jsx.
   // Eliminates local duplicate that drifted (missing AdmAsst chat, EventDayCoordinator, LivestreamAdmin).
