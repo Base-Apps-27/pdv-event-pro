@@ -14,7 +14,7 @@ export default function DatePicker({
   disabled = false,
   className,
   required = false,
-  ...props 
+  ...props
 }) {
   const brandStyle = {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
