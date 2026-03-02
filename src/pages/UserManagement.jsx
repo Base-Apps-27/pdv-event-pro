@@ -14,7 +14,7 @@ import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from "@/compone
 import { useLanguage } from "@/components/utils/i18n";
 
 export default function UserManagement() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState(null);
@@ -49,7 +49,7 @@ export default function UserManagement() {
       setCustomPermissions([]);
       setRevokedPermissions([]);
     },
-    onError: (err) => toast.error(language === 'es' ? 'Error al actualizar usuario: ' + err.message : 'Failed to update user: ' + err.message),
+    onError: (err) => toast.error(t('users.updateError') + ': ' + err.message),
   });
 
   // Bulk update mutation
@@ -69,14 +69,10 @@ export default function UserManagement() {
       setBulkAction("");
       setBulkRole("");
       setBulkPermission("");
-      toast.success(
-        language === 'es' 
-          ? `${userIds.size} usuarios actualizados` 
-          : `${userIds.size} users updated`
-      );
+      toast.success(t('users.usersUpdated').replace('{count}', userIds.size));
     },
     onError: (err) => {
-      toast.error(language === 'es' ? 'Error al actualizar usuarios' : 'Failed to update users');
+      toast.error(t('users.bulkUpdateError'));
     }
   });
 
@@ -229,16 +225,16 @@ export default function UserManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
-            {language === 'es' ? 'Gestión de Usuarios' : 'User Management'}
+            {t('users.title')}
           </h1>
           <p className="text-gray-500 mt-1">
-            {language === 'es' ? 'Gestiona roles de usuarios y permisos' : 'Manage user roles and permissions'}
+            {t('users.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' }}>
           <Users className="w-5 h-5 text-white" />
           <span className="text-white font-bold">
-            {users.length} {language === 'es' ? 'Usuarios' : 'Users'}
+            {users.length} {t('users.count')}
           </span>
         </div>
       </div>
@@ -247,13 +243,13 @@ export default function UserManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
-            {language === 'es' ? 'Buscar Usuarios' : 'Search Users'}
+            {t('users.search')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <Input
-              placeholder={language === 'es' ? 'Buscar por nombre o email...' : 'Search by name or email...'}
+              placeholder={t('users.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-md"
@@ -262,7 +258,7 @@ export default function UserManagement() {
             {selectedUserIds.size > 0 && (
               <div className="flex items-center gap-2 ml-auto">
                 <Badge className="bg-pdv-teal text-white">
-                  {selectedUserIds.size} {language === 'es' ? 'seleccionados' : 'selected'}
+                  {selectedUserIds.size} {t('users.selected')}
                 </Badge>
                 <Button
                   variant="outline"
@@ -274,7 +270,7 @@ export default function UserManagement() {
                   className="gap-1"
                 >
                   <UserCog className="w-4 h-4" />
-                  {language === 'es' ? 'Cambiar Rol' : 'Change Role'}
+                  {t('users.changeRole')}
                 </Button>
                 <Button
                   variant="outline"
@@ -286,7 +282,7 @@ export default function UserManagement() {
                   className="gap-1"
                 >
                   <Plus className="w-4 h-4" />
-                  {language === 'es' ? 'Añadir Permiso' : 'Add Permission'}
+                  {t('users.addPermission')}
                 </Button>
                 <Button
                   variant="outline"
@@ -298,14 +294,14 @@ export default function UserManagement() {
                   className="gap-1"
                 >
                   <Minus className="w-4 h-4" />
-                  {language === 'es' ? 'Revocar Permiso' : 'Revoke Permission'}
+                  {t('users.revokePermission')}
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedUserIds(new Set())}
                 >
-                  {language === 'es' ? 'Limpiar' : 'Clear'}
+                  {t('users.clear')}
                 </Button>
               </div>
             )}
@@ -326,17 +322,17 @@ export default function UserManagement() {
                     />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    {language === 'es' ? 'Usuario' : 'User'}
+                   {t('users.user')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    {language === 'es' ? 'Rol' : 'Role'}
+                   {t('users.role')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    {language === 'es' ? 'Permisos' : 'Permissions'}
+                   {t('users.permissions')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    {language === 'es' ? 'Acciones' : 'Actions'}
+                   {t('users.actions')}
                   </th>
                 </tr>
               </thead>
@@ -344,13 +340,13 @@ export default function UserManagement() {
                 {isLoading ? (
                   <tr>
                     <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                      {language === 'es' ? 'Cargando usuarios...' : 'Loading users...'}
+                      {t('users.loading')}
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                      {language === 'es' ? 'No se encontraron usuarios' : 'No users found'}
+                      {t('users.noResults')}
                     </td>
                   </tr>
                 ) : (
@@ -368,7 +364,7 @@ export default function UserManagement() {
                             {(user.display_name || user.full_name)?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
                           </div>
                           <div className="font-semibold text-gray-900">
-                            {user.display_name || user.full_name || (language === 'es' ? 'Sin nombre' : 'No name')}
+                            {user.display_name || user.full_name || t('users.noName')}
                           </div>
                         </div>
                       </td>
@@ -381,7 +377,7 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <Badge variant="outline" className={getRoleBadge(user.app_role)}>
                           <Shield className="w-3 h-3 mr-1" />
-                          {getRoleLabel(user.app_role)}
+                          {t(`users.roleBadge.${user.app_role}`) || t('users.roleBadge.EventDayViewer')}
                         </Badge>
                       </td>
                       <td className="px-6 py-4">
@@ -408,7 +404,7 @@ export default function UserManagement() {
                           className="gap-2"
                         >
                           <Edit2 className="w-4 h-4" />
-                          {language === 'es' ? 'Editar' : 'Edit'}
+                          {t('common.edit')}
                         </Button>
                       </td>
                     </tr>
@@ -424,14 +420,14 @@ export default function UserManagement() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {language === 'es' ? 'Editar Usuario' : 'Edit User'}
+              {t('users.editUser')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             {/* User Info */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-gray-700">
-                {language === 'es' ? 'Usuario' : 'User'}
+                {t('users.user')}
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1F8A70 0%, #4DC15F 100%)' }}>
@@ -441,14 +437,12 @@ export default function UserManagement() {
                   <Input
                     value={editingFullName}
                     onChange={(e) => setEditingFullName(e.target.value)}
-                    placeholder={language === 'es' ? 'Nombre para mostrar' : 'Display name'}
+                    placeholder={t('users.displayNamePlaceholder')}
                     className="font-semibold"
                   />
                   <div className="text-sm text-gray-500">{editingUser?.email}</div>
                   <p className="text-xs text-gray-400 italic">
-                    {language === 'es' 
-                      ? 'Este nombre se muestra en toda la aplicación (chat, reportes, etc.)' 
-                      : 'This name is shown throughout the app (chat, reports, etc.)'}
+                    {t('users.displayNameHint')}
                   </p>
                 </div>
               </div>
@@ -457,41 +451,41 @@ export default function UserManagement() {
             {/* Role Selection */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-gray-700">
-                {language === 'es' ? 'Rol Base' : 'Base Role'}
+                {t('users.baseRole')}
               </div>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'es' ? 'Selecciona un rol...' : 'Select a role...'} />
+                  <SelectValue placeholder={t('users.selectRole')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span>{language === 'es' ? 'Super Admin - Acceso Completo' : 'Super Admin - Full Access'}</span>
+                      <span>{t('users.superAdmin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="AdmAsst">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-blue-600" />
-                      <span>{language === 'es' ? 'Asistente Admin - Eventos y Servicios' : 'Assistant Admin - Events & Services'}</span>
+                      <span>{t('users.assistantAdmin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="LivestreamAdmin">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-red-600" />
-                      <span>{language === 'es' ? 'Admin Livestream - Solo Bloques de Stream' : 'Livestream Admin - Stream Blocks Only'}</span>
+                      <span>{t('users.livestreamAdmin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayCoordinator">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-teal-600" />
-                      <span>{language === 'es' ? 'Coordinador del Día - Programa + Chat' : 'Day Coordinator - Program + Chat'}</span>
+                      <span>{t('users.dayCoordinator')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayViewer">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-gray-600" />
-                      <span>{language === 'es' ? 'Visualizador - Solo Lectura' : 'Viewer - Read-only Access'}</span>
+                      <span>{t('users.viewer')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -501,18 +495,16 @@ export default function UserManagement() {
             {/* All Permissions (Unified View) */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-gray-700">
-                {language === 'es' ? 'Permisos' : 'Permissions'}
+                {t('users.permissions')}
               </div>
               <p className="text-xs text-gray-500 mb-2">
-                {language === 'es' 
-                  ? 'Los permisos del rol base están marcados en verde. Añade permisos adicionales o revoca permisos del rol.' 
-                  : 'Role base permissions are marked in green. Add extra permissions or revoke role permissions.'}
+                {t('users.permissionsHint')}
               </p>
               <div className="border rounded-lg p-4 max-h-96 overflow-y-auto space-y-3">
                 {Object.entries(permissionsByCategory).map(([category, perms]) => (
                   <div key={category}>
                     <h5 className="text-xs font-bold uppercase text-gray-600 mb-2">
-                      {language === 'es' ? categoryLabels[category]?.es : categoryLabels[category]?.en}
+                      {t(`category.${category}`)}
                     </h5>
                     <div className="grid grid-cols-1 gap-2">
                       {perms.map(perm => {
@@ -543,7 +535,7 @@ export default function UserManagement() {
                             </label>
                             {isInRole && !isRevoked && (
                               <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 text-[10px] px-1 py-0">
-                                {language === 'es' ? 'Rol' : 'Role'}
+                                {t('users.role')}
                               </Badge>
                             )}
                             {isCustomAdded && !isInRole && (
@@ -567,14 +559,14 @@ export default function UserManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingUser(null)}>
-              {language === 'es' ? 'Cancelar' : 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleSaveUser}
               disabled={updateUserMutation.isPending}
               style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
             >
-              {updateUserMutation.isPending ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Cambios' : 'Save Changes')}
+              {updateUserMutation.isPending ? t('btn.saving') : t('btn.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -585,52 +577,50 @@ export default function UserManagement() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {bulkAction === "role" && (language === 'es' ? 'Cambiar Rol en Masa' : 'Bulk Change Role')}
-              {bulkAction === "addPerm" && (language === 'es' ? 'Añadir Permiso en Masa' : 'Bulk Add Permission')}
-              {bulkAction === "removePerm" && (language === 'es' ? 'Revocar Permiso en Masa' : 'Bulk Revoke Permission')}
+              {bulkAction === "role" && t('users.bulkChangeRole')}
+              {bulkAction === "addPerm" && t('users.bulkAddPerm')}
+              {bulkAction === "removePerm" && t('users.bulkRevokePerm')}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-600">
-              {language === 'es' 
-                ? `Esta acción afectará a ${selectedUserIds.size} usuario(s).`
-                : `This action will affect ${selectedUserIds.size} user(s).`}
+              {t('users.bulkAffect').replace('{count}', selectedUserIds.size)}
             </p>
 
             {bulkAction === "role" && (
               <Select value={bulkRole} onValueChange={setBulkRole}>
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'es' ? 'Selecciona un rol...' : 'Select a role...'} />
+                  <SelectValue placeholder={t('users.selectRole')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span>Super Admin</span>
+                      <span>{t('users.roleBadge.Admin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="AdmAsst">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-blue-600" />
-                      <span>{language === 'es' ? 'Asistente Admin' : 'Assistant Admin'}</span>
+                      <span>{t('users.roleBadge.AdmAsst')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="LivestreamAdmin">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-red-600" />
-                      <span>{language === 'es' ? 'Admin Livestream' : 'Livestream Admin'}</span>
+                      <span>{t('users.roleBadge.LivestreamAdmin')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayViewer">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-gray-600" />
-                      <span>{language === 'es' ? 'Visualizador' : 'Viewer'}</span>
+                      <span>{t('users.roleBadge.EventDayViewer')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="EventDayCoordinator">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-teal-600" />
-                      <span>{language === 'es' ? 'Coordinador del Día' : 'Day Coordinator'}</span>
+                      <span>{t('users.roleBadge.EventDayCoordinator')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -640,7 +630,7 @@ export default function UserManagement() {
             {(bulkAction === "addPerm" || bulkAction === "removePerm") && (
               <Select value={bulkPermission} onValueChange={setBulkPermission}>
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'es' ? 'Selecciona un permiso...' : 'Select a permission...'} />
+                  <SelectValue placeholder={t('users.selectPermission')} />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
                   {allPermissions.map(perm => (
@@ -654,16 +644,14 @@ export default function UserManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>
-              {language === 'es' ? 'Cancelar' : 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleBulkApply}
               disabled={bulkUpdateMutation.isPending || (bulkAction === "role" && !bulkRole) || ((bulkAction === "addPerm" || bulkAction === "removePerm") && !bulkPermission)}
               style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
             >
-              {bulkUpdateMutation.isPending 
-                ? (language === 'es' ? 'Aplicando...' : 'Applying...') 
-                : (language === 'es' ? 'Aplicar a Todos' : 'Apply to All')}
+              {bulkUpdateMutation.isPending ? t('users.applying') : t('users.applyToAll')}
             </Button>
           </DialogFooter>
         </DialogContent>
