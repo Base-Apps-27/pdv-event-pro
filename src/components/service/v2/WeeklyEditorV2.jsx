@@ -38,6 +38,7 @@ import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 import { buildPdfData } from "./utils/buildPdfData";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
+import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
