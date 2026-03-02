@@ -507,6 +507,29 @@ export default function StickyOpsDeck({
                     {activeAction.notes}
                   </p>
                 )}
+
+                {/* Row 3b: Upcoming break indicator (service context only, bar mode) */}
+                {viewState === 'bar' && isServiceContext && !isPast && (() => {
+                  const now = currentTime.getTime();
+                  const activeDateStr = sessionDate || new Date().toISOString().split('T')[0];
+                  const nextBreak = breakSegments.find(brk => {
+                    if (!brk.startTime) return false;
+                    const [y, m, d] = (brk.date || activeDateStr).split('-').map(Number);
+                    const [h, min] = brk.startTime.split(':').map(Number);
+                    const brkMs = new Date(y, m - 1, d, h, min, 0, 0).getTime();
+                    // Show if break is within the next 15 minutes
+                    return brkMs > now && brkMs - now < 15 * 60000;
+                  });
+                  if (!nextBreak) return null;
+                  return (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-base leading-none">☕</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                        {nextBreak.title} @ {formatTimeToEST(nextBreak.startTime)}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
