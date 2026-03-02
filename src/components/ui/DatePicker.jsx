@@ -1,4 +1,3 @@
-// DatePicker — branded date selector (2026-03-02: confirmed rest-element fix)
 import React from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -8,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-export default function DatePicker({ 
-  value, 
-  onChange, 
+export default function DatePicker({
+  value,
+  onChange,
   placeholder = "Seleccionar fecha",
   disabled = false,
   className,
   required = false,
+  id,
   ...props
 }) {
   const brandStyle = {
@@ -41,6 +41,7 @@ export default function DatePicker({
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
@@ -57,8 +58,8 @@ export default function DatePicker({
             <span>{placeholder}</span>
           )}
           {value && !disabled && (
-            <X 
-              className="ml-auto h-4 w-4 text-gray-400 hover:text-gray-600" 
+            <X
+              className="ml-auto h-4 w-4 text-gray-400 hover:text-gray-600"
               onClick={handleClear}
             />
           )}
