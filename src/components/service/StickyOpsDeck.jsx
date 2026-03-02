@@ -50,7 +50,11 @@ export default function StickyOpsDeck({
   // Stream actions — pre-resolved by parent (resolveStreamActions utility)
   // Array of { id, time, label, segmentTitle, type, isPrep, notes, isStreamAction, blockId, blockTitle }
   resolvedStreamActions = [],
-  onScrollToStreamBlock
+  onScrollToStreamBlock,
+  // 2026-03-02: Service context — when true, break segments (Receso/Almuerzo/Break)
+  // are injected as visual dividers in the expanded action list.
+  // Events manage breaks separately via their own UI, so this is off by default.
+  isServiceContext = false
 }) {
   const [viewState, setViewState] = useState('icon'); // 'icon' | 'bar' | 'expanded'
   const isExpanded = viewState === 'expanded';
