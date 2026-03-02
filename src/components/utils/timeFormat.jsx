@@ -67,6 +67,27 @@ export function formatTimestampToEST(isoTimestamp) {
   }
 }
 
+/**
+ * DEV-4 (2026-03-02): Canonical "today in ET" helper.
+ * Returns YYYY-MM-DD string in America/New_York timezone.
+ * Use this everywhere you need "today's date" to avoid UTC-vs-local bugs.
+ * 'en-CA' locale produces YYYY-MM-DD natively from Intl.DateTimeFormat.
+ */
+export function getTodayET() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+}
+
+/**
+ * DEV-4 (2026-03-02): Parse a YYYY-MM-DD string into a local Date at midnight.
+ * Avoids the UTC midnight bug: new Date('2026-03-01') creates UTC midnight,
+ * which in EST displays as Feb 28. This splits the string and creates a local Date.
+ */
+export function parseDateStringLocal(dateStr) {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
 export function formatDateTimeET(isoTimestamp) {
   if (!isoTimestamp) return '';
   let ts = String(isoTimestamp);

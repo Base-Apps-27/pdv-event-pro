@@ -30,11 +30,18 @@ Deno.serve(async (req) => {
     attempts.push(now);
     rateLimiter.set(clientIp, attempts);
 
+    // CTO-5 (2026-03-02): Hoist idempotencyKey to function scope so catch block
+    // can access it for cleanup even if req.json() throws.
+    // Previously, idempotencyKey was declared inside try block via destructuring,
+    // making it unreachable in the catch block's cleanup logic.
+    let idempotencyKey;
+
     try {
         const base44 = createClientFromRequest(req);
         
         const body = await req.json();
-        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey, device_info } = body;
+        const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, device_info } = body;
+        idempotencyKey = body.idempotencyKey;
 
         // ── HONEYPOT CHECK (2026-02-28) ──
         // Hidden "website" field that humans never fill. Bots get fake success.

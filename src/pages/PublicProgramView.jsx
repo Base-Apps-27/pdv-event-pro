@@ -735,8 +735,10 @@ export default function PublicProgramView() {
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {availableEvents.map((event) => (
+                                                        {/* UX-7 (2026-03-02): CSS truncation instead of JS substring(0,25).
+                                                            Full text stays in DOM for screen readers + tooltip. */}
                                                         <SelectItem key={event.id} value={event.id}>
-                                                          {event.name.length > 25 ? event.name.substring(0, 25) + '...' : event.name} - {formatDateET(event.start_date)}
+                                                          <span className="truncate max-w-[200px] inline-block align-bottom">{event.name}</span> - {formatDateET(event.start_date)}
                                                         </SelectItem>
                                                       ))}
                       </SelectContent>
@@ -784,8 +786,9 @@ export default function PublicProgramView() {
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
                         {upcomingServices.map((service) => (
+                                                    {/* UX-7 (2026-03-02): CSS truncation for service names too */}
                                                     <SelectItem key={service.id} value={service.id}>
-                                                      {service.name.length > 25 ? service.name.substring(0, 25) + '...' : service.name} - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
+                                                      <span className="truncate max-w-[180px] inline-block align-bottom">{service.name}</span> - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
                                                     </SelectItem>
                                                   ))}
                       </SelectContent>

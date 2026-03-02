@@ -8,8 +8,8 @@ import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Loader2 } from "luci
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
+import { parseDateStringLocal } from "@/components/utils/timeFormat";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -227,8 +227,15 @@ export default function Dashboard() {
                         <div className="space-y-2 text-gray-700">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
+                            {/* DEV-6 (2026-03-02): Use parseDateStringLocal to avoid UTC midnight
+                                off-by-one. new Date('2026-03-01') is UTC midnight which displays
+                                as Feb 28 in EST. Splitting the string creates a local-timezone date. */}
                             <span className="font-semibold">
-                              {format(new Date(event.start_date), 'MMMM d, yyyy', { locale })}
+                              {(() => {
+                                const d = parseDateStringLocal(event.start_date);
+                                if (!d) return '';
+                                return d.toLocaleDateString(language === 'es' ? 'es-US' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                              })()}
                             </span>
                           </div>
                           {event.location && (
@@ -298,8 +305,13 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-3">
                       <div>
                         <h4 className="text-gray-900">{event.name}</h4>
+                        {/* DEV-6 (2026-03-02): Safe date formatting — same fix as above */}
                         <p className="text-sm text-gray-600">
-                          {format(new Date(event.start_date), 'MMM d, yyyy', { locale })}
+                          {(() => {
+                            const d = parseDateStringLocal(event.start_date);
+                            if (!d) return '';
+                            return d.toLocaleDateString(language === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                          })()}
                         </p>
                       </div>
                       <div className="flex justify-between items-center">

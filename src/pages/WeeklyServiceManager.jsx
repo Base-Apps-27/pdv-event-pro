@@ -179,14 +179,20 @@ export default function WeeklyServiceManager() {
     updateAnnouncementMutation.mutate({ id: ann.id, data: { ...ann, priority: newPriority } });
   };
 
-  // Auto-select announcements
+  // DEV-7 (2026-03-02): Auto-select announcements on initial data load.
+  // Uses a ref guard so this only runs ONCE when data first arrives,
+  // not on every subsequent change to the announcement arrays.
+  // Previously: missing deps caused this to not run on initial mount in some cases.
+  const announcementsAutoSelected = React.useRef(false);
   useEffect(() => {
+    if (announcementsAutoSelected.current) return;
     if (fixedAnnouncements.length > 0 || dynamicAnnouncements.length > 0) {
       if (!selectedAnnouncements || selectedAnnouncements.length === 0) {
         setSelectedAnnouncements([...fixedAnnouncements.map(a => a.id), ...dynamicAnnouncements.map(a => a.id)]);
+        announcementsAutoSelected.current = true;
       }
     }
-  }, [fixedAnnouncements, dynamicAnnouncements]);
+  }, [fixedAnnouncements, dynamicAnnouncements, selectedAnnouncements]);
 
   // ── Compute active days and dates ──
   const activeDays = useMemo(() => {
@@ -313,7 +319,14 @@ export default function WeeklyServiceManager() {
                     setSelectedDate(`${year}-${month}-${day}`);
                   }
                 }}
-                disabled={(date) => date.getDay() !== 0}
+                // DEV-5/UX-5 (2026-03-02): Unlock date picker for non-Sunday services.
+                // Previously hardcoded to Sunday-only. Now checks ServiceSchedule days.
+                // Fallback: if no schedules configured, allow Sunday only (legacy behavior).
+                disabled={(date) => {
+                  const dayNameMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                  const dayName = dayNameMap[date.getDay()];
+                  return scheduledDays.length > 0 ? !scheduledDays.includes(dayName) : date.getDay() !== 0;
+                }}
               />
             </PopoverContent>
           </Popover>
