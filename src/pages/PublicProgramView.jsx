@@ -231,52 +231,13 @@ export default function PublicProgramView() {
     refetchInterval: 30000,
   });
 
-  // MULTI-SLOT WARM CACHE (2026-02-28): Write-back after explicit fetch.
-  // When getPublicProgramData returns fresh data, write it to the warm cache
-  // slot so the NEXT user who opens this program gets it instantly.
-  // This is the "cache on first open" mechanism.
-  const lastWrittenRef = React.useRef(null); // Prevent duplicate writes
-  useEffect(() => {
-    if (!explicitFetchData || !programCacheKey || programCacheKey === 'current_display') return;
-
-    // Dedupe: only write if data changed (use a simple hash of program_id + segment count)
-    const dataFingerprint = `${programCacheKey}_${explicitFetchData?.segments?.length || 0}_${explicitFetchData?.sessions?.length || 0}`;
-    if (lastWrittenRef.current === dataFingerprint) return;
-    lastWrittenRef.current = dataFingerprint;
-
-    // Determine program metadata from the fetched data
-    const isEvent = programCacheKey.startsWith('event_');
-    const programObj = explicitFetchData?.program || explicitFetchData?.event;
-    const programId = isEvent ? selectedEventId : selectedServiceId;
-
-    const cachePayload = {
-      cache_key: programCacheKey,
-      program_type: isEvent ? 'event' : 'service',
-      program_id: programId || '',
-      program_name: programObj?.name || '',
-      program_date: isEvent ? (programObj?.start_date || '') : (programObj?.date || ''),
-      detected_date: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()),
-      program_snapshot: explicitFetchData,
-      last_refresh_trigger: 'user_view',
-      last_refresh_at: new Date().toISOString(),
-    };
-
-    // Write-back: upsert the warm cache entry
-    (async () => {
-      try {
-        const existing = await base44.entities.ActiveProgramCache.filter({ cache_key: programCacheKey });
-        if (existing?.[0]) {
-          await base44.entities.ActiveProgramCache.update(existing[0].id, cachePayload);
-        } else {
-          await base44.entities.ActiveProgramCache.create(cachePayload);
-        }
-        // Invalidate the warm cache query so it picks up the fresh data
-        queryClient.invalidateQueries({ queryKey: ['activeProgramCache', programCacheKey] });
-      } catch (err) {
-        console.warn('[WarmCache] Write-back failed (non-critical):', err.message);
-      }
-    })();
-  }, [explicitFetchData, programCacheKey, selectedEventId, selectedServiceId, queryClient]);
+  // CTO-3/SEC-5 (2026-03-02): Frontend cache writes REMOVED.
+  // Previously, this useEffect wrote directly to ActiveProgramCache from the frontend,
+  // which allowed ANY authenticated user to poison the cache for all users (including TV Display).
+  // Warm cache is now populated exclusively by refreshActiveProgram (backend, service role).
+  // The explicit fetch (getPublicProgramData) still runs for fresh data — it just doesn't
+  // write back to the cache from the client. Backend automations handle cache warming.
+  // See: SEC-5 in DECISION_5PERSONA_AUDIT_REMEDIATION_PLAN
 
   // Merge: cache-first with background revalidation
   // If we have cache data for this selection, show it instantly. 

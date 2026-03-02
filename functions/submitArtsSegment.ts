@@ -140,6 +140,27 @@ Deno.serve(async (req) => {
             'art_other_description', 'arts_run_of_show_url', 'description_details',
         ];
 
+        // SEC-6 (2026-03-02): Validate URL fields to prevent XSS/injection.
+        // Only https:// and http:// schemes allowed. Blocks javascript:, data:, file:.
+        const URL_FIELDS = [
+            'dance_song_source', 'dance_song_2_url', 'dance_song_3_url',
+            'drama_song_source', 'drama_song_2_url', 'drama_song_3_url',
+            'video_url', 'arts_run_of_show_url',
+            'spoken_word_music_url', 'spoken_word_script_url', 'spoken_word_audio_url',
+        ];
+        for (const field of URL_FIELDS) {
+            const val = data[field];
+            if (val && typeof val === 'string' && val.trim() !== '') {
+                const trimmed = val.trim().toLowerCase();
+                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                    return Response.json(
+                        { error: `Invalid URL in field "${field}". Only http/https URLs are allowed.` },
+                        { status: 400, headers: corsHeaders }
+                    );
+                }
+            }
+        }
+
         // Build sanitized update payload
         const updatePayload = {};
         for (const field of ALLOWED_FIELDS) {
