@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 import { PlayCircle, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 
 function parseHHMM(str) {
   if (!str) return null;
