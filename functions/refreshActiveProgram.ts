@@ -399,7 +399,11 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            const warmSnapshot = await buildProgramSnapshot(base44, programEntity, entryIsEvent);
+            const response = await base44.functions.invoke('buildProgramSnapshot', {
+              targetProgram: programEntity,
+              isEvent: entryIsEvent
+            });
+            const warmSnapshot = response.data;
             await withRetry(() =>
               base44.asServiceRole.entities.ActiveProgramCache.update(entry.id, {
                 program_snapshot: warmSnapshot,

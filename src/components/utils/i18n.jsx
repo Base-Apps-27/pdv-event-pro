@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { safeGetItem, safeSetItem } from '@/components/utils/safeLocalStorage';
+import { en } from './i18n/en';
+import { es } from './i18n/es';
 
 const translations = {
+  en,
+  es,
+};
   es: {
     // Navigation
     'nav.dashboard': 'Inicio',
