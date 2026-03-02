@@ -32,6 +32,7 @@ import SlotColumnContainer from "./columns/SlotColumnContainer";
 import EmptyDayPrompt from "@/components/service/weekly/EmptyDayPrompt";
 import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
+import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 import { buildPdfData } from "./utils/buildPdfData";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
