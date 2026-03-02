@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import { hasPermission, hasDashboardAccess } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav, adminNav } from "@/components/nav/navItems";
 import { MoreHorizontal, X, Languages, LogOut, Calendar, Pin, PinOff, ChevronDown } from "lucide-react";

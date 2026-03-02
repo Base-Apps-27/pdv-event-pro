@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
