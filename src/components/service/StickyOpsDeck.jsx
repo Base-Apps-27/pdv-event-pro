@@ -571,33 +571,101 @@ export default function StickyOpsDeck({
                 <div className="h-px flex-1 bg-slate-300" />
               </div>
             
-              {(isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4)).map((action, idx) => {
-                // Concurrent = within 5 min of the header action's time → highlight time the same way
-                const isConcurrent = activeAction && Math.abs(action.time.getTime() - activeAction.time.getTime()) < 300000;
-                return (
-                <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
-                  <span className={`font-mono font-bold text-sm mt-0.5 min-w-[3.5rem] text-center px-2 py-0.5 rounded-lg ${
-                    isConcurrent 
-                      ? (isUrgent ? 'bg-amber-100 text-amber-900 border-2 border-amber-400' : 'bg-indigo-50 text-indigo-700 border-2 border-indigo-300')
-                      : 'text-slate-500'
-                  }`}>
-                    {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-sm text-slate-800 leading-snug">{action.label}</div>
-                    {action.notes && (
-                      <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'text-slate-600'}`}>
-                        {action.notes}
+              {(() => {
+                const expandedActions = isPast ? pastActions.slice(0, 3) : upcomingActions.slice(1, 4);
+                const activeDateStr = sessionDate || new Date().toISOString().split('T')[0];
+                
+                // 2026-03-02: For service context, interleave break dividers among actions.
+                // Break dividers appear between actions whose times straddle a break's start_time.
+                const parseTime = (dateStr, timeStr) => {
+                  if (!dateStr || !timeStr) return null;
+                  const [y, m, d] = dateStr.split('-').map(Number);
+                  const [h, min] = timeStr.split(':').map(Number);
+                  return new Date(y, m - 1, d, h, min, 0, 0);
+                };
+
+                // Build a merged list of actions + break dividers, sorted by time
+                let mergedItems = expandedActions.map(a => ({ ...a, _itemType: 'action' }));
+                
+                if (isServiceContext && breakSegments.length > 0 && !isPast) {
+                  const now = currentTime.getTime();
+                  breakSegments.forEach(brk => {
+                    const brkDate = brk.date || activeDateStr;
+                    const brkTime = parseTime(brkDate, brk.startTime);
+                    if (!brkTime || brkTime.getTime() <= now) return; // Skip past breaks
+                    // Only insert if break falls within the time window of displayed actions
+                    const firstActionTime = expandedActions[0]?.time?.getTime();
+                    const lastActionTime = expandedActions[expandedActions.length - 1]?.time?.getTime();
+                    if (firstActionTime && lastActionTime && brkTime.getTime() >= firstActionTime && brkTime.getTime() <= lastActionTime + 600000) {
+                      mergedItems.push({
+                        _itemType: 'break',
+                        id: brk.id,
+                        time: brkTime,
+                        title: brk.title,
+                        startTime: brk.startTime,
+                        endTime: brk.endTime,
+                        durationMin: brk.durationMin,
+                      });
+                    }
+                  });
+                  mergedItems.sort((a, b) => a.time.getTime() - b.time.getTime());
+                }
+
+                return mergedItems.map((item, idx) => {
+                  // Break divider rendering
+                  if (item._itemType === 'break') {
+                    return (
+                      <div key={item.id} className="flex items-center gap-3 py-2">
+                        <div className="h-px flex-1 bg-amber-300" />
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border-2 border-dashed border-amber-300 rounded-lg">
+                          <span className="text-base">☕</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                            {item.title}
+                          </span>
+                          {item.startTime && (
+                            <span className="font-mono text-xs font-bold text-amber-600">
+                              {formatTimeToEST(item.startTime)}
+                            </span>
+                          )}
+                          {item.durationMin > 0 && (
+                            <span className="text-[10px] text-amber-500">
+                              ({item.durationMin} min)
+                            </span>
+                          )}
+                        </div>
+                        <div className="h-px flex-1 bg-amber-300" />
                       </div>
-                    )}
-                    <div className="text-[10px] font-medium truncate text-slate-400 mt-1 flex items-center gap-1">
-                      {action.isStreamAction && <Radio className="w-2.5 h-2.5 text-red-400 shrink-0" />}
-                      <span>{action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span></span>
+                    );
+                  }
+
+                  // Regular action rendering (unchanged)
+                  const action = item;
+                  const isConcurrent = activeAction && Math.abs(action.time.getTime() - activeAction.time.getTime()) < 300000;
+                  return (
+                    <div key={idx} className={`flex items-start gap-4 py-2 border-b border-slate-200 last:border-0 ${isPast ? 'opacity-60' : ''}`}>
+                      <span className={`font-mono font-bold text-sm mt-0.5 min-w-[3.5rem] text-center px-2 py-0.5 rounded-lg ${
+                        isConcurrent 
+                          ? (isUrgent ? 'bg-amber-100 text-amber-900 border-2 border-amber-400' : 'bg-indigo-50 text-indigo-700 border-2 border-indigo-300')
+                          : 'text-slate-500'
+                      }`}>
+                        {formatTimeToEST(action.time.toTimeString().substring(0, 5))}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm text-slate-800 leading-snug">{action.label}</div>
+                        {action.notes && (
+                          <div className={`text-xs leading-relaxed mt-1 whitespace-pre-wrap line-clamp-4 ${isUrgent ? 'text-amber-700' : 'text-slate-600'}`}>
+                            {action.notes}
+                          </div>
+                        )}
+                        <div className="text-[10px] font-medium truncate text-slate-400 mt-1 flex items-center gap-1">
+                          {action.isStreamAction && <Radio className="w-2.5 h-2.5 text-red-400 shrink-0" />}
+                          <span>{action.segmentTitle} • <span className="uppercase tracking-wide">{action.type}</span></span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                );
-              })}
+                  );
+                });
+              })()}
               
               {((isPast && pastActions.length === 0) || (!isPast && upcomingActions.length <= 1)) && (
                 <p className="text-sm opacity-50 italic py-2 text-slate-500">No hay más acciones.</p>
