@@ -125,8 +125,8 @@ export function estimateWeeklyOptimalScale(serviceData) {
     scale = TARGET_CAPACITY / maxLoad;
   }
 
-  // Lower floor to 0.40 to accommodate huge blocks of text
-  return Math.max(0.40, Math.min(1.0, scale));
+  // Floor raised to 0.70 — below this text becomes illegibly small on print
+  return Math.max(0.70, Math.min(1.0, scale));
 }
 
 export async function generateWeeklyProgramPDF(serviceData) {
