@@ -8,7 +8,6 @@ import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Loader2 } from "luci
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { es, enUS } from "date-fns/locale";
 import { parseDateStringLocal } from "@/components/utils/timeFormat";
 
 export default function Dashboard() {
@@ -26,8 +25,6 @@ export default function Dashboard() {
   
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const blueStyle = { backgroundColor: '#2563eb', color: '#ffffff' };
-  // Locale for date-fns based on current UI language
-  const locale = language === 'es' ? es : enUS;
   
   // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: events = [], isLoading: eventsLoading } = useQuery({
