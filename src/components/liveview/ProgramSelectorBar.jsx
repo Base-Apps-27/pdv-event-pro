@@ -6,14 +6,8 @@
  */
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDateET } from "@/components/utils/timeFormat";
+import { formatDateET, getTodayET, parseDateStringLocal } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
-
-function getLocalDateAtMidnight(dateString) {
-  if (!dateString) return null;
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day, 0, 0, 0, 0);
-}
 
 export default function ProgramSelectorBar({
   viewType, setViewType,
