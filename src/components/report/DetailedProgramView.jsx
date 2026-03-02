@@ -10,7 +10,7 @@ import React from "react";
 import { Languages, Mic, Utensils, Music, Sliders } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import SegmentReportRow from "@/components/report/SegmentReportRow";
 import PreSessionDetailsBlock from "./PreSessionDetailsBlock";
 import {
