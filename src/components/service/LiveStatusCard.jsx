@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, Monitor, BookOpen, AlertTriangle, Radio } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 
 /**

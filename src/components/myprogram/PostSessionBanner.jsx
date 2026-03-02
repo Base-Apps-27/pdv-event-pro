@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { CheckCircle2, CalendarDays } from 'lucide-react';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 
 export default function PostSessionBanner({ isFinished, nextSessionTime }) {
   const { t } = useLanguage();
