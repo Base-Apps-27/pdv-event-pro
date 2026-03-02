@@ -58,11 +58,13 @@ export default function CustomServicesManager() {
   });
 
   const handleCreateNew = () => {
-    navigate(createPageUrl('CustomServiceBuilder'));
+    // V2 (2026-03-02): Route new services to entity-first editor
+    navigate(createPageUrl('CustomEditorV2'));
   };
 
   const handleEdit = (serviceId) => {
-    navigate(createPageUrl('CustomServiceBuilder') + `?id=${serviceId}`);
+    // V2 (2026-03-02): Route to entity-first editor
+    navigate(createPageUrl('CustomEditorV2') + `?id=${serviceId}`);
   };
 
   // Helper to parse "YYYY-MM-DD" as local date at midnight to prevent timezone shifts
