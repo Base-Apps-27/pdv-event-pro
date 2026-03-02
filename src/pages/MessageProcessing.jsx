@@ -208,8 +208,8 @@ export default function MessageProcessingPage() {
     const versionLimitWarning = segments?.hitVersionLimit || false;
     const segmentItems = segments?.items || segments || [];
 
-    const pendingSegments = segments.filter(s => s.submission_status === 'pending');
-    const processedSegments = segments.filter(s => s.submission_status === 'processed');
+    const pendingSegments = segmentItems.filter(s => s.submission_status === 'pending');
+    const processedSegments = segmentItems.filter(s => s.submission_status === 'processed');
 
     const updateSegmentMutation = useMutation({
         mutationFn: async ({ segment, data }) => {
