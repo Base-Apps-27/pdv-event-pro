@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, CheckCircle2, Sparkles, History, RotateCcw, Bug, Plus, Check } from "lucide-react";
+import { CheckCircle2, Sparkles, History, RotateCcw, Bug, Plus, Check } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
 import ParsedContentPreview from "@/components/service/ParsedContentPreview";
@@ -274,18 +275,19 @@ export default function MessageProcessingPage() {
     };
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 bg-gray-50/50 min-h-screen">
-            <div className="flex justify-between items-center border-b border-gray-200 pb-6">
+        {/* UX-3 (2026-03-02): Mobile-optimized padding and header layout */}
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 bg-gray-50/50 min-h-screen">
+            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b border-gray-200 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Procesamiento de Mensajes</h1>
-                    <p className="text-gray-500 mt-1">Bandeja de entrada para contenido de oradores</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Procesamiento de Mensajes</h1>
+                    <p className="text-gray-500 mt-1 text-sm md:text-base">Bandeja de entrada para contenido de oradores</p>
                 </div>
                 <Button 
                     onClick={() => setIsGateOpen(true)}
-                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
+                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm w-full sm:w-auto"
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Procesar Nuevo Mensaje
+                    <span className="sm:inline">Procesar Nuevo Mensaje</span>
                 </Button>
             </div>
 
@@ -298,7 +300,8 @@ export default function MessageProcessingPage() {
             )}
 
             <Tabs defaultValue="inbox" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
+                {/* UX-3 (2026-03-02): Responsive tab width for mobile */}
+                <TabsList className="grid w-full grid-cols-2 max-w-full sm:max-w-[400px] mb-4 md:mb-6">
                     <TabsTrigger value="inbox">
                         Bandeja de Entrada
                         <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-800 border-none">
@@ -375,7 +378,7 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <Loader2 className="w-10 h-10 animate-spin mb-4 text-teal-600" />
+                <LoadingSpinner size="lg" className="mb-4" />
                 <p>Cargando mensajes...</p>
             </div>
         );

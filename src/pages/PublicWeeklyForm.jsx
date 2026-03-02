@@ -16,6 +16,8 @@ import WeeklyFormHeader from '@/components/publicforms/WeeklyFormHeader';
 import WeeklySubmissionForm from '@/components/publicforms/WeeklySubmissionForm';
 import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import ErrorCard from '@/components/ui/ErrorCard';
 
 export default function PublicWeeklyForm() {
     const [loading, setLoading] = useState(true);
@@ -41,14 +43,7 @@ export default function PublicWeeklyForm() {
     }, []);
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
-                <div className="text-center text-gray-400">
-                    <div className="animate-spin w-8 h-8 border-2 border-[#1F8A70] border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-sm font-medium">Cargando formulario...</p>
-                </div>
-            </div>
-        );
+        return <LoadingSpinner size="fullPage" label="Cargando formulario..." />;
     }
 
     return (
@@ -61,7 +56,7 @@ export default function PublicWeeklyForm() {
                 <WeeklyFormHeader />
 
                 {error && serviceGroups.length === 0 ? (
-                    <div className="bg-red-50 text-red-800 border border-red-200 rounded-lg p-4 font-medium">{error}</div>
+                    <ErrorCard message={error} onRetry={() => window.location.reload()} />
                 ) : (
                     <WeeklySubmissionForm serviceGroups={serviceGroups} siblingMap={siblingMap} />
                 )}

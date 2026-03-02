@@ -12,7 +12,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/components/utils/i18n';
 import { useCurrentUser } from '@/components/utils/useCurrentUser';
 import { useClockTick } from '@/components/utils/useClockTick';
-import { Loader2, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { formatDateET } from '@/components/utils/timeFormat';
 
@@ -196,14 +197,7 @@ export default function MyProgram() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#1F8A70]" />
-          <p className="text-gray-500 text-sm">{t('myprogram.loading')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size="fullPage" label={t('myprogram.loading')} />;
   }
 
   if (!contextId) {
