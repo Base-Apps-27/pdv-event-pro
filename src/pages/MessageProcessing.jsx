@@ -275,7 +275,6 @@ export default function MessageProcessingPage() {
     };
 
     return (
-        {/* UX-3 (2026-03-02): Mobile-optimized padding and header layout */}
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 bg-gray-50/50 min-h-screen">
             <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b border-gray-200 pb-4 md:pb-6">
                 <div>
