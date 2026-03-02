@@ -267,7 +267,77 @@ export default function WeeklyEditorV2({
     setRepairing(true);
     try {
       for (const slotDef of sessionDefs) {
-...
+        // 1. Create Session entity
+        const session = await base44.entities.Session.create({
+          service_id: serviceId,
+          name: slotDef.name,
+          date: date,
+          order: slotDef.order || (sessionDefs.indexOf(slotDef) + 1),
+        });
+
+        // 2. Resolve blueprint segments for this session
+        const bp = blueprintsBySessionName[slotDef.name];
+        const bpSegments = bp?.segments || resolvedBlueprint?.segments || [];
+
+        // 3. Create Segment entities from blueprint
+        for (let i = 0; i < bpSegments.length; i++) {
+          const segData = bpSegments[i];
+          const resolvedType = resolveSegmentEnum(segData.type);
+          const entityPayload = {
+            session_id: session.id,
+            service_id: serviceId,
+            order: i + 1,
+            title: segData.title || "Sin título",
+            segment_type: resolvedType,
+            duration_min: Number(segData.duration) || 0,
+            show_in_general: true,
+            ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
+            ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
+              label: sa.label || "Sin título",
+              person_field_name: sa.person_field_name || "",
+              duration_min: Number(sa.duration_min || sa.duration) || 0,
+            })) : [],
+            requires_translation: !!segData.requires_translation,
+            default_translator_source: segData.default_translator_source || "manual",
+          };
+          if (segData.number_of_songs !== undefined) {
+            entityPayload.number_of_songs = Number(segData.number_of_songs) || 0;
+          }
+          if (Array.isArray(segData.actions) && segData.actions.length > 0) {
+            entityPayload.segment_actions = segData.actions;
+          }
+
+          const createdSeg = await base44.entities.Segment.create(entityPayload);
+
+          // Create child entities for sub-assignments
+          if (Array.isArray(segData.sub_assignments) && segData.sub_assignments.length > 0) {
+            for (let saIdx = 0; saIdx < segData.sub_assignments.length; saIdx++) {
+              const sa = segData.sub_assignments[saIdx];
+              await base44.entities.Segment.create({
+                session_id: session.id,
+                service_id: serviceId,
+                parent_segment_id: createdSeg.id,
+                order: saIdx + 1,
+                title: sa.label || 'Sub-asignación',
+                segment_type: 'Ministración',
+                duration_min: Number(sa.duration_min || sa.duration) || 5,
+                presenter: '',
+                show_in_general: false,
+                origin: 'template',
+                ui_fields: [],
+                ui_sub_assignments: [],
+              });
+            }
+          }
+        }
+      }
+
+      toast.success("Estructura reparada con éxito");
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['dayServiceV2', date, dayOfWeek] });
+    } catch (err) {
+      console.error("[V2] Repair failed:", err);
+      toast.error("Error al reparar: " + err.message);
     } finally {
       setRepairing(false);
     }
