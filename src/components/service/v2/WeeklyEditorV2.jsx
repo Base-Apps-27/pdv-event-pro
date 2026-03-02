@@ -361,6 +361,8 @@ export default function WeeklyEditorV2({
     }
   }, [serviceId, sessionDefs, date, blueprintsBySessionName, resolvedBlueprint, queryClient, queryKey, dayOfWeek]);
 
+  if (dataLoading) return <div className="p-8"><Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" /></div>;
+
   // ── Data error ──
   if (!dataLoading && sessions.length === 0 && serviceId) {
     return (
