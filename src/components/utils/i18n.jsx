@@ -8,6 +8,7 @@ const translations = {
   en,
   es,
 };
+/* remove me
     'nav.events': 'Eventos',
     'nav.services': 'Servicios',
     'nav.weeklyServices': 'Servicios Semanales',
