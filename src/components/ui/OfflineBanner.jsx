@@ -31,8 +31,8 @@ export default function OfflineBanner({ lastUpdated, language = 'es' }) {
   if (!isOffline) return null;
 
   const label = language === 'en'
-    ? 'You are offline — showing last known data'
-    : 'Sin conexión — mostrando últimos datos conocidos';
+    ? 'You are offline — do not refresh. Check your WiFi or cellular connection.'
+    : 'Sin conexión — no actualices. Verifica tu WiFi o conexión celular.';
 
   const timeAgo = lastUpdated ? formatTimeAgo(lastUpdated, language) : '';
 
