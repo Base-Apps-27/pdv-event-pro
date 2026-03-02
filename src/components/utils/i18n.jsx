@@ -491,6 +491,12 @@ const translations = {
       'forceDisplay.cleared': 'Override eliminado — detección normal activa',
       'forceDisplay.clear': 'Quitar',
       'forceDisplay.activeOverride': 'Override activo',
+
+      // P3 GRO-3/GRO-5 (2026-03-02): Error card + offline banner
+      'error.title': 'Algo salió mal',
+      'error.body': 'No se pudo cargar la información. Verifica tu conexión e intenta de nuevo.',
+      'error.retry': 'Reintentar',
+      'offline.banner': 'Sin conexión — mostrando últimos datos conocidos',
   },
   en: {
     // Navigation
@@ -990,6 +996,12 @@ const translations = {
     'forceDisplay.cleared': 'Override cleared — normal detection active',
     'forceDisplay.clear': 'Clear',
     'forceDisplay.activeOverride': 'Active override',
+
+    // P3 GRO-3/GRO-5 (2026-03-02): Error card + offline banner
+    'error.title': 'Something went wrong',
+    'error.body': 'Could not load the information. Check your connection and try again.',
+    'error.retry': 'Retry',
+    'offline.banner': 'You are offline — showing last known data',
   }
 };
 
