@@ -96,16 +96,18 @@ function EventSelector({ events, selectedId, onSelect, t }) {
 }
 
 function ServiceSelector({ services, selectedId, onSelect, t }) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  // DEV-4 (2026-03-02): Canonical date helpers for consistent ET timezone handling.
+  const todayStr = getTodayET();
+  const today = parseDateStringLocal(todayStr);
   const sevenDaysOut = new Date(today); sevenDaysOut.setDate(today.getDate() + 7);
 
   const upcomingServices = services
     .filter(s => {
-      const sd = getLocalDateAtMidnight(s.date);
+      const sd = parseDateStringLocal(s.date);
       return sd && sd.getTime() <= sevenDaysOut.getTime();
     })
     .map(service => {
-      const sd = getLocalDateAtMidnight(service.date);
+      const sd = parseDateStringLocal(service.date);
       const diffTime = sd.getTime() - today.getTime();
       const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       return { ...service, daysUntil };
