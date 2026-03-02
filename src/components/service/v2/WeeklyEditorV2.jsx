@@ -396,18 +396,7 @@ export default function WeeklyEditorV2({
 
   return (
     <div className="space-y-4">
-      {/* External change banner */}
-      {externalChangeAvailable && (
-        <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-blue-600" />
-            <span className="text-sm text-blue-800 font-medium">Otro administrador actualizó el programa.</span>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleReload} className="border-blue-400 text-blue-700 hover:bg-blue-100 ml-4 shrink-0">
-            <RefreshCw className="w-3 h-3 mr-1" />Recargar
-          </Button>
-        </div>
-      )}
+      {/* 2026-03-02: External change banner removed — real-time subs handle data freshness */}
 
       {/* Service meta */}
       {existingService?.updated_date && (
