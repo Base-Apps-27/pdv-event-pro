@@ -18,7 +18,6 @@ import { Plus, AlertTriangle } from "lucide-react";
 import { addMinutes, format as formatDate } from "date-fns";
 import SegmentCard from "@/components/service/v2/segments/SegmentCard";
 import PreServiceSection from "@/components/service/v2/columns/PreServiceSection";
-import TeamSection from "@/components/service/v2/columns/TeamSection";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 
 function safeParseTime(timeStr) {
@@ -39,7 +38,6 @@ export default memo(function CustomSegmentColumn({
   onWrite,
   onWriteSongs,
   onWriteChild,
-  onWriteSession,
   onWritePSD,
   onWriteDuration,
   // Action handlers
