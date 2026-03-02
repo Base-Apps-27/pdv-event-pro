@@ -252,13 +252,13 @@ export default function MessageProcessingPage() {
             segment: selectedSegment,
             data: {
                 submitted_content: restoreContent || selectedSegment.submitted_content || "",
-                // Note: We are saving to entity. If old Service JSON structure is needed, it won't be updated here.
-                // Assumption: Migration to Entity-based segments is primary.
                 scripture_references: data.verse, 
                 parsed_verse_data: data.parsed_data,
                 submission_status: 'processed'
             }
         });
+        // GRO-1 (2026-03-02): Track message processing
+        base44.analytics.track({ eventName: 'message_processed', properties: { segment_id: selectedSegment.id, segment_type: selectedSegment.segment_type || 'unknown' } });
     };
 
     const handleGateSelection = async (segmentId) => {

@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n";
-import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Loader2 } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +115,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 space-y-8">
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <LoadingSpinner size="md" />
           </div>
         )}
         {/* Live Program Hero Card */}
