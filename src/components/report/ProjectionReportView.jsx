@@ -6,7 +6,7 @@
  */
 import React from "react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import PreSessionDetailsBlock from "./PreSessionDetailsBlock";
 // 2026-02-28: Smart routing surfaces arts data relevant to projection (video, cues, scripts)
 import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";

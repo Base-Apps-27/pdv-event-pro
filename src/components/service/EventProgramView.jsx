@@ -16,7 +16,7 @@ import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { formatTimeToEST, formatDateET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { hasPermission } from "@/components/utils/permissions";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import SessionPicker from "@/components/myprogram/SessionPicker";
 import { getSessionLabels } from "@/components/myprogram/normalizeSession";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
