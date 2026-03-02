@@ -278,10 +278,7 @@ export default function WeeklyEditorV2({
     );
   }
 
-  if (dataLoading) return <div className="p-8"><Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" /></div>;
-
   // ── Repair handler: create missing sessions + segments from blueprint ──
-  const [repairing, setRepairing] = useState(false);
   const handleRepairStructure = useCallback(async () => {
     if (!serviceId || !sessionDefs?.length) return;
     setRepairing(true);
