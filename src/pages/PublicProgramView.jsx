@@ -734,9 +734,9 @@ export default function PublicProgramView() {
                         <SelectValue placeholder={t('public.selectEvent')} />
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
+                        {/* UX-7 (2026-03-02): CSS truncation instead of JS substring(0,25).
+                            Full text stays in DOM for screen readers + tooltip. */}
                         {availableEvents.map((event) => (
-                                                        {/* UX-7 (2026-03-02): CSS truncation instead of JS substring(0,25).
-                                                            Full text stays in DOM for screen readers + tooltip. */}
                                                         <SelectItem key={event.id} value={event.id}>
                                                           <span className="truncate max-w-[200px] inline-block align-bottom">{event.name}</span> - {formatDateET(event.start_date)}
                                                         </SelectItem>
@@ -785,8 +785,8 @@ export default function PublicProgramView() {
                         <SelectValue placeholder={t('public.selectService')} />
                       </SelectTrigger>
                       <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
+                        {/* UX-7 (2026-03-02): CSS truncation for service names too */}
                         {upcomingServices.map((service) => (
-                                                    {/* UX-7 (2026-03-02): CSS truncation for service names too */}
                                                     <SelectItem key={service.id} value={service.id}>
                                                       <span className="truncate max-w-[180px] inline-block align-bottom">{service.name}</span> - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
                                                     </SelectItem>
