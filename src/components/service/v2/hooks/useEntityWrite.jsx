@@ -128,6 +128,8 @@ export function useEntityWrite(queryKey) {
 
     try {
       await entity.update(entityId, fields);
+      // GRO-1 (2026-03-02): Track admin write operations for observability
+      base44.analytics.track({ eventName: `${entityType.toLowerCase()}_updated`, properties: { entity_id: entityId, fields_count: Object.keys(fields).length } });
     } catch (err) {
       if (attempt < MAX_RETRIES) {
         console.warn(`[useEntityWrite] Retry ${attempt + 1}/${MAX_RETRIES} for ${entityType}:${entityId}`, err.message);
