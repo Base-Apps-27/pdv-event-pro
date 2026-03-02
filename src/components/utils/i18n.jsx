@@ -583,7 +583,7 @@ const translations = {
       'category.resources': 'Recursos',
       'category.settings': 'Configuración',
       'category.live': 'Vista en Vivo',
-  },
+*/
   en: {
     // Navigation
     'nav.dashboard': 'Home',
