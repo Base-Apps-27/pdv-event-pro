@@ -85,8 +85,9 @@ export default function WeeklyEditorV2({
     dirtyIds, flushAll, flushEntity
   } = useEntityWrite(queryKey);
 
-  // ── External sync (watches Service + Segment + Session) ──
-  const { externalChangeAvailable, handleReload, markOwnWrite } = useExternalSync(serviceId, queryKey);
+  // 2026-03-02: External sync hook removed — real-time subscriptions handle freshness.
+  // markOwnWrite kept as no-op for columnProps compatibility.
+  const markOwnWrite = useCallback(() => {}, []);
 
   // ── Flush before navigating away ──
   useEffect(() => {
