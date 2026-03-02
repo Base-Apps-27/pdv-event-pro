@@ -59,16 +59,16 @@ export default function Dashboard() {
   const todayET = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
   // ^ 'en-CA' locale produces YYYY-MM-DD format
 
-  // 2026-03-02: Check if a live program is active TODAY to highlight the link.
-  // Placed after todayET definition to avoid ReferenceError.
-  const { data: cacheEntries = [] } = useQuery({
-    queryKey: ['activeProgramCache', 'dashboard'],
-    queryFn: () => base44.entities.ActiveProgramCache.filter({ cache_key: 'current_display' }),
-    staleTime: 60 * 1000, // 1 minute
+  // 2026-03-02: Simple check — is there an event or service happening today?
+  const { data: todayServices = [] } = useQuery({
+    queryKey: ['services-today', todayET],
+    queryFn: () => base44.entities.Service.filter({ date: todayET }),
+    staleTime: 5 * 60 * 1000,
   });
-  const isLive = cacheEntries.length > 0
-    && cacheEntries[0].program_type !== 'none'
-    && cacheEntries[0].detected_date === todayET;
+  const todayHasEvent = events.some(e =>
+    e.status !== 'template' && e.start_date && e.start_date <= todayET && (e.end_date || e.start_date) >= todayET
+  );
+  const isLive = todayHasEvent || todayServices.length > 0;
 
   // An event is "upcoming" if its end_date (or start_date if no end_date) is today or later.
   // This ensures multi-day events stay in "upcoming" through their final day.
