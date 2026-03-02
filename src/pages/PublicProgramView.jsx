@@ -1,14 +1,21 @@
+/**
+ * PublicProgramView — Live View Page
+ * 
+ * P3 DEV-1 (2026-03-02): Decomposed from 1027 lines into ~250 lines of orchestration.
+ * Extracted components: ProgramSelectorBar, ProgramInfoBanner, LiveAdjustmentControls,
+ * useSegmentTiming. Existing ServiceProgramView + EventProgramView unchanged.
+ * 
+ * Auth: Required (Layout enforces redirect + defense-in-depth guard here).
+ * Data: Cache-first via useActiveProgramCache, background revalidation via getPublicProgramData.
+ * Real-time: ActiveProgramCache subscription (via hook) + entity subs for explicit fetch.
+ */
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
-import { Calendar, Clock, History } from "lucide-react";
-import { createPageUrl } from "@/utils";
-import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatTimeToEST, formatTimestampToEST, formatDateET } from "../components/utils/timeFormat";
+import { Calendar } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { formatDateET } from "../components/utils/timeFormat";
 import StructuredVersesModal from "@/components/service/StructuredVersesModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import LiveTimeAdjustmentModal from "@/components/service/LiveTimeAdjustmentModal";
@@ -20,6 +27,13 @@ import EventProgramView from "@/components/service/EventProgramView";
 import LiveOperationsChat from "@/components/live/LiveOperationsChat";
 import { useLanguage } from "@/components/utils/i18n";
 import LiveViewSkeleton from "@/components/service/LiveViewSkeleton";
+import OfflineBanner from "@/components/ui/OfflineBanner";
+
+// DEV-1 extracted components
+import ProgramSelectorBar from "@/components/liveview/ProgramSelectorBar";
+import ProgramInfoBanner from "@/components/liveview/ProgramInfoBanner";
+import LiveAdjustmentControls from "@/components/liveview/LiveAdjustmentControls";
+import useSegmentTiming from "@/components/liveview/useSegmentTiming";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -27,10 +41,7 @@ export default function PublicProgramView() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // AUTH GATE (2026-02-14): This page now requires authentication.
-  // Layout enforces the redirect, but we also guard here for defense-in-depth.
-  // PERF (2026-02-28): Parallel auth check — runs isAuthenticated + me() together
-  // to shave ~500ms off the auth waterfall on page load.
+  // AUTH GATE (2026-02-14): defense-in-depth
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -38,960 +49,277 @@ export default function PublicProgramView() {
           base44.auth.isAuthenticated(),
           base44.auth.me().catch(() => null),
         ]);
-        if (authenticated && user) {
-          setCurrentUser(user);
-        } else {
-          base44.auth.redirectToLogin(window.location.href);
-          return;
-        }
-      } catch (e) {
-        base44.auth.redirectToLogin(window.location.href);
-        return;
-      }
+        if (authenticated && user) { setCurrentUser(user); }
+        else { base44.auth.redirectToLogin(window.location.href); return; }
+      } catch (e) { base44.auth.redirectToLogin(window.location.href); return; }
       setAuthChecked(true);
     };
     fetchUser();
   }, []);
-  const gradientStyle = {
-    background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
-  };
-  
+
+  const gradientStyle = { background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)' };
+
+  // URL params
   const urlParams = new URLSearchParams(window.location.search);
-  const preloadedSlug = urlParams.get('slug');
   const preloadedEventId = urlParams.get('eventId') || "";
   const preloadedServiceId = urlParams.get('serviceId') || "";
   const preloadedDate = urlParams.get('date') || "";
-  const viewParam = urlParams.get('view'); // 'livestream'
-  const isStreamMode = viewParam === 'livestream';
-  
-  // Top-level state for view type selection and entity selection
-  // PERF (2026-02-28): Initialize viewType from cache detection if no URL params.
-  // This avoids the "default to event → detect service → switch" flash.
+  const preloadedSlug = urlParams.get('slug');
+  const isStreamMode = urlParams.get('view') === 'livestream';
+  const overrideServiceId = urlParams.get('override_service_id');
+  const overrideEventId = urlParams.get('override_event_id');
+  const mockTimeParam = urlParams.get('mock_time');
+
+  // State
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");
   const [selectedEventId, setSelectedEventId] = useState(preloadedEventId);
   const [selectedServiceId, setSelectedServiceId] = useState(preloadedServiceId);
-  // CLEANUP (2026-02-10): showEventDetails, viewMode, selectedSessionId removed — only used in deleted legacy blocks
-  
-  // Shared state for both views
   const [currentTime, setCurrentTime] = useState(new Date());
   const [versesModalOpen, setVersesModalOpen] = useState(false);
   const [versesModalData, setVersesModalData] = useState({ parsedData: null, rawText: "" });
-  // Admin verse parser state (Live-only for event Plenarias)
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserInitial, setVerseParserInitial] = useState("");
   const [verseParserSegment, setVerseParserSegment] = useState(null);
-  const [expandedSegments, setExpandedSegments] = useState({}); // Still needed for verse modal callback compatibility
+  const [expandedSegments, setExpandedSegments] = useState({});
   const [timeAdjustmentModalOpen, setTimeAdjustmentModalOpen] = useState(false);
   const [adjustmentModalTimeSlot, setAdjustmentModalTimeSlot] = useState(null);
   const [currentAdjustment, setCurrentAdjustment] = useState(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  
-  // Chat state lifted for integration with StickyOpsDeck
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
-  // ── Mock time for testing (URL param) ──
-  const mockTimeParam = urlParams.get('mock_time'); // HH:MM format
-  
-  // Helper to parse date strings as local timezone dates at midnight
-  const getLocalDateAtMidnight = (dateString) => {
-    if (!dateString) return null;
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day, 0, 0, 0, 0);
-  };
-
-  // Update current time every second for real-time countdowns (or use mock time)
+  // Clock tick (or mock time)
   useEffect(() => {
     if (mockTimeParam) {
-      // Use mock time from URL - freeze clock at specified time
       const [h, m] = mockTimeParam.split(':').map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      setCurrentTime(d);
-      return;
+      const d = new Date(); d.setHours(h, m, 0, 0); setCurrentTime(d); return;
     }
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000); // Update every second
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, [mockTimeParam]);
 
-  useEffect(() => {
-    if (preloadedEventId) {
-      setSelectedEventId(preloadedEventId);
-    }
-  }, [preloadedEventId]);
+  useEffect(() => { if (preloadedEventId) setSelectedEventId(preloadedEventId); }, [preloadedEventId]);
 
-  // ── Testing override: check URL params ──
-  const overrideServiceId = urlParams.get('override_service_id');
-  const overrideEventId = urlParams.get('override_event_id');
-
-  // MULTI-SLOT WARM CACHE (2026-02-28):
-  // Compute a dynamic cache key for the user's current selection.
-  // - 'current_display' = auto-detected (default, before user picks anything)
-  // - 'event_{id}' / 'service_{id}' = user-selected program (warm cache)
-  // This way, if another user already viewed Única, the cache has its snapshot.
+  // ── CACHE-FIRST DATA LAYER ──
   const programCacheKey = useMemo(() => {
     if (viewType === 'event' && selectedEventId) return `event_${selectedEventId}`;
     if (viewType === 'service' && selectedServiceId) return `service_${selectedServiceId}`;
-    return 'current_display'; // Default: auto-detected program
+    return 'current_display';
   }, [viewType, selectedEventId, selectedServiceId]);
 
-  // ── CACHE-FIRST: Read from ActiveProgramCache (instant, no backend call) ──
-  // This provides the auto-detected program, selector options, and full snapshot.
-  // MULTI-SLOT (2026-02-28): First try the program-specific cache key.
-  // Also always read 'current_display' for auto-detection + selector options.
-  const {
-    contextType: cacheContextType,
-    contextId: cacheContextId,
-    programData: defaultCacheProgramData,
-    selectorOptions: cacheSelectorOptions,
-    isLoading: isCacheLoading,
-    _isOverride,
-  } = useActiveProgramCache({
-    overrideServiceId,
-    overrideEventId,
-  });
-
-  // Read the program-specific warm cache entry (if different from current_display)
-  const {
-    programData: warmCacheProgramData,
-    isLoading: isWarmCacheLoading,
-  } = useActiveProgramCache({
-    programCacheKey: programCacheKey !== 'current_display' ? programCacheKey : undefined,
-  });
-
-  // Merge: warm cache takes priority for the selected program's data
+  const { contextType: cacheContextType, contextId: cacheContextId, programData: defaultCacheProgramData, selectorOptions: cacheSelectorOptions, isLoading: isCacheLoading, _isOverride } = useActiveProgramCache({ overrideServiceId, overrideEventId });
+  const { programData: warmCacheProgramData, isLoading: isWarmCacheLoading } = useActiveProgramCache({ programCacheKey: programCacheKey !== 'current_display' ? programCacheKey : undefined });
   const cacheProgramData = warmCacheProgramData || defaultCacheProgramData;
-
-  // Selector options always come from cache (wider window: 90d events, 7d services)
   const publicEvents = cacheSelectorOptions?.events || [];
   const services = cacheSelectorOptions?.services || [];
 
-  // Auto-set state from cache's detected program on first load
-  // (only when user hasn't explicitly picked something via URL params)
+  // Auto-detect from cache
   const [autoDetected, setAutoDetected] = useState(false);
   useEffect(() => {
     if (autoDetected || isCacheLoading) return;
-    if (preloadedEventId || preloadedServiceId || preloadedDate || preloadedSlug) {
-      setAutoDetected(true);
-      return;
-    }
+    if (preloadedEventId || preloadedServiceId || preloadedDate || preloadedSlug) { setAutoDetected(true); return; }
     if (cacheContextType && cacheContextId) {
-      if (cacheContextType === 'event') {
-        setSelectedEventId(cacheContextId);
-        setViewType('event');
-      } else if (cacheContextType === 'service') {
-        setSelectedServiceId(cacheContextId);
-        setViewType('service');
-      }
+      if (cacheContextType === 'event') { setSelectedEventId(cacheContextId); setViewType('event'); }
+      else if (cacheContextType === 'service') { setSelectedServiceId(cacheContextId); setViewType('service'); }
       setAutoDetected(true);
     }
   }, [cacheContextType, cacheContextId, isCacheLoading, autoDetected, preloadedEventId, preloadedServiceId, preloadedDate, preloadedSlug]);
 
-  // PERF (2026-02-28): Stale-while-revalidate for BOTH events and services.
-  // MULTI-SLOT (2026-02-28): A selection is "cached" if EITHER:
-  //   1. It matches the auto-detected current_display, OR
-  //   2. A warm cache entry exists for this program (event_{id} / service_{id})
   const isCachedSelection = useMemo(() => {
-    // Warm cache hit (from multi-slot)
     if (warmCacheProgramData) return true;
-    // Auto-detected cache hit (current_display)
     if (!cacheContextId || !defaultCacheProgramData) return false;
     if (viewType === 'event' && selectedEventId === cacheContextId) return true;
     if (viewType === 'service' && selectedServiceId === cacheContextId) return true;
     return false;
   }, [viewType, selectedEventId, selectedServiceId, cacheContextId, defaultCacheProgramData, warmCacheProgramData]);
 
-  // PERF (2026-02-28): Two-tier data strategy:
-  // Tier 1 (instant): Cache snapshot from ActiveProgramCache — shown immediately.
-  // Tier 2 (background): Fresh fetch from getPublicProgramData — replaces cache data when ready.
-  // For non-cached selections (user picked a different event/service), Tier 2 is the only source.
+  // Background revalidation fetch
   const { data: explicitFetchData, isLoading: isExplicitLoading, refetch: refetchExplicit } = useQuery({
     queryKey: ['publicProgramData-explicit', selectedEventId, selectedServiceId, viewType, preloadedDate, preloadedSlug],
     queryFn: async () => {
       const payload = { includeOptions: false };
-      if (viewType === 'event' && selectedEventId) {
-        payload.eventId = selectedEventId;
-      } else if (viewType === 'service' && selectedServiceId) {
-        payload.serviceId = selectedServiceId;
-      } else if (preloadedDate) {
-        payload.date = preloadedDate;
-      } else {
-        payload.detectActive = true;
-      }
+      if (viewType === 'event' && selectedEventId) payload.eventId = selectedEventId;
+      else if (viewType === 'service' && selectedServiceId) payload.serviceId = selectedServiceId;
+      else if (preloadedDate) payload.date = preloadedDate;
+      else payload.detectActive = true;
       const response = await base44.functions.invoke('getPublicProgramData', payload);
       if (response.status >= 400) throw new Error("Failed to fetch program data");
       return response.data;
     },
-    // Always fetch fresh in background, even for cached selection (revalidation).
-    // But for cached selections, this runs in the background — user sees cache instantly.
     enabled: !!(selectedEventId || selectedServiceId || preloadedDate),
-    staleTime: 30 * 1000,
-    refetchInterval: 30000,
+    staleTime: 30 * 1000, refetchInterval: 30000,
   });
 
-  // CTO-3/SEC-5 (2026-03-02): Frontend cache writes REMOVED.
-  // Previously, this useEffect wrote directly to ActiveProgramCache from the frontend,
-  // which allowed ANY authenticated user to poison the cache for all users (including TV Display).
-  // Warm cache is now populated exclusively by refreshActiveProgram (backend, service role).
-  // The explicit fetch (getPublicProgramData) still runs for fresh data — it just doesn't
-  // write back to the cache from the client. Backend automations handle cache warming.
-  // See: SEC-5 in DECISION_5PERSONA_AUDIT_REMEDIATION_PLAN
-
-  // Merge: cache-first with background revalidation
-  // If we have cache data for this selection, show it instantly. 
-  // Once explicit fetch completes, it takes over (fresher data).
+  // Merged program data
   const programData = useMemo(() => {
-    // Tier 2 (fresh) takes priority when available
     if (explicitFetchData) return explicitFetchData;
-    // Tier 1 (warm cache or auto-detected cache) for instant display while Tier 2 loads
     if (isCachedSelection && cacheProgramData) return cacheProgramData;
-    // Tier 1b: warm cache hit even if not the "auto-detected" program
     if (warmCacheProgramData) return warmCacheProgramData;
     return null;
   }, [explicitFetchData, isCachedSelection, cacheProgramData, warmCacheProgramData]);
 
-  // Loading state: only show skeleton when we have NO data at all
-  // If cache provides data, loading is false even while explicit fetch runs in background
-  const isLoadingProgram = isCachedSelection
-    ? (isCacheLoading && !cacheProgramData) // Cache: only loading on first fetch
-    : (isExplicitLoading && !explicitFetchData); // Non-cache: only loading on first fetch
-  const refetchProgram = refetchExplicit;
+  const isLoadingProgram = isCachedSelection ? (isCacheLoading && !cacheProgramData) : (isExplicitLoading && !explicitFetchData);
 
-  // Derived state from programData — works for both cache snapshot and explicit fetch shapes
+  // Derived data
   const sessions = programData?.sessions || [];
   const allSegments = programData?.segments || [];
   const rooms = programData?.rooms || [];
   const preSessionDetails = programData?.preSessionDetails || [];
-  // For 'weeklyServiceData' compat (rawServiceData was the service object)
   const rawServiceData = viewType === 'service' ? programData?.program : null;
-
-  const refetchData = () => {
-    if (typeof refetchProgram === 'function') refetchProgram();
-  };
-
+  const actualServiceData = rawServiceData ? { ...rawServiceData } : null;
+  const liveAdjustments = programData?.liveAdjustments || [];
   const selectedEvent = publicEvents.find(e => e.id === selectedEventId);
   const selectedService = services.find(s => s.id === selectedServiceId);
 
-  // ── REAL-TIME SUBSCRIPTIONS (2026-02-15 stability refactor) ──
-  // CACHED path: useActiveProgramCache subscribes to ActiveProgramCache only.
-  //   Entity automations → refreshActiveProgram → ActiveProgramCache update → sub fires.
-  // EXPLICIT path: these subs invalidate 'publicProgramData-explicit' for non-cached selection.
-  // TOAST notifications: only for entities directly relevant to the current selection on today's date.
-  // Debounce timer ref to coalesce rapid entity changes into one invalidation.
+  // ── REAL-TIME SUBSCRIPTIONS ──
   const explicitDebounceRef = React.useRef(null);
   useEffect(() => {
     if (!currentUser) return;
-
-    // PERF (2026-02-28): Always subscribe to entity changes — even for cached selections.
-    // The explicit fetch now always runs as background revalidation, so we need subs
-    // to invalidate it when entities change. The cache sub (useActiveProgramCache)
-    // handles instant updates; these subs keep the explicit fetch current too.
-
-    const unsubscribers = [];
-
-    const debouncedInvalidateExplicit = () => {
+    const unsubs = [];
+    const debouncedInvalidate = () => {
       if (explicitDebounceRef.current) clearTimeout(explicitDebounceRef.current);
-      explicitDebounceRef.current = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
-        explicitDebounceRef.current = null;
-      }, 800);
+      explicitDebounceRef.current = setTimeout(() => { queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] }); explicitDebounceRef.current = null; }, 800);
     };
-
-    // Core entities that affect program display
-    unsubscribers.push(
-      base44.entities.Segment.subscribe(() => debouncedInvalidateExplicit())
-    );
-    unsubscribers.push(
-      base44.entities.Session.subscribe(() => debouncedInvalidateExplicit())
-    );
-    unsubscribers.push(
-      base44.entities.SegmentAction.subscribe(() => debouncedInvalidateExplicit())
-    );
-
-    // PreSessionDetails apply to both events and services
-    unsubscribers.push(
-      base44.entities.PreSessionDetails.subscribe(() => debouncedInvalidateExplicit())
-    );
-
-    if (viewType === 'service' && selectedServiceId) {
-      unsubscribers.push(
-        base44.entities.Service.subscribe(() => debouncedInvalidateExplicit())
-      );
-    }
+    unsubs.push(base44.entities.Segment.subscribe(() => debouncedInvalidate()));
+    unsubs.push(base44.entities.Session.subscribe(() => debouncedInvalidate()));
+    unsubs.push(base44.entities.SegmentAction.subscribe(() => debouncedInvalidate()));
+    unsubs.push(base44.entities.PreSessionDetails.subscribe(() => debouncedInvalidate()));
+    if (viewType === 'service' && selectedServiceId) unsubs.push(base44.entities.Service.subscribe(() => debouncedInvalidate()));
     if (viewType === 'event' && selectedEventId) {
-      unsubscribers.push(
-        base44.entities.Event.subscribe(() => debouncedInvalidateExplicit())
-      );
-      unsubscribers.push(
-        base44.entities.StreamBlock.subscribe(() => {
-          debouncedInvalidateExplicit();
-          queryClient.invalidateQueries({ queryKey: ['streamBlocksForStatusCard'] });
-        })
-      );
+      unsubs.push(base44.entities.Event.subscribe(() => debouncedInvalidate()));
+      unsubs.push(base44.entities.StreamBlock.subscribe(() => { debouncedInvalidate(); queryClient.invalidateQueries({ queryKey: ['streamBlocksForStatusCard'] }); }));
     }
+    return () => { if (explicitDebounceRef.current) clearTimeout(explicitDebounceRef.current); unsubs.forEach(u => { if (typeof u === 'function') u(); }); };
+  }, [viewType, selectedServiceId, selectedEventId, queryClient, currentUser]);
 
-    return () => {
-      if (explicitDebounceRef.current) clearTimeout(explicitDebounceRef.current);
-      unsubscribers.forEach(unsub => {
-        if (typeof unsub === 'function') unsub();
-      });
-    };
-  }, [viewType, selectedServiceId, selectedEventId, isCachedSelection, queryClient, currentUser]);
-
-  // Derived live adjustments from program data
-  const liveAdjustments = programData?.liveAdjustments || [];
-
-  // Fetch immutable adjustment history logs
+  // Adjustment history logs
   const { data: adjustmentLogs = [] } = useQuery({
     queryKey: ['adjustmentLogs', selectedServiceId, rawServiceData?.date],
     queryFn: async () => {
       if (!selectedServiceId || !rawServiceData?.date) return [];
-      return await base44.entities.TimeAdjustmentLog.filter({ 
-        date: rawServiceData.date, 
-        service_id: selectedServiceId 
-      }, '-created_date');
+      return await base44.entities.TimeAdjustmentLog.filter({ date: rawServiceData.date, service_id: selectedServiceId }, '-created_date');
     },
     enabled: viewType === "service" && !!selectedServiceId && !!rawServiceData?.date,
-    staleTime: 15 * 1000,    // Fresh for 15s
-    refetchInterval: 30000,  // Safety net: 30s poll (not time-critical, only for history modal)
+    staleTime: 15000, refetchInterval: 30000,
   });
 
-  // LiveTimeAdjustment subscription — invalidates explicit fetch on adjustment changes.
-  // PERF (2026-02-28): Always subscribe (explicit fetch now runs for all selections as revalidation).
+  // LiveTimeAdjustment subscription
   useEffect(() => {
     if (!currentUser || viewType !== "service" || !selectedServiceId || !rawServiceData?.date) return;
-
-    const unsubscribe = base44.entities.LiveTimeAdjustment.subscribe((event) => {
+    return base44.entities.LiveTimeAdjustment.subscribe((event) => {
       if (event.data?.date === rawServiceData.date && event.data?.service_id === selectedServiceId) {
         queryClient.invalidateQueries({ queryKey: ['publicProgramData-explicit'] });
       }
     });
+  }, [viewType, selectedServiceId, rawServiceData?.date, queryClient, currentUser]);
 
-    return unsubscribe;
-  }, [viewType, selectedServiceId, rawServiceData?.date, isCachedSelection, queryClient, currentUser]);
+  // ── SEGMENT TIMING (extracted hook) ──
+  const { isSegmentCurrent, isSegmentUpcoming, scrollToSegment } = useSegmentTiming({
+    currentTime, viewType, serviceDate: actualServiceData?.date, sessions,
+  });
 
-  // Save time adjustment
+  // Helpers
+  const getRoomName = (roomId) => rooms.find(r => r.id === roomId)?.name || "";
+  const toggleSegmentExpanded = (segId) => setExpandedSegments(p => ({ ...p, [segId]: !p[segId] }));
+
+  // Notification hook
+  useSegmentNotifications(allSegments, viewType === "event" ? sessions[0] : null);
+
+  // Time adjustment handlers
   const handleSaveTimeAdjustment = async (offsetMinutes, authorizedBy) => {
     if (!selectedServiceId || !rawServiceData?.date || !adjustmentModalTimeSlot) return;
-
-    try {
-      // Determine adjustment type: custom services use 'global', weekly use 'time_slot'
-      const isCustomService = adjustmentModalTimeSlot === "custom";
-      const adjustmentType = isCustomService ? "global" : "time_slot";
-      
-      // Check if adjustment exists
-      const existing = liveAdjustments.find(a => 
-        isCustomService ? a.adjustment_type === 'global' : a.time_slot === adjustmentModalTimeSlot
-      );
-      
-      const previousOffset = existing?.offset_minutes || 0;
-      const action = offsetMinutes === 0 ? 'clear' : (existing ? 'update' : 'set');
-      
-      // Always log to immutable history first
-      await base44.entities.TimeAdjustmentLog.create({
-        date: rawServiceData.date,
-        service_id: selectedServiceId,
-        time_slot: isCustomService ? 'custom' : adjustmentModalTimeSlot,
-        previous_offset: previousOffset,
-        new_offset: offsetMinutes,
-        authorized_by: authorizedBy,
-        performed_by_name: currentUser?.full_name || '',
-        performed_by_email: currentUser?.email || '',
-        action: action
-      });
-      
-      if (existing) {
-        // Update existing LiveTimeAdjustment
-        await base44.entities.LiveTimeAdjustment.update(existing.id, {
-          offset_minutes: offsetMinutes,
-          authorized_by: authorizedBy,
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        // Create new LiveTimeAdjustment
-        await base44.entities.LiveTimeAdjustment.create({
-          date: rawServiceData.date,
-          adjustment_type: adjustmentType,
-          service_id: selectedServiceId,
-          time_slot: isCustomService ? null : adjustmentModalTimeSlot,
-          offset_minutes: offsetMinutes,
-          authorized_by: authorizedBy
-        });
-      }
-
-      toast.success(t('adjustments.saveSuccess'));
-    } catch (err) {
-      console.error(err);
-      toast.error(t('adjustments.saveError'));
-      throw err;
-    }
+    const isCustom = adjustmentModalTimeSlot === "custom";
+    const adjustmentType = isCustom ? "global" : "time_slot";
+    const existing = liveAdjustments.find(a => isCustom ? a.adjustment_type === 'global' : a.time_slot === adjustmentModalTimeSlot);
+    const previousOffset = existing?.offset_minutes || 0;
+    const action = offsetMinutes === 0 ? 'clear' : (existing ? 'update' : 'set');
+    await base44.entities.TimeAdjustmentLog.create({ date: rawServiceData.date, service_id: selectedServiceId, time_slot: isCustom ? 'custom' : adjustmentModalTimeSlot, previous_offset: previousOffset, new_offset: offsetMinutes, authorized_by: authorizedBy, performed_by_name: currentUser?.full_name || '', performed_by_email: currentUser?.email || '', action });
+    if (existing) await base44.entities.LiveTimeAdjustment.update(existing.id, { offset_minutes: offsetMinutes, authorized_by: authorizedBy, updated_at: new Date().toISOString() });
+    else await base44.entities.LiveTimeAdjustment.create({ date: rawServiceData.date, adjustment_type: adjustmentType, service_id: selectedServiceId, time_slot: isCustom ? null : adjustmentModalTimeSlot, offset_minutes: offsetMinutes, authorized_by: authorizedBy });
+    // GRO-1 (2026-03-02): Track live timing adjustments
+    base44.analytics.track({ eventName: 'live_timing_adjusted', properties: { offset: offsetMinutes, time_slot: adjustmentModalTimeSlot, action } });
+    const { toast } = await import("sonner");
+    toast.success(t('adjustments.saveSuccess'));
   };
 
-  // Open adjustment modal
   const openAdjustmentModal = (timeSlot) => {
-    // For custom services, find global adjustment; for weekly, find by time_slot
-    const existing = timeSlot === "custom" 
-      ? liveAdjustments.find(a => a.adjustment_type === 'global')
-      : liveAdjustments.find(a => a.time_slot === timeSlot);
+    const existing = timeSlot === "custom" ? liveAdjustments.find(a => a.adjustment_type === 'global') : liveAdjustments.find(a => a.time_slot === timeSlot);
     setCurrentAdjustment(existing || null);
     setAdjustmentModalTimeSlot(timeSlot);
     setTimeAdjustmentModalOpen(true);
   };
-  
-  // Calculate start times for weekly service segments (which usually lack them)
-  const actualServiceData = React.useMemo(() => {
-    if (!rawServiceData) return null;
-    
-    // STRICT ENTITY MODE: No longer calculating segment times for JSON fallbacks.
-    // Entities have their times calculated correctly during sync/save.
-    return { ...rawServiceData };
-  }, [rawServiceData]);
 
-  const eventSessions = sessions;
-  const filteredSessions = eventSessions;
-
-  // Derive current active session for notifications context
-  const activeSession = viewType === "event" ? filteredSessions[0] : null; // Simplified for now
-  
-  // Prepare segments list for notifications
-  // STRICT ENTITY MODE: Use allSegments (backend flat list from Segment entities).
-  // No JSON fallback discovery.
-  const segmentsForNotifications = React.useMemo(() => {
-    return allSegments;
-  }, [allSegments]);
-
-  // Use the robust notification hook
-  useSegmentNotifications(segmentsForNotifications, activeSession);
-
-  const getSessionSegments = (sessionId) => {
-    return allSegments.filter(seg => seg.session_id === sessionId);
-  };
-
-  // Helper: check if a segment's date matches today
-  // For events, each segment belongs to a session with its own date.
-  // For services, uses the single service date.
-  const isSegmentDateToday = (segment) => {
-    const now = currentTime;
-    const today = new Date(now);
-    today.setHours(0,0,0,0);
-
-    if (viewType === 'service' && actualServiceData?.date) {
-      const serviceDate = getLocalDateAtMidnight(actualServiceData.date);
-      return serviceDate && serviceDate.getTime() === today.getTime();
-    }
-
-    if (viewType === 'event') {
-      // Find the session this segment belongs to and check ITS date
-      // Segments from events carry session_id; also check segment.date (augmented by EventProgramView)
-      const segDate = segment.date || (() => {
-        const session = sessions.find(s => s.id === segment.session_id);
-        return session?.date;
-      })();
-      if (segDate) {
-        const sessionDate = getLocalDateAtMidnight(segDate);
-        return sessionDate && sessionDate.getTime() === today.getTime();
-      }
-      // No date info — conservative: don't mark as live
-      return false;
-    }
-
-    return true; // fallback
-  };
-
-  const isSegmentCurrent = (segment) => {
-    if (!segment?.start_time || !segment?.end_time) return false;
-    if (typeof segment.start_time !== 'string' || typeof segment.end_time !== 'string') return false;
-    
-    // Per-session date gate: only segments whose session date is TODAY can be "current"
-    if (!isSegmentDateToday(segment)) return false;
-
-    const now = currentTime;
-    const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
-    const [endHours, endMinutes] = segment.end_time.split(':').map(Number);
-    
-    const startTime = new Date(now);
-    startTime.setHours(startHours, startMinutes, 0);
-    
-    const endTime = new Date(now);
-    endTime.setHours(endHours, endMinutes, 0);
-    
-    return now >= startTime && now <= endTime;
-  };
-
-  const getNextSegment = (segments) => {
-    if (!segments || segments.length === 0) return null;
-    
-    const now = currentTime;
-    const futureSegments = segments.filter(seg => {
-      if (!seg?.start_time || typeof seg.start_time !== 'string') return false;
-      const [hours, minutes] = seg.start_time.split(':').map(Number);
-      const startTime = new Date(now);
-      startTime.setHours(hours, minutes, 0);
-      return startTime > now;
-    });
-    
-    if (futureSegments.length === 0) return null;
-    
-    // Sort by start time and return first
-    return futureSegments.sort((a, b) => {
-      const [aH, aM] = a.start_time.split(':').map(Number);
-      const [bH, bM] = b.start_time.split(':').map(Number);
-      return (aH * 60 + aM) - (bH * 60 + bM);
-    })[0];
-  };
-
-  const isSegmentUpcoming = (segment, allSegs) => {
-    // Per-session date gate
-    if (!isSegmentDateToday(segment)) return false;
-
-    // Only consider segments that are also today when computing "next"
-    const todaySegments = (allSegs || []).filter(s => isSegmentDateToday(s));
-    const nextSegment = getNextSegment(todaySegments);
-    if (!nextSegment || nextSegment.id !== segment.id) return false;
-    if (!segment?.start_time || typeof segment.start_time !== 'string') return false;
-    
-    const now = currentTime;
-    const [startHours, startMinutes] = segment.start_time.split(':').map(Number);
-    const startTime = new Date(now);
-    startTime.setHours(startHours, startMinutes, 0);
-    const timeUntilStart = (startTime - now) / 1000 / 60;
-    
-    return timeUntilStart > 0 && timeUntilStart <= 15;
-  };
-
-  const getCountdownToNext = (segments) => {
-    const nextSegment = getNextSegment(segments);
-    if (!nextSegment || !nextSegment?.start_time || typeof nextSegment.start_time !== 'string') return null;
-    
-    const now = currentTime;
-    const [hours, minutes] = nextSegment.start_time.split(':').map(Number);
-    const startTime = new Date(now);
-    startTime.setHours(hours, minutes, 0);
-    const diffMs = startTime - now;
-    const diffMin = Math.floor(diffMs / 1000 / 60);
-    const diffSec = Math.floor((diffMs / 1000) % 60);
-    
-    return {
-      segment: nextSegment,
-      minutes: diffMin,
-      seconds: diffSec,
-      isNear: diffMin <= 15
-    };
-  };
-
-  // Helper functions shared across views
-  const getRoomName = (roomId) => {
-    const room = rooms.find(r => r.id === roomId);
-    return room ? room.name : "";
-  };
-
-  const toggleSegmentExpanded = (segmentId) => {
-    setExpandedSegments(prev => ({
-      ...prev,
-      [segmentId]: !prev[segmentId]
-    }));
-  };
-
-  const getSegmentDomId = (segment) => {
-    // Generate a unique-ish ID for the DOM element
-    // Handle both root-level and data-level properties to ensure consistency between raw and normalized objects
-    const title = segment.title || segment.data?.title || 'Untitled';
-    const startTime = segment.start_time || segment.data?.start_time || '00:00';
-    
-    // Fallback to title+time for legacy segments without IDs
-    const baseId = segment.id || `${title}-${startTime}`;
-    // Sanitize for valid HTML ID
-    return `segment-${baseId}`.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-');
-  };
-
-  const scrollToSegment = (segment) => {
-    if (!segment) return;
-    const id = getSegmentDomId(segment);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Add a temporary visual highlight
-      element.classList.add('ring-4', 'ring-pdv-teal', 'ring-offset-2', 'transition-all', 'duration-500');
-      setTimeout(() => {
-        element.classList.remove('ring-4', 'ring-pdv-teal', 'ring-offset-2');
-      }, 2500);
-    } else {
-        console.warn('Scroll target not found:', id);
-    }
-  };
-
-  // AUTH GATE: Don't render anything until auth is confirmed
-  if (!authChecked) {
-    return <LiveViewSkeleton />;
-  }
-
-  // PERF (2026-02-28): Only show full-page skeleton when we truly have NO data at all.
-  // With cache-first architecture, this should almost never happen on a normal day
-  // (cache is pre-populated by midnight refresh / entity automations).
-  // Never show skeleton when cache already has data for this selection.
+  // ── RENDER ──
+  if (!authChecked) return <LiveViewSkeleton />;
   const isContentLoading = !programData && isLoadingProgram && (selectedEventId || selectedServiceId);
+  if (isContentLoading) return <LiveViewSkeleton />;
 
-  if (isContentLoading) {
-    return <LiveViewSkeleton />;
-  }
+  const hasSelection = (selectedEventId && selectedEvent) || (selectedServiceId && selectedService);
+  const canAccessLiveOps = !!(currentUser && hasPermission(currentUser, 'view_live_chat'));
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
+      {/* GRO-5 (2026-03-02): Offline banner */}
+      <OfflineBanner language={language} />
+
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        {/* Compact Navigation Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-          {/* View Type Toggle (Segmented Control style) */}
-          {/* PERF (2026-02-28): Switching view type clears opposite selection
-            * to prevent stale data flash. React-query will not re-fetch the cleared
-            * selection's key (enabled becomes false), so no wasted API calls. */}
-          <div className="bg-gray-200 p-1 rounded-xl flex shrink-0 shadow-inner">
-            <button
-              onClick={() => { setViewType("event"); setSelectedServiceId(""); }}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "event" ? "bg-white text-pdv-teal shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              {t('public.events')}
-            </button>
-            <button
-              onClick={() => { setViewType("service"); setSelectedEventId(""); }}
-              className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-all ${viewType === "service" ? "bg-white text-pdv-green shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              {t('public.services')}
-            </button>
-          </div>
+        {/* DEV-1: Extracted selector bar */}
+        <ProgramSelectorBar
+          viewType={viewType} setViewType={setViewType}
+          selectedEventId={selectedEventId} setSelectedEventId={setSelectedEventId}
+          selectedServiceId={selectedServiceId} setSelectedServiceId={setSelectedServiceId}
+          publicEvents={publicEvents} services={services}
+        />
 
-          {/* Context Selector */}
-          <div className="flex-1 w-full">
-              {viewType === "event" && (() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const ninetyDaysOut = new Date(today);
-                ninetyDaysOut.setDate(today.getDate() + 90);
-                
-                // Last 1 past event (most recent), leveraging publicEvents pre-sort (desc by start_date)
-                const pastEvents = publicEvents.filter(e => {
-                  if (!e.start_date) return false;
-                  const eventDate = new Date(e.start_date);
-                  return eventDate < today;
-                }).slice(0, 1);
-                
-                // All future events within next 90 days
-                const upcomingEvents = publicEvents
-                  .filter(e => {
-                    if (!e.start_date) return false;
-                    const eventDate = new Date(e.start_date);
-                    return eventDate >= today && eventDate <= ninetyDaysOut;
-                  })
-                  // Sort ascending by date for better UX (soonest first)
-                  .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-                
-                const availableEvents = [...pastEvents, ...upcomingEvents];
-                
-                return (
-                  <div className="w-full max-w-full">
-                    <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder={t('public.selectEvent')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
-                        {/* UX-7 (2026-03-02): CSS truncation instead of JS substring(0,25).
-                            Full text stays in DOM for screen readers + tooltip. */}
-                        {availableEvents.map((event) => (
-                                                        <SelectItem key={event.id} value={event.id}>
-                                                          <span className="truncate max-w-[200px] inline-block align-bottom">{event.name}</span> - {formatDateET(event.start_date)}
-                                                        </SelectItem>
-                                                      ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                );
-              })()}
-
-              {/* Service Selector (upcoming within 7 days) */}
-              {viewType === "service" && (() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const sevenDaysOut = new Date(today);
-                sevenDaysOut.setDate(today.getDate() + 7);
-
-                // Services are already filtered and sorted by date
-                const upcomingServices = services
-                  .filter(s => {
-                    const serviceDate = getLocalDateAtMidnight(s.date);
-                    return serviceDate && serviceDate.getTime() <= sevenDaysOut.getTime();
-                  })
-                  .map(service => {
-                    const serviceDate = getLocalDateAtMidnight(service.date);
-                    const diffTime = serviceDate.getTime() - today.getTime();
-                    const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    return { ...service, daysUntil };
-                  })
-                  .reduce((acc, service) => {
-                    // Dedupe by date - keep only the most recently updated service per date
-                    const existing = acc.find(s => s.date === service.date);
-                    if (!existing) {
-                      acc.push(service);
-                    } else if (new Date(service.updated_date) > new Date(existing.updated_date)) {
-                      const idx = acc.indexOf(existing);
-                      acc[idx] = service;
-                    }
-                    return acc;
-                  }, []);
-
-                return (
-                  <div className="w-full max-w-full">
-                    <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                      <SelectTrigger className="w-full max-w-full overflow-hidden bg-white border-2 border-gray-400 text-gray-900 h-12">
-                        <SelectValue placeholder={t('public.selectService')} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white max-w-[calc(100vw-2rem)]">
-                        {/* UX-7 (2026-03-02): CSS truncation for service names too */}
-                        {upcomingServices.map((service) => (
-                                                    <SelectItem key={service.id} value={service.id}>
-                                                      <span className="truncate max-w-[180px] inline-block align-bottom">{service.name}</span> - {formatDateET(service.date)} ({service.daysUntil === 0 ? t('public.today') : service.daysUntil === 1 ? t('public.tomorrow') : `${t('public.in')} ${service.daysUntil} ${service.daysUntil === 1 ? t('public.day') : t('public.days')}`})
-                                                    </SelectItem>
-                                                  ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                );
-              })()}
-          </div>
-
-
-        </div>
-
-        {((selectedEventId && selectedEvent) || (selectedServiceId && selectedService)) && (
+        {hasSelection && (
           <>
-            {/* Minimal Event/Service Info Banner */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-gray-500 text-xs uppercase font-bold tracking-wider">
-                <Calendar className="w-3 h-3" />
-                <span>
-                  {viewType === "event" && selectedEvent?.start_date ? formatDateET(selectedEvent.start_date) : 
-                   viewType === "service" && selectedService?.date ? formatDateET(selectedService.date) : ""}
-                </span>
-                {viewType === "event" && selectedEvent?.location && (
-                  <>
-                    <span>•</span>
-                    <span className="truncate">{selectedEvent.location}</span>
-                  </>
-                )}
-                {_isOverride && (
-                  <>
-                    <span>•</span>
-                    <span className="text-orange-500 font-bold">🧪 TEST OVERRIDE</span>
-                  </>
-                )}
-              </div>
-              <h2 className="text-2xl text-gray-900 leading-tight">
-                {viewType === "event" ? selectedEvent?.name : selectedService?.name}
-              </h2>
-              {viewType === "event" && selectedEvent?.theme && (
-                <p className="text-pdv-teal font-medium italic">"{selectedEvent.theme}"</p>
-              )}
-            </div>
+            {/* DEV-1: Extracted info banner */}
+            <ProgramInfoBanner viewType={viewType} selectedEvent={selectedEvent} selectedService={selectedService} isOverride={_isOverride} />
 
-            {/* Live Admin Controls moved to EventProgramView - LiveDirectorPanel */}
-
-            {/* CLEANUP: Legacy filter card removed (2026-02-10). EventProgramView handles filters internally. */}
-
-            {/* Live Time Adjustment Banner */}
-            {viewType === "service" && liveAdjustments.length > 0 && liveAdjustments.some(adj => adj.offset_minutes !== 0) && (
-              <Card className="bg-amber-50 border-2 border-amber-500">
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    {liveAdjustments.filter(adj => adj.offset_minutes !== 0).map((adj) => {
-                      // Calculate adjusted start time for display
-                      let displayLabel = '';
-                      let adjustedTimeStr = '';
-                      
-                      if (adj.adjustment_type === 'global') {
-                        // Custom service - show service time + offset
-                        const serviceTime = actualServiceData?.time || "10:00";
-                        const [h, m] = serviceTime.split(':').map(Number);
-                        const adjustedDate = new Date();
-                        adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
-                        const timeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
-                        adjustedTimeStr = formatTimeToEST(timeStr);
-                        displayLabel = t('service.specialService');
-                      } else {
-                        // Weekly service - show time slot
-                        const baseTime = adj.time_slot.replace('am', '').replace('pm', '');
-                        const [h, m] = baseTime.split(':').map(Number);
-                        const adjustedDate = new Date();
-                        adjustedDate.setHours(h, m + adj.offset_minutes, 0, 0);
-                        const timeStr = `${String(adjustedDate.getHours()).padStart(2, '0')}:${String(adjustedDate.getMinutes()).padStart(2, '0')}`;
-                        adjustedTimeStr = formatTimeToEST(timeStr);
-                        displayLabel = adj.time_slot;
-                      }
-                      
-                      // Convert adjustment timestamp to EST HH:MM:SS
-                       const estTime = formatTimestampToEST(adj.updated_date);
-                      
-                      return (
-                        <div key={adj.id} className="flex items-start justify-between gap-4 bg-white p-3 rounded border border-amber-300">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Clock className="w-4 h-4 text-amber-700" />
-                              <span className="font-bold text-amber-900">
-                                {displayLabel} {t('public.adjusted')} {adj.offset_minutes > 0 ? '+' : ''}{adj.offset_minutes} {t('public.minutes')} ({t('public.start')}: {adjustedTimeStr})
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-700 space-y-0.5">
-                              <div><strong>{t('adjustments.authorizedBy')}:</strong> {adj.authorized_by}</div>
-                              <div><strong>{t('adjustments.appliedBy')}:</strong> {adj.created_by}</div>
-                              <div><strong>{t('adjustments.time')}:</strong> {estTime}</div>
-                            </div>
-                          </div>
-                          {hasPermission(currentUser, 'manage_live_timing') && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => openAdjustmentModal(adj.adjustment_type === 'global' ? 'custom' : adj.time_slot)}
-                              className="shrink-0"
-                            >
-                              {t('common.edit')}
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* DEV-1: Extracted adjustment controls (service only) */}
+            {viewType === "service" && (
+              <LiveAdjustmentControls
+                liveAdjustments={liveAdjustments} actualServiceData={actualServiceData}
+                sessions={sessions} currentUser={currentUser}
+                openAdjustmentModal={openAdjustmentModal} setHistoryModalOpen={setHistoryModalOpen}
+              />
             )}
 
-            {/* Live Time Adjustment Controls for Coordinators - Only for Services */}
-            {viewType === "service" && hasPermission(currentUser, 'manage_live_timing') && actualServiceData && (
-              <Card className="bg-slate-900 text-white border-none">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400" />
-                      <span className="font-bold uppercase text-xs sm:text-sm">{t('public.adjustStartTime')}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
-                      {/* Custom services: show single button regardless of 9:30am/11:30am data */}
-                      {actualServiceData.segments && actualServiceData.segments.length > 0 ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openAdjustmentModal("custom")}
-                          className="bg-pdv-teal hover:bg-pdv-teal/90 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
-                        >
-                          {t('adjustments.adjustStart')}
-                        </Button>
-                      ) : (
-                        <>
-                          {/* Dynamic slot buttons from Session entities. No JSON fallback. */}
-                          {(() => {
-                            const SLOT_BTN_COLORS = ['red', 'blue', 'purple', 'amber', 'green'];
-                            const slotButtons = sessions.map((s, i) => ({ 
-                              name: s.name, 
-                              color: SLOT_BTN_COLORS[i % SLOT_BTN_COLORS.length] 
-                            }));
-                            
-                            return slotButtons.map(slot => (
-                              <Button
-                                key={slot.name}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openAdjustmentModal(slot.name)}
-                                className={`bg-${slot.color}-600 hover:bg-${slot.color}-700 text-white border-none text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2`}
-                              >
-                                {slot.name.replace('am', ' AM').replace('pm', ' PM')}
-                              </Button>
-                            ));
-                          })()}
-                        </>
-                      )}
-                      {/* History button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setHistoryModalOpen(true)}
-                        className="text-gray-400 hover:text-white hover:bg-white/10 px-2"
-                        title={t('public.viewHistory')}
-                      >
-                        <History className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Service Program View (Weekly and Custom Services) */}
+            {/* Service Program View */}
             {viewType === "service" && actualServiceData && (
               <ServiceProgramView
-                actualServiceData={actualServiceData}
-                allSegments={allSegments} // Pass backend-generated flat list (includes Break)
-                sessions={sessions} // For resolving entity session IDs to slot names
+                actualServiceData={actualServiceData} allSegments={allSegments} sessions={sessions}
                 liveAdjustments={liveAdjustments}
                 preSessionData={preSessionDetails.find(p => sessions[0] && p.session_id === sessions[0].id) || null}
-                allPreSessionDetails={preSessionDetails}
-                currentTime={currentTime}
-                isSegmentCurrent={isSegmentCurrent}
-                isSegmentUpcoming={isSegmentUpcoming}
+                allPreSessionDetails={preSessionDetails} currentTime={currentTime}
+                isSegmentCurrent={isSegmentCurrent} isSegmentUpcoming={isSegmentUpcoming}
                 toggleSegmentExpanded={toggleSegmentExpanded}
-                onOpenVerses={(data) => {
-                  setVersesModalData({
-                    parsedData: data.parsedData,
-                    rawText: data.rawText
-                  });
-                  setVersesModalOpen(true);
-                }}
+                onOpenVerses={(data) => { setVersesModalData({ parsedData: data.parsedData, rawText: data.rawText }); setVersesModalOpen(true); }}
                 scrollToSegment={scrollToSegment}
-                // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
-                // Compute once and pass down — requires currentUser to be loaded
-                canAccessLiveOps={!!(currentUser && hasPermission(currentUser, 'view_live_chat'))}
-                onToggleChat={() => setChatOpen(!chatOpen)}
-                chatUnreadCount={chatUnreadCount}
-                chatOpen={chatOpen}
+                canAccessLiveOps={canAccessLiveOps} onToggleChat={() => setChatOpen(!chatOpen)}
+                chatUnreadCount={chatUnreadCount} chatOpen={chatOpen}
               />
             )}
 
             {/* Event Program View */}
             {viewType === "event" && selectedEvent && (
               <EventProgramView
-                               selectedEvent={selectedEvent}
-                               eventSessions={eventSessions}
-                               allSegments={allSegments}
-                               preSessionDetails={preSessionDetails}
-                               currentUser={currentUser}
-                               currentTime={currentTime}
-                               isSegmentCurrent={isSegmentCurrent}
-                               isSegmentUpcoming={isSegmentUpcoming}
-                               onOpenVerses={(data) => {
-                                 setVersesModalData({
-                                   parsedData: data.parsedData,
-                                   rawText: data.rawText
-                                 });
-                                 setVersesModalOpen(true);
-                               }}
-                               scrollToSegment={scrollToSegment}
-                               refetchData={refetchData}
-                               getRoomName={getRoomName}
-                               onOpenVerseParser={({ segment, initialText }) => {
-                                 setVerseParserSegment(segment);
-                                 setVerseParserInitial(initialText || "");
-                                 setVerseParserOpen(true);
-                               }}
-                               // PERMISSION-GATED: Live ops (StickyOpsDeck + chat) require view_live_chat
-                               canAccessLiveOps={!!(currentUser && hasPermission(currentUser, 'view_live_chat'))}
-                               onToggleChat={() => setChatOpen(!chatOpen)}
-                               chatUnreadCount={chatUnreadCount}
-                               chatOpen={chatOpen}
-                               isStreamMode={isStreamMode}
-                               />
+                selectedEvent={selectedEvent} eventSessions={sessions}
+                allSegments={allSegments} preSessionDetails={preSessionDetails}
+                currentUser={currentUser} currentTime={currentTime}
+                isSegmentCurrent={isSegmentCurrent} isSegmentUpcoming={isSegmentUpcoming}
+                onOpenVerses={(data) => { setVersesModalData({ parsedData: data.parsedData, rawText: data.rawText }); setVersesModalOpen(true); }}
+                scrollToSegment={scrollToSegment} refetchData={() => refetchExplicit()}
+                getRoomName={getRoomName}
+                onOpenVerseParser={({ segment, initialText }) => { setVerseParserSegment(segment); setVerseParserInitial(initialText || ""); setVerseParserOpen(true); }}
+                canAccessLiveOps={canAccessLiveOps} onToggleChat={() => setChatOpen(!chatOpen)}
+                chatUnreadCount={chatUnreadCount} chatOpen={chatOpen}
+                isStreamMode={isStreamMode}
+              />
             )}
 
-            {/* Legacy blocks removed 2026-02-10 — see AttemptLog */}
-
-            {viewType === "event" && filteredSessions.length === 0 && (
-                  <Card className="p-12 text-center bg-white border-2 border-gray-300">
+            {viewType === "event" && sessions.length === 0 && (
+              <Card className="p-12 text-center bg-white border-2 border-gray-300">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">{t('public.noSessions')}</p>
               </Card>
@@ -1007,13 +335,16 @@ export default function PublicProgramView() {
         )}
       </div>
 
+      {/* Modals */}
       <StructuredVersesModal open={versesModalOpen} onOpenChange={setVersesModalOpen} parsedData={versesModalData.parsedData} rawText={versesModalData.rawText} language={language} />
-      <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserInitial} onSave={async ({ parsed_data, verse }) => { if (!verseParserSegment) return; await base44.entities.Segment.update(verseParserSegment.id, { scripture_references: verse, parsed_verse_data: parsed_data }); setVersesModalData({ parsedData: parsed_data, rawText: verse }); setVersesModalOpen(true); refetchProgram(); }} language={language} />
+      <VerseParserDialog open={verseParserOpen} onOpenChange={setVerseParserOpen} initialText={verseParserInitial} onSave={async ({ parsed_data, verse }) => { if (!verseParserSegment) return; await base44.entities.Segment.update(verseParserSegment.id, { scripture_references: verse, parsed_verse_data: parsed_data }); setVersesModalData({ parsedData: parsed_data, rawText: verse }); setVersesModalOpen(true); refetchExplicit(); }} language={language} />
       <LiveTimeAdjustmentModal isOpen={timeAdjustmentModalOpen} onClose={() => { setTimeAdjustmentModalOpen(false); setAdjustmentModalTimeSlot(null); setCurrentAdjustment(null); }} timeSlot={adjustmentModalTimeSlot} currentOffset={currentAdjustment?.offset_minutes || 0} onSave={handleSaveTimeAdjustment} serviceTime={actualServiceData?.time} />
       <TimeAdjustmentHistoryModal isOpen={historyModalOpen} onClose={() => setHistoryModalOpen(false)} logs={adjustmentLogs} selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''} />
       {currentUser && hasPermission(currentUser, 'view_live_chat') && (viewType === "event" ? selectedEvent : selectedService) && (
         <LiveOperationsChat currentUser={currentUser} contextType={viewType} contextId={viewType === "event" ? selectedEventId : selectedServiceId} contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date} contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name} isOpen={chatOpen} onToggle={setChatOpen} onUnreadCountChange={setChatUnreadCount} hideTrigger={true} />
       )}
+
+      {/* Footer */}
       <div style={gradientStyle} className="mt-12 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691b19c064436ea35f171ca3/e75f54157_image.png" alt="Logo" className="w-12 h-12 mx-auto mb-3" />
@@ -1024,4 +355,3 @@ export default function PublicProgramView() {
     </div>
   );
 }
-// EOF - PublicProgramView.jsx cleaned 2026-02-10
