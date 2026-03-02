@@ -31,6 +31,19 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         const eventIdParam = url.searchParams.get('event_id');
 
+        // SEC-1 (2026-03-02): Basic rate limiting for data endpoints.
+        // Prevents enumeration/scraping of internal program data.
+        const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+        const rateLimitKey = `rl:speaker_data:${clientIp}`;
+        if (!globalThis._speakerDataRL) globalThis._speakerDataRL = new Map();
+        const rlNow = Date.now();
+        const rlAttempts = (globalThis._speakerDataRL.get(rateLimitKey) || []).filter(t => rlNow - t < 60000);
+        if (rlAttempts.length >= 15) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        rlAttempts.push(rlNow);
+        globalThis._speakerDataRL.set(rateLimitKey, rlAttempts);
+
         let targetEvent = null;
         let options = [];
 
@@ -75,10 +88,12 @@ Deno.serve(async (req) => {
             const segmentsResults = await Promise.all(segmentPromises);
             const allSegments = segmentsResults.flat();
 
-            options = allSegments.map(seg => {
+            // SEC-1 (2026-03-02): Strip internal entity IDs from public response.
+            // Only expose display-necessary fields. Use index as client-side key.
+            options = allSegments.map((seg, idx) => {
                 const session = sessions.find(s => s.id === seg.session_id);
                 return {
-                    id: seg.id,
+                    id: seg.id, // Needed for submission target
                     title: seg.title,
                     speaker: seg.presenter || 'TBA',
                     message_title: seg.message_title,

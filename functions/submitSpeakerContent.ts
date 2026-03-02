@@ -14,15 +14,16 @@ Deno.serve(async (req) => {
         return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Rate Limiting
+    // SEC-3 (2026-03-02): Dual-layer rate limiting.
+    // Layer 1: In-memory (fast, but resets on cold start ~60s on Deno Deploy).
+    // Layer 2: Entity-based (persistent, survives cold starts).
     const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
     const windowMs = 60000; // 1 minute
     const maxAttempts = 5;
 
-    if (!rateLimiter.has(clientIp)) {
-        rateLimiter.set(clientIp, []);
-    }
+    // Layer 1: In-memory quick check
+    if (!rateLimiter.has(clientIp)) rateLimiter.set(clientIp, []);
     const attempts = rateLimiter.get(clientIp).filter(t => now - t < windowMs);
     if (attempts.length >= maxAttempts) {
         return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
@@ -48,6 +49,19 @@ Deno.serve(async (req) => {
         if (body.website) {
             console.warn(`[SpeakerSubmission] Honeypot triggered from ${clientIp}`);
             return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
+        // Layer 2: Entity-based persistent rate limit (SEC-3, 2026-03-02).
+        // Queries PublicFormIdempotency records created by this IP in the last 2 minutes.
+        // Survives Deno Deploy cold starts unlike the in-memory Map.
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentFromIp = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'speaker_submission', created_date: { $gte: twoMinAgo } },
+            '-created_date', 20
+        );
+        if (recentFromIp.length >= 10) {
+            console.warn(`[SpeakerSubmission] Entity rate limit hit: ${recentFromIp.length} submissions in 2min`);
+            return Response.json({ error: 'Too many requests. Please wait.' }, { status: 429, headers: corsHeaders });
         }
 
         // Validate Input First

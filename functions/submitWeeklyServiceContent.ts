@@ -159,7 +159,9 @@ Deno.serve(async (req) => {
         return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Rate Limiting
+    // SEC-3/4 (2026-03-02): Dual-layer rate limiting.
+    // Layer 1: In-memory (fast, resets on cold start).
+    // Layer 2: Entity-based (persistent, see below after base44 init).
     const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
     if (!rateLimiter.has(clientIp)) rateLimiter.set(clientIp, []);
@@ -182,6 +184,17 @@ Deno.serve(async (req) => {
         if (body.website) {
             console.warn(`[WeeklySubmission] Honeypot triggered from ${clientIp}`);
             return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
+        // Layer 2: Entity-based persistent rate limit (SEC-3/4, 2026-03-02).
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentSubmissions = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'weekly_service_submission', created_date: { $gte: twoMinAgo } },
+            '-created_date', 20
+        );
+        if (recentSubmissions.length >= 10) {
+            console.warn(`[WeeklySubmission] Entity rate limit hit: ${recentSubmissions.length} submissions in 2min`);
+            return Response.json({ error: 'Too many requests. Please wait.' }, { status: 429, headers: corsHeaders });
         }
 
         if (!segment_id) {

@@ -31,6 +31,17 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
 
+        // SEC-1 (2026-03-02): Rate limiting for data endpoints.
+        const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+        if (!globalThis._weeklyDataRL) globalThis._weeklyDataRL = new Map();
+        const rlNow = Date.now();
+        const rlAttempts = (globalThis._weeklyDataRL.get(clientIp) || []).filter(t => rlNow - t < 60000);
+        if (rlAttempts.length >= 15) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        rlAttempts.push(rlNow);
+        globalThis._weeklyDataRL.set(clientIp, rlAttempts);
+
         let serviceGroups = [];
 
         // Current date in ET

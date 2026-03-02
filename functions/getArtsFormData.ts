@@ -28,6 +28,17 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         const url = new URL(req.url);
 
+        // SEC-1 (2026-03-02): Rate limiting for data endpoints.
+        const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+        if (!globalThis._artsDataRL) globalThis._artsDataRL = new Map();
+        const rlNow = Date.now();
+        const rlAttempts = (globalThis._artsDataRL.get(clientIp) || []).filter(t => rlNow - t < 60000);
+        if (rlAttempts.length >= 15) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        rlAttempts.push(rlNow);
+        globalThis._artsDataRL.set(clientIp, rlAttempts);
+
         // Accept event_id from URL params or POST body
         let eventIdParam = url.searchParams.get('event_id');
         if (!eventIdParam && req.method === 'POST') {
