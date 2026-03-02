@@ -265,7 +265,7 @@ export default function Dashboard() {
                           )}
                         </div>
                         <Button 
-                          onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
+                          onClick={(e) => { e.stopPropagation(); navigate(createPageUrl('EventDetail') + `?id=${event.id}`); }}
                           className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                         >
                           {t('btn.view_details')}
