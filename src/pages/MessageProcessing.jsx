@@ -195,14 +195,18 @@ export default function MessageProcessingPage() {
                 };
             });
 
+            // DEV-3 (2026-03-02): Track if version query hit the limit
+            const hitVersionLimit = allVersions.length >= 200;
+
             // Sort by most recently updated
-            return all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
+            return { items: all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0)), hitVersionLimit };
         },
         refetchInterval: 15000 // 15s is enough, 5s was wasteful
     });
 
-    // DEV-3 (2026-03-02): Warning if we hit the query limit
-    const versionLimitWarning = segments.length >= 200;
+    // DEV-3 (2026-03-02): Warning if the SpeakerSubmissionVersion query hit its limit
+    const versionLimitWarning = segments?.hitVersionLimit || false;
+    const segmentItems = segments?.items || segments || [];
 
     const pendingSegments = segments.filter(s => s.submission_status === 'pending');
     const processedSegments = segments.filter(s => s.submission_status === 'processed');
