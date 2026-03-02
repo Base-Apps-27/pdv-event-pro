@@ -1134,7 +1134,17 @@ export function LanguageProvider({ children }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
+    // P3-FIX (2026-03-02): Return safe defaults instead of throwing.
+    // Throwing here is unrecoverable by ErrorBoundary — it crashes the entire tree
+    // because React can't re-render hooks that throw during recovery.
+    // This fallback ensures navigation and basic rendering survive even if
+    // LanguageProvider is missing or errored.
+    console.error('[useLanguage] Called outside LanguageProvider — returning safe defaults');
+    return {
+      language: 'es',
+      setLanguage: () => {},
+      t: (key) => key,
+    };
   }
   return context;
 }
