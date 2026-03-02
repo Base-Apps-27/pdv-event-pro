@@ -59,6 +59,27 @@ export default function StickyOpsDeck({
   const [viewState, setViewState] = useState('icon'); // 'icon' | 'bar' | 'expanded'
   const isExpanded = viewState === 'expanded';
 
+  // 2026-03-02: Extract break segments for service-context visual dividers.
+  // Break segments (Receso, Almuerzo, Break) are shown as prominent dividers in
+  // the expanded action list so coordinators clearly see when service pauses occur.
+  // Only active when isServiceContext=true (passed by ServiceProgramView).
+  const breakSegments = useMemo(() => {
+    if (!isServiceContext) return [];
+    return segments
+      .filter(seg => {
+        const tp = (seg.segment_type || seg.type || '').toLowerCase();
+        return ['receso', 'almuerzo', 'break'].includes(tp) || seg.major_break;
+      })
+      .map(seg => ({
+        id: `break-${seg.id}`,
+        startTime: seg.start_time,
+        endTime: seg.end_time,
+        title: seg.title || (seg.segment_type || seg.type || 'Receso'),
+        durationMin: seg.duration_min || 0,
+        date: seg.date,
+      }));
+  }, [segments, isServiceContext]);
+
   // Flatten and sort all actions
   const { upcomingActions, pastActions, isServiceDay } = useMemo(() => {
     const actions = [];
