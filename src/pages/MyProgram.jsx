@@ -9,7 +9,7 @@
  */
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 import { useCurrentUser } from '@/components/utils/useCurrentUser';
 import { useClockTick } from '@/components/utils/useClockTick';
 import { Calendar } from 'lucide-react';

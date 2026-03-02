@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 import { getAllPermissionDefinitions } from '@/components/utils/permissions';
 import { Shield, Plus, Edit2, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
