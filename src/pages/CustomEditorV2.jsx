@@ -58,8 +58,6 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 
-// Logging
-import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 
 export default function CustomEditorV2() {
   const { user } = useCurrentUser();
