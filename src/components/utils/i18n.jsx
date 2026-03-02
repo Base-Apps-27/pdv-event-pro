@@ -584,7 +584,7 @@ const translations = {
       'category.settings': 'Configuración',
       'category.live': 'Vista en Vivo',
 */
-  en: {
+  /*en: {
     // Navigation
     'nav.dashboard': 'Home',
     'nav.liveProgram': 'Live Program',
