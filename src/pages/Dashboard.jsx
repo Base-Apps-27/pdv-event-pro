@@ -118,25 +118,16 @@ export default function Dashboard() {
             <LoadingSpinner size="md" />
           </div>
         )}
-        {/* Live Program Hero Card */}
-        <Card className="hover:shadow-lg transition-all border-0 cursor-pointer overflow-hidden" onClick={() => navigate(createPageUrl('PublicProgramView'))}>
-          <CardContent className="p-3 md:p-4" style={gradientStyle}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Bell className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-base md:text-lg text-white uppercase tracking-wide">{t('dashboard.liveProgram.title')}</h2>
-                  <p className="text-white/95 text-[10px] md:text-xs">{t('dashboard.liveProgram.subtitle')}</p>
-                </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white animate-pulse"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Live Program — compact secondary link (2026-03-02: downsized from hero card) */}
+        <div
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => navigate(createPageUrl('PublicProgramView'))}
+        >
+          <Bell className="w-4 h-4 text-gray-500 shrink-0" />
+          <span className="text-sm font-medium text-gray-700">{t('dashboard.liveProgram.title')}</span>
+          <span className="text-xs text-gray-400 hidden sm:inline">— {t('dashboard.liveProgram.subtitle')}</span>
+          <ArrowRight className="w-3.5 h-3.5 text-gray-400 ml-auto shrink-0" />
+        </div>
 
         {/* Quick Actions - 3 Shortcuts */}
         <div className="grid md:grid-cols-3 gap-6">
