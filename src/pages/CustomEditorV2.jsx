@@ -33,7 +33,7 @@ import { useLanguage } from "@/components/utils/i18n";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Download, Eye, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Download, Eye, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 // V2 hooks (shared with Weekly)
@@ -47,7 +47,7 @@ import { useSpecialSegment } from "@/components/service/v2/actions/useSpecialSeg
 import CustomMetadataForm from "@/components/service/custom-v2/CustomMetadataForm";
 import CustomSegmentColumn from "@/components/service/custom-v2/CustomSegmentColumn";
 import { useCustomServiceInit } from "@/components/service/custom-v2/useCustomServiceInit";
-import { getDefaultUiFields, getDefaultSubAssignments } from "@/components/service/custom-v2/DEFAULT_UI_FIELDS";
+// getDefaultUiFields/getDefaultSubAssignments used internally by useCustomServiceInit — not needed here
 
 // Shared components
 import AnnouncementListSelector from "@/components/announcements/AnnouncementListSelector";
@@ -243,6 +243,45 @@ export default function CustomEditorV2() {
     }
   }, [existingService, segments, en]);
 
+  // ── Announcements PDF handler (Phase 2) ──
+  const handlePrintAnnouncements = useCallback(async () => {
+    if (!selectedAnnouncements.length) {
+      toast.error(en ? 'Please select at least one announcement.' : 'Por favor, selecciona al menos un anuncio.');
+      return;
+    }
+    const toastId = toast.loading(en ? 'Generating Announcements PDF...' : 'Generando PDF de Anuncios...');
+    try {
+      const [allAnns, events] = await Promise.all([
+        base44.entities.AnnouncementItem.list('priority'),
+        base44.entities.Event.list(),
+      ]);
+      const selDate = existingService?.date ? new Date(existingService.date + 'T00:00:00') : new Date();
+      const fixed = allAnns.filter(a => a.category === 'General' && a.is_active && selectedAnnouncements.includes(a.id));
+      const dynamic = [
+        ...allAnns.filter(a => {
+          if (a.category === 'General' || !a.is_active) return false;
+          if (!selectedAnnouncements.includes(a.id)) return false;
+          return true;
+        }),
+        ...events.filter(e => {
+          if (!e.promote_in_announcements || !e.start_date) return false;
+          return new Date(e.start_date + 'T00:00:00') >= selDate;
+        }).map(e => ({ ...e, isEvent: true }))
+      ];
+      const allForPrint = [...fixed, ...dynamic];
+      if (allForPrint.length === 0) {
+        toast.error(en ? 'No announcements to print' : 'No hay anuncios para imprimir', { id: toastId });
+        return;
+      }
+      const pdf = await generateAnnouncementsPDF(allForPrint, existingService || { date: new Date().toISOString().split('T')[0] });
+      pdf.download(`Anuncios-${existingService?.date || 'servicio'}.pdf`);
+      toast.success(en ? 'PDF generated' : 'PDF generado', { id: toastId });
+    } catch (err) {
+      console.error('[Announcements PDF]', err);
+      toast.error('Error: ' + err.message, { id: toastId });
+    }
+  }, [selectedAnnouncements, existingService, en]);
+
   // ── Loading states ──
   if (serviceLoading || (serviceId && dataLoading)) {
     return (
@@ -317,6 +356,13 @@ export default function CustomEditorV2() {
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{en ? 'Program PDF' : 'PDF Programa'}</span>
           </Button>
+          <Button onClick={handlePrintAnnouncements} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} className="gap-2 font-semibold" size="sm"
+            disabled={!selectedAnnouncements.length}
+            title={en ? 'Download Announcements PDF' : 'Descargar PDF de Anuncios'}
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">{en ? 'Announcements' : 'Anuncios'}</span>
+          </Button>
           <Button onClick={() => navigate(createPageUrl('PublicProgramView'))} variant="outline" size="sm" className="gap-2">
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{en ? 'Live View' : 'Vista en Vivo'}</span>
@@ -352,7 +398,6 @@ export default function CustomEditorV2() {
           onWrite={writeSegment}
           onWriteSongs={writeSongs}
           onWriteChild={handleWriteChild}
-          onWriteSession={writeSession}
           onWritePSD={writePSD}
           onWriteDuration={handleWriteDuration}
           onOpenSpecialDialog={(sess) => {
@@ -376,7 +421,12 @@ export default function CustomEditorV2() {
 
       {/* Service Team — elevated to page level so it's clearly before Announcements */}
       {session && (
-        <TeamSection session={session} accentColor="teal" onWriteSession={writeSession} />
+        <TeamSection
+          session={session}
+          accentColor="teal"
+          onWriteSession={writeSession}
+          label={en ? 'SERVICE TEAM' : 'EQUIPO DEL SERVICIO'}
+        />
       )}
 
       {/* Announcements */}

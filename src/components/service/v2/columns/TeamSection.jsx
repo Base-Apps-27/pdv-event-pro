@@ -21,11 +21,14 @@ const AUTOCOMPLETE_TYPE_MAP = {
   photography_team: 'person',
 };
 
-export default memo(function TeamSection({ session, accentColor = 'teal', onWriteSession }) {
+export default memo(function TeamSection({ session, accentColor = 'teal', onWriteSession, label }) {
+  // Phase 2 (2026-03-02): Optional label prop overrides default "EQUIPO {session.name}"
+  // Used by CustomEditorV2 to show "EQUIPO DEL SERVICIO" instead of a generic session name
+  const displayLabel = label || `EQUIPO ${session.name}`;
   return (
     <Card className={`bg-${accentColor}-50 border-${accentColor}-300 border-2`}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm print:text-xs">EQUIPO {session.name}</CardTitle>
+        <CardTitle className="text-sm print:text-xs">{displayLabel}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {/* Screen: editable inputs */}
