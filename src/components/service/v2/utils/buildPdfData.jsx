@@ -22,6 +22,8 @@ import { normalizeSegmentType } from "@/components/utils/segmentTypeMap";
  * @param {Object<string, object>} psdBySession - PreSessionDetails by session ID
  * @returns {object} Legacy serviceData shape for PDF generators
  */
+import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
+
 export function buildPdfData({ existingService, sessions, segmentsBySession, childSegments, psdBySession }) {
   if (!existingService || !sessions || sessions.length === 0) return null;
 
