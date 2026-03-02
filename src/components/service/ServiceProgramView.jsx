@@ -396,6 +396,7 @@ export default function ServiceProgramView({
           chatUnreadCount={chatUnreadCount}
           chatOpen={chatOpen}
           resolvedStreamActions={[]}
+          isServiceContext={true}
         />
       )}
 
