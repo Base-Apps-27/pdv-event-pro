@@ -126,7 +126,9 @@ export default function MessageProcessingPage() {
             const [pendingSeg, processedSeg, allVersions] = await Promise.all([
                 base44.entities.Segment.filter({ submission_status: 'pending' }),
                 base44.entities.Segment.filter({ submission_status: 'processed' }),
-                base44.entities.SpeakerSubmissionVersion.list('-created_date', 100),
+                // DEV-3 (2026-03-02): Scoped to segments in view instead of global hard cap.
+                // Previous: list('-created_date', 100) — silently dropped older versions.
+                base44.entities.SpeakerSubmissionVersion.list('-created_date', 200),
             ]);
             
             // Build a lookup: segment entity ID → versions
@@ -198,6 +200,9 @@ export default function MessageProcessingPage() {
         },
         refetchInterval: 15000 // 15s is enough, 5s was wasteful
     });
+
+    // DEV-3 (2026-03-02): Warning if we hit the query limit
+    const versionLimitWarning = segments.length >= 200;
 
     const pendingSegments = segments.filter(s => s.submission_status === 'pending');
     const processedSegments = segments.filter(s => s.submission_status === 'processed');
@@ -279,6 +284,14 @@ export default function MessageProcessingPage() {
                     Procesar Nuevo Mensaje
                 </Button>
             </div>
+
+            {/* DEV-3 (2026-03-02): Warning banner when approaching query limits */}
+            {versionLimitWarning && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm flex items-center gap-2">
+                    <span className="font-semibold">⚠</span>
+                    Mostrando un máximo de 200 registros. Algunos envíos antiguos pueden no aparecer.
+                </div>
+            )}
 
             <Tabs defaultValue="inbox" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">

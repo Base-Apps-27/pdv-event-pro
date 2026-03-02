@@ -202,7 +202,35 @@ Deno.serve(async (req) => {
 
     console.log(`[refreshActiveProgram] Trigger: ${trigger}, Date: ${todayStr}, Entity: ${changedEntityType}/${changedEntityId}`);
 
-
+    // ─── CTO-2 (2026-03-02): Concurrency guard using ActiveProgramCache as soft lock ───
+    // Prevents two near-simultaneous refreshes (e.g. entity automations within 200ms)
+    // from both rebuilding cache at the same time. 30s TTL prevents stale locks.
+    try {
+      const existingLock = await withRetry(() =>
+        base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+      );
+      if (existingLock.length > 0) {
+        const lockEntry = existingLock[0];
+        if (lockEntry.refresh_in_progress && lockEntry.last_refresh_at) {
+          const lockAge = Date.now() - new Date(lockEntry.last_refresh_at).getTime();
+          if (lockAge < 30000) {
+            console.log(`[refreshActiveProgram] Concurrency guard: another refresh in progress (${lockAge}ms ago). Skipping.`);
+            return Response.json({ skipped: true, reason: 'concurrency_guard' });
+          }
+          // Lock older than 30s — stale, proceed and overwrite
+          console.log(`[refreshActiveProgram] Stale lock detected (${lockAge}ms). Proceeding.`);
+        }
+        // Set the lock
+        await withRetry(() =>
+          base44.asServiceRole.entities.ActiveProgramCache.update(lockEntry.id, {
+            refresh_in_progress: true,
+            last_refresh_at: new Date().toISOString(),
+          })
+        );
+      }
+    } catch (lockErr) {
+      console.warn('[refreshActiveProgram] Lock check failed (non-fatal, proceeding):', lockErr.message);
+    }
 
     // ─── STEP 1: Fetch all events and services ───
     const allEvents = await withRetry(() =>
@@ -340,6 +368,9 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
     );
 
+    // CTO-2 (2026-03-02): Clear concurrency lock on write
+    cacheData.refresh_in_progress = false;
+
     if (existing && existing.length > 0) {
       await withRetry(() =>
         base44.asServiceRole.entities.ActiveProgramCache.update(existing[0].id, cacheData)
@@ -391,9 +422,51 @@ Deno.serve(async (req) => {
             // LiveTimeAdjustments: rebuild if the entry is a service (adjustments only apply to services)
             shouldRebuild = !entryIsEvent;
           } else if (['Segment', 'Session', 'SegmentAction', 'PreSessionDetails', 'StreamBlock'].includes(changedEntityType)) {
-            // For these entities, we can't cheaply check parentage without fetching.
-            // Rebuild all warm entries (capped at 5, so this is bounded).
-            shouldRebuild = true;
+            // GRO-4 (2026-03-02): Scope cache invalidation to affected program.
+            // Try to resolve the changed entity's parent program. Only rebuild
+            // warm caches that match. Falls back to rebuild-all on resolution failure.
+            if (changedEntityId) {
+              try {
+                let parentProgramId = null;
+                if (changedEntityType === 'Segment' || changedEntityType === 'SegmentAction') {
+                  // Resolve: Segment → session_id → Session → service_id/event_id
+                  const segId = changedEntityType === 'SegmentAction'
+                    ? (await withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ id: changedEntityId })))?.[0]?.segment_id
+                    : changedEntityId;
+                  if (segId) {
+                    const segs = await withRetry(() => base44.asServiceRole.entities.Segment.filter({ id: segId }));
+                    const seg = segs?.[0];
+                    if (seg?.session_id) {
+                      const sess = await withRetry(() => base44.asServiceRole.entities.Session.filter({ id: seg.session_id }));
+                      parentProgramId = sess?.[0]?.service_id || sess?.[0]?.event_id || null;
+                    }
+                  }
+                } else if (changedEntityType === 'Session') {
+                  const sess = await withRetry(() => base44.asServiceRole.entities.Session.filter({ id: changedEntityId }));
+                  parentProgramId = sess?.[0]?.service_id || sess?.[0]?.event_id || null;
+                } else if (changedEntityType === 'PreSessionDetails' || changedEntityType === 'StreamBlock') {
+                  // These have session_id directly
+                  const entityType = changedEntityType === 'PreSessionDetails' ? 'PreSessionDetails' : 'StreamBlock';
+                  const items = await withRetry(() => base44.asServiceRole.entities[entityType].filter({ id: changedEntityId }));
+                  if (items?.[0]?.session_id) {
+                    const sess = await withRetry(() => base44.asServiceRole.entities.Session.filter({ id: items[0].session_id }));
+                    parentProgramId = sess?.[0]?.service_id || sess?.[0]?.event_id || null;
+                  }
+                }
+                // Only rebuild if this warm cache matches the resolved parent
+                if (parentProgramId) {
+                  shouldRebuild = entryProgramId === parentProgramId;
+                } else {
+                  // Resolution failed — fall back to rebuild all (safe default)
+                  shouldRebuild = true;
+                }
+              } catch (resolveErr) {
+                console.warn(`[refreshActiveProgram] GRO-4 parentage resolution failed: ${resolveErr.message}. Rebuilding all.`);
+                shouldRebuild = true;
+              }
+            } else {
+              shouldRebuild = true;
+            }
           }
 
           if (!shouldRebuild) continue;

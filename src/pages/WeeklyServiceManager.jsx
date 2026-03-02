@@ -230,8 +230,11 @@ export default function WeeklyServiceManager() {
       const slots = getTimeSlotsForDay(day.dayName);
       map[day.key] = slots;
     });
-    // Ensure Sunday always has sessions (legacy fallback)
-    if (!map.sunday || map.sunday.length === 0) {
+    // GRO-6 (2026-03-02): Removed hardcoded Sunday fallback sessions.
+    // If no ServiceSchedule exists for a day, the day won't appear in tabs.
+    // Keeping minimal fallback ONLY if Sunday tab is active but has no schedule,
+    // so existing orgs that haven't created ServiceSchedules yet still work.
+    if (scheduledDays.length === 0 && (!map.sunday || map.sunday.length === 0)) {
       map.sunday = [
         { name: "9:30am", planned_start_time: "09:30", order: 1, color: "green" },
         { name: "11:30am", planned_start_time: "11:30", order: 2, color: "blue" }

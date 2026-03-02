@@ -63,6 +63,121 @@ Deno.serve(async (req) => {
         const dataEnv = req.headers.get('x-data-env') || 'prod';
 
         // ---------------------------------------------------------
+        // CTO-4 (2026-03-02): CACHE-FIRST PATH
+        // For production reads, try ActiveProgramCache first.
+        // This eliminates the duplicated snapshot-building logic (~400 lines)
+        // by delegating to refreshActiveProgram as the single source of truth.
+        // Fallback: if cache miss or test env, fall through to full rebuild.
+        // ---------------------------------------------------------
+        if (dataEnv === 'prod') {
+          // Specific program requested by ID → try warm cache
+          const cacheKey = eventId
+            ? `event_${eventId}`
+            : serviceId
+              ? `service_${serviceId}`
+              : 'current_display';
+
+          try {
+            const cacheEntries = await withRetry(() =>
+              base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: cacheKey })
+            );
+
+            if (cacheEntries.length > 0 && cacheEntries[0].program_snapshot) {
+              const cached = cacheEntries[0];
+              const cacheAge = Date.now() - new Date(cached.last_refresh_at || 0).getTime();
+              // Serve from cache if < 5 min old
+              if (cacheAge < 300000) {
+                console.log(`[getPublicProgramData] Cache HIT for ${cacheKey} (${Math.round(cacheAge / 1000)}s old)`);
+                const snap = cached.program_snapshot;
+                const response = {
+                  event: snap.event || null,
+                  program: snap.program || null,
+                  sessions: snap.sessions || [],
+                  segments: snap.segments || [],
+                  rooms: snap.rooms || [],
+                  eventDays: snap.eventDays || [],
+                  preSessionDetails: snap.preSessionDetails || [],
+                  liveAdjustments: snap.liveAdjustments || [],
+                  streamBlocks: snap.streamBlocks || [],
+                };
+                // Merge selector options if requested
+                if (listOptions || includeOptions) {
+                  response.events = cached.selector_options?.events || [];
+                  response.services = cached.selector_options?.services || [];
+                }
+                return Response.json(response);
+              }
+            }
+
+            // Cache miss for specific program but current_display exists → check if it matches
+            if (cacheKey !== 'current_display' && cacheEntries.length === 0) {
+              const mainCache = await withRetry(() =>
+                base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+              );
+              if (mainCache.length > 0 && mainCache[0].program_id === (eventId || serviceId)) {
+                const cached = mainCache[0];
+                const cacheAge = Date.now() - new Date(cached.last_refresh_at || 0).getTime();
+                if (cacheAge < 300000 && cached.program_snapshot) {
+                  console.log(`[getPublicProgramData] Cache HIT via current_display fallback`);
+                  const snap = cached.program_snapshot;
+                  const response = {
+                    event: snap.event || null,
+                    program: snap.program || null,
+                    sessions: snap.sessions || [],
+                    segments: snap.segments || [],
+                    rooms: snap.rooms || [],
+                    eventDays: snap.eventDays || [],
+                    preSessionDetails: snap.preSessionDetails || [],
+                    liveAdjustments: snap.liveAdjustments || [],
+                    streamBlocks: snap.streamBlocks || [],
+                  };
+                  if (listOptions || includeOptions) {
+                    response.events = cached.selector_options?.events || [];
+                    response.services = cached.selector_options?.services || [];
+                  }
+                  return Response.json(response);
+                }
+              }
+            }
+
+            // Auto-detect mode: use current_display cache
+            if (!eventId && !serviceId && (detectActive || !date)) {
+              const mainCache = await withRetry(() =>
+                base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+              );
+              if (mainCache.length > 0 && mainCache[0].program_snapshot) {
+                const cached = mainCache[0];
+                const cacheAge = Date.now() - new Date(cached.last_refresh_at || 0).getTime();
+                if (cacheAge < 300000) {
+                  console.log(`[getPublicProgramData] Cache HIT for auto-detect (${Math.round(cacheAge / 1000)}s old)`);
+                  const snap = cached.program_snapshot;
+                  const response = {
+                    event: snap.event || null,
+                    program: snap.program || null,
+                    sessions: snap.sessions || [],
+                    segments: snap.segments || [],
+                    rooms: snap.rooms || [],
+                    eventDays: snap.eventDays || [],
+                    preSessionDetails: snap.preSessionDetails || [],
+                    liveAdjustments: snap.liveAdjustments || [],
+                    streamBlocks: snap.streamBlocks || [],
+                  };
+                  if (listOptions || includeOptions) {
+                    response.events = cached.selector_options?.events || [];
+                    response.services = cached.selector_options?.services || [];
+                  }
+                  return Response.json(response);
+                }
+              }
+            }
+          } catch (cacheErr) {
+            console.warn('[getPublicProgramData] Cache read failed, falling through to full rebuild:', cacheErr.message);
+          }
+        }
+        // ─── END CTO-4 CACHE-FIRST PATH ───
+        // Fall through to existing full rebuild logic for cache misses, test env, etc.
+
+        // ---------------------------------------------------------
         // SHARED: Options Fetching (Mode 1 or Mode 4 combined)
         // ---------------------------------------------------------
         let optionsData = null;
