@@ -41,7 +41,7 @@ export default function RolePermissionManager() {
     mutationFn: (data) => base44.entities.RoleTemplate.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roleTemplates'] });
-      toast.success(language === 'es' ? 'Rol creado' : 'Role created');
+      toast.success(t('roles.roleCreated'));
       setIsDialogOpen(false);
       setEditingRole(null);
     },
@@ -51,7 +51,7 @@ export default function RolePermissionManager() {
     mutationFn: ({ id, data }) => base44.entities.RoleTemplate.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roleTemplates'] });
-      toast.success(language === 'es' ? 'Rol actualizado' : 'Role updated');
+      toast.success(t('roles.roleUpdated'));
       setIsDialogOpen(false);
       setEditingRole(null);
     },
@@ -61,7 +61,7 @@ export default function RolePermissionManager() {
     mutationFn: (id) => base44.entities.RoleTemplate.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roleTemplates'] });
-      toast.success(language === 'es' ? 'Rol eliminado' : 'Role deleted');
+      toast.success(t('roles.roleDeleted'));
     },
   });
 
@@ -87,10 +87,10 @@ export default function RolePermissionManager() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 uppercase">
-              {language === 'es' ? 'Roles y Permisos' : 'Roles & Permissions'}
+              {t('roles.title')}
             </h1>
             <p className="text-gray-600 mt-1">
-              {language === 'es' ? 'Gestiona plantillas de roles y permisos' : 'Manage role templates and permissions'}
+              {t('roles.subtitle')}
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -111,15 +111,13 @@ export default function RolePermissionManager() {
                 style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: 'white' }}
               >
                 <Plus className="w-4 h-4" />
-                {language === 'es' ? 'Nuevo Rol' : 'New Role'}
+                {t('roles.newRole')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingRole?.id 
-                    ? (language === 'es' ? 'Editar Rol' : 'Edit Role')
-                    : (language === 'es' ? 'Crear Rol' : 'Create Role')}
+                  {editingRole?.id ? t('roles.editRole') : t('roles.createRole')}
                 </DialogTitle>
               </DialogHeader>
               <RoleForm
@@ -141,14 +139,14 @@ export default function RolePermissionManager() {
         <Dialog open={!!roleToDelete} onOpenChange={(open) => !open && setRoleToDelete(null)}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>{language === 'es' ? '¿Eliminar este rol?' : 'Delete this role?'}</DialogTitle>
+              <DialogTitle>{t('roles.deleteConfirm')}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-gray-600">
-              {language === 'es' ? 'Esta acción no se puede deshacer.' : 'This action cannot be undone.'}
+              {t('roles.deleteWarning')}
             </p>
             <div className="flex justify-end gap-3 mt-4">
               <Button variant="outline" onClick={() => setRoleToDelete(null)}>
-                {language === 'es' ? 'Cancelar' : 'Cancel'}
+                {t('common.cancel')}
               </Button>
               <Button 
                 className="bg-red-600 text-white hover:bg-red-700"
@@ -157,7 +155,7 @@ export default function RolePermissionManager() {
                   setRoleToDelete(null);
                 }}
               >
-                {language === 'es' ? 'Eliminar' : 'Delete'}
+                {t('common.delete')}
               </Button>
             </div>
           </DialogContent>
@@ -184,7 +182,7 @@ export default function RolePermissionManager() {
                       </p>
                       {role.is_system_role && (
                         <Badge variant="outline" className="mt-2">
-                          {language === 'es' ? 'Rol del Sistema' : 'System Role'}
+                          {t('roles.systemRole')}
                         </Badge>
                       )}
                     </div>
@@ -219,7 +217,7 @@ export default function RolePermissionManager() {
                 <div className="flex flex-wrap gap-2">
                   {role.default_permissions?.includes('*') ? (
                     <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                      {language === 'es' ? '✓ Todos los Permisos' : '✓ All Permissions'}
+                      {t('roles.allPermissions')}
                     </Badge>
                   ) : (
                     role.default_permissions?.map((permKey) => {

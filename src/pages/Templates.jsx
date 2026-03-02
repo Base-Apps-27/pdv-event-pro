@@ -21,13 +21,14 @@ const SEGMENT_TYPES = [
   "Anuncio", "Dinámica", "Break", "TechOnly", "Oración", "Especial", "Cierre"
 ];
 
+// P4 DEV-2: COLOR_CODES labels now resolved via i18n t() in the component
 const COLOR_CODES = [
-  { value: "worship", label: "Adoración" },
-  { value: "preach", label: "Predicación" },
-  { value: "break", label: "Descanso" },
-  { value: "tech", label: "Técnico" },
-  { value: "special", label: "Especial" },
-  { value: "default", label: "Predeterminado" }
+  { value: "worship", key: "templates.colorWorship" },
+  { value: "preach", key: "templates.colorPreach" },
+  { value: "break", key: "templates.colorBreak" },
+  { value: "tech", key: "templates.colorTech" },
+  { value: "special", key: "templates.colorSpecial" },
+  { value: "default", key: "templates.colorDefault" }
 ];
 
 export default function Templates() {
@@ -163,9 +164,9 @@ export default function Templates() {
             <CardContent className="py-12 text-center space-y-4">
               <FileText className="w-12 h-12 text-gray-400 mx-auto" />
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Blueprint de Servicios</h3>
+                <h3 className="text-lg font-bold text-gray-800">{t('templates.serviceBlueprintTitle')}</h3>
                 <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-                  La configuración de blueprints se ha movido a la página de Configuración de Servicios para evitar conflictos de datos.
+                  {t('templates.serviceBlueprintMoved')}
                 </p>
               </div>
               <Button
@@ -174,7 +175,7 @@ export default function Templates() {
                 className="hover:opacity-90"
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
-                Ir a Configuración de Servicios
+                {t('templates.goToServiceConfig')}
               </Button>
             </CardContent>
           </Card>
@@ -303,7 +304,7 @@ export default function Templates() {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          if (confirm('¿Eliminar esta plantilla?')) {
+                          if (confirm(t('templates.deleteSegmentConfirm'))) {
                             deleteMutation.mutate(template.id);
                           }
                         }}
@@ -378,7 +379,7 @@ export default function Templates() {
                   </SelectTrigger>
                   <SelectContent>
                     {COLOR_CODES.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>{color.label}</SelectItem>
+                      <SelectItem key={color.value} value={color.value}>{t(color.key)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
