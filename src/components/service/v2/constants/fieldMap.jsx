@@ -20,7 +20,7 @@
  */
 
 export const FIELD_REGISTRY = {
-  leader:      { column: 'presenter',            label: 'Director de A&A',     type: 'autocomplete', autocompleteType: 'worshipLeader', hint: 'Sarah Manzano o Anthony Estrella' },
+  leader:      { column: 'presenter',            label: 'Director de A&A',     type: 'autocomplete', autocompleteType: 'worshipLeader', hint: 'Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.' },
   presenter:   { column: 'presenter',            label: 'Presentador',         type: 'autocomplete', autocompleteType: 'presenter' },
   preacher:    { column: 'presenter',            label: 'Predicador',          type: 'autocomplete', autocompleteType: 'preacher' },
   title:       { column: 'message_title',        label: 'Título del Mensaje',  type: 'text' },
