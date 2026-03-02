@@ -25,7 +25,7 @@ import {
   Plus, Pencil, Trash2, ArrowUpDown, Shield
 } from "lucide-react";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const ACTION_COLORS = {
   create: "bg-green-100 text-green-700 border-green-200",
