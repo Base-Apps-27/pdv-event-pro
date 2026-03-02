@@ -1173,11 +1173,6 @@ const translations = {
     'category.events': 'Events',
     'category.services': 'Services',
     'category.resources': 'Resources',
-    'category.settings': 'Settings',
-    'category.live': 'Live View',
-  }
-};
-
 // Defensive fallback map for live.* keys when a translation is missing
 const liveFallback = {
   // New LiveDirectorPanel translations
