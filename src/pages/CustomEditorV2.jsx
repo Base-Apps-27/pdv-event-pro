@@ -26,14 +26,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Save, Download, Printer, Eye, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Download, Eye, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 // V2 hooks (shared with Weekly)
