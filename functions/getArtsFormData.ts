@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         const url = new URL(req.url);
 
-        // SEC-1 (2026-03-02): Rate limiting for data endpoints.
+        // SEC-1 (2026-03-02): Dual-layer rate limiting for data endpoints.
+        // Layer 1: In-memory (fast, resets on cold start).
         const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
         if (!globalThis._artsDataRL) globalThis._artsDataRL = new Map();
         const rlNow = Date.now();
@@ -38,6 +39,22 @@ Deno.serve(async (req) => {
         }
         rlAttempts.push(rlNow);
         globalThis._artsDataRL.set(clientIp, rlAttempts);
+
+        // Layer 2: Entity-based persistent rate limit (SEC-1 P1, 2026-03-02).
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentDataReqs = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'arts_data_read', site_id: clientIp, created_date: { $gte: twoMinAgo } },
+            '-created_date', 30
+        );
+        if (recentDataReqs.length >= 20) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        await base44.asServiceRole.entities.PublicFormIdempotency.create({
+            idempotency_key: `arts_data_${clientIp}_${rlNow}`,
+            form_type: 'arts_data_read',
+            site_id: clientIp,
+            status: 'succeeded'
+        });
 
         // Accept event_id from URL params or POST body
         let eventIdParam = url.searchParams.get('event_id');
@@ -55,7 +72,8 @@ Deno.serve(async (req) => {
         } else {
             // Find next upcoming confirmed event
             const events = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
-            const today = new Date().toISOString().split('T')[0];
+            // DEV-4 (2026-03-02): Use ET-aware date to avoid UTC midnight drift.
+            const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })).toISOString().split('T')[0];
             const upcoming = events.filter(e => e.start_date >= today).sort((a, b) => a.start_date.localeCompare(b.start_date));
             if (upcoming.length > 0) {
                 targetEvent = upcoming[0];

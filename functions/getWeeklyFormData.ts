@@ -31,7 +31,8 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
 
-        // SEC-1 (2026-03-02): Rate limiting for data endpoints.
+        // SEC-1 (2026-03-02): Dual-layer rate limiting for data endpoints.
+        // Layer 1: In-memory (fast, resets on cold start).
         const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
         if (!globalThis._weeklyDataRL) globalThis._weeklyDataRL = new Map();
         const rlNow = Date.now();
@@ -41,6 +42,22 @@ Deno.serve(async (req) => {
         }
         rlAttempts.push(rlNow);
         globalThis._weeklyDataRL.set(clientIp, rlAttempts);
+
+        // Layer 2: Entity-based persistent rate limit (SEC-1 P1, 2026-03-02).
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentDataReqs = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'weekly_data_read', site_id: clientIp, created_date: { $gte: twoMinAgo } },
+            '-created_date', 30
+        );
+        if (recentDataReqs.length >= 20) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        await base44.asServiceRole.entities.PublicFormIdempotency.create({
+            idempotency_key: `weekly_data_${clientIp}_${rlNow}`,
+            form_type: 'weekly_data_read',
+            site_id: clientIp,
+            status: 'succeeded'
+        });
 
         let serviceGroups = [];
 

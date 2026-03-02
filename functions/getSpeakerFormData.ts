@@ -31,8 +31,8 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         const eventIdParam = url.searchParams.get('event_id');
 
-        // SEC-1 (2026-03-02): Basic rate limiting for data endpoints.
-        // Prevents enumeration/scraping of internal program data.
+        // SEC-1 (2026-03-02): Dual-layer rate limiting for data endpoints.
+        // Layer 1: In-memory (fast, resets on cold start).
         const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
         const rateLimitKey = `rl:speaker_data:${clientIp}`;
         if (!globalThis._speakerDataRL) globalThis._speakerDataRL = new Map();
@@ -44,6 +44,24 @@ Deno.serve(async (req) => {
         rlAttempts.push(rlNow);
         globalThis._speakerDataRL.set(rateLimitKey, rlAttempts);
 
+        // Layer 2: Entity-based persistent rate limit (SEC-1 P1, 2026-03-02).
+        // Survives cold starts. Scoped per IP via site_id field.
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentDataReqs = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'speaker_data_read', site_id: clientIp, created_date: { $gte: twoMinAgo } },
+            '-created_date', 30
+        );
+        if (recentDataReqs.length >= 20) {
+            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
+        }
+        // Record this request for persistent tracking
+        await base44.asServiceRole.entities.PublicFormIdempotency.create({
+            idempotency_key: `speaker_data_${clientIp}_${rlNow}`,
+            form_type: 'speaker_data_read',
+            site_id: clientIp,
+            status: 'succeeded'
+        });
+
         let targetEvent = null;
         let options = [];
 
@@ -52,7 +70,9 @@ Deno.serve(async (req) => {
         } else {
             // Find next upcoming confirmed event
             const events = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
-            const today = new Date().toISOString().split('T')[0];
+            // DEV-4 (2026-03-02): Use ET-aware date to avoid UTC midnight drift.
+            // At 11pm ET, UTC is already the next day — can miss same-day events.
+            const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })).toISOString().split('T')[0];
             const upcoming = events
                 .filter(e => e.start_date >= today)
                 .sort((a, b) => a.start_date.localeCompare(b.start_date));
