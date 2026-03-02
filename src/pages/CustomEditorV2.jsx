@@ -52,6 +52,7 @@ import { getDefaultUiFields, getDefaultSubAssignments } from "@/components/servi
 // Shared components
 import AnnouncementListSelector from "@/components/announcements/AnnouncementListSelector";
 import SpecialSegmentDialog from "@/components/service/SpecialSegmentDialog";
+import TeamSection from "@/components/service/v2/columns/TeamSection";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 
 // PDF
@@ -371,6 +372,11 @@ export default function CustomEditorV2() {
             {en ? 'No session found. The service structure may be incomplete.' : 'No se encontró sesión. La estructura del servicio puede estar incompleta.'}
           </p>
         </div>
+      )}
+
+      {/* Service Team — elevated to page level so it's clearly before Announcements */}
+      {session && (
+        <TeamSection session={session} accentColor="teal" onWriteSession={writeSession} />
       )}
 
       {/* Announcements */}

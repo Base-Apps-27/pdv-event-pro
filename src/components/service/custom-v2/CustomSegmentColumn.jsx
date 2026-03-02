@@ -147,8 +147,7 @@ export default memo(function CustomSegmentColumn({
         ))}
       </div>
 
-      {/* Team */}
-      <TeamSection session={session} accentColor="teal" onWriteSession={onWriteSession} />
+      {/* Team section moved to page level (before Announcements) */}
     </div>
   );
 });
