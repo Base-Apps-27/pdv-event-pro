@@ -23,7 +23,9 @@ import { createPageUrl } from "@/utils";
 
 import { useWeeklyData } from "./hooks/useWeeklyData";
 import { useEntityWrite } from "./hooks/useEntityWrite";
-import { useExternalSync } from "./hooks/useExternalSync";
+// 2026-03-02: useExternalSync removed. Real-time entity subscriptions + React Query
+// already push external changes to all clients. The unscoped Segment/Session
+// subscriptions caused constant false-positive "Otro administrador" banners.
 import { useResetToBlueprint } from "./actions/useResetToBlueprint";
 import { useMoveSegment } from "./actions/useMoveSegment";
 import { useSpecialSegment } from "./actions/useSpecialSegment";
