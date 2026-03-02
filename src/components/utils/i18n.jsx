@@ -8,10 +8,6 @@ const translations = {
   en,
   es,
 };
-  es: {
-    // Navigation
-    'nav.dashboard': 'Inicio',
-    'nav.liveProgram': 'Programa en Vivo',
     'nav.events': 'Eventos',
     'nav.services': 'Servicios',
     'nav.weeklyServices': 'Servicios Semanales',
