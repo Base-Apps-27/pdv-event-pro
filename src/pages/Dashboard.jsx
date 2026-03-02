@@ -218,7 +218,8 @@ export default function Dashboard() {
               {upcomingEvents.map((event) => (
                 <Card 
                   key={event.id} 
-                  className="bg-white shadow-md hover:shadow-lg transition-shadow"
+                  className="bg-white shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
                 >
                   <CardContent className="p-6">
                     <div className="grid md:grid-cols-2 gap-6">
