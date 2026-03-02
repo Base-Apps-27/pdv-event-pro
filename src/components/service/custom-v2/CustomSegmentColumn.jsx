@@ -8,17 +8,25 @@
  *   - Receso injection
  *   - Blueprint reset
  *
+ * Phase 2 (2026-03-02): Adopted same accent color scheme from Weekly V2 SlotColumn.
+ * Uses 'teal' as the default accent for consistency with single-session custom services.
+ * SegmentCard already inherits COLOR_MAP from color_code — no change needed there.
+ *
  * Reuses 100% of V2 rendering components (SegmentCard, PreServiceSection, TeamSection).
  */
 
 import React, { useCallback, useMemo, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Clock, Plus, AlertTriangle } from "lucide-react";
 import { addMinutes, format as formatDate } from "date-fns";
 import SegmentCard from "@/components/service/v2/segments/SegmentCard";
 import PreServiceSection from "@/components/service/v2/columns/PreServiceSection";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+
+// Same accent color used by Weekly V2 SlotColumn (first slot = teal)
+const ACCENT_COLOR = 'teal';
+const DEFAULT_TARGET_MIN = 90;
 
 function safeParseTime(timeStr) {
   if (!timeStr) return new Date(2000, 0, 1, 10, 0);
@@ -51,13 +59,16 @@ export default memo(function CustomSegmentColumn({
   // Language
   language,
 }) {
-  // Calculate timing
-  const { totalDuration, endTime } = useMemo(() => {
+  // Calculate timing — matches SlotColumn logic with overage detection
+  const { totalDuration, endTime, isOverage, targetMin } = useMemo(() => {
     const total = segments.reduce((sum, s) => sum + (s.duration_min || 0), 0);
     const start = safeParseTime(serviceTime);
+    const target = DEFAULT_TARGET_MIN;
     return {
       totalDuration: total,
       endTime: addMinutes(start, total),
+      isOverage: total > target,
+      targetMin: target,
     };
   }, [segments, serviceTime]);
 
@@ -77,35 +88,40 @@ export default memo(function CustomSegmentColumn({
 
   return (
     <div className="space-y-4">
-      {/* Program header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl text-gray-900 uppercase">
+      {/* Program header — matches Weekly V2 SlotColumn header styling */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h2 className={`text-3xl text-${ACCENT_COLOR}-600`}>
             {en ? 'Service Program' : 'Programa del Servicio'}
           </h2>
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <Badge variant="outline" className="bg-blue-50">
-              {totalDuration} min total
-            </Badge>
-            <Badge variant="outline" className="text-xs text-gray-500">
-              {segments.length} {en ? 'segments' : 'segmentos'}
-            </Badge>
-            <span className="text-sm text-gray-600">
-              {en ? 'Starts' : 'Inicia'}: {formatTimeToEST(serviceTime)} | {en ? 'Ends' : 'Termina'}: {formatDate(endTime, "h:mm a")}
-            </span>
-          </div>
+          {canEdit && (
+            <div className="flex gap-2 print:hidden">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onOpenSpecialDialog?.(session)}
+                className="border-2 border-gray-400 bg-white text-gray-900 font-semibold"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {en ? 'Add Segment' : 'Añadir Segmento'}
+              </Button>
+            </div>
+          )}
         </div>
-        {canEdit && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onOpenSpecialDialog?.(session)}
-            className="border-2 border-gray-400 bg-white text-gray-900 font-semibold print:hidden"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {en ? 'Add Segment' : 'Añadir Segmento'}
-          </Button>
-        )}
+        <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
+          <Badge variant="outline" className={isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : `bg-${ACCENT_COLOR}-50`}>
+            {totalDuration} min total{isOverage && ` (+${totalDuration - targetMin} min)`}
+          </Badge>
+          <Badge variant="outline" className="text-xs text-gray-500">
+            {segments.length} {en ? 'segments' : 'segmentos'}
+          </Badge>
+          <span>
+            <Clock className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
+            {en ? 'Starts' : 'Inicia'}: {formatTimeToEST(serviceTime)} | {en ? 'Ends' : 'Termina'}: {formatDate(endTime, "h:mm a")}
+          </span>
+          <span className="text-xs text-gray-500">({en ? 'Target' : 'Meta'}: {targetMin} min)</span>
+          {isOverage && <Badge className="bg-amber-600 text-white text-xs">⚠ {en ? 'Over target' : 'Sobrepasa'}</Badge>}
+        </div>
       </div>
 
       {/* Pre-Service */}
