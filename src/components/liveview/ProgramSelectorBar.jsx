@@ -55,21 +55,25 @@ export default function ProgramSelectorBar({
 }
 
 function EventSelector({ events, selectedId, onSelect, t }) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  // DEV-4 (2026-03-02): Use canonical getTodayET + parseDateStringLocal to avoid
+  // UTC midnight bugs when comparing dates. Previously used new Date().setHours(0,0,0,0)
+  // which is local timezone — correct for client but inconsistent with the canonical helper.
+  const todayStr = getTodayET();
+  const today = parseDateStringLocal(todayStr);
   const ninetyDaysOut = new Date(today); ninetyDaysOut.setDate(today.getDate() + 90);
 
   const pastEvents = events.filter(e => {
     if (!e.start_date) return false;
-    return new Date(e.start_date) < today;
+    return e.start_date < todayStr;
   }).slice(0, 1);
 
   const upcomingEvents = events
     .filter(e => {
       if (!e.start_date) return false;
-      const d = new Date(e.start_date);
+      const d = parseDateStringLocal(e.start_date);
       return d >= today && d <= ninetyDaysOut;
     })
-    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
 
   const available = [...pastEvents, ...upcomingEvents];
 
