@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { hasPermission } from "@/components/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle, Printer, Tv, UserCircle } from "lucide-react";
+import { Loader2, Eye, RotateCcw, ShieldCheck, Plus, AlertCircle, Printer, Tv, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
