@@ -303,7 +303,8 @@ export default function Dashboard() {
               {recentPastEvents.map((event) => (
                 <Card 
                   key={event.id} 
-                  className={`bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 ${statusBorderColors[event.status] || 'border-l-gray-300'}`}
+                  className={`bg-white shadow-sm hover:shadow-md transition-shadow border-l-4 cursor-pointer ${statusBorderColors[event.status] || 'border-l-gray-300'}`}
+                  onClick={() => navigate(createPageUrl('EventDetail') + `?id=${event.id}`)}
                 >
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3">
