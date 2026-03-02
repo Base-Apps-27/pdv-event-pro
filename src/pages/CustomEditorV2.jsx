@@ -351,21 +351,19 @@ export default function CustomEditorV2() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handlePrintProgram} style={tealStyle} className="gap-2 font-semibold" size="sm">
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{en ? 'Program PDF' : 'PDF Programa'}</span>
+        {/* Action bar — matches Weekly V2 compact style */}
+        <div className="flex gap-1.5 items-center flex-wrap">
+          <Button onClick={handlePrintProgram} style={tealStyle} size="sm" className="font-semibold text-xs h-8 px-2" title={en ? 'Download Program PDF' : 'Imprimir Programa'}>
+            <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Program' : 'Prog.'}</span>
           </Button>
-          <Button onClick={handlePrintAnnouncements} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} className="gap-2 font-semibold" size="sm"
+          <Button onClick={handlePrintAnnouncements} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2"
             disabled={!selectedAnnouncements.length}
-            title={en ? 'Download Announcements PDF' : 'Descargar PDF de Anuncios'}
+            title={en ? 'Download Announcements PDF' : 'Imprimir Anuncios'}
           >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">{en ? 'Announcements' : 'Anuncios'}</span>
+            <FileText className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Announce.' : 'Anun.'}</span>
           </Button>
-          <Button onClick={() => navigate(createPageUrl('PublicProgramView'))} variant="outline" size="sm" className="gap-2">
-            <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">{en ? 'Live View' : 'Vista en Vivo'}</span>
+          <Button onClick={() => navigate(createPageUrl('PublicProgramView'))} variant="outline" size="sm" className="text-xs h-8 px-2" title={en ? 'Live View' : 'Vista en Vivo'}>
+            <Eye className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Live' : 'Vivo'}</span>
           </Button>
         </div>
       </div>
