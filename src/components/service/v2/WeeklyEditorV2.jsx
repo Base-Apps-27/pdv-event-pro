@@ -176,7 +176,7 @@ export default function WeeklyEditorV2({
 
   const slotNames = useMemo(() => sessions.map(s => s.name), [sessions]);
 
-  // ── PDF download handlers ──
+  // ── PDF print handlers (2026-03-02: changed from download to print dialog) ──
   const handleDownloadProgramPDF = useCallback(async () => {
     const toastId = toast.loading('Generando PDF del Programa...');
     try {
