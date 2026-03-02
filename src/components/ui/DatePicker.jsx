@@ -1,3 +1,4 @@
+// DatePicker — branded date selector (2026-03-02: confirmed rest-element fix)
 import React from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
