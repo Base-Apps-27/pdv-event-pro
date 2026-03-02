@@ -7,7 +7,7 @@
  * Auto-scrolls to current segment.
  */
 import React, { useMemo, useEffect, useRef } from 'react';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 import MyProgramSegmentCard from './MyProgramSegmentCard';
 import PostSessionBanner from './PostSessionBanner';
 

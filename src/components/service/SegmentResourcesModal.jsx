@@ -31,7 +31,7 @@ import {
   BookOpen,
   Lightbulb
 } from "lucide-react";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 import ArtsResourcesSection from "@/components/service/ArtsResourcesSection";
 

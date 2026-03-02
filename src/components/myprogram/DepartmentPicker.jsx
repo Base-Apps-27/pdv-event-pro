@@ -8,7 +8,7 @@
  * Decision: "MyProgram: hybrid department selection with localStorage persistence"
  */
 import React from 'react';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 import { safeGetItem, safeSetItem } from '@/components/utils/safeLocalStorage';
 import { 
   Select, 

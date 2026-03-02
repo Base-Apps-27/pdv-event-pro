@@ -3,7 +3,7 @@ import { Users, Sparkles, Languages, Mic, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 import { getSegmentData, getNormalizedSongs } from '@/components/utils/segmentDataUtils';
 import { normalizeName } from '@/components/utils/textNormalization';
 import DepartmentNotes from './DepartmentNotes';

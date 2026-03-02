@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { Music, Monitor, Wifi, Info } from 'lucide-react';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 
 export default function MyProgramPreSessionCard({ details }) {
   const { t } = useLanguage();
