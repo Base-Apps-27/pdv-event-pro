@@ -6,17 +6,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 // it will already be processing_status='processed' and will be skipped.
 // Safety net: processPendingSubmissions (scheduled) catches anything stuck in 'pending'.
 
+// CTO-1 (2026-03-02): Verse parsing centralized in parseScriptureShared.
+// This file delegates to the shared function via base44.asServiceRole.functions.invoke().
+// VERSION_HASH: v1.0-2026-03-02 (must match parseScriptureShared)
+// Frontend VerseParserDialog keeps its own copy (cannot call backend synchronously).
+//
+// DEPRECATED INLINE COPY BELOW — kept temporarily for the automation handler
+// but all new code paths should use parseScriptureReferencesViaShared().
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  VERSE PARSING LOGIC — BACKEND COPY (processNewSubmissionVersion)    ║
-// ║                                                                      ║
-// ║  ALL COPIES MUST BE KEPT IN SYNC. If you change one, change all:    ║
-// ║    1. components/service/VerseParserDialog  (frontend)               ║
-// ║    2. functions/submitWeeklyServiceContent  (backend — inline)       ║
-// ║    3. functions/processNewSubmissionVersion (this file — automation) ║
-// ║    4. functions/processPendingSubmissions   (backend — safety net)   ║
-// ║                                                                      ║
-// ║  Decision: "Verse Parsing Logic Anti-Drift Protocol" (2026-02-05)   ║
-// ╚══════════════════════════════════════════════════════════════════════╝
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
