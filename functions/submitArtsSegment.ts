@@ -95,6 +95,18 @@ Deno.serve(async (req) => {
         emailAttempts.push(now);
         rateLimiter.set(emailKey, emailAttempts);
 
+        // Layer 2: Entity-based persistent rate limit (SEC-3/4, 2026-03-02).
+        // ArtsSubmissionLog serves as the audit trail — count recent entries.
+        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
+        const recentArtsSubmissions = await base44.asServiceRole.entities.ArtsSubmissionLog.filter(
+            { submitter_email: submitter_email.toLowerCase(), created_date: { $gte: twoMinAgo } },
+            '-created_date', 20
+        );
+        if (recentArtsSubmissions.length >= 12) {
+            console.warn(`[ArtsSubmission] Entity rate limit hit: ${submitter_email}, ${recentArtsSubmissions.length} in 2min`);
+            return Response.json({ error: 'Too many saves. Please wait.' }, { status: 429, headers: corsHeaders });
+        }
+
         // Verify segment exists
         const segment = await base44.asServiceRole.entities.Segment.get(segment_id);
         if (!segment) {
