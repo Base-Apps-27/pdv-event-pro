@@ -27,6 +27,14 @@ export default function Dashboard() {
   const tealStyle = { backgroundColor: '#1F8A70', color: '#ffffff' };
   const blueStyle = { backgroundColor: '#2563eb', color: '#ffffff' };
   
+  // 2026-03-02: Check if a live program is active to highlight the link
+  const { data: cacheEntries = [] } = useQuery({
+    queryKey: ['activeProgramCache', 'dashboard'],
+    queryFn: () => base44.entities.ActiveProgramCache.filter({ cache_key: 'current_display' }),
+    staleTime: 60 * 1000, // 1 minute
+  });
+  const isLive = cacheEntries.length > 0 && cacheEntries[0].program_type !== 'none';
+
   // Phase 7: Added staleTime to reduce unnecessary refetches
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['events'],
