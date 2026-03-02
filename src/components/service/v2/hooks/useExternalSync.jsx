@@ -1,15 +1,11 @@
 /**
  * useExternalSync.js — V2 concurrent editing detection.
- * DECISION-003: Clean implementation, no race condition hacks.
  *
- * HARDENING (Phase 8):
- *   - Watches Segment + Session entities (not just Service)
- *   - Uses per-entity type suppressors to avoid false positives
- *   - Debounces rapid-fire subscription events
+ * 2026-03-02: Simplified. Only watches the Service entity itself (scoped by ID).
+ * Segment/Session subscriptions were firing on ALL entities app-wide, causing
+ * constant false "Otro administrador" banners. Removed them.
  *
- * Subscribes to Service/Segment/Session entity changes. If another user
- * modifies any, shows a reload banner. Suppresses own writes using a
- * timestamp-based window (8s) to avoid false positives.
+ * The suppress window is 15s to cover debounced writes that may land late.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -17,8 +13,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
-const SUPPRESS_WINDOW_MS = 8000;
-const DEBOUNCE_MS = 2000;
+const SUPPRESS_WINDOW_MS = 15000;
+const DEBOUNCE_MS = 3000;
 
 /**
  * @param {string} serviceId - Service entity ID to watch
@@ -41,53 +37,27 @@ export function useExternalSync(serviceId, queryKey) {
     toast.info('Recargando programa...');
   }, [queryClient, queryKey]);
 
-  const onExternalEvent = useCallback(() => {
-    // Suppress if we wrote recently
-    if (Date.now() - lastOwnWriteRef.current < SUPPRESS_WINDOW_MS) return;
-
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => {
-      // Double-check after debounce
-      if (Date.now() - lastOwnWriteRef.current < SUPPRESS_WINDOW_MS) return;
-      setExternalChangeAvailable(true);
-    }, DEBOUNCE_MS);
-  }, []);
-
   useEffect(() => {
     if (!serviceId) return;
-    const unsubs = [];
 
-    // Watch Service entity
-    unsubs.push(
-      base44.entities.Service.subscribe((event) => {
-        if (event.id !== serviceId) return;
-        onExternalEvent();
-      })
-    );
+    // Only watch the specific Service entity — no app-wide Segment/Session noise
+    const unsub = base44.entities.Service.subscribe((event) => {
+      if (event.id !== serviceId) return;
+      // Suppress if we wrote recently (own edits)
+      if (Date.now() - lastOwnWriteRef.current < SUPPRESS_WINDOW_MS) return;
 
-    // Watch Segment entity — any segment change under our service triggers banner
-    unsubs.push(
-      base44.entities.Segment.subscribe((event) => {
-        // We can't filter by service_id from the subscription event payload easily,
-        // but the debounce + suppress window handles most false positives
-        onExternalEvent();
-      })
-    );
-
-    // Watch Session entity
-    unsubs.push(
-      base44.entities.Session.subscribe((event) => {
-        onExternalEvent();
-      })
-    );
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        if (Date.now() - lastOwnWriteRef.current < SUPPRESS_WINDOW_MS) return;
+        setExternalChangeAvailable(true);
+      }, DEBOUNCE_MS);
+    });
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      unsubs.forEach(unsub => {
-        if (typeof unsub === 'function') unsub();
-      });
+      if (typeof unsub === 'function') unsub();
     };
-  }, [serviceId, onExternalEvent]);
+  }, [serviceId]);
 
   return { externalChangeAvailable, handleReload, markOwnWrite };
 }
