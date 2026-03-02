@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleManager";
 
 import BlueprintManager from "@/components/service/weekly/BlueprintManager";
