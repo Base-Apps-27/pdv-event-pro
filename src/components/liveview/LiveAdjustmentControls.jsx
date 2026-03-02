@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatTimeToEST, formatTimestampToEST } from "@/components/utils/timeFormat";
 import { hasPermission } from "@/components/utils/permissions";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function LiveAdjustmentControls({
   liveAdjustments, actualServiceData, sessions,

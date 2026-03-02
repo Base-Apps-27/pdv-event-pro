@@ -7,7 +7,7 @@ import { normalizeName } from "@/components/utils/textNormalization";
 import { getSegmentData, getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 import { getArtsSmartNotes } from "@/components/utils/artsSmartRouting";
 import { ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import SegmentResourcesModal from "./SegmentResourcesModal";
 import CollapsibleActions from "@/components/service/CollapsibleActions";
 

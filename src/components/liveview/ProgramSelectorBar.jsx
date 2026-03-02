@@ -7,7 +7,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDateET, getTodayET, parseDateStringLocal } from "@/components/utils/timeFormat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function ProgramSelectorBar({
   viewType, setViewType,
