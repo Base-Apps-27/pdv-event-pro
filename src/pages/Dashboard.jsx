@@ -9,7 +9,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { parseDateStringLocal } from "@/components/utils/timeFormat";
+import { parseDateStringLocal, getTodayET } from "@/components/utils/timeFormat";
 
 export default function Dashboard() {
   const navigate = useNavigate();
