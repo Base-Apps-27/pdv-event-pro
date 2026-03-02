@@ -53,11 +53,9 @@ export default function Dashboard() {
 
   const isLoading = eventsLoading || sessionsLoading;
 
-  // Build a timezone-safe "today" string (YYYY-MM-DD) in America/New_York.
-  // Comparing date STRINGS avoids UTC-vs-local midnight bugs that caused
-  // same-day events (like Juntos 2026-02-06) to fall into "recent" prematurely.
-  const todayET = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
-  // ^ 'en-CA' locale produces YYYY-MM-DD format
+  // DEV-4 (2026-03-02): Use canonical getTodayET() helper instead of inline
+  // Intl.DateTimeFormat. Same logic, single source of truth.
+  const todayET = getTodayET();
 
   // 2026-03-02: Simple check — is there an event or service happening today?
   const { data: todayServices = [] } = useQuery({
