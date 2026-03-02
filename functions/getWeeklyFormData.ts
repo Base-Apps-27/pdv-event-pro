@@ -61,9 +61,12 @@ Deno.serve(async (req) => {
 
         let serviceGroups = [];
 
-        // Current date in ET
+        // DEV-4 (2026-03-02): ET-aware date to avoid UTC midnight drift.
         const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        const todayETStr = nowET.toISOString().split('T')[0];
+        const yy = nowET.getFullYear();
+        const mm = String(nowET.getMonth() + 1).padStart(2, '0');
+        const dd = String(nowET.getDate()).padStart(2, '0');
+        const todayETStr = `${yy}-${mm}-${dd}`;
         const weekAhead = new Date(nowET);
         weekAhead.setDate(weekAhead.getDate() + 14);
         const weekAheadStr = weekAhead.toISOString().split('T')[0];
