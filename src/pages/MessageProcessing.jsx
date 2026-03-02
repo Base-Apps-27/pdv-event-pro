@@ -64,7 +64,7 @@ function SubmissionHistoryDialog({ open, onOpenChange, segment, onRestore }) {
                 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 py-2">
                     {isLoading ? (
-                        <div className="flex justify-center py-8"><Loader2 className="animate-spin text-gray-400" /></div>
+                        <div className="flex justify-center py-8"><LoadingSpinner size="md" /></div>
                     ) : versions.length === 0 ? (
                         <p className="text-center text-gray-500 py-8">No hay historial disponible.</p>
                     ) : (
