@@ -26,7 +26,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n";
