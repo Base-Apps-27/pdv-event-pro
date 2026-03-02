@@ -16,7 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { hasPermission } from "@/components/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle, Download, Tv, UserCircle } from "lucide-react";
+import { Loader2, Eye, RotateCcw, ShieldCheck, RefreshCw, Users, Plus, AlertCircle, Printer, Tv, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -189,8 +189,8 @@ export default function WeeklyEditorV2({
       });
       if (!pdfData) { toast.error('No hay datos para generar PDF', { id: toastId }); return; }
       const pdf = await generateWeeklyProgramPDF(pdfData);
-      pdf.download(`Programa-${existingService.day_of_week || 'Servicio'}-${date}.pdf`);
-      toast.success('PDF descargado', { id: toastId });
+      pdf.print();
+      toast.success('PDF listo para imprimir', { id: toastId });
     } catch (error) {
       console.error(error);
       toast.error('Error generando PDF: ' + error.message, { id: toastId });
@@ -232,8 +232,8 @@ export default function WeeklyEditorV2({
       });
 
       const pdf = await generateAnnouncementsPDF(allForPrint, pdfData || { date });
-      pdf.download(`Anuncios-${existingService?.day_of_week || 'Servicio'}-${date}.pdf`);
-      toast.success('PDF descargado', { id: toastId });
+      pdf.print();
+      toast.success('PDF listo para imprimir', { id: toastId });
     } catch (error) {
       console.error(error);
       toast.error('Error generando PDF: ' + error.message, { id: toastId });
@@ -332,11 +332,11 @@ export default function WeeklyEditorV2({
 
       {/* Action bar */}
       <div className="flex gap-1.5 items-center flex-wrap">
-        <Button onClick={handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Programa">
-          <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Prog.</span>
+        <Button onClick={handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Imprimir Programa">
+          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Prog.</span>
         </Button>
-        <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Descargar Anuncios">
-          <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
+        <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Imprimir Anuncios">
+          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
         </Button>
         {resolvedBlueprint && (
           <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2" title="Restablecer estructura predeterminada">
