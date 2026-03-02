@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { LanguageProvider } from "@/components/utils/i18n";
+import { LanguageProvider } from "@/components/utils/i18n.jsx";
 import { hasPermission, hasDashboardAccess, getLandingPage } from "@/components/utils/permissions";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";

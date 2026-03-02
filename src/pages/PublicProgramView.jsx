@@ -25,7 +25,7 @@ import { useSegmentNotifications } from "@/components/service/useSegmentNotifica
 import ServiceProgramView from "@/components/service/ServiceProgramView";
 import EventProgramView from "@/components/service/EventProgramView";
 import LiveOperationsChat from "@/components/live/LiveOperationsChat";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import LiveViewSkeleton from "@/components/service/LiveViewSkeleton";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { hasPermission } from "@/components/utils/permissions";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
 import { toast } from "sonner";

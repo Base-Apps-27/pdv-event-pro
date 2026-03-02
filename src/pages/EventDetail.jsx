@@ -24,7 +24,7 @@ import EventCalendar from "../components/event/EventCalendar";
 import EventAIHelper from "../components/event/EventAIHelper";
 import EditHistoryModal from "../components/event/EditHistoryModal";
 import { hasPermission } from "@/components/utils/permissions";
-import { useLanguage } from "@/components/utils/i18n";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function EventDetail() {
   const navigate = useNavigate();
