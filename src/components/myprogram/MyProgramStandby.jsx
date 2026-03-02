@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { Calendar } from 'lucide-react';
-import { useLanguage } from '@/components/utils/i18n';
+import { useLanguage } from '@/components/utils/i18n.jsx';
 
 // UX-6 (2026-03-02): Added actionable bilingual guidance so users know what to do
 // when no program is active. Previously showed no next steps.
