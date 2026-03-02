@@ -241,7 +241,9 @@ Deno.serve(async (req) => {
             event_id: eventId || '',
             segment_title: segment.title || '',
             submitter_name: submitter_name || 'Unknown',
-            submitter_email: submitter_email || '',
+            // FIX (2026-03-02): Normalize email to lowercase so entity rate limit query
+            // (which filters by lowercase email) matches consistently.
+            submitter_email: (submitter_email || '').toLowerCase(),
             submitted_at: new Date().toISOString(),
             data_snapshot: updatePayload,
             fields_changed: fieldsChanged,

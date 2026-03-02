@@ -187,13 +187,16 @@ Deno.serve(async (req) => {
         }
 
         // Layer 2: Entity-based persistent rate limit (SEC-3/4, 2026-03-02).
+        // FIX (2026-03-02): Scoped to segment_id (site_id field) to prevent global false positives.
+        // Originally queried ALL weekly submissions globally — 10 different users submitting
+        // to 10 different segments in 2 min would trigger the limit for everyone.
         const twoMinAgo = new Date(Date.now() - 120000).toISOString();
-        const recentSubmissions = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
-            { form_type: 'weekly_service_submission', created_date: { $gte: twoMinAgo } },
+        const recentForSegment = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'weekly_service_submission', site_id: segment_id, created_date: { $gte: twoMinAgo } },
             '-created_date', 20
         );
-        if (recentSubmissions.length >= 10) {
-            console.warn(`[WeeklySubmission] Entity rate limit hit: ${recentSubmissions.length} submissions in 2min`);
+        if (recentForSegment.length >= 5) {
+            console.warn(`[WeeklySubmission] Entity rate limit hit: ${recentForSegment.length} submissions for ${segment_id} in 2min`);
             return Response.json({ error: 'Too many requests. Please wait.' }, { status: 429, headers: corsHeaders });
         }
 

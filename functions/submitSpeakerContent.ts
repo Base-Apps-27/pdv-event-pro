@@ -52,15 +52,16 @@ Deno.serve(async (req) => {
         }
 
         // Layer 2: Entity-based persistent rate limit (SEC-3, 2026-03-02).
-        // Queries PublicFormIdempotency records created by this IP in the last 2 minutes.
-        // Survives Deno Deploy cold starts unlike the in-memory Map.
+        // Scoped to the specific segment being submitted to — prevents global false positives.
+        // FIX (2026-03-02): Originally queried ALL speaker submissions globally, causing
+        // false rate-limit hits when multiple users submitted to different segments simultaneously.
         const twoMinAgo = new Date(Date.now() - 120000).toISOString();
-        const recentFromIp = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
-            { form_type: 'speaker_submission', created_date: { $gte: twoMinAgo } },
+        const recentForSegment = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
+            { form_type: 'speaker_submission', site_id: segment_id, created_date: { $gte: twoMinAgo } },
             '-created_date', 20
         );
-        if (recentFromIp.length >= 10) {
-            console.warn(`[SpeakerSubmission] Entity rate limit hit: ${recentFromIp.length} submissions in 2min`);
+        if (recentForSegment.length >= 5) {
+            console.warn(`[SpeakerSubmission] Entity rate limit hit: ${recentForSegment.length} submissions for segment ${segment_id} in 2min`);
             return Response.json({ error: 'Too many requests. Please wait.' }, { status: 429, headers: corsHeaders });
         }
 
