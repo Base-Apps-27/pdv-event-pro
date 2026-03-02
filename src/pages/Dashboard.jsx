@@ -126,15 +126,20 @@ export default function Dashboard() {
             <LoadingSpinner size="md" />
           </div>
         )}
-        {/* Live Program — compact secondary link (2026-03-02: downsized from hero card) */}
+        {/* Live Program — compact secondary link. Red when a program is active. (2026-03-02) */}
         <div
-          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+            isLive
+              ? 'bg-red-50 border border-red-300 hover:bg-red-100'
+              : 'bg-white border border-gray-200 hover:bg-gray-50'
+          }`}
           onClick={() => navigate(createPageUrl('PublicProgramView'))}
         >
-          <Bell className="w-4 h-4 text-gray-500 shrink-0" />
-          <span className="text-sm font-medium text-gray-700">{t('dashboard.liveProgram.title')}</span>
-          <span className="text-xs text-gray-400 hidden sm:inline">— {t('dashboard.liveProgram.subtitle')}</span>
-          <ArrowRight className="w-3.5 h-3.5 text-gray-400 ml-auto shrink-0" />
+          <Bell className={`w-4 h-4 shrink-0 ${isLive ? 'text-red-500' : 'text-gray-500'}`} />
+          {isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />}
+          <span className={`text-sm font-medium ${isLive ? 'text-red-700' : 'text-gray-700'}`}>{t('dashboard.liveProgram.title')}</span>
+          <span className={`text-xs hidden sm:inline ${isLive ? 'text-red-400' : 'text-gray-400'}`}>— {t('dashboard.liveProgram.subtitle')}</span>
+          <ArrowRight className={`w-3.5 h-3.5 ml-auto shrink-0 ${isLive ? 'text-red-400' : 'text-gray-400'}`} />
         </div>
 
         {/* Quick Actions - 3 Shortcuts */}
