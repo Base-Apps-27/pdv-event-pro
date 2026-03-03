@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Clock, ChevronDown, ChevronUp, Archive } from "lucide-react";
 import { format } from "date-fns";
+import { es as esLocale } from "date-fns/locale";
 
 export default function CustomServicesManager() {
   const { language, t } = useLanguage();
@@ -104,7 +105,7 @@ export default function CustomServicesManager() {
       {/* Header */}
       <div style={gradientStyle} className="px-6 py-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl uppercase text-white mb-2">
+          <h1 className="text-3xl md:text-4xl uppercase text-white mb-2">
             {language === 'es' ? 'Servicios Personalizados' : 'Custom Services'}
           </h1>
           <p className="text-white/90">
@@ -184,71 +185,72 @@ export default function CustomServicesManager() {
                   {service.date && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
+                      {/* 2026-03-03: Use locale-aware date format for consistency with WeeklyServiceManager */}
                       {(() => {
-                        const [y, m, d] = service.date.split('-').map(Number);
-                        const localDate = new Date(y, m - 1, d);
-                        return format(localDate, 'MMM d, yyyy');
+                       const [y, m, d] = service.date.split('-').map(Number);
+                       const localDate = new Date(y, m - 1, d);
+                       return format(localDate, "d 'de' MMM, yyyy", { locale: language === 'es' ? esLocale : undefined });
                       })()}
-                    </div>
-                  )}
-                  {service.time && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      </div>
+                      )}
+                      {service.time && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Clock className="w-4 h-4" />
                       {service.time}
-                    </div>
-                  )}
-                  {service.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2 mt-2">
+                      </div>
+                      )}
+                      {service.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mt-2">
                       {service.description}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                      </p>
+                      )}
+                      </CardContent>
+                      </Card>
+                      ))}
+                      </div>
+                      )}
 
-        {/* Archived Services Section */}
-        {archived.length > 0 && (
-          <div className="mt-8">
-            <Button
-              variant="ghost"
-              onClick={() => setShowArchived(!showArchived)}
-              className="mb-4 text-gray-700"
-            >
-              <Archive className="w-4 h-4 mr-2" />
-              {language === 'es' ? 'Servicios Pasados' : 'Past Services'} ({archived.length})
-              {showArchived ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-            </Button>
+                      {/* Archived Services Section */}
+                      {archived.length > 0 && (
+                      <div className="mt-8">
+                      <Button
+                      variant="ghost"
+                      onClick={() => setShowArchived(!showArchived)}
+                      className="mb-4 text-gray-700"
+                      >
+                      <Archive className="w-4 h-4 mr-2" />
+                      {language === 'es' ? 'Servicios Pasados' : 'Past Services'} ({archived.length})
+                      {showArchived ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+                      </Button>
 
-            {showArchived && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {archived.map((service) => (
-                  <Card 
-                    key={service.id}
-                    className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-200 opacity-75"
-                    onClick={() => handleEdit(service.id)}
-                  >
-                    <CardHeader className="pb-3">
+                      {showArchived && (
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {archived.map((service) => (
+                      <Card 
+                      key={service.id}
+                      className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-200 opacity-75"
+                      onClick={() => handleEdit(service.id)}
+                      >
+                      <CardHeader className="pb-3">
                       <div className="flex justify-between items-start mb-2">
-                        <Badge className="bg-gray-500 text-white">
-                          {language === 'es' ? 'Finalizado' : 'Completed'}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {service.segments?.length || 0} {language === 'es' ? 'segmentos' : 'segments'}
-                        </span>
+                       <Badge className="bg-gray-500 text-white">
+                         {language === 'es' ? 'Finalizado' : 'Completed'}
+                       </Badge>
+                       <span className="text-xs text-gray-500">
+                         {service.segments?.length || 0} {language === 'es' ? 'segmentos' : 'segments'}
+                       </span>
                       </div>
                       <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+                      </CardHeader>
+                      <CardContent className="space-y-2">
                       {service.date && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          {(() => {
-                            const [y, m, d] = service.date.split('-').map(Number);
-                            const localDate = new Date(y, m - 1, d);
-                            return format(localDate, 'MMM d, yyyy');
-                          })()}
+                       <div className="flex items-center gap-2 text-sm text-gray-600">
+                         <Calendar className="w-4 h-4" />
+                         {(() => {
+                           const [y, m, d] = service.date.split('-').map(Number);
+                           const localDate = new Date(y, m - 1, d);
+                           return format(localDate, "d 'de' MMM, yyyy", { locale: language === 'es' ? esLocale : undefined });
+                         })()}
                         </div>
                       )}
                     </CardContent>

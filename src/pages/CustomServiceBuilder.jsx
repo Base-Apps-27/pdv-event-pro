@@ -354,9 +354,15 @@ export default function CustomServiceBuilder() {
       {/* Header */}
       <div className="flex justify-between items-center print:hidden">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate(createPageUrl('CustomServicesManager'))}><ArrowLeft className="w-5 h-5" /></Button>
+          <Button variant="ghost" onClick={async () => {
+            // 2026-03-03: Flush pending auto-save before navigating back (consistency with CustomEditorV2)
+            if (hasUnsavedChanges && serviceId) {
+              await saveServiceMutation.mutateAsync({ ...serviceData, status: 'active', service_type: resolvedServiceType }).catch(() => {});
+            }
+            navigate(createPageUrl('CustomServicesManager'));
+          }}><ArrowLeft className="w-5 h-5" /></Button>
           <div>
-            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? (language === 'es' ? 'Editar Servicio' : 'Edit Service') : (language === 'es' ? 'Nuevo Servicio Personalizado' : 'New Custom Service')}</h1>
+            <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? (language === 'es' ? 'Editar Servicio' : 'Edit Service') : (language === 'es' ? 'Nuevo Servicio Personalizado' : 'New Custom Service')}</h1>
             <p className="text-gray-500 mt-1">{language === 'es' ? 'Crea servicios especiales con horarios y elementos personalizados' : 'Create special services with custom schedules and elements'}</p>
             <div className="flex items-center gap-3 mt-2">
               {existingService?.updated_date && (

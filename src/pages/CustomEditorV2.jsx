@@ -39,7 +39,8 @@ import { toast } from "sonner";
 // V2 hooks (shared with Weekly)
 import { useWeeklyData } from "@/components/service/v2/hooks/useWeeklyData";
 import { useEntityWrite } from "@/components/service/v2/hooks/useEntityWrite";
-import { useExternalSync } from "@/components/service/v2/hooks/useExternalSync";
+// 2026-03-03: useExternalSync removed for consistency with WeeklyEditorV2.
+// Real-time entity subscriptions + React Query already push external changes.
 import { useMoveSegment } from "@/components/service/v2/actions/useMoveSegment";
 import { useSpecialSegment } from "@/components/service/v2/actions/useSpecialSegment";
 
@@ -95,8 +96,8 @@ export default function CustomEditorV2() {
     dirtyIds, flushAll, flushEntity,
   } = useEntityWrite(queryKey);
 
-  // ── External sync ──
-  const { externalChangeAvailable, handleReload } = useExternalSync(serviceId, queryKey);
+  // 2026-03-03: External sync removed — real-time entity subscriptions handle freshness
+  // (consistent with WeeklyEditorV2 which removed useExternalSync on 2026-03-02).
 
   // ── Action hooks ──
   const { move: moveSegment } = useMoveSegment(queryKey);
@@ -303,7 +304,7 @@ export default function CustomEditorV2() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
+            <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">
               {en ? 'New Custom Service' : 'Nuevo Servicio Personalizado'}
             </h1>
             <p className="text-gray-500 mt-1">
@@ -331,7 +332,7 @@ export default function CustomEditorV2() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-5xl text-gray-900 uppercase tracking-tight">
+            <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">
               {existingService.name || (en ? 'Edit Service' : 'Editar Servicio')}
             </h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
@@ -348,9 +349,7 @@ export default function CustomEditorV2() {
                   {en ? 'Saving...' : 'Guardando...'}
                 </Badge>
               )}
-              <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
-                V2 Entity-First
-              </Badge>
+              {/* 2026-03-03: Removed "V2 Entity-First" badge — developer artifact, not user-facing */}
             </div>
           </div>
         </div>
@@ -371,17 +370,7 @@ export default function CustomEditorV2() {
         </div>
       </div>
 
-      {/* External change banner */}
-      {externalChangeAvailable && (
-        <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 flex items-center justify-between print:hidden">
-          <span className="text-sm text-blue-800">
-            {en ? 'Another admin made changes.' : 'Otro administrador hizo cambios.'}
-          </span>
-          <Button size="sm" onClick={handleReload} className="bg-blue-600 text-white hover:bg-blue-700">
-            {en ? 'Reload' : 'Recargar'}
-          </Button>
-        </div>
-      )}
+      {/* 2026-03-03: External change banner removed — real-time subs handle data freshness */}
 
       {/* Service Metadata */}
       <CustomMetadataForm service={existingService} onServiceUpdated={handleServiceUpdated} />
