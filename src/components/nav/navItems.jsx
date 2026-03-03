@@ -58,7 +58,7 @@ export const secondaryNav = [
     icon: Plus,
     page: 'CustomServicesManager',
     permission: 'view_services',
-    matchPages: ['CustomServicesManager', 'CustomServiceBuilder'],
+    matchPages: ['CustomServicesManager', 'CustomServiceBuilder', 'CustomEditorV2'],
   },
   {
     id: 'reports',
