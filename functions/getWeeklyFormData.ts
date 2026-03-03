@@ -79,9 +79,11 @@ Deno.serve(async (req) => {
             console.warn("[getWeeklyFormData] Could not fetch ServiceSchedule:", e.message);
         }
 
-        // Fetch upcoming services
+        // Fetch upcoming services — sort descending so newest dates appear first
+        // FIX (2026-03-03): Ascending sort with limit=50 caused old services to
+        // consume the entire result window before future dates were reached.
         const allActiveServices = await base44.asServiceRole.entities.Service.filter(
-            { status: 'active' }, 'date', 50
+            { status: 'active' }, '-date', 50
         );
         const upcomingServices = allActiveServices.filter(s => s.date >= todayETStr && s.date <= weekAheadStr);
 
