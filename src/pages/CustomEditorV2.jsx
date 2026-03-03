@@ -295,18 +295,6 @@ export default function CustomEditorV2() {
     );
   }
 
-  // ── No service: auto-create immediately (2026-03-03) ──
-  // Previous behavior showed an intermediate "Create Service" button which was
-  // redundant — user already clicked "Create Service" on CustomServicesManager.
-  // Now we auto-trigger creation and show a loading state instead.
-  const [autoCreateTriggered, setAutoCreateTriggered] = useState(false);
-  useEffect(() => {
-    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
-      setAutoCreateTriggered(true);
-      handleCreateNew();
-    }
-  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading]);
-
   if (!serviceId || !existingService) {
     return (
       <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[50vh]">
