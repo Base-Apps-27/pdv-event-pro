@@ -21,6 +21,12 @@ import ArtsChangeHistory from '@/components/publicforms/ArtsChangeHistory';
 import { PublicFormLangProvider, usePublicLang } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
 
+/**
+ * PERF-FIX (2026-03-03): Show gate form immediately while data loads in background.
+ * Previously the user saw a full-page spinner for 10-26s on cold starts.
+ * Now gate + data load happen in parallel — user fills in name/email while
+ * segments load. If gate is passed before data arrives, a small spinner shows.
+ */
 export default function PublicArtsForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,11 +61,8 @@ export default function PublicArtsForm() {
     loadData();
   }, []);
 
-  if (loading) {
-    return <LoadingSpinner size="fullPage" label="Cargando formulario..." />;
-  }
-
-  if (error) {
+  // Hard error: no event found at all (only show after loading finishes)
+  if (!loading && error) {
     return (
       <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-[720px]">
@@ -77,10 +80,15 @@ export default function PublicArtsForm() {
           <div className="flex justify-end mb-2">
             <PublicFormLangToggle />
           </div>
+          {/* Show header with event info once loaded, or placeholder header while loading */}
           <ArtsFormHeader event={event} />
 
           {!gateUser ? (
+            /* Gate shows immediately — no need to wait for data */
             <ArtsGateForm onEnter={setGateUser} />
+          ) : loading ? (
+            /* User passed gate but data still loading — brief spinner */
+            <LoadingSpinner size="fullPage" label="Cargando segmentos..." />
           ) : (
             <ArtsFormContent segments={segments} gateUser={gateUser} isUnica={isUnica} eventId={event?.id} />
           )}
