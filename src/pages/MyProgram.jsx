@@ -140,21 +140,16 @@ export default function MyProgram() {
     return todaySessions[0].id;
   }, [sessionLabels, segments, currentTime]);
 
-  // Auto-select session: use auto-detection unless user manually overrode
+  // Auto-select session: use auto-detection unless user manually overrode.
+  // Always set on first load and when auto-detected changes (if no manual override).
   useEffect(() => {
     if (sessionLabels.length === 0) return;
-    
-    if (!selectedSession) {
-      // First load — use auto-detected
-      setSelectedSession(autoDetectedSession || sessionLabels[0].id);
-      return;
-    }
-    
-    // Auto-switch only if user hasn't manually overridden
-    if (!userOverrodeSession && autoDetectedSession && autoDetectedSession !== selectedSession) {
+    if (!autoDetectedSession) return;
+
+    if (!selectedSession || !userOverrodeSession) {
       setSelectedSession(autoDetectedSession);
     }
-  }, [sessionLabels, autoDetectedSession, selectedSession, userOverrodeSession]);
+  }, [sessionLabels, autoDetectedSession, userOverrodeSession]);
 
   // Reset override when context changes (different service/event loaded)
   useEffect(() => {
