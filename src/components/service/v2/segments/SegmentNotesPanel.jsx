@@ -15,16 +15,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { NOTES_FIELDS } from "../constants/fieldMap";
 import SegmentActionsEditor from "@/components/session/SegmentActionsEditor";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const VISIBILITY_TOGGLES = [
-  { column: 'show_in_general',    label: 'General' },
-  { column: 'show_in_projection', label: 'Proyección' },
-  { column: 'show_in_sound',      label: 'Sonido' },
-  { column: 'show_in_ushers',     label: 'Ujieres' },
-  { column: 'show_in_livestream', label: 'Livestream' },
+  { column: 'show_in_general',    labelKey: 'notes.general' },
+  { column: 'show_in_projection', labelKey: 'notes.projection' },
+  { column: 'show_in_sound',      labelKey: 'notes.sound' },
+  { column: 'show_in_ushers',     labelKey: 'notes.ushers' },
+  { column: 'show_in_livestream', labelKey: 'notes.livestream' },
 ];
 
 export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-3 pt-2 border-t">
       {/* Duration + Stage Call in one row */}
@@ -35,14 +37,14 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
 
       {/* Visibility toggles */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-gray-700">Visibilidad en Reportes</Label>
+        <Label className="text-xs font-semibold text-gray-700">{t('notes.reportVisibility')}</Label>
         <div className="flex flex-wrap gap-3">
           {VISIBILITY_TOGGLES.map(v => (
             <VisibilityToggle
               key={v.column}
               segment={segment}
               column={v.column}
-              label={v.label}
+              label={t(v.labelKey)}
               onWrite={onWrite}
             />
           ))}
@@ -63,7 +65,7 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
           key={f.column}
           segment={segment}
           column={f.column}
-          placeholder={f.label}
+          placeholder={t(f.labelKey)}
           onWrite={onWrite}
         />
       ))}
@@ -72,11 +74,12 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
 }
 
 function DurationInput({ segment, onWriteDuration }) {
+  const { t } = useLanguage();
   const [local, setLocal] = useState(segment.duration_min || 0);
   useEffect(() => { setLocal(segment.duration_min || 0); }, [segment.duration_min]);
   return (
     <div className="space-y-1">
-      <Label className="text-xs font-semibold text-gray-700">Duración (min)</Label>
+      <Label className="text-xs font-semibold text-gray-700">{t('notes.durationMin')}</Label>
       <Input
         type="number"
         value={local}
@@ -94,11 +97,12 @@ function DurationInput({ segment, onWriteDuration }) {
 }
 
 function StageCallInput({ segment, onWrite }) {
+  const { t } = useLanguage();
   const [local, setLocal] = useState(segment.stage_call_offset_min ?? '');
   useEffect(() => { setLocal(segment.stage_call_offset_min ?? ''); }, [segment.stage_call_offset_min]);
   return (
     <div className="space-y-1">
-      <Label className="text-xs font-semibold text-gray-700">Stage Call (min antes)</Label>
+      <Label className="text-xs font-semibold text-gray-700">{t('notes.stageCallMin')}</Label>
       <Input
         type="number"
         value={local}

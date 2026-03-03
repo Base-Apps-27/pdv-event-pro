@@ -19,6 +19,7 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { FIELD_REGISTRY } from "../constants/fieldMap";
 import SpeakerMaterialSection from "./SpeakerMaterialSection";
 import ParsedContentPreview from "../../ParsedContentPreview";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 /**
  * Phase 2 (2026-03-03): Color-coded field boxes for visual tracking.
@@ -49,6 +50,7 @@ const FIELD_BOX_STYLES = {
  * @param {function} onOpenVerseParser - () => void (already bound to segmentId by parent)
  */
 const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onWriteSongs, onOpenVerseParser }) {
+  const { t } = useLanguage();
   const config = FIELD_REGISTRY[field];
   if (!config) {
     console.warn(`[FieldRenderer] Unknown ui_fields key: "${field}" on segment ${segment.id}`);
@@ -61,12 +63,15 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
   const segmentId = segment.id;
   const value = segment[config.column] || '';
   const box = FIELD_BOX_STYLES[field] || { bg: 'bg-gray-50', border: 'border-gray-200', label: 'text-gray-700' };
+  // i18n (2026-03-03): Resolve label from translation key
+  const label = t(config.labelKey);
+  const hint = config.hintKey ? t(config.hintKey) : null;
 
   return (
     <div className={`${box.bg} border ${box.border} rounded p-2 space-y-0.5`}>
       {/* Label — includes icon prefix when defined in FIELD_BOX_STYLES */}
       <Label className={`text-[10px] ${box.label} font-semibold print:font-semibold`}>
-        {box.icon ? `${box.icon} ${config.label}` : config.label}
+        {box.icon ? `${box.icon} ${label}` : label}
       </Label>
 
       {/* Print: read-only */}
@@ -82,8 +87,8 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
             column={config.column}
             value={value}
             type={config.autocompleteType}
-            placeholder={config.label}
-            hint={config.hint}
+            placeholder={label}
+            hint={hint}
             onWrite={onWrite}
           />
         )}
@@ -92,7 +97,7 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
             segmentId={segmentId}
             column={config.column}
             value={value}
-            placeholder={config.label}
+            placeholder={label}
             onWrite={onWrite}
           />
         )}
@@ -105,10 +110,8 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
             ) : (
               <div className="mt-2 border border-dashed rounded-md p-4 text-center bg-gray-50">
                 <BookOpen className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-500">Sin contenido procesado</p>
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Las citas bíblicas son de solo lectura aquí. Ve a <strong>Procesamiento de Mensajes</strong> para añadir o modificar contenido.
-                </p>
+                <p className="text-xs text-gray-500">{t('field.noProcessedContent')}</p>
+                <p className="text-[10px] text-gray-400 mt-1" dangerouslySetInnerHTML={{ __html: t('field.versesReadOnly') }} />
               </div>
             )}
             <SpeakerMaterialSection segment={segment} onWrite={onWrite} />
@@ -119,7 +122,7 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
             segmentId={segmentId}
             column={config.column}
             value={value}
-            placeholder={config.label}
+            placeholder={label}
             onWrite={onWrite}
           />
         )}

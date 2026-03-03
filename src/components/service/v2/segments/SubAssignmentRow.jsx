@@ -11,6 +11,7 @@ import React, { useState, useEffect, useRef, memo } from "react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 /**
  * @param {object} subConfig - { label, person_field_name, duration_min } from ui_sub_assignments
@@ -29,6 +30,7 @@ import AutocompleteInput from "@/components/ui/AutocompleteInput";
  * 4. parentSegmentId is always required for creates to prevent orphan segments.
  */
 export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteChild, parentSegmentId }) {
+  const { t } = useLanguage();
   const value = childEntity?.presenter || '';
   const [local, setLocal] = useState(value);
   const createTimerRef = useRef(null);
@@ -72,16 +74,16 @@ export default memo(function SubAssignmentRow({ subConfig, childEntity, onWriteC
           {subConfig.label} {subConfig.duration_min ? `(${subConfig.duration_min} min)` : ''}
         </Label>
         {value ? (
-          <Badge variant="outline" className="text-[9px] bg-green-50 border-green-300 text-green-700">Asignado</Badge>
+          <Badge variant="outline" className="text-[9px] bg-green-50 border-green-300 text-green-700">{t('sub.assigned')}</Badge>
         ) : (
-          <Badge variant="outline" className="text-[9px] bg-gray-50 border-gray-300 text-gray-500">Pendiente</Badge>
+          <Badge variant="outline" className="text-[9px] bg-gray-50 border-gray-300 text-gray-500">{t('sub.pending')}</Badge>
         )}
       </div>
       {/* Screen: editable */}
       <div className="print:hidden">
         <AutocompleteInput
           type="person"
-          placeholder={`Nombre para ${subConfig.label}`}
+          placeholder={t('sub.nameFor').replace('{label}', subConfig.label)}
           value={local}
           onChange={handleChange}
           className="text-sm"

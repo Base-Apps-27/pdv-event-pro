@@ -12,6 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { TEAM_FIELDS } from "../constants/fieldMap";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const AUTOCOMPLETE_TYPE_MAP = {
   coordinators:     'person',
@@ -22,9 +23,10 @@ const AUTOCOMPLETE_TYPE_MAP = {
 };
 
 export default memo(function TeamSection({ session, accentColor = 'teal', onWriteSession, label }) {
-  // Phase 2 (2026-03-02): Optional label prop overrides default "EQUIPO {session.name}"
-  // Used by CustomEditorV2 to show "EQUIPO DEL SERVICIO" instead of a generic session name
-  const displayLabel = label || `EQUIPO ${session.name}`;
+  const { t } = useLanguage();
+  // Phase 2 (2026-03-02): Optional label prop overrides default team header
+  // Used by CustomEditorV2 to show custom label instead of a generic session name
+  const displayLabel = label || t('team.label').replace('{name}', session.name);
   return (
     <Card className={`bg-${accentColor}-50 border-${accentColor}-300 border-2`}>
       <CardHeader className="pb-2">
@@ -38,7 +40,7 @@ export default memo(function TeamSection({ session, accentColor = 'teal', onWrit
               key={f.key}
               session={session}
               column={f.column}
-              label={f.label}
+              label={t(f.labelKey)}
               onWriteSession={onWriteSession}
             />
           ))}
@@ -50,7 +52,7 @@ export default memo(function TeamSection({ session, accentColor = 'teal', onWrit
             if (!val) return null;
             return (
               <div key={f.key} className="text-xs">
-                <span className="font-semibold">{f.label}:</span> {val}
+                <span className="font-semibold">{t(f.labelKey)}:</span> {val}
               </div>
             );
           })}

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "lucide-react";
 import { SPEAKER_MATERIAL_FIELDS } from "../constants/fieldMap";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 function isValidUrl(str) {
   if (!str) return false;
@@ -19,16 +20,18 @@ function isValidUrl(str) {
 }
 
 export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-slate-50 border border-slate-200 rounded p-3 mt-2 space-y-2">
       <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
         <Link className="w-3 h-3" />
-        Material del Orador
+        {t('speaker.materialTitle')}
       </Label>
 
       {/* Screen: editable */}
       <div className="print:hidden space-y-2">
         {SPEAKER_MATERIAL_FIELDS.map(f => {
+          const fLabel = t(f.labelKey);
           if (f.type === 'checkbox') {
             return (
               <div key={f.column} className="flex items-center space-x-2">
@@ -42,7 +45,7 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
                   htmlFor={`${f.column}-${segment.id}`}
                   className="text-xs cursor-pointer text-gray-600"
                 >
-                  {f.label}
+                  {fLabel}
                 </label>
               </div>
             );
@@ -52,7 +55,7 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
               key={f.column}
               segment={segment}
               column={f.column}
-              placeholder={f.label}
+              placeholder={fLabel}
               onWrite={onWrite}
             />
           );
@@ -63,15 +66,16 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
       <div className="hidden print:block space-y-1">
         {SPEAKER_MATERIAL_FIELDS.map(f => {
           const val = segment[f.column];
+          const pLabel = t(f.labelKey);
           if (!val) return null;
           if (f.type === 'checkbox') {
             return val ? (
-              <div key={f.column} className="text-xs text-gray-700">✓ {f.label}</div>
+              <div key={f.column} className="text-xs text-gray-700">✓ {pLabel}</div>
             ) : null;
           }
           return (
             <div key={f.column} className="text-xs">
-              <span className="font-semibold">{f.label}:</span>{' '}
+              <span className="font-semibold">{pLabel}:</span>{' '}
               {isValidUrl(val) ? (
                 <a href={val.startsWith('http') ? val : `https://${val}`} className="text-blue-600 underline">{val}</a>
               ) : (

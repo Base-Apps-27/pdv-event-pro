@@ -12,8 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default memo(function PreServiceSection({ session, psd, onWritePSD }) {
+  const { t } = useLanguage();
   const value = psd?.general_notes || '';
   const facilityNotes = psd?.facility_notes || '';
   const hasContent = !!(value || facilityNotes);
@@ -29,9 +31,9 @@ export default memo(function PreServiceSection({ session, psd, onWritePSD }) {
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2 text-gray-700">
           <Clock className="w-4 h-4" />
-          PRE-SERVICIO
+          {t('preService.title')}
           <Badge variant="outline" className="ml-auto text-xs text-gray-600 border-gray-500 print:hidden">
-            Antes de iniciar
+            {t('preService.badge')}
           </Badge>
           {!expanded && (
             <Button variant="ghost" size="sm" onClick={() => setExpanded(true)} className="print:hidden h-6 px-2 text-xs text-gray-500">
@@ -45,7 +47,7 @@ export default memo(function PreServiceSection({ session, psd, onWritePSD }) {
           {/* Screen: editable */}
           <div className="print:hidden space-y-2">
             <Textarea
-              placeholder="Instrucciones pre-servicio (opcional)..."
+              placeholder={t('preService.placeholder')}
               value={local}
               onChange={(e) => {
                 setLocal(e.target.value);
@@ -56,7 +58,7 @@ export default memo(function PreServiceSection({ session, psd, onWritePSD }) {
             />
             {!value && (
               <Button variant="ghost" size="sm" onClick={() => setExpanded(false)} className="w-full text-xs text-gray-400">
-                <ChevronUp className="w-3 h-3 mr-1" />Ocultar
+                <ChevronUp className="w-3 h-3 mr-1" />{t('preService.hide')}
               </Button>
             )}
           </div>

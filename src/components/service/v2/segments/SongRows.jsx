@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, Music } from "lucide-react";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 /**
  * Extract songs array from flat segment entity fields.
@@ -34,6 +35,7 @@ function getSongsFromEntity(segment) {
 }
 
 export default memo(function SongRows({ segment, onWriteSongs, canEdit = true }) {
+  const { t } = useLanguage();
   const [songs, setSongs] = useState(() => getSongsFromEntity(segment));
 
   // Sync from entity when segment changes
@@ -78,15 +80,15 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
           <Music className="w-3 h-3" />
-          Canciones
+          {t('songs.title')}
         </Label>
         {canEdit && (
           <div className="flex items-center gap-1 print:hidden">
             <span className="text-[10px] text-gray-400">{songs.length}</span>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={removeSlot} disabled={songs.length <= 1} title="Quitar canción">
+            <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={removeSlot} disabled={songs.length <= 1} title={t('songs.removeSong')}>
               <Minus className="w-3 h-3" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={addSlot} disabled={songs.length >= 10} title="Agregar canción">
+            <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={addSlot} disabled={songs.length >= 10} title={t('songs.addSong')}>
               <Plus className="w-3 h-3" />
             </Button>
           </div>
@@ -100,7 +102,7 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
             <div className="col-span-5">
               <AutocompleteInput
                 type="songTitle"
-                placeholder={`Canción ${idx + 1}`}
+                placeholder={t('songs.songN').replace('{n}', idx + 1)}
                 value={song.title}
                 onChange={(e) => updateSong(idx, 'title', e.target.value)}
                 className="text-xs"
@@ -109,7 +111,7 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
             <div className="col-span-5">
               <AutocompleteInput
                 type="worshipLeader"
-                placeholder="Líder"
+                placeholder={t('songs.lead')}
                 value={song.lead}
                 onChange={(e) => updateSong(idx, 'lead', e.target.value)}
                 className="text-xs"
@@ -117,7 +119,7 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
             </div>
             <div className="col-span-2">
               <Input
-                placeholder="Tono"
+                placeholder={t('songs.key')}
                 value={song.key}
                 onChange={(e) => updateSong(idx, 'key', e.target.value)}
                 className="text-xs px-1 text-center"
