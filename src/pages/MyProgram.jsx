@@ -96,36 +96,48 @@ export default function MyProgram() {
   // Session labels for picker (with auto-abbreviated labels)
   const sessionLabels = useMemo(() => getSessionLabels(segments, language), [segments, language]);
 
-  // Auto-detect which session is active (for auto-switching between 9:30am / 11:30am)
+  // Auto-detect which session is currently active or about to start.
+  // For multi-day events: match by date first, then by time.
+  // For same-day services: match by time (15-min pre-start window).
   // Only auto-switch if the user hasn't manually overridden their selection.
   const autoDetectedSession = useMemo(() => {
-    if (sessionLabels.length <= 1) return sessionLabels[0]?.id || null;
-    if (!currentTime) return sessionLabels[0]?.id || null;
+    if (sessionLabels.length === 0) return null;
+    if (sessionLabels.length === 1) return sessionLabels[0].id;
+    if (!currentTime) return sessionLabels[0].id;
 
     const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(currentTime);
 
-    // Find the session whose segments are currently active or about to start
-    // Walk sessions in reverse order: pick the latest one whose first segment has started
-    for (let i = sessionLabels.length - 1; i >= 0; i--) {
-      const sessId = sessionLabels[i].id;
+    // Step 1: Filter to today's sessions only (if sessions have dates)
+    const hasDateInfo = sessionLabels.some(s => s.date);
+    const todaySessions = hasDateInfo
+      ? sessionLabels.filter(s => !s.date || s.date === todayStr)
+      : sessionLabels; // no date info = treat all as same-day
+
+    // If no sessions today, fall back to first session overall
+    if (todaySessions.length === 0) return sessionLabels[0].id;
+
+    // Step 2: Among today's sessions, find the one currently active or about to start.
+    // Walk in reverse: pick the latest session whose first segment has started (or within 15 min).
+    for (let i = todaySessions.length - 1; i >= 0; i--) {
+      const sessId = todaySessions[i].id;
       const sessSegments = segments.filter(s => s._sessionId === sessId);
       if (sessSegments.length === 0) continue;
-      
-      // Find earliest start in this session
+
       const earliest = sessSegments.reduce((min, s) => {
         if (!s.start_time) return min;
         const [h, m] = s.start_time.split(':').map(Number);
         const t = h * 60 + m;
         return t < min ? t : min;
       }, Infinity);
-      
-      // If now is within 15 min before the session start or after it, select it
+
       if (earliest !== Infinity && nowMin >= earliest - 15) {
         return sessId;
       }
     }
 
-    return sessionLabels[0]?.id || null;
+    // Step 3: Nothing started yet today — pick the first today session
+    return todaySessions[0].id;
   }, [sessionLabels, segments, currentTime]);
 
   // Auto-select session: use auto-detection unless user manually overrode
