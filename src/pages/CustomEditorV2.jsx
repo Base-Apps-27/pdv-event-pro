@@ -298,6 +298,15 @@ export default function CustomEditorV2() {
     );
   }
 
+  // ── Auto-create on mount when no serviceId (2026-03-03) ──
+  // Eliminates redundant "Create Service" button — user already clicked it on CustomServicesManager.
+  useEffect(() => {
+    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
+      setAutoCreateTriggered(true);
+      handleCreateNew();
+    }
+  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading, handleCreateNew]);
+
   if (!serviceId || !existingService) {
     return (
       <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[50vh]">
