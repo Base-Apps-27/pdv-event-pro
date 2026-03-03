@@ -21,6 +21,27 @@ import SpeakerMaterialSection from "./SpeakerMaterialSection";
 import ParsedContentPreview from "../../ParsedContentPreview";
 
 /**
+ * Phase 2 (2026-03-03): Color-coded field boxes for visual tracking.
+ * Matches the blue Translator box pattern from SegmentCard.
+ * Each field type gets a distinctive color so admins can scan quickly:
+ *   - leader/presenter/preacher (person): green
+ *   - title: amber
+ *   - verse: purple
+ *   - description: slate
+ *   - translator: teal (blue handled by SegmentCard wrapper)
+ *   - default: neutral
+ */
+const FIELD_BOX_STYLES = {
+  leader:      { bg: 'bg-green-50', border: 'border-green-200', label: 'text-green-800' },
+  presenter:   { bg: 'bg-green-50', border: 'border-green-200', label: 'text-green-800' },
+  preacher:    { bg: 'bg-green-50', border: 'border-green-200', label: 'text-green-800' },
+  title:       { bg: 'bg-amber-50', border: 'border-amber-200', label: 'text-amber-800' },
+  verse:       { bg: 'bg-purple-50', border: 'border-purple-200', label: 'text-purple-800' },
+  description: { bg: 'bg-slate-50', border: 'border-slate-200', label: 'text-slate-700' },
+  translator:  { bg: 'bg-blue-50',  border: 'border-blue-200',  label: 'text-blue-800' },
+};
+
+/**
  * @param {object} segment - Raw Segment entity object
  * @param {string} field - Key from segment.ui_fields (e.g. "leader", "verse")
  * @param {function} onWrite - (segmentId, column, value) => void
@@ -30,7 +51,6 @@ import ParsedContentPreview from "../../ParsedContentPreview";
 const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onWriteSongs, onOpenVerseParser }) {
   const config = FIELD_REGISTRY[field];
   if (!config) {
-    // Unknown field key — warn once, don't crash
     console.warn(`[FieldRenderer] Unknown ui_fields key: "${field}" on segment ${segment.id}`);
     return null;
   }
@@ -40,11 +60,12 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
 
   const segmentId = segment.id;
   const value = segment[config.column] || '';
+  const box = FIELD_BOX_STYLES[field] || { bg: 'bg-gray-50', border: 'border-gray-200', label: 'text-gray-700' };
 
   return (
-    <div className="space-y-0.5">
+    <div className={`${box.bg} border ${box.border} rounded p-2 space-y-0.5`}>
       {/* Label */}
-      <Label className="text-[10px] text-gray-500 font-medium print:font-semibold">{config.label}</Label>
+      <Label className={`text-[10px] ${box.label} font-semibold print:font-semibold`}>{config.label}</Label>
 
       {/* Print: read-only */}
       {value && (
