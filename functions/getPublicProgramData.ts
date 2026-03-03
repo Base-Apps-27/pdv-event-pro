@@ -23,7 +23,33 @@ async function withRetry(fn, maxRetries = 2) {
     }
 }
 
-
+/**
+ * PRODUCTION-READINESS FIX (2026-03-03): sortSessionsChronologically was used but never defined.
+ * Copied from buildProgramSnapshot for parity. This function is the fallback path when
+ * the cache is stale or unavailable — it MUST be self-contained.
+ */
+function sortSessionsChronologically(sessions) {
+    return [...sessions].sort((a, b) => {
+        const aDate = a?.date || '';
+        const bDate = b?.date || '';
+        if (aDate !== bDate) {
+            if (!aDate) return 1;
+            if (!bDate) return -1;
+            return aDate.localeCompare(bDate);
+        }
+        const aTime = a?.planned_start_time || '';
+        const bTime = b?.planned_start_time || '';
+        if (aTime !== bTime) {
+            if (!aTime) return 1;
+            if (!bTime) return -1;
+            return aTime.localeCompare(bTime);
+        }
+        const aOrder = Number.isFinite(a?.order) ? a.order : Infinity;
+        const bOrder = Number.isFinite(b?.order) ? b.order : Infinity;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (a?.name || '').localeCompare(b?.name || '');
+    });
+}
 
 Deno.serve(async (req) => {
     try {
