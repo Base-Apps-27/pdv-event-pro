@@ -33,7 +33,7 @@ import { useLanguage } from "@/components/utils/i18n";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Download, Eye, Plus, FileText } from "lucide-react";
+import { Loader2, ArrowLeft, Printer, Eye, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 // V2 hooks (shared with Weekly)
@@ -212,12 +212,11 @@ export default function CustomEditorV2() {
     queryClient.invalidateQueries({ queryKey: ['customServiceV2', serviceId] });
   }, [queryClient, serviceId]);
 
-  // ── PDF handlers ──
+  // ── PDF handlers (2026-03-03: changed from download to print for consistency with Weekly V2) ──
   const handlePrintProgram = useCallback(async () => {
     if (!existingService) return;
-    const toastId = toast.loading(en ? 'Generating PDF...' : 'Generando PDF...');
+    const toastId = toast.loading(en ? 'Generating PDF...' : 'Generando PDF del Programa...');
     try {
-      // Build a minimal serviceData shape for the PDF generator
       const pdfServiceData = {
         ...existingService,
         segments: segments.map(seg => ({
@@ -229,14 +228,18 @@ export default function CustomEditorV2() {
         })),
       };
       const result = await generateServiceProgramPDFWithAutoFit(pdfServiceData);
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(result.pdf);
-      link.download = `Programa-${existingService.date || 'servicio'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      toast.success(en ? 'PDF generated' : 'PDF generado', { id: toastId });
+      // result.pdf is a Blob — need pdfmake doc for .print(). Rebuild doc for print.
+      // Simpler: open blob in new tab for printing
+      const url = URL.createObjectURL(result.pdf);
+      const printWindow = window.open(url);
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+          // Cleanup after a delay to allow print dialog
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        };
+      }
+      toast.success(en ? 'PDF ready to print' : 'PDF listo para imprimir', { id: toastId });
     } catch (err) {
       console.error('[PDF]', err);
       toast.error('Error: ' + err.message, { id: toastId });
@@ -274,8 +277,8 @@ export default function CustomEditorV2() {
         return;
       }
       const pdf = await generateAnnouncementsPDF(allForPrint, existingService || { date: new Date().toISOString().split('T')[0] });
-      pdf.download(`Anuncios-${existingService?.date || 'servicio'}.pdf`);
-      toast.success(en ? 'PDF generated' : 'PDF generado', { id: toastId });
+      pdf.print();
+      toast.success(en ? 'PDF ready to print' : 'PDF listo para imprimir', { id: toastId });
     } catch (err) {
       console.error('[Announcements PDF]', err);
       toast.error('Error: ' + err.message, { id: toastId });
@@ -353,14 +356,14 @@ export default function CustomEditorV2() {
         </div>
         {/* Action bar — matches Weekly V2 compact style */}
         <div className="flex gap-1.5 items-center flex-wrap">
-          <Button onClick={handlePrintProgram} style={tealStyle} size="sm" className="font-semibold text-xs h-8 px-2" title={en ? 'Download Program PDF' : 'Imprimir Programa'}>
-            <Download className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Program' : 'Prog.'}</span>
+          <Button onClick={handlePrintProgram} style={tealStyle} size="sm" className="font-semibold text-xs h-8 px-2" title={en ? 'Print Program' : 'Imprimir Programa'}>
+            <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Program' : 'Prog.'}</span>
           </Button>
           <Button onClick={handlePrintAnnouncements} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2"
             disabled={!selectedAnnouncements.length}
-            title={en ? 'Download Announcements PDF' : 'Imprimir Anuncios'}
+            title={en ? 'Print Announcements' : 'Imprimir Anuncios'}
           >
-            <FileText className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Announce.' : 'Anun.'}</span>
+            <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Announce.' : 'Anun.'}</span>
           </Button>
           <Button onClick={() => navigate(createPageUrl('PublicProgramView'))} variant="outline" size="sm" className="text-xs h-8 px-2" title={en ? 'Live View' : 'Vista en Vivo'}>
             <Eye className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{en ? 'Live' : 'Vivo'}</span>
