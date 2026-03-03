@@ -166,7 +166,17 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
-        const body = await req.json();
+
+        // ── PAYLOAD SIZE GUARD (2026-03-03: parity with submitArtsSegment) ──
+        // Prevents blob injection. Weekly submissions are text + URLs, 100KB is generous.
+        const rawBody = await req.text();
+        const MAX_BODY_SIZE = 100_000; // 100KB
+        if (rawBody.length > MAX_BODY_SIZE) {
+            console.warn(`[WeeklySubmission] Payload too large: ${rawBody.length} bytes from ${clientIp}`);
+            return Response.json({ error: 'Payload too large' }, { status: 413, headers: corsHeaders });
+        }
+        const body = JSON.parse(rawBody);
+
         const { segment_id, content, title, presentation_url, notes_url, content_is_slides_only, idempotencyKey, device_info } = body;
         // Dynamic mirror targets: array of composite IDs to also receive this submission
         // Backward compat: legacy apply_to_both_services boolean still works
@@ -178,6 +188,21 @@ Deno.serve(async (req) => {
         if (body.website) {
             console.warn(`[WeeklySubmission] Honeypot triggered from ${clientIp}`);
             return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
+        // ── URL FIELD VALIDATION (2026-03-03: parity with submitArtsSegment SEC-6) ──
+        // Only http/https schemes allowed. Blocks javascript:, data:, file: injection.
+        const URL_FIELDS_TO_CHECK = { presentation_url, notes_url };
+        for (const [fieldName, val] of Object.entries(URL_FIELDS_TO_CHECK)) {
+            if (val && typeof val === 'string' && val.trim() !== '') {
+                const trimmed = val.trim().toLowerCase();
+                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                    return Response.json(
+                        { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                        { status: 400, headers: corsHeaders }
+                    );
+                }
+            }
         }
 
         // Layer 2: Entity-based persistent rate limit (SEC-3/4, 2026-03-02).
