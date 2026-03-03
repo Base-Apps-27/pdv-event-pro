@@ -558,4 +558,149 @@ export const en = {
 
   // Offline
   'offline.banner': 'You are offline — showing last known data',
+
+  // ── Weekly Service Editor V2 (2026-03-03) ──
+
+  // Day labels
+  'day.Sunday': 'Sunday', 'day.Monday': 'Monday', 'day.Tuesday': 'Tuesday',
+  'day.Wednesday': 'Wednesday', 'day.Thursday': 'Thursday', 'day.Friday': 'Friday', 'day.Saturday': 'Saturday',
+
+  // WeeklyEditorV2
+  'weekly.toast.generatingProgram': 'Generating Program PDF...',
+  'weekly.toast.noDataForPdf': 'No data available to generate PDF',
+  'weekly.toast.pdfReady': 'PDF ready to print',
+  'weekly.toast.pdfError': 'Error generating PDF: ',
+  'weekly.toast.generatingAnnouncements': 'Generating Announcements PDF...',
+  'weekly.toast.noAnnouncements': 'No announcements',
+  'weekly.toast.repairSuccess': 'Structure repaired successfully',
+  'weekly.toast.repairError': 'Error repairing: ',
+  'weekly.noSessions': 'No sessions found for this service.',
+  'weekly.serviceExistsNoSessions': 'The service exists (ID: {id}) but has no sessions. Reset from the blueprint to recreate the structure.',
+  'weekly.repairing': 'Repairing...',
+  'weekly.repairStructure': 'Repair Structure',
+  'weekly.printProgram': 'Print Program',
+  'weekly.prog': 'Prog.',
+  'weekly.printAnnouncements': 'Print Announcements',
+  'weekly.announ': 'Announ.',
+  'weekly.resetStructure': 'Reset default structure',
+  'weekly.resetConfirmTitle': 'Reset default structure?',
+  'weekly.resetConfirmAll': 'ALL sessions will be reset. All entered content will be deleted.',
+  'weekly.resetConfirmSingle': 'Only "{name}" will be reset. Content entered in that session will be deleted.',
+  'weekly.resetSession': 'Reset Session',
+  'weekly.resetAll': 'Reset All',
+  'weekly.cancel': 'Cancel',
+  'weekly.fallbackTitle': 'Untitled',
+  'weekly.subAssignment': 'Sub-assignment',
+
+  // SlotColumn
+  'slot.copyAll': 'Copy All',
+  'slot.special': 'Special',
+  'slot.minTotal': 'min total',
+  'slot.segments': 'segments',
+  'slot.endsAt': 'Ends:',
+  'slot.target': 'Target:',
+  'slot.overage': '⚠ Exceeds',
+  'slot.noSegments': 'No segments in this time slot.',
+  'slot.noSegmentsHint': 'Use "Special" to add, or reset from the blueprint.',
+  'slot.resetThisSession': 'Reset only this session',
+
+  // SegmentCard
+  'segment.untitled': 'Untitled',
+  'segment.unconfiguredWarning': 'Segment without field configuration (empty ui_fields). Reset the service from the blueprint to fix, or delete this segment.',
+  'segment.less': 'Less',
+  'segment.notesAndDetails': 'Notes and details',
+  'segment.special': 'Special',
+  'segment.deleteSegment': 'Delete segment',
+  'segment.subAssignments': 'Sub-Assignments',
+  'segment.lessDetails': 'Less details',
+  'segment.moreDetails': 'More details',
+  'segment.saving': 'Saving...',
+  'segment.saveChanges': 'Save changes',
+  'segment.saved': 'Saved',
+  'segment.copyTo': 'Copy to {name}',
+
+  // FieldRenderer
+  'field.noProcessedContent': 'No processed content',
+  'field.versesReadOnly': 'Bible references are read-only here. Go to <strong>Message Processing</strong> to add or modify content.',
+
+  // SegmentNotesPanel
+  'notes.reportVisibility': 'Report Visibility',
+  'notes.general': 'General',
+  'notes.projection': 'Projection',
+  'notes.sound': 'Sound',
+  'notes.ushers': 'Ushers',
+  'notes.livestream': 'Livestream',
+  'notes.durationMin': 'Duration (min)',
+  'notes.stageCallMin': 'Stage Call (min before)',
+
+  // SongRows
+  'songs.title': 'Songs',
+  'songs.removeSong': 'Remove song',
+  'songs.addSong': 'Add song',
+  'songs.songN': 'Song {n}',
+  'songs.lead': 'Lead',
+  'songs.key': 'Key',
+
+  // SubAssignmentRow
+  'sub.assigned': 'Assigned',
+  'sub.pending': 'Pending',
+  'sub.nameFor': 'Name for {label}',
+
+  // PreServiceSection
+  'preService.title': 'PRE-SERVICE',
+  'preService.badge': 'Before start',
+  'preService.placeholder': 'Pre-service instructions (optional)...',
+  'preService.hide': 'Hide',
+
+  // RecesoSection
+  'receso.title': 'BREAK',
+  'receso.placeholder': 'Break notes (optional)...',
+  'receso.hide': 'Hide',
+
+  // TeamSection
+  'team.label': 'TEAM {name}',
+
+  // SpeakerMaterialSection
+  'speaker.materialTitle': 'Speaker Material',
+
+  // EmptyDayPrompt
+  'empty.noService': 'No service for {day}',
+  'empty.date': 'Date: {date}',
+  'empty.blueprintWillUse': 'Will use blueprint: <strong>{name}</strong> ({count} segments)',
+  'empty.noBlueprint': 'No blueprint configured — will be created empty',
+  'empty.creating': 'Creating...',
+  'empty.createService': 'Create Service for {day}',
+  'empty.toast.created': 'Service for {day} created with full structure',
+  'empty.toast.error': 'Error creating service: ',
+
+  // fieldMap labels
+  'fieldMap.worshipLeader': 'Worship Director',
+  'fieldMap.worshipLeaderHint': 'Sarah Manzano or Anthony Estrella (whoever is serving). If neither, the designated Band Director.',
+  'fieldMap.presenter': 'Presenter',
+  'fieldMap.preacher': 'Preacher',
+  'fieldMap.messageTitle': 'Message Title',
+  'fieldMap.verse': 'Verse / Scripture Reference',
+  'fieldMap.songs': 'Songs',
+  'fieldMap.translator': 'Translator',
+  'fieldMap.description': 'Description / Notes',
+  'fieldMap.ministry': 'Ministry',
+  'fieldMap.coordinator': 'Coordinator',
+  'fieldMap.ushers': 'Ushers',
+  'fieldMap.soundTeam': 'Sound',
+  'fieldMap.lightsTeam': 'Lights',
+  'fieldMap.photographyTeam': 'Photography',
+  'fieldMap.coordinatorNotes': 'Coordinator Notes',
+  'fieldMap.projectionNotes': 'Projection Notes',
+  'fieldMap.soundNotes': 'Sound Notes',
+  'fieldMap.ushersNotes': 'Ushers Notes',
+  'fieldMap.translationNotes': 'Translation Notes',
+  'fieldMap.livestreamNotes': 'Livestream Notes',
+  'fieldMap.stageDecorNotes': 'Stage/Decor Notes',
+  'fieldMap.micAssignments': 'Microphone Assignments',
+  'fieldMap.prepInstructions': 'Preparation Instructions',
+  'fieldMap.otherNotes': 'Additional Notes',
+  'fieldMap.generalNotes': 'General Notes',
+  'fieldMap.presentationLink': 'Presentation Link (Slides)',
+  'fieldMap.notesLink': 'Outline / Notes Link (PDF or Doc)',
+  'fieldMap.slidesOnly': 'Slides Only (No verses)',
 };

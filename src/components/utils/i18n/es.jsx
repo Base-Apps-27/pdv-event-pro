@@ -558,4 +558,149 @@ export const es = {
   
   // Offline
   'offline.banner': 'Sin conexión — mostrando últimos datos conocidos',
+
+  // ── Weekly Service Editor V2 (2026-03-03) ──
+
+  // Day labels
+  'day.Sunday': 'Domingo', 'day.Monday': 'Lunes', 'day.Tuesday': 'Martes',
+  'day.Wednesday': 'Miércoles', 'day.Thursday': 'Jueves', 'day.Friday': 'Viernes', 'day.Saturday': 'Sábado',
+
+  // WeeklyEditorV2
+  'weekly.toast.generatingProgram': 'Generando PDF del Programa...',
+  'weekly.toast.noDataForPdf': 'No hay datos para generar PDF',
+  'weekly.toast.pdfReady': 'PDF listo para imprimir',
+  'weekly.toast.pdfError': 'Error generando PDF: ',
+  'weekly.toast.generatingAnnouncements': 'Generando PDF de Anuncios...',
+  'weekly.toast.noAnnouncements': 'No hay anuncios',
+  'weekly.toast.repairSuccess': 'Estructura reparada con éxito',
+  'weekly.toast.repairError': 'Error al reparar: ',
+  'weekly.noSessions': 'No se encontraron sesiones para este servicio.',
+  'weekly.serviceExistsNoSessions': 'El servicio existe (ID: {id}) pero no tiene sesiones. Restablezca desde el blueprint para recrear la estructura.',
+  'weekly.repairing': 'Reparando...',
+  'weekly.repairStructure': 'Reparar Estructura',
+  'weekly.printProgram': 'Imprimir Programa',
+  'weekly.prog': 'Prog.',
+  'weekly.printAnnouncements': 'Imprimir Anuncios',
+  'weekly.announ': 'Anun.',
+  'weekly.resetStructure': 'Restablecer estructura predeterminada',
+  'weekly.resetConfirmTitle': '¿Restablecer estructura predeterminada?',
+  'weekly.resetConfirmAll': 'TODAS las sesiones serán restablecidas. Todo el contenido ingresado se borrará.',
+  'weekly.resetConfirmSingle': 'Solo "{name}" será restablecido. El contenido ingresado en esa sesión se borrará.',
+  'weekly.resetSession': 'Restablecer Sesión',
+  'weekly.resetAll': 'Restablecer Todo',
+  'weekly.cancel': 'Cancelar',
+  'weekly.fallbackTitle': 'Sin título',
+  'weekly.subAssignment': 'Sub-asignación',
+
+  // SlotColumn
+  'slot.copyAll': 'Copiar Todo',
+  'slot.special': 'Especial',
+  'slot.minTotal': 'min total',
+  'slot.segments': 'segmentos',
+  'slot.endsAt': 'Termina:',
+  'slot.target': 'Meta:',
+  'slot.overage': '⚠ Sobrepasa',
+  'slot.noSegments': 'No hay segmentos en este horario.',
+  'slot.noSegmentsHint': 'Use "Especial" para agregar, o restablezca desde el blueprint.',
+  'slot.resetThisSession': 'Restablecer solo esta sesión',
+
+  // SegmentCard
+  'segment.untitled': 'Sin título',
+  'segment.unconfiguredWarning': 'Segmento sin configuración de campos (ui_fields vacío). Restablezca el servicio desde el blueprint para corregir, o elimine este segmento.',
+  'segment.less': 'Menos',
+  'segment.notesAndDetails': 'Notas y detalles',
+  'segment.special': 'Especial',
+  'segment.deleteSegment': 'Eliminar segmento',
+  'segment.subAssignments': 'Sub-Asignaciones',
+  'segment.lessDetails': 'Menos detalles',
+  'segment.moreDetails': 'Más detalles',
+  'segment.saving': 'Guardando...',
+  'segment.saveChanges': 'Guardar cambios',
+  'segment.saved': 'Guardado',
+  'segment.copyTo': 'Copiar a {name}',
+
+  // FieldRenderer
+  'field.noProcessedContent': 'Sin contenido procesado',
+  'field.versesReadOnly': 'Las citas bíblicas son de solo lectura aquí. Ve a <strong>Procesamiento de Mensajes</strong> para añadir o modificar contenido.',
+
+  // SegmentNotesPanel
+  'notes.reportVisibility': 'Visibilidad en Reportes',
+  'notes.general': 'General',
+  'notes.projection': 'Proyección',
+  'notes.sound': 'Sonido',
+  'notes.ushers': 'Ujieres',
+  'notes.livestream': 'Livestream',
+  'notes.durationMin': 'Duración (min)',
+  'notes.stageCallMin': 'Stage Call (min antes)',
+
+  // SongRows
+  'songs.title': 'Canciones',
+  'songs.removeSong': 'Quitar canción',
+  'songs.addSong': 'Agregar canción',
+  'songs.songN': 'Canción {n}',
+  'songs.lead': 'Líder',
+  'songs.key': 'Tono',
+
+  // SubAssignmentRow
+  'sub.assigned': 'Asignado',
+  'sub.pending': 'Pendiente',
+  'sub.nameFor': 'Nombre para {label}',
+
+  // PreServiceSection
+  'preService.title': 'PRE-SERVICIO',
+  'preService.badge': 'Antes de iniciar',
+  'preService.placeholder': 'Instrucciones pre-servicio (opcional)...',
+  'preService.hide': 'Ocultar',
+
+  // RecesoSection
+  'receso.title': 'RECESO',
+  'receso.placeholder': 'Notas del receso (opcional)...',
+  'receso.hide': 'Ocultar',
+
+  // TeamSection
+  'team.label': 'EQUIPO {name}',
+
+  // SpeakerMaterialSection
+  'speaker.materialTitle': 'Material del Orador',
+
+  // EmptyDayPrompt
+  'empty.noService': 'No hay servicio para {day}',
+  'empty.date': 'Fecha: {date}',
+  'empty.blueprintWillUse': 'Se usará el blueprint: <strong>{name}</strong> ({count} segmentos)',
+  'empty.noBlueprint': 'Sin blueprint configurado — se creará vacío',
+  'empty.creating': 'Creando...',
+  'empty.createService': 'Crear Servicio para {day}',
+  'empty.toast.created': 'Servicio para {day} creado con estructura completa',
+  'empty.toast.error': 'Error al crear servicio: ',
+
+  // fieldMap labels
+  'fieldMap.worshipLeader': 'Director de A&A',
+  'fieldMap.worshipLeaderHint': 'Sarah Manzano o Anthony Estrella (quien esté sirviendo). Si ninguno, el Director de Banda designado.',
+  'fieldMap.presenter': 'Presentador',
+  'fieldMap.preacher': 'Predicador',
+  'fieldMap.messageTitle': 'Título del Mensaje',
+  'fieldMap.verse': 'Verso / Cita Bíblica',
+  'fieldMap.songs': 'Canciones',
+  'fieldMap.translator': 'Traductor(a)',
+  'fieldMap.description': 'Descripción / Notas',
+  'fieldMap.ministry': 'Ministración',
+  'fieldMap.coordinator': 'Coordinador(a)',
+  'fieldMap.ushers': 'Ujieres',
+  'fieldMap.soundTeam': 'Sonido',
+  'fieldMap.lightsTeam': 'Luces',
+  'fieldMap.photographyTeam': 'Fotografía',
+  'fieldMap.coordinatorNotes': 'Notas para Coordinador',
+  'fieldMap.projectionNotes': 'Notas de Proyección',
+  'fieldMap.soundNotes': 'Notas de Sonido',
+  'fieldMap.ushersNotes': 'Notas de Ujieres',
+  'fieldMap.translationNotes': 'Notas de Traducción',
+  'fieldMap.livestreamNotes': 'Notas de Livestream',
+  'fieldMap.stageDecorNotes': 'Notas de Stage/Decor',
+  'fieldMap.micAssignments': 'Asignación de Micrófonos',
+  'fieldMap.prepInstructions': 'Instrucciones de Preparación',
+  'fieldMap.otherNotes': 'Notas Adicionales',
+  'fieldMap.generalNotes': 'Notas Generales',
+  'fieldMap.presentationLink': 'Enlace a Presentación (Slides)',
+  'fieldMap.notesLink': 'Link de Bosquejo / Notas (PDF o Doc)',
+  'fieldMap.slidesOnly': 'Solo Slides (Sin versículos)',
 };
