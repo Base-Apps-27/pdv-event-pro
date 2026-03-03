@@ -289,6 +289,16 @@ export default function CustomEditorV2() {
     }
   }, [selectedAnnouncements, existingService, en]);
 
+  // ── Auto-create on mount when no serviceId (2026-03-03) ──
+  // Eliminates redundant "Create Service" button — user already clicked it on CustomServicesManager.
+  // MUST be above early returns to satisfy Rules of Hooks.
+  useEffect(() => {
+    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
+      setAutoCreateTriggered(true);
+      handleCreateNew();
+    }
+  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading, handleCreateNew]);
+
   // ── Loading states ──
   if (serviceLoading || (serviceId && dataLoading)) {
     return (
@@ -297,15 +307,6 @@ export default function CustomEditorV2() {
       </div>
     );
   }
-
-  // ── Auto-create on mount when no serviceId (2026-03-03) ──
-  // Eliminates redundant "Create Service" button — user already clicked it on CustomServicesManager.
-  useEffect(() => {
-    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
-      setAutoCreateTriggered(true);
-      handleCreateNew();
-    }
-  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading, handleCreateNew]);
 
   if (!serviceId || !existingService) {
     return (
