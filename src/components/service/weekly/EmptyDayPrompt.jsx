@@ -13,16 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
-
-const DAY_LABELS = {
-  Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
-  Wednesday: "Miércoles", Thursday: "Jueves", Friday: "Viernes", Saturday: "Sábado"
-};
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintData, onServiceCreated }) {
   // blueprintData: the resolved Service blueprint object (status='blueprint'), or null
+  const { t } = useLanguage();
   const [creating, setCreating] = useState(false);
-  const dayLabel = DAY_LABELS[dayOfWeek] || dayOfWeek;
+  const dayLabel = t(`day.${dayOfWeek}`);
 
   const handleCreate = async () => {
     setCreating(true);
@@ -93,14 +90,14 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
             session_id: session.id,
             service_id: createdService.id,
             order: i + 1,
-            title: segData.title || "Untitled",
+            title: segData.title || t('weekly.fallbackTitle'),
             segment_type: resolvedType,
             duration_min: Number(segData.duration) || 0,
             show_in_general: true,
             color_code: segData.color_code || 'default',
             ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
             ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
-              label: sa.label || "Untitled",
+              label: sa.label || t('weekly.fallbackTitle'),
               person_field_name: sa.person_field_name || "",
               duration_min: Number(sa.duration_min || sa.duration) || 0
             })) : [],
@@ -130,7 +127,7 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
                 service_id: createdService.id,
                 parent_segment_id: createdSeg.id,
                 order: saIdx + 1,
-                title: sa.label || 'Sub-asignación',
+                title: sa.label || t('weekly.subAssignment'),
                 segment_type: 'Ministración',
                 duration_min: Number(sa.duration_min || sa.duration) || 5,
                 presenter: '',
@@ -144,11 +141,11 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
         }
       }
 
-      toast.success(`Servicio para ${dayLabel} creado con estructura completa`);
+      toast.success(t('empty.toast.created').replace('{day}', dayLabel));
       onServiceCreated?.(createdService);
     } catch (err) {
       console.error("Error creating service:", err);
-      toast.error("Error al crear servicio: " + err.message);
+      toast.error(t('empty.toast.error') + err.message);
     } finally {
       setCreating(false);
     }
@@ -157,15 +154,18 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
   return (
     <Card className="p-8 text-center bg-white border-2 border-dashed border-gray-300">
       <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-      <p className="text-gray-600 mb-1 font-medium">No hay servicio para {dayLabel}</p>
-      <p className="text-gray-400 text-sm mb-4">Fecha: {date}</p>
+      <p className="text-gray-600 mb-1 font-medium">{t('empty.noService').replace('{day}', dayLabel)}</p>
+      <p className="text-gray-400 text-sm mb-4">{t('empty.date').replace('{date}', date)}</p>
       {blueprintData ? (
-        <p className="text-xs text-[#1F8A70] font-medium mb-4">
-          Se usará el blueprint: <span className="font-bold">{blueprintData.name || `Blueprint asignado`}</span>
-          {' '}({(blueprintData.segments || []).length} segmentos)
-        </p>
+        <p className="text-xs text-[#1F8A70] font-medium mb-4"
+          dangerouslySetInnerHTML={{
+            __html: t('empty.blueprintWillUse')
+              .replace('{name}', blueprintData.name || 'Blueprint')
+              .replace('{count}', (blueprintData.segments || []).length)
+          }}
+        />
       ) : (
-        <p className="text-xs text-amber-600 mb-4">Sin blueprint configurado — se creará vacío</p>
+        <p className="text-xs text-amber-600 mb-4">{t('empty.noBlueprint')}</p>
       )}
       <Button
         onClick={handleCreate}
@@ -174,9 +174,9 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
         className="hover:opacity-90"
       >
         {creating ? (
-          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creando...</>
+          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('empty.creating')}</>
         ) : (
-          <><Plus className="w-4 h-4 mr-2" />Crear Servicio para {dayLabel}</>
+          <><Plus className="w-4 h-4 mr-2" />{t('empty.createService').replace('{day}', dayLabel)}</>
         )}
       </Button>
     </Card>
