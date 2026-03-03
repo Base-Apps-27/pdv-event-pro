@@ -38,7 +38,7 @@ const FIELD_BOX_STYLES = {
   title:       { bg: 'bg-amber-50', border: 'border-amber-200', label: 'text-amber-800' },
   verse:       { bg: 'bg-purple-50', border: 'border-purple-200', label: 'text-purple-800' },
   description: { bg: 'bg-slate-50', border: 'border-slate-200', label: 'text-slate-700' },
-  translator:  { bg: 'bg-blue-50',  border: 'border-blue-200',  label: 'text-blue-800' },
+  translator:  { bg: 'bg-blue-50',  border: 'border-blue-200',  label: 'text-blue-800', icon: '🌐' },
 };
 
 /**
