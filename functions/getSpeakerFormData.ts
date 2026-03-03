@@ -13,7 +13,7 @@
  * Auth: None required (public form). Uses asServiceRole for reads.
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
     const corsHeaders = {
@@ -44,23 +44,9 @@ Deno.serve(async (req) => {
         rlAttempts.push(rlNow);
         globalThis._speakerDataRL.set(rateLimitKey, rlAttempts);
 
-        // Layer 2: Entity-based persistent rate limit (SEC-1 P1, 2026-03-02).
-        // Survives cold starts. Scoped per IP via site_id field.
-        const twoMinAgo = new Date(Date.now() - 120000).toISOString();
-        const recentDataReqs = await base44.asServiceRole.entities.PublicFormIdempotency.filter(
-            { form_type: 'speaker_data_read', site_id: clientIp, created_date: { $gte: twoMinAgo } },
-            '-created_date', 30
-        );
-        if (recentDataReqs.length >= 20) {
-            return Response.json({ error: 'Too many requests' }, { status: 429, headers: corsHeaders });
-        }
-        // Record this request for persistent tracking
-        await base44.asServiceRole.entities.PublicFormIdempotency.create({
-            idempotency_key: `speaker_data_${clientIp}_${rlNow}`,
-            form_type: 'speaker_data_read',
-            site_id: clientIp,
-            status: 'succeeded'
-        });
+        // Layer 2 entity-based rate limiting REMOVED (2026-03-03):
+        // Caused unnecessary DB writes on every read. In-memory Layer 1 is sufficient.
+        // See Decision: "getWeeklyFormData: Entity-only, no JSON fallback, targeted queries"
 
         let targetEvent = null;
         let options = [];
