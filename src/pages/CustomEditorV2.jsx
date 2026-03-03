@@ -295,27 +295,25 @@ export default function CustomEditorV2() {
     );
   }
 
-  // ── No service: prompt to create ──
+  // ── No service: auto-create immediately (2026-03-03) ──
+  // Previous behavior showed an intermediate "Create Service" button which was
+  // redundant — user already clicked "Create Service" on CustomServicesManager.
+  // Now we auto-trigger creation and show a loading state instead.
+  const [autoCreateTriggered, setAutoCreateTriggered] = useState(false);
+  useEffect(() => {
+    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
+      setAutoCreateTriggered(true);
+      handleCreateNew();
+    }
+  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading]);
+
   if (!serviceId || !existingService) {
     return (
-      <div className="p-6 md:p-8 space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate(createPageUrl('CustomServicesManager'))}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">
-              {en ? 'New Custom Service' : 'Nuevo Servicio Personalizado'}
-            </h1>
-            <p className="text-gray-500 mt-1">
-              {en ? 'Create a new custom service with entity-first architecture' : 'Crea un nuevo servicio personalizado con arquitectura entity-first'}
-            </p>
-          </div>
-        </div>
-        <Button onClick={handleCreateNew} disabled={creating} style={tealStyle} className="font-semibold">
-          {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-          {en ? 'Create Service' : 'Crear Servicio'}
-        </Button>
+      <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <p className="text-gray-500 text-sm">
+          {en ? 'Creating service...' : 'Creando servicio...'}
+        </p>
       </div>
     );
   }
