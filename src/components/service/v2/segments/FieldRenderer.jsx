@@ -179,7 +179,7 @@ const DebouncedAutocomplete = memo(function DebouncedAutocomplete({ segmentId, c
         className="text-sm"
       />
       {hint && (
-        <p className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+        <p className="text-xs text-gray-600 bg-white/60 border border-gray-200 rounded px-2 py-1">
           💡 {hint}
         </p>
       )}
