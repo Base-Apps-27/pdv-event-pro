@@ -54,20 +54,28 @@ Deno.serve(async (req) => {
         if (eventIdParam) {
             targetEvent = await base44.asServiceRole.entities.Event.get(eventIdParam);
         } else {
-            // Find next upcoming confirmed event
-            const events = await base44.asServiceRole.entities.Event.filter({ status: 'confirmed' });
-            // DEV-4 (2026-03-02): Use ET-aware date to avoid UTC midnight drift.
-            // At 11pm ET, UTC is already the next day — can miss same-day events.
-            const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })).toISOString().split('T')[0];
-            const upcoming = events
-                .filter(e => e.start_date >= today)
+            // Auto-detect: find nearest upcoming confirmed or in_progress event.
+            // PERF-FIX (2026-03-03): Fetch only 5 most recent per status to avoid
+            // transferring large Event payloads. Events are lightweight but the
+            // unfiltered call was timing out on cold starts.
+            const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const todayETStr = `${nowET.getFullYear()}-${String(nowET.getMonth() + 1).padStart(2, '0')}-${String(nowET.getDate()).padStart(2, '0')}`;
+
+            // Try confirmed first (most common), then in_progress
+            const confirmed = await base44.asServiceRole.entities.Event.filter(
+                { status: 'confirmed' }, '-start_date', 10
+            );
+            const upcoming = confirmed
+                .filter(e => e.start_date >= todayETStr)
                 .sort((a, b) => a.start_date.localeCompare(b.start_date));
 
             if (upcoming.length > 0) {
                 targetEvent = upcoming[0];
             } else {
                 // Fallback to in_progress
-                const progress = await base44.asServiceRole.entities.Event.filter({ status: 'in_progress' });
+                const progress = await base44.asServiceRole.entities.Event.filter(
+                    { status: 'in_progress' }, '-start_date', 5
+                );
                 if (progress.length > 0) targetEvent = progress[0];
             }
         }
