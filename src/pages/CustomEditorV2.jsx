@@ -116,6 +116,9 @@ export default function CustomEditorV2() {
   const segments = session ? (segmentsBySession[session.id] || []) : [];
   const psd = session ? (psdBySession[session.id] || null) : null;
 
+  // ── Auto-create state (must be above all early returns per Rules of Hooks) ──
+  const [autoCreateTriggered, setAutoCreateTriggered] = useState(false);
+
   // ── Dialog state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
   const [specialDetails, setSpecialDetails] = useState({
