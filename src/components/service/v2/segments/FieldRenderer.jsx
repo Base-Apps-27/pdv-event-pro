@@ -64,8 +64,10 @@ const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onW
 
   return (
     <div className={`${box.bg} border ${box.border} rounded p-2 space-y-0.5`}>
-      {/* Label */}
-      <Label className={`text-[10px] ${box.label} font-semibold print:font-semibold`}>{config.label}</Label>
+      {/* Label — includes icon prefix when defined in FIELD_BOX_STYLES */}
+      <Label className={`text-[10px] ${box.label} font-semibold print:font-semibold`}>
+        {box.icon ? `${box.icon} ${config.label}` : config.label}
+      </Label>
 
       {/* Print: read-only */}
       {value && (
