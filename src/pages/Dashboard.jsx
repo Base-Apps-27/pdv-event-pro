@@ -178,10 +178,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <Button 
-                onClick={() => navigate(createPageUrl('CustomServiceBuilder'))}
+                onClick={() => navigate(createPageUrl('CustomServicesManager'))}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
               >
-                {t('btn.add')}
+                {t('btn.view_all')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>

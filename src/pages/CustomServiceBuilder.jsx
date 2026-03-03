@@ -351,36 +351,43 @@ export default function CustomServiceBuilder() {
     <div className="p-6 md:p-8 space-y-8 print:p-0" style={{ '--print-margin-top': marginVal, '--print-margin-right': marginVal, '--print-margin-bottom': marginVal, '--print-margin-left': marginVal, '--print-segment-margin': segMargin, '--print-line-height': lineH }}>
       <style>{CUSTOM_SERVICE_PRINT_CSS}</style>
 
-      {/* Header */}
-      <div className="flex justify-between items-center print:hidden">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={async () => {
-            // 2026-03-03: Flush pending auto-save before navigating back (consistency with CustomEditorV2)
-            if (hasUnsavedChanges && serviceId) {
-              await saveServiceMutation.mutateAsync({ ...serviceData, status: 'active', service_type: resolvedServiceType }).catch(() => {});
-            }
-            navigate(createPageUrl('CustomServicesManager'));
-          }}><ArrowLeft className="w-5 h-5" /></Button>
-          <div>
-            <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? (language === 'es' ? 'Editar Servicio' : 'Edit Service') : (language === 'es' ? 'Nuevo Servicio Personalizado' : 'New Custom Service')}</h1>
-            <p className="text-gray-500 mt-1">{language === 'es' ? 'Crea servicios especiales con horarios y elementos personalizados' : 'Create special services with custom schedules and elements'}</p>
-            <div className="flex items-center gap-3 mt-2">
-              {existingService?.updated_date && (
-                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
-                  {language === 'es' ? 'Última actualización' : 'Last updated'}: {new Date(existingService.updated_date).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })}
-                </Badge>
-              )}
-              {hasUnsavedChanges && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">{language === 'es' ? 'Cambios sin guardar' : 'Unsaved changes'}</Badge>}
-              {autoSaveStatus === "saving" && <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">{language === 'es' ? 'Guardando automáticamente...' : 'Auto-saving...'}</Badge>}
-              {autoSaveStatus === "saved" && !hasUnsavedChanges && <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">✓ {language === 'es' ? 'Auto-guardado' : 'Auto-saved'}</Badge>}
-              {autoSaveStatus === "error" && <Badge variant="outline" className="text-xs bg-red-50 border-red-200 text-red-700">⚠ {language === 'es' ? 'Error al guardar' : 'Save error'}</Badge>}
+      {/* Header — 2026-03-03: Restructured to match Weekly V2 compact mobile-first action bar */}
+      <div className="space-y-2 print:hidden">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={async () => {
+              if (hasUnsavedChanges && serviceId) {
+                await saveServiceMutation.mutateAsync({ ...serviceData, status: 'active', service_type: resolvedServiceType }).catch(() => {});
+              }
+              navigate(createPageUrl('CustomServicesManager'));
+            }}><ArrowLeft className="w-5 h-5" /></Button>
+            <div>
+              <h1 className="text-3xl md:text-5xl text-gray-900 uppercase tracking-tight">{serviceId ? (language === 'es' ? 'Editar Servicio' : 'Edit Service') : (language === 'es' ? 'Nuevo Servicio Personalizado' : 'New Custom Service')}</h1>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {existingService?.updated_date && (
+                  <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                    {new Date(existingService.updated_date).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' })}
+                  </Badge>
+                )}
+                {hasUnsavedChanges && <Badge className="text-xs bg-yellow-500 text-white animate-pulse">{language === 'es' ? 'Sin guardar' : 'Unsaved'}</Badge>}
+                {autoSaveStatus === "saving" && <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">{language === 'es' ? 'Guardando...' : 'Saving...'}</Badge>}
+                {autoSaveStatus === "saved" && !hasUnsavedChanges && <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">✓</Badge>}
+                {autoSaveStatus === "error" && <Badge variant="outline" className="text-xs bg-red-50 border-red-200 text-red-700">⚠</Badge>}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saveServiceMutation.isPending} style={tealStyle} className="font-semibold"><Save className="w-5 h-5 mr-2" />{saveServiceMutation.isPending ? t('btn.saving') : t('common.save')}</Button>
-          <Button onClick={handleDownloadProgramPDF} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Imprimir Programa' : 'Print Program'}><Printer className="w-4 h-4" />{language === 'es' ? 'Programa' : 'Program'}</Button>
-          <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Imprimir Anuncios' : 'Print Announcements'}><Printer className="w-4 h-4" />{language === 'es' ? 'Anuncios' : 'Announcements'}</Button>
+          {/* Action bar — matches Weekly V2 compact button style */}
+          <div className="flex gap-1.5 items-center flex-wrap flex-shrink-0">
+            <Button onClick={handleSave} disabled={saveServiceMutation.isPending} style={tealStyle} size="sm" className="font-semibold text-xs h-8 px-2" title={language === 'es' ? 'Guardar' : 'Save'}>
+              <Save className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{saveServiceMutation.isPending ? (language === 'es' ? 'Guardando' : 'Saving') : (language === 'es' ? 'Guardar' : 'Save')}</span>
+            </Button>
+            <Button onClick={handleDownloadProgramPDF} style={tealStyle} size="sm" className="font-semibold text-xs h-8 px-2" title={language === 'es' ? 'Imprimir Programa' : 'Print Program'}>
+              <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{language === 'es' ? 'Prog.' : 'Prog.'}</span>
+            </Button>
+            <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title={language === 'es' ? 'Imprimir Anuncios' : 'Print Announcements'}>
+              <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{language === 'es' ? 'Anun.' : 'Ann.'}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
