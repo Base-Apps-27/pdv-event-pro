@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AutocompleteInput from "@/components/ui/AutocompleteInput";
-import { Calendar, Save, Plus, ArrowLeft, Download } from "lucide-react";
+import { Calendar, Save, Plus, ArrowLeft, Printer } from "lucide-react";
 import AnnouncementListSelector from "@/components/announcements/AnnouncementListSelector";
 import DatePicker from "@/components/ui/DatePicker";
 import TimePicker from "@/components/ui/TimePicker";
@@ -260,12 +260,20 @@ export default function CustomServiceBuilder() {
   }, [hasUnsavedChanges]);
 
   // ── Handlers ──
+  // 2026-03-03: Changed from download to print for consistency with Weekly V2
   const handleDownloadProgramPDF = async () => {
-    const toastId = toast.loading(t('pdf.generating') || 'Generando PDF...');
+    const toastId = toast.loading(t('pdf.generating') || 'Generando PDF del Programa...');
     try {
       const result = await generateServiceProgramPDFWithAutoFit(serviceData, (msg) => toast.loading(msg, { id: toastId }));
-      const link = document.createElement('a'); link.href = URL.createObjectURL(result.pdf); link.download = `Programa-${serviceData.date || 'servicio'}.pdf`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href);
-      toast.success((t('pdf.generated') || 'PDF generado exitosamente') + (result.isCached ? ' ✓ (Cached)' : ''), { id: toastId });
+      const url = URL.createObjectURL(result.pdf);
+      const printWindow = window.open(url);
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        };
+      }
+      toast.success('PDF listo para imprimir', { id: toastId });
     } catch (error) { console.error('[PDF ERROR]', error); toast.error(t('pdf.error') || 'Error generando PDF: ' + (error?.message || 'Error desconocido'), { id: toastId }); }
   };
 
@@ -273,7 +281,8 @@ export default function CustomServiceBuilder() {
     try {
       if (!selectedAnnouncementsForPrint || selectedAnnouncementsForPrint.length === 0) { toast.error('Por favor, selecciona al menos un anuncio.'); return; }
       const pdf = await generateAnnouncementsPDF(selectedAnnouncementsForPrint, serviceData.date);
-      pdf.download(`Anuncios-${serviceData.date || 'servicio'}.pdf`);
+      pdf.print();
+      toast.success('PDF listo para imprimir');
     } catch (error) { console.error('[PDF ERROR]', error); toast.error('Error generando PDF de anuncios: ' + (error?.message || 'Error desconocido')); }
   };
 
@@ -364,8 +373,8 @@ export default function CustomServiceBuilder() {
         </div>
         <div className="flex gap-2">
           <Button onClick={handleSave} disabled={saveServiceMutation.isPending} style={tealStyle} className="font-semibold"><Save className="w-5 h-5 mr-2" />{saveServiceMutation.isPending ? t('btn.saving') : t('common.save')}</Button>
-          <Button onClick={handleDownloadProgramPDF} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Descargar Programa como PDF' : 'Download Program as PDF'}><Download className="w-4 h-4" />{language === 'es' ? 'PDF Programa' : 'Program PDF'}</Button>
-          <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Descargar Anuncios como PDF' : 'Download Announcements as PDF'}><Download className="w-4 h-4" />{language === 'es' ? 'PDF Anuncios' : 'Announcements PDF'}</Button>
+          <Button onClick={handleDownloadProgramPDF} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Imprimir Programa' : 'Print Program'}><Printer className="w-4 h-4" />{language === 'es' ? 'Programa' : 'Program'}</Button>
+          <Button onClick={handleDownloadAnnouncementsPDF} disabled={!serviceData.selected_announcements || serviceData.selected_announcements.length === 0} style={tealStyle} className="gap-2 font-semibold" title={language === 'es' ? 'Imprimir Anuncios' : 'Print Announcements'}><Printer className="w-4 h-4" />{language === 'es' ? 'Anuncios' : 'Announcements'}</Button>
         </div>
       </div>
 
