@@ -17,6 +17,7 @@ import SegmentCard from "../segments/SegmentCard";
 import PreServiceSection from "./PreServiceSection";
 import RecesoSection from "./RecesoSection";
 import TeamSection from "./TeamSection";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const SLOT_COLORS = ['teal', 'blue', 'purple', 'amber', 'green'];
 const DEFAULT_TARGET_MIN = 90;
@@ -67,6 +68,7 @@ export default memo(function SlotColumn({
   markOwnWrite,
   style,
 }) {
+  const { t } = useLanguage();
   const accentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
 
   // Calculate timing
@@ -107,33 +109,33 @@ export default memo(function SlotColumn({
             <div className="flex gap-2 print:hidden">
               {onCopyAllToSlot && (
                 <Button size="sm" onClick={onCopyAllToSlot} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold border-2 border-blue-600">
-                  <ChevronsRight className="w-4 h-4 mr-2" />Copiar Todo
+                  <ChevronsRight className="w-4 h-4 mr-2" />{t('slot.copyAll')}
                 </Button>
               )}
               {onResetSession && (
                 <Button size="sm" variant="outline" onClick={() => onResetSession(session.id)}
                   className="border-amber-400 text-amber-700 hover:bg-amber-50 font-semibold"
-                  title="Restablecer solo esta sesión"
+                  title={t('slot.resetThisSession')}
                 >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
               )}
               <Button size="sm" variant="outline" onClick={() => onOpenSpecialDialog?.(session)} className="border-2 border-gray-400 bg-white text-gray-900 font-semibold">
-                <Plus className="w-4 h-4 mr-2" />Especial
+                <Plus className="w-4 h-4 mr-2" />{t('slot.special')}
               </Button>
             </div>
           )}
         </div>
         <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
           <Badge variant="outline" className={isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : `bg-${accentColor}-50`}>
-            {totalDuration} min total{isOverage && ` (+${totalDuration - targetMin} min)`}
+            {totalDuration} {t('slot.minTotal')}{isOverage && ` (+${totalDuration - targetMin} min)`}
           </Badge>
           <Badge variant="outline" className="text-xs text-gray-500">
-            {segments.length} segmentos
+            {segments.length} {t('slot.segments')}
           </Badge>
-          <span>Termina: {formatDate(endTime, "h:mm a")}</span>
-          <span className="text-xs text-gray-500">(Meta: {targetMin} min)</span>
-          {isOverage && <Badge className="bg-amber-600 text-white text-xs">⚠ Sobrepasa</Badge>}
+          <span>{t('slot.endsAt')} {formatDate(endTime, "h:mm a")}</span>
+          <span className="text-xs text-gray-500">({t('slot.target')} {targetMin} min)</span>
+          {isOverage && <Badge className="bg-amber-600 text-white text-xs">{t('slot.overage')}</Badge>}
         </div>
       </div>
 
@@ -145,10 +147,10 @@ export default memo(function SlotColumn({
         {segments.length === 0 && (
           <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
             <AlertTriangle className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No hay segmentos en este horario.</p>
+            <p className="text-sm text-gray-500">{t('slot.noSegments')}</p>
             {canEdit && (
               <p className="text-xs text-gray-400 mt-1">
-                Use "Especial" para agregar, o restablezca desde el blueprint.
+                {t('slot.noSegmentsHint')}
               </p>
             )}
           </div>

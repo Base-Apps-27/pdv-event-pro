@@ -26,6 +26,7 @@ import FieldRenderer from "./FieldRenderer";
 import SongRows from "./SongRows";
 import SubAssignmentRow from "./SubAssignmentRow";
 import SegmentNotesPanel from "./SegmentNotesPanel";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const COLOR_MAP = {
   worship: { border: 'border-l-purple-500', bg: 'bg-purple-50/30' },
@@ -58,6 +59,7 @@ const SegmentCard = memo(function SegmentCard({
   onFlushEntity,
   nextSlotName,
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const isSpecial = segment.segment_type === 'Especial';
   const fields = segment.ui_fields || [];
@@ -85,12 +87,12 @@ const SegmentCard = memo(function SegmentCard({
               </Button>
             </div>
             <AlertTriangle className="w-4 h-4 text-amber-600" />
-            {segment.title || 'Sin título'}
+            {segment.title || t('segment.untitled')}
             <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-400">{segment.segment_type}</Badge>
             <Badge variant="outline" className="ml-auto text-xs">{segment.duration_min || 0} min</Badge>
             <SaveButton isDirty={isDirty} entityId={segment.id} onFlush={onFlushEntity} />
             {canEdit && (
-              <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden" title="Eliminar segmento">
+              <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden" title={t('segment.deleteSegment')}>
                 <Trash2 className="w-4 h-4 text-red-500" />
               </Button>
             )}
@@ -98,12 +100,11 @@ const SegmentCard = memo(function SegmentCard({
         </CardHeader>
         <CardContent>
           <p className="text-xs text-amber-700 mb-2">
-            Segmento sin configuración de campos (ui_fields vacío).
-            Restablezca el servicio desde el blueprint para corregir, o elimine este segmento.
+            {t('segment.unconfiguredWarning')}
           </p>
           <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="w-full text-xs print:hidden">
             {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-            {expanded ? "Menos" : "Notas y detalles"}
+            {expanded ? t('segment.less') : t('segment.notesAndDetails')}
           </Button>
           {expanded && (
             <SegmentNotesPanel segment={segment} onWrite={onWrite} onWriteDuration={onWriteDuration} />
@@ -129,7 +130,7 @@ const SegmentCard = memo(function SegmentCard({
             </div>
             {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className={`w-4 h-4 text-${accentColor}-600`} />}
             {segment.title}
-            {isSpecial && <Badge className="ml-1 bg-orange-200 text-orange-800 text-[10px]">Especial</Badge>}
+            {isSpecial && <Badge className="ml-1 bg-orange-200 text-orange-800 text-[10px]">{t('segment.special')}</Badge>}
             {segment.color_code && segment.color_code !== 'default' && !isSpecial && (
               <Badge variant="outline" className="text-[9px] text-gray-500 border-gray-300">{segment.color_code}</Badge>
             )}
@@ -138,14 +139,14 @@ const SegmentCard = memo(function SegmentCard({
             <SaveButton isDirty={isDirty} entityId={segment.id} onFlush={onFlushEntity} />
             {/* Copy to next slot */}
             {onCopyToNext && (
-              <Button variant="ghost" size="sm" onClick={() => onCopyToNext?.(index)} className="print:hidden h-7 px-2 hover:bg-blue-50" title={`Copiar a ${nextSlotName || 'siguiente'}`}>
+              <Button variant="ghost" size="sm" onClick={() => onCopyToNext?.(index)} className="print:hidden h-7 px-2 hover:bg-blue-50" title={t('segment.copyTo').replace('{name}', nextSlotName || '')}>
                 <ArrowRight className="w-4 h-4 text-blue-600" />
               </Button>
             )}
           </CardTitle>
           {canEdit && (
             <Button variant="ghost" size="sm" onClick={() => onRemove?.(index)} className="print:hidden"
-              title="Eliminar segmento"
+              title={t('segment.deleteSegment')}
             >
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
@@ -188,7 +189,7 @@ const SegmentCard = memo(function SegmentCard({
           */}
         {subAssignments.length > 0 && (
           <div className="space-y-2 border-t pt-2 mt-2">
-            <Label className="text-xs font-semibold text-purple-800">Sub-Asignaciones</Label>
+            <Label className="text-xs font-semibold text-purple-800">{t('segment.subAssignments')}</Label>
             {subAssignments.map((subConfig, idx) => {
               // Match child entity by label → title (durable), fallback to index
               const matchedChild = (childSegments || []).find(
@@ -210,7 +211,7 @@ const SegmentCard = memo(function SegmentCard({
         {/* Expand/collapse for notes */}
         <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="w-full text-xs mt-2 print:hidden">
           {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-          {expanded ? "Menos detalles" : "Más detalles"}
+          {expanded ? t('segment.lessDetails') : t('segment.moreDetails')}
         </Button>
 
         {expanded && (
@@ -228,6 +229,7 @@ const SegmentCard = memo(function SegmentCard({
 export default SegmentCard;
 
 function SaveButton({ isDirty, entityId, onFlush }) {
+  const { t } = useLanguage();
   const [saving, setSaving] = useState(false);
   if (!entityId) return null;
 
@@ -245,7 +247,7 @@ function SaveButton({ isDirty, entityId, onFlush }) {
         : isDirty ? 'text-red-600 animate-pulse bg-red-50 hover:bg-red-100'
         : 'text-green-600 opacity-50 hover:opacity-100'
       }`}
-      title={saving ? "Guardando..." : isDirty ? "Guardar cambios" : "Guardado"}
+      title={saving ? t('segment.saving') : isDirty ? t('segment.saveChanges') : t('segment.saved')}
     >
       {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
        : isDirty ? <Save className="w-3.5 h-3.5" />
