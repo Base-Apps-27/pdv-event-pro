@@ -170,17 +170,15 @@ const SegmentCard = memo(function SegmentCard({
           <SongRows segment={segment} onWriteSongs={onWriteSongs} canEdit={canEdit} />
         )}
 
-        {/* Translation */}
+        {/* Translation — FieldRenderer now applies its own blue box styling (Phase 2, 2026-03-03).
+          * Outer wrapper removed to prevent double-boxing. The 🌐 icon is preserved inside FieldRenderer's label. */}
         {hasTranslation && (
-          <div className="bg-blue-50 border border-blue-200 rounded p-2">
-            <Label className="text-xs font-semibold text-blue-800 mb-1">🌐 Traductor(a)</Label>
-            <FieldRenderer
-              segment={segment}
-              field="translator"
-              onWrite={onWrite}
-              onWriteSongs={onWriteSongs}
-            />
-          </div>
+          <FieldRenderer
+            segment={segment}
+            field="translator"
+            onWrite={onWrite}
+            onWriteSongs={onWriteSongs}
+          />
         )}
 
         {/* Sub-Assignments from ui_sub_assignments */}
