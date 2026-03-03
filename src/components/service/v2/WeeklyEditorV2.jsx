@@ -39,11 +39,7 @@ import { buildPdfData } from "./utils/buildPdfData";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
 import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
-
-const DAY_LABELS = {
-  Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",
-  Wednesday: "Miércoles", Thursday: "Jueves", Friday: "Viernes", Saturday: "Sábado"
-};
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function WeeklyEditorV2({
   dayOfWeek,
@@ -54,6 +50,7 @@ export default function WeeklyEditorV2({
 }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // ── Find existing service for this day + date ──
   const { data: existingService, isLoading: serviceLoading } = useQuery({
@@ -185,7 +182,7 @@ export default function WeeklyEditorV2({
 
   // ── PDF print handlers (2026-03-02: changed from download to print dialog) ──
   const handleDownloadProgramPDF = useCallback(async () => {
-    const toastId = toast.loading('Generando PDF del Programa...');
+    const toastId = toast.loading(t('weekly.toast.generatingProgram'));
     try {
       const pdfData = buildPdfData({
         existingService,
@@ -194,18 +191,18 @@ export default function WeeklyEditorV2({
         childSegments,
         psdBySession,
       });
-      if (!pdfData) { toast.error('No hay datos para generar PDF', { id: toastId }); return; }
+      if (!pdfData) { toast.error(t('weekly.toast.noDataForPdf'), { id: toastId }); return; }
       const pdf = await generateWeeklyProgramPDF(pdfData);
       pdf.print();
-      toast.success('PDF listo para imprimir', { id: toastId });
+      toast.success(t('weekly.toast.pdfReady'), { id: toastId });
     } catch (error) {
       console.error(error);
-      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+      toast.error(t('weekly.toast.pdfError') + error.message, { id: toastId });
     }
   }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date]);
 
   const handleDownloadAnnouncementsPDF = useCallback(async () => {
-    const toastId = toast.loading('Generando PDF de Anuncios...');
+    const toastId = toast.loading(t('weekly.toast.generatingAnnouncements'));
     try {
       // We need announcements data - fetch fresh
       const [allAnns, events] = await Promise.all([
@@ -228,7 +225,7 @@ export default function WeeklyEditorV2({
       ];
 
       const allForPrint = [...fixed, ...dynamic];
-      if (allForPrint.length === 0) { toast.error('No hay anuncios', { id: toastId }); return; }
+      if (allForPrint.length === 0) { toast.error(t('weekly.toast.noAnnouncements'), { id: toastId }); return; }
 
       const pdfData = buildPdfData({
         existingService,
@@ -240,12 +237,12 @@ export default function WeeklyEditorV2({
 
       const pdf = await generateAnnouncementsPDF(allForPrint, pdfData || { date });
       pdf.print();
-      toast.success('PDF listo para imprimir', { id: toastId });
+      toast.success(t('weekly.toast.pdfReady'), { id: toastId });
     } catch (error) {
       console.error(error);
-      toast.error('Error generando PDF: ' + error.message, { id: toastId });
+      toast.error(t('weekly.toast.pdfError') + error.message, { id: toastId });
     }
-  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date]);
+  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date, t]);
 
   // ── Verse parser handler ──
   const handleOpenVerseParser = useCallback((segmentId) => {
@@ -291,13 +288,13 @@ export default function WeeklyEditorV2({
             session_id: session.id,
             service_id: serviceId,
             order: i + 1,
-            title: segData.title || "Sin título",
+            title: segData.title || t('weekly.fallbackTitle'),
             segment_type: resolvedType,
             duration_min: Number(segData.duration) || 0,
             show_in_general: true,
             ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
             ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
-              label: sa.label || "Sin título",
+              label: sa.label || t('weekly.fallbackTitle'),
               person_field_name: sa.person_field_name || "",
               duration_min: Number(sa.duration_min || sa.duration) || 0,
             })) : [],
@@ -322,7 +319,7 @@ export default function WeeklyEditorV2({
                 service_id: serviceId,
                 parent_segment_id: createdSeg.id,
                 order: saIdx + 1,
-                title: sa.label || 'Sub-asignación',
+                title: sa.label || t('weekly.subAssignment'),
                 segment_type: 'Ministración',
                 duration_min: Number(sa.duration_min || sa.duration) || 5,
                 presenter: '',
@@ -336,12 +333,12 @@ export default function WeeklyEditorV2({
         }
       }
 
-      toast.success("Estructura reparada con éxito");
+      toast.success(t('weekly.toast.repairSuccess'));
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ['dayServiceV2', date, dayOfWeek] });
     } catch (err) {
       console.error("[V2] Repair failed:", err);
-      toast.error("Error al reparar: " + err.message);
+      toast.error(t('weekly.toast.repairError') + err.message);
     } finally {
       setRepairing(false);
     }
@@ -374,21 +371,20 @@ export default function WeeklyEditorV2({
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-amber-600" />
           <p className="text-sm text-amber-800 font-medium">
-            No se encontraron sesiones para este servicio.
+            {t('weekly.noSessions')}
           </p>
         </div>
         <p className="text-xs text-amber-700">
-          El servicio existe (ID: {serviceId}) pero no tiene sesiones.
-          Restablezca desde el blueprint para recrear la estructura.
+          {t('weekly.serviceExistsNoSessions').replace('{id}', serviceId)}
         </p>
         <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white"
           disabled={repairing}
           onClick={handleRepairStructure}
         >
           {repairing ? (
-            <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Reparando...</>
+            <><Loader2 className="w-3 h-3 mr-1 animate-spin" />{t('weekly.repairing')}</>
           ) : (
-            <><RotateCcw className="w-3 h-3 mr-1" />Reparar Estructura</>
+            <><RotateCcw className="w-3 h-3 mr-1" />{t('weekly.repairStructure')}</>
           )}
         </Button>
       </div>
@@ -410,14 +406,14 @@ export default function WeeklyEditorV2({
 
       {/* Action bar */}
       <div className="flex gap-1.5 items-center flex-wrap">
-        <Button onClick={handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Imprimir Programa">
-          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Prog.</span>
+        <Button onClick={handleDownloadProgramPDF} style={{ backgroundColor: '#1F8A70', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title={t('weekly.printProgram')}>
+          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{t('weekly.prog')}</span>
         </Button>
-        <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title="Imprimir Anuncios">
-          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">Anun.</span>
+        <Button onClick={handleDownloadAnnouncementsPDF} style={{ backgroundColor: '#8DC63F', color: '#ffffff' }} size="sm" className="font-semibold text-xs h-8 px-2" title={t('weekly.printAnnouncements')}>
+          <Printer className="w-3.5 h-3.5 sm:mr-1" /><span className="hidden sm:inline">{t('weekly.announ')}</span>
         </Button>
         {resolvedBlueprint && (
-          <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2" title="Restablecer estructura predeterminada">
+          <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50 border font-semibold text-xs h-8 px-2" title={t('weekly.resetStructure')}>
             <RotateCcw className="w-4 h-4" />
           </Button>
         )}
@@ -428,11 +424,11 @@ export default function WeeklyEditorV2({
       {showResetConfirm && resolvedBlueprint && (
         <div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-3 space-y-3">
           <div>
-            <p className="text-sm font-semibold text-amber-800">¿Restablecer estructura predeterminada?</p>
+            <p className="text-sm font-semibold text-amber-800">{t('weekly.resetConfirmTitle')}</p>
             <p className="text-xs text-amber-700 mt-0.5">
               {resetTargetSessionId
-                ? `Solo "${sessions.find(s => s.id === resetTargetSessionId)?.name}" será restablecido. El contenido ingresado en esa sesión se borrará.`
-                : 'TODAS las sesiones serán restablecidas. Todo el contenido ingresado se borrará.'}
+                ? t('weekly.resetConfirmSingle').replace('{name}', sessions.find(s => s.id === resetTargetSessionId)?.name || '')
+                : t('weekly.resetConfirmAll')}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -466,10 +462,10 @@ export default function WeeklyEditorV2({
                 });
               }}
             >
-              {resetTargetSessionId ? 'Restablecer Sesión' : 'Restablecer Todo'}
+              {resetTargetSessionId ? t('weekly.resetSession') : t('weekly.resetAll')}
             </Button>
             <Button size="sm" variant="ghost" className="text-xs h-7 px-2" onClick={() => { setShowResetConfirm(false); setResetTargetSessionId(null); }}>
-              Cancelar
+              {t('weekly.cancel')}
             </Button>
           </div>
         </div>
