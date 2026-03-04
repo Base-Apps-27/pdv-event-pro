@@ -703,4 +703,15 @@ export const en = {
   'fieldMap.presentationLink': 'Presentation Link (Slides)',
   'fieldMap.notesLink': 'Outline / Notes Link (PDF or Doc)',
   'fieldMap.slidesOnly': 'Slides Only (No verses)',
+
+  // WeeklyServiceDialogs (2026-03-04)
+  'dialogs.confirmDelete': 'Confirm Deletion',
+  'dialogs.deleteAnnouncementConfirm': 'Are you sure you want to delete this announcement?',
+  'dialogs.confirmReset': 'Confirm Reset',
+  'dialogs.resetDescription': 'This will reset segments and fields to the Blueprint design. Data entered in the selected time slots will be lost.',
+  'dialogs.selectSlotsToReset': 'Select which time slots to reset:',
+  'dialogs.reset': 'Reset',
+  'dialogs.resetAll': 'All',
+  'dialogs.editAnnouncement': 'Edit Announcement',
+  'dialogs.newAnnouncement': 'New Announcement',
 };

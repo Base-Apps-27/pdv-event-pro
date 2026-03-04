@@ -703,4 +703,15 @@ export const es = {
   'fieldMap.presentationLink': 'Enlace a Presentación (Slides)',
   'fieldMap.notesLink': 'Link de Bosquejo / Notas (PDF o Doc)',
   'fieldMap.slidesOnly': 'Solo Slides (Sin versículos)',
+
+  // WeeklyServiceDialogs (2026-03-04)
+  'dialogs.confirmDelete': 'Confirmar Eliminación',
+  'dialogs.deleteAnnouncementConfirm': '¿Estás seguro de que deseas eliminar este anuncio?',
+  'dialogs.confirmReset': 'Confirmar Restablecimiento',
+  'dialogs.resetDescription': 'Esto restablecerá los segmentos y campos al diseño del Blueprint. Se perderán los datos ingresados en los horarios seleccionados.',
+  'dialogs.selectSlotsToReset': 'Selecciona qué horarios restablecer:',
+  'dialogs.reset': 'Restablecer',
+  'dialogs.resetAll': 'Todo',
+  'dialogs.editAnnouncement': 'Editar Anuncio',
+  'dialogs.newAnnouncement': 'Nuevo Anuncio',
 };
