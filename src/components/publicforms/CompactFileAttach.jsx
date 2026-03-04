@@ -36,7 +36,9 @@ export default function CompactFileAttach({
         try {
           const url = new URL(val);
           const parts = url.pathname.split('/').filter(Boolean);
-          return decodeURIComponent(parts[parts.length - 1] || url.hostname);
+          let name = decodeURIComponent(parts[parts.length - 1] || url.hostname);
+          const prefixMatch = name.match(/^[a-fA-F0-9-]{8,36}_(.*)/);
+          return prefixMatch ? prefixMatch[1] : name;
         } catch { return val.substring(0, 40) + '…'; }
       })
     : [];
