@@ -245,8 +245,11 @@ export default function FileOrLinkInput({
     }
   };
 
-  const hasValue = value && value.trim();
-  const isUploaded = hasValue && (value.includes('/storage/v1/object/public/') || value.includes('base44'));
+  // Guard: value might arrive as array (e.g. presentation_url schema is string[]).
+  // Normalise to string so .trim()/.includes() never crash.
+  const safeValue = typeof value === 'string' ? value : (Array.isArray(value) ? (value[0] || '') : '');
+  const hasValue = safeValue && safeValue.trim();
+  const isUploaded = hasValue && (safeValue.includes('/storage/v1/object/public/') || safeValue.includes('base44'));
   const displayMode = hasValue ? (isUploaded ? 'upload' : 'link') : mode;
 
   return (
