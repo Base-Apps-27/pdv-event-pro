@@ -244,6 +244,9 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     arrayUrlFields.forEach(field => {
       if (typeof cleanedFormData[field] === 'string') {
         cleanedFormData[field] = cleanedFormData[field].trim() ? cleanedFormData[field].split(',').map(s => s.trim()).filter(Boolean) : [];
+      } else if (Array.isArray(cleanedFormData[field])) {
+        // Also cleanup arrays that might have empty strings in them
+        cleanedFormData[field] = cleanedFormData[field].map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
       }
     });
 
