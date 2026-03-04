@@ -69,8 +69,6 @@ function extractFilename(url) {
   }
 }
 
-import { Pencil } from 'lucide-react'; // Add this import at the top if it isn't there already
-
 export default function FileOrLinkInput({
   value,
   onChange,
