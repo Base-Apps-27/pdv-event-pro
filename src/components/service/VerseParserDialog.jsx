@@ -272,9 +272,10 @@ function VerseParserDialog({
       const aiVerses = aiResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
       const aiTakeaways = aiResponse?.key_takeaways || [];
       
-      // AI is usually smarter at understanding context (e.g. "read from John 3, starting at verse 16"). 
-      // If AI found verses, we trust it more than the regex. If AI failed, fallback to regex.
-      const finalVerses = aiVerses.length > 0 ? aiVerses : localResult.sections;
+      // 2026-03-04 FIX: Regex is canonical for verse formatting (produces proper bilingual EN|ES).
+      // LLM frequently duplicates the same language on both sides of the pipe.
+      // Only use LLM verses as fallback when regex found nothing.
+      const finalVerses = localResult.sections.length > 0 ? localResult.sections : (aiVerses.length > 0 ? aiVerses : []);
 
       setParsedData({
         type: finalVerses.length > 0 ? 'verse_list' : (aiTakeaways.length > 0 ? 'empty' : 'empty'),
