@@ -61,6 +61,9 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
         language="es"
       />
 
+      {/* Translation section — available for all segment types except Breakout */}
+      <TranslationSection segment={segment} onWrite={onWrite} />
+
       {/* Notes fields */}
       {NOTES_FIELDS.map(f => (
         <NoteTextarea
