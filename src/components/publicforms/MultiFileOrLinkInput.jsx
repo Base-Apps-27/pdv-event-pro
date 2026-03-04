@@ -16,7 +16,10 @@ export default function MultiFileOrLinkInput({
   const langCtx = useContext(PublicFormLangContext);
   const tFn = langCtx?.t || ((es, en) => es);
 
-  const currentUrls = Array.isArray(urls) ? urls : (urls ? urls.split(',').map(u => u.trim()).filter(Boolean) : []);
+  // Guard: urls might be a string, array, or unexpected type. Normalise to string[].
+  const currentUrls = Array.isArray(urls)
+    ? urls.map(u => (typeof u === 'string' ? u : String(u || ''))).filter(Boolean)
+    : (typeof urls === 'string' && urls ? urls.split(',').map(u => u.trim()).filter(Boolean) : []);
 
   const updateUrl = (index, newUrl) => {
     const next = [...currentUrls];
