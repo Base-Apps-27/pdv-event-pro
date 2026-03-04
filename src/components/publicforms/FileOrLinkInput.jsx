@@ -401,7 +401,7 @@ export default function FileOrLinkInput({
               <ExternalLink className="w-4 h-4 text-sky-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <a 
-                  href={value} 
+                  href={safeValue} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-xs font-medium text-sky-700 hover:text-sky-900 hover:underline truncate block" 
