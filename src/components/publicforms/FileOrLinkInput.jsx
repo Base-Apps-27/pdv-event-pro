@@ -47,6 +47,32 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/**
+ * Detect file category from URL/filename for visual differentiation.
+ * Categories: image, pdf, video, audio, link, other
+ */
+function getFileCategory(url) {
+  if (!url) return 'other';
+  const lower = url.toLowerCase().split('?')[0];
+  if (/\.(png|jpg|jpeg|gif|webp|svg)$/.test(lower)) return 'image';
+  if (/\.pdf$/.test(lower)) return 'pdf';
+  if (/\.(mp4|mov|webm)$/.test(lower)) return 'video';
+  if (/\.(mp3|wav|ogg)$/.test(lower)) return 'audio';
+  if (/\.(pptx|doc|docx|xlsx|xls|csv)$/.test(lower)) return 'document';
+  return 'other';
+}
+
+/** Visual config per file category — icon, colors, label */
+const FILE_CATEGORY_STYLES = {
+  image:    { Icon: Image,    bg: 'bg-purple-50',  border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', labelEs: 'Imagen', labelEn: 'Image' },
+  pdf:      { Icon: FileText, bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',    icon: 'text-red-500',    labelEs: 'PDF',    labelEn: 'PDF' },
+  video:    { Icon: Film,     bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-700',   icon: 'text-blue-500',   labelEs: 'Video',  labelEn: 'Video' },
+  audio:    { Icon: Music,    bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-700',  icon: 'text-amber-500',  labelEs: 'Audio',  labelEn: 'Audio' },
+  document: { Icon: File,     bg: 'bg-green-50',   border: 'border-green-200',  text: 'text-green-700',  icon: 'text-green-500',  labelEs: 'Documento', labelEn: 'Document' },
+  other:    { Icon: File,     bg: 'bg-green-50',   border: 'border-green-200',  text: 'text-green-700',  icon: 'text-green-500',  labelEs: 'Archivo', labelEn: 'File' },
+  link:     { Icon: ExternalLink, bg: 'bg-sky-50', border: 'border-sky-200',    text: 'text-sky-700',    icon: 'text-sky-500',    labelEs: 'Enlace', labelEn: 'Link' },
+};
+
 function extractFilename(url) {
   if (!url) return '';
   try {
