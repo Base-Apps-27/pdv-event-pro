@@ -233,6 +233,20 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     // Strip internal UI state flags
     const cleanedFormData = Object.fromEntries(Object.entries(formData).filter(([key]) => !key.startsWith('_')));
 
+    // Legacy schema cleanup: ensure URL array fields are actually arrays, not empty strings
+    const arrayUrlFields = [
+      'presentation_url', 'notes_url', 'video_url', 'arts_run_of_show_url',
+      'drama_song_source', 'drama_song_2_url', 'drama_song_3_url',
+      'dance_song_source', 'dance_song_2_url', 'dance_song_3_url',
+      'spoken_word_music_url', 'spoken_word_script_url', 'spoken_word_audio_url'
+    ];
+    
+    arrayUrlFields.forEach(field => {
+      if (typeof cleanedFormData[field] === 'string') {
+        cleanedFormData[field] = cleanedFormData[field].trim() ? cleanedFormData[field].split(',').map(s => s.trim()).filter(Boolean) : [];
+      }
+    });
+
     const data = {
       session_id: sessionId,
       ...cleanedFormData,
