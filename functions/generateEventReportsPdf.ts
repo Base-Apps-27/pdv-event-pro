@@ -269,7 +269,7 @@ function headerBand(event, session, sizes) {
       {
         width: 50,
         stack: [
-          { qr: 'https://pdv-event-pro.base44.app', fit: 36, alignment: 'right', foreground: '#1F8A70' },
+          { qr: 'https://vidaevents.co', fit: 36, alignment: 'right', foreground: '#1F8A70' },
           { text: 'SCAN', fontSize: 5, alignment: 'right', color: '#6b7280', margin: [0, 1, 0, 0] }
         ]
       }

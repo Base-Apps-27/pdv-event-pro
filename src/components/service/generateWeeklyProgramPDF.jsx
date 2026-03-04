@@ -304,7 +304,7 @@ function buildHeader(serviceData, logoDataUrl, scale) {
       {
         width: 50,
         stack: [
-          { qr: 'https://pdv-event-pro.base44.app', fit: 42, alignment: 'right', foreground: BRAND.TEAL },
+          { qr: 'https://vidaevents.co', fit: 42, alignment: 'right', foreground: BRAND.TEAL },
           { text: 'SCAN', fontSize: 5, alignment: 'right', color: BRAND.GRAY, margin: [0, 1, 0, 0] }
         ]
       }

@@ -288,7 +288,7 @@ export default function EventDetail() {
                 <DropdownMenuItem
                   onClick={async () => {
                     // Production custom domain — stable, not tied to builder preview origin
-                    const prodOrigin = 'https://pdv-event-pro.base44.app';
+                    const prodOrigin = 'https://vidaevents.co';
                     const url = `${prodOrigin}${createPageUrl('PublicSpeakerForm')}?event_id=${eventId}`;
                     try {
                       await navigator.clipboard.writeText(url);
@@ -303,7 +303,7 @@ export default function EventDetail() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
-                    const prodOrigin = 'https://pdv-event-pro.base44.app';
+                    const prodOrigin = 'https://vidaevents.co';
                     const url = `${prodOrigin}${createPageUrl('PublicArtsForm')}?event_id=${eventId}`;
                     try {
                       await navigator.clipboard.writeText(url);
