@@ -84,7 +84,6 @@ import SessionDetail from './pages/SessionDetail';
 import SoundView from './pages/SoundView';
 import Teams from './pages/Teams';
 import Templates from './pages/Templates';
-import TestDashboard from './pages/TestDashboard';
 import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
@@ -130,7 +129,6 @@ export const PAGES = {
     "SoundView": SoundView,
     "Teams": Teams,
     "Templates": Templates,
-    "TestDashboard": TestDashboard,
     "UserManagement": UserManagement,
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
