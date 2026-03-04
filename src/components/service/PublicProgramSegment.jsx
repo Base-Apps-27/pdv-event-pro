@@ -61,24 +61,27 @@ export default function PublicProgramSegment({
   // anything beyond what the slim surface summary shows (types + order + media names).
   // This includes: arts operational data (mics, cues, setup, scripts, audio),
   // speaker resources (slides, notes), video URLs, song URLs, run-of-show PDF.
+  // 2026-03-04 FIX: URL fields are arrays — empty [] is truthy in JS.
+  // Must check .length > 0 to avoid phantom "Recursos" buttons on segments with no actual URLs.
+  const arrHas = (v) => Array.isArray(v) ? v.length > 0 : !!v;
   const hasArtsOperationalData = (segment.art_types?.length > 0) && (
     segment.drama_handheld_mics > 0 || segment.drama_headset_mics > 0 ||
     segment.drama_start_cue || segment.drama_end_cue ||
     segment.dance_handheld_mics > 0 || segment.dance_headset_mics > 0 ||
     segment.dance_start_cue || segment.dance_end_cue ||
-    segment.spoken_word_speaker || segment.spoken_word_mic_position || segment.spoken_word_script_url || segment.spoken_word_audio_url ||
+    segment.spoken_word_speaker || segment.spoken_word_mic_position || arrHas(segment.spoken_word_script_url) || arrHas(segment.spoken_word_audio_url) ||
     segment.painting_needs_easel || segment.painting_needs_drop_cloth || segment.painting_needs_lighting || segment.painting_canvas_size || segment.painting_other_setup ||
     segment.drama_song_title || segment.dance_song_title ||
-    segment.video_url || segment.video_name ||
-    segment.arts_run_of_show_url ||
+    arrHas(segment.video_url) || segment.video_name ||
+    arrHas(segment.arts_run_of_show_url) ||
     segment.art_other_description
   );
   const hasResourceLinks = hasArtsOperationalData ||
-    segment.video_url || 
-    segment.drama_song_source || segment.drama_song_2_url || segment.drama_song_3_url ||
-    segment.dance_song_source || segment.dance_song_2_url || segment.dance_song_3_url ||
-    segment.arts_run_of_show_url ||
-    presentationUrl || notesUrl;
+    arrHas(segment.video_url) || 
+    arrHas(segment.drama_song_source) || arrHas(segment.drama_song_2_url) || arrHas(segment.drama_song_3_url) ||
+    arrHas(segment.dance_song_source) || arrHas(segment.dance_song_2_url) || arrHas(segment.dance_song_3_url) ||
+    arrHas(segment.arts_run_of_show_url) ||
+    arrHas(presentationUrl) || arrHas(notesUrl);
   
   // Determine segment type and characteristics
   const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
