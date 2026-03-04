@@ -76,11 +76,19 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
           return (
             <div key={f.column} className="text-xs">
               <span className="font-semibold">{pLabel}:</span>{' '}
-              {isValidUrl(val) ? (
-                <a href={val.startsWith('http') ? val : `https://${val}`} className="text-blue-600 underline">{val}</a>
-              ) : (
-                <span className="text-gray-700">{val}</span>
-              )}
+              {val.split(',').map((u, i) => {
+                const url = u.trim();
+                if (!url) return null;
+                return (
+                  <span key={i} className="inline-block mr-2">
+                    {isValidUrl(url) ? (
+                      <a href={url.startsWith('http') ? url : `https://${url}`} className="text-blue-600 underline">{url}</a>
+                    ) : (
+                      <span className="text-gray-700">{url}</span>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           );
         })}
@@ -93,12 +101,14 @@ const SpeakerInput = memo(function SpeakerInput({ segment, column, placeholder, 
   const value = segment[column] || '';
   const [local, setLocal] = useState(value);
   useEffect(() => { setLocal(value); }, [value]);
-  const hasUrl = isValidUrl(local);
+  
+  // Basic check: if any of the comma-separated parts is a valid URL
+  const hasUrl = local.split(',').some(u => isValidUrl(u.trim()));
 
   return (
     <Input
       value={local}
-      placeholder={placeholder}
+      placeholder={placeholder + " (comma separated for multiple)"}
       onChange={(e) => {
         setLocal(e.target.value);
         onWrite(segment.id, column, e.target.value);
