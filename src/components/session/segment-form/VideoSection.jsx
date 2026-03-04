@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, X } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import VideoDurationInput from "@/components/publicforms/VideoDurationInput";
+import MultiFileOrLinkInput from "@/components/publicforms/MultiFileOrLinkInput";
 
 export default function VideoSection({ formData, setFormData, isVideoType, isBreakType, isTechOnly }) {
   const { language } = useLanguage();
