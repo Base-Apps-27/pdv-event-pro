@@ -59,6 +59,23 @@ function resolveSegmentEnum(rawType) {
   return TYPE_TO_ENUM[rawType.toLowerCase()] || rawType;
 }
 
+/**
+ * BUGFIX (2026-03-04): Derive planned_start_time from slot name like "9:30am".
+ * Without this, sessions are created without planned_start_time, which breaks
+ * segment time calculation in buildProgramSnapshot and SlotColumn display.
+ */
+function parseSlotNameToTime(slotName) {
+  if (!slotName) return null;
+  const match = slotName.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+  if (!match) return null;
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const ampm = (match[3] || '').toLowerCase();
+  if (ampm === 'pm' && hours !== 12) hours += 12;
+  if (ampm === 'am' && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
 // Hardcoded fallback blueprint for Sunday (legacy safety net)
 const FALLBACK_BLUEPRINT_SEGMENTS = [
   { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader"], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], requires_translation: false, default_translator_source: "manual", number_of_songs: 4 },
@@ -217,11 +234,15 @@ Deno.serve(async (req) => {
         }
 
         // Create Session entity
+        // BUGFIX (2026-03-04): Include planned_start_time derived from slot name.
+        // Without this, computeSegmentTimes in buildProgramSnapshot can't calculate
+        // segment start/end times, causing "–" to display instead of actual times.
         const session = await base44.asServiceRole.entities.Session.create({
           service_id: newService.id,
           name: slotName,
           date: dateStr,
           order: slotNames.indexOf(slotName) + 1,
+          planned_start_time: parseSlotNameToTime(slotName),
         });
         console.log(`[ENSURE_RECURRING] Created Session "${slotName}" (id: ${session.id})`);
 
