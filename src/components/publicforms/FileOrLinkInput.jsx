@@ -25,7 +25,7 @@
  */
 import React, { useState, useRef, useContext, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Upload, Link2, X, CheckCircle2, Loader2, AlertCircle, Trash2, Pencil } from 'lucide-react';
+import { Upload, Link2, CheckCircle2, Loader2, AlertCircle, Trash2, Pencil } from 'lucide-react';
 import { PublicFormLangContext } from './PublicFormLangContext';
 
 // Supported upload formats on Base44 (from platform docs)
