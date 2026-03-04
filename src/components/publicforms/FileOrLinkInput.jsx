@@ -349,7 +349,7 @@ export default function FileOrLinkInput({
       )}
 
       {/* Link mode */}
-      {mode === 'link' && (
+      {displayMode === 'link' && (
         <div className="relative">
           <input
             type="url"
