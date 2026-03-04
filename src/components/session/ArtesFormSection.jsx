@@ -329,8 +329,12 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
-            <Input value={formData.video_url || ""} onChange={(e) => setFormData({ ...formData, video_url: e.target.value, video_url_meta: null })} placeholder="https://youtube.com/watch?v=..." className="h-8 text-sm" />
+            <Label className="text-xs">{language === 'es' ? 'Enlace al Video' : 'Video Link'}</Label>
+            <MultiFileOrLinkInput 
+               urls={formData.video_url} 
+               onChange={(urls) => setFormData({ ...formData, video_url: urls, video_url_meta: null })} 
+               placeholder="https://youtube.com/watch?v=..." 
+            />
           </div>
         </div>
       )}
