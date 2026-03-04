@@ -112,7 +112,8 @@ export default function FileOrLinkInput({
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [isLinkLocked, setIsLinkLocked] = useState(!!value && !value.includes('/storage/v1/object/public/') && !value.includes('base44'));
+  const initialValue = typeof value === 'string' ? value : (Array.isArray(value) ? (value[0] || '') : '');
+  const [isLinkLocked, setIsLinkLocked] = useState(!!initialValue && !initialValue.includes('/storage/v1/object/public/') && !initialValue.includes('base44'));
   const fileInputRef = useRef(null);
   const progressTimerRef = useRef(null);
 
