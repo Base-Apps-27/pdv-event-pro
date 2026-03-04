@@ -212,6 +212,8 @@ export default function FileOrLinkInput({
   };
 
   const hasValue = value && value.trim();
+  const isUploaded = hasValue && (value.includes('/storage/v1/object/public/') || value.includes('base44'));
+  const displayMode = hasValue ? (isUploaded ? 'upload' : 'link') : mode;
 
   return (
     <div className="space-y-2">
@@ -223,8 +225,9 @@ export default function FileOrLinkInput({
       )}
 
       {/* Mode toggle tabs */}
-      <div className="flex gap-1 mb-1">
-        <button
+      {!hasValue && (
+        <div className="flex gap-1 mb-1">
+          <button
           type="button"
           onClick={() => { setMode('upload'); setUploadError(''); setConfirmingDelete(false); }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
