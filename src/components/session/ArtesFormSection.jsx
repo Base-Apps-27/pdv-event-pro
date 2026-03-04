@@ -331,10 +331,10 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
 
       {/* Arts Directions PDF - simple input */}
       <div className="border-t border-pink-200 pt-3 mt-3 space-y-2">
-        <Label className="text-xs">{language === 'es' ? 'Guía de Artes (PDF/Documento)' : 'Arts Directions (PDF/Document)'}</Label>
+        <Label className="text-xs">{language === 'es' ? 'Guía de Artes (PDF/Documento, separadas por coma)' : 'Arts Directions (PDF/Document, comma separated)'}</Label>
         <Input
-          value={formData.arts_run_of_show_url}
-          onChange={(e) => setFormData({ ...formData, arts_run_of_show_url: e.target.value, arts_run_of_show_url_meta: null })}
+          value={Array.isArray(formData.arts_run_of_show_url) ? formData.arts_run_of_show_url.join(', ') : (formData.arts_run_of_show_url || "")}
+          onChange={(e) => setFormData({ ...formData, arts_run_of_show_url: e.target.value.split(',').map(s=>s.trim()).filter(Boolean), arts_run_of_show_url_meta: null })}
           placeholder="https://drive.google.com/..."
           className="h-9 text-sm"
         />
