@@ -163,12 +163,15 @@ Deno.serve(async (req) => {
         for (const field of URL_FIELDS) {
             const val = data[field];
             if (val && typeof val === 'string' && val.trim() !== '') {
-                const trimmed = val.trim().toLowerCase();
-                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                    return Response.json(
-                        { error: `Invalid URL in field "${field}". Only http/https URLs are allowed.` },
-                        { status: 400, headers: corsHeaders }
-                    );
+                const urls = val.split(',').map(u => u.trim()).filter(Boolean);
+                for (const u of urls) {
+                    const trimmed = u.toLowerCase();
+                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                        return Response.json(
+                            { error: `Invalid URL in field "${field}". Only http/https URLs are allowed.` },
+                            { status: 400, headers: corsHeaders }
+                        );
+                    }
                 }
             }
         }
