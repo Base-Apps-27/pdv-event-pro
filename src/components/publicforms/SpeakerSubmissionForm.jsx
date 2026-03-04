@@ -64,8 +64,8 @@ export default function SpeakerSubmissionForm({ options }) {
             segment_id: segmentId,
             content: content,
             title: title,
-            presentation_url: presentationUrl,
-            notes_url: notesUrl,
+            presentation_url: presentationUrls.join(','),
+            notes_url: notesUrls.join(','),
             content_is_slides_only: slidesOnly,
             idempotencyKey: idempotencyKey,
             // 2026-03-01: Browser/device metadata for audit trail
@@ -226,9 +226,10 @@ export default function SpeakerSubmissionForm({ options }) {
                                 'If you have supplemental slides or images ready for projection, upload them here. Do NOT upload your notes/outline document. You already pasted it above.'
                             )}
                         </p>
-                        <FileOrLinkInput
-                            value={presentationUrl}
-                            onChange={setPresentationUrl}
+                        <MultiFileOrLinkInput
+                            urls={presentationUrls}
+                            onChange={setPresentationUrls}
+                            maxCount={4}
                             label={t('Slides Complementarios (Opcional)', 'Supplemental Slides (Optional)')}
                             accept="image/*,.pdf,.pptx"
                             placeholder="https://drive.google.com/..."
@@ -252,9 +253,10 @@ export default function SpeakerSubmissionForm({ options }) {
                                 'Upload your finished presentation (PowerPoint, Keynote, PDF, or images). This file will be used directly for projection. Make sure it is the final version.'
                             )}
                         </div>
-                        <FileOrLinkInput
-                            value={presentationUrl}
-                            onChange={setPresentationUrl}
+                        <MultiFileOrLinkInput
+                            urls={presentationUrls}
+                            onChange={setPresentationUrls}
+                            maxCount={4}
                             label={t('Presentación / Slides Finales', 'Final Presentation / Slides')}
                             accept="image/*,.pdf,.pptx"
                             placeholder="https://drive.google.com/..."
@@ -273,9 +275,10 @@ export default function SpeakerSubmissionForm({ options }) {
                                 'If you have an outline or guide so the media team can follow the presentation, upload it here.'
                             )}
                         </p>
-                        <FileOrLinkInput
-                            value={notesUrl}
-                            onChange={setNotesUrl}
+                        <MultiFileOrLinkInput
+                            urls={notesUrls}
+                            onChange={setNotesUrls}
+                            maxCount={4}
                             label={t('Bosquejo / Notas (Opcional)', 'Outline / Notes (Optional)')}
                             accept=".pdf,.doc,.docx"
                             placeholder={t('Enlace a notas', 'Link to notes')}
