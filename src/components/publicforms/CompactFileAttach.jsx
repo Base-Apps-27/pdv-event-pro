@@ -28,11 +28,11 @@ export default function CompactFileAttach({
 }) {
   const { t } = usePublicLang();
   const [expanded, setExpanded] = useState(false);
-  const hasValue = value && value.trim();
+  const hasValue = Array.isArray(value) ? value.length > 0 : value && value.trim();
 
   // Extract display name from URL (last path segment or domain)
   const displayNames = hasValue
-    ? (Array.isArray(value) ? value : value.split(',')).map(v => v.trim()).filter(Boolean).map(val => {
+    ? (Array.isArray(value) ? value : value.split(',')).map(v => typeof v === 'string' ? v.trim() : v).filter(Boolean).map(val => {
         try {
           const url = new URL(val);
           const parts = url.pathname.split('/').filter(Boolean);
