@@ -358,13 +358,13 @@ export default function FileOrLinkInput({
                   <CatIcon className={`w-4 h-4 ${style.icon} shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <a 
-                      href={value} 
+                      href={safeValue} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className={`text-xs font-medium ${style.text} hover:underline truncate block`}
-                      title={uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
+                      title={uploadedFileName || extractFilename(safeValue) || tFn('Archivo subido', 'File uploaded')}
                     >
-                      {uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
+                      {uploadedFileName || extractFilename(safeValue) || tFn('Archivo subido', 'File uploaded')}
                     </a>
                     <span className={`text-[10px] ${style.icon} truncate block`}>
                       {tFn(style.labelEs, style.labelEn)}
