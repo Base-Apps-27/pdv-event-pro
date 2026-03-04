@@ -14,7 +14,7 @@
  */
 import React, { useState } from 'react';
 import { Paperclip, CheckCircle2, ChevronDown, X } from 'lucide-react';
-import FileOrLinkInput from './FileOrLinkInput';
+import MultiFileOrLinkInput from './MultiFileOrLinkInput';
 import { usePublicLang } from './PublicFormLangContext';
 
 export default function CompactFileAttach({
@@ -31,15 +31,15 @@ export default function CompactFileAttach({
   const hasValue = value && value.trim();
 
   // Extract display name from URL (last path segment or domain)
-  const displayName = hasValue
-    ? (() => {
+  const displayNames = hasValue
+    ? value.split(',').map(v => v.trim()).filter(Boolean).map(val => {
         try {
-          const url = new URL(value);
+          const url = new URL(val);
           const parts = url.pathname.split('/').filter(Boolean);
           return decodeURIComponent(parts[parts.length - 1] || url.hostname);
-        } catch { return value.substring(0, 40) + '…'; }
-      })()
-    : '';
+        } catch { return val.substring(0, 40) + '…'; }
+      })
+    : [];
 
   // Has value: show compact confirmation line
   if (hasValue && !expanded) {
@@ -48,7 +48,13 @@ export default function CompactFileAttach({
         <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
         <div className="flex-1 min-w-0">
           <span className="text-xs font-medium text-green-800 truncate block">{label}</span>
-          <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block">{displayName}</a>
+          <div className="space-y-1 mt-1">
+            {value.split(',').map((v, i) => v.trim() ? (
+              <a key={i} href={v.trim()} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block">
+                {displayNames[i]}
+              </a>
+            ) : null)}
+          </div>
         </div>
         <button type="button" onClick={() => setExpanded(true)} className="text-[10px] text-gray-500 hover:text-[#1F8A70] font-medium px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors shrink-0">
           {t('Cambiar', 'Change')}
@@ -88,15 +94,13 @@ export default function CompactFileAttach({
           {t('Cerrar', 'Close')}
         </button>
       </div>
-      <FileOrLinkInput
-        value={value}
-        onChange={(v) => {
+      <MultiFileOrLinkInput
+        urls={value ? value.split(',').map(s=>s.trim()).filter(Boolean) : []}
+        onChange={(arr) => {
+          const v = arr.join(',');
           onChange(v);
-          // Auto-collapse after successful upload/link entry
-          if (v && v.trim()) {
-            setTimeout(() => setExpanded(false), 800);
-          }
         }}
+        maxCount={4}
         accept={accept}
         placeholder={placeholder}
         helpText={helpText}
