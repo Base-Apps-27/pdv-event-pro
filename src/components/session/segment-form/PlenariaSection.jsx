@@ -29,18 +29,18 @@ export default function PlenariaSection({ formData, setFormData, onOpenVersePars
       </div>
       <div className="space-y-3 pt-2 border-t border-orange-200">
         <div className="space-y-2">
-          <Label>Presentación / Slides (URL)</Label>
-          <Input
-            value={Array.isArray(formData.presentation_url) ? formData.presentation_url.join(', ') : (formData.presentation_url || '')}
-            onChange={(e) => setFormData({...formData, presentation_url: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : []})}
+          <Label>Presentación / Slides</Label>
+          <MultiFileOrLinkInput
+            urls={formData.presentation_url}
+            onChange={(urls) => setFormData({...formData, presentation_url: urls})}
             placeholder="https://..."
           />
         </div>
         <div className="space-y-2">
-          <Label>Bosquejo / Notas (URL)</Label>
-          <Input
-            value={Array.isArray(formData.notes_url) ? formData.notes_url.join(', ') : (formData.notes_url || '')}
-            onChange={(e) => setFormData({...formData, notes_url: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : []})}
+          <Label>Bosquejo / Notas</Label>
+          <MultiFileOrLinkInput
+            urls={formData.notes_url}
+            onChange={(urls) => setFormData({...formData, notes_url: urls})}
             placeholder="https://..."
           />
         </div>
