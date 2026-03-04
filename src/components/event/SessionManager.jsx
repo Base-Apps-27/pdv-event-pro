@@ -737,6 +737,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader className="shrink-0 border-b border-gray-100 p-6 pb-4">
             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSession ? 'Editar Sesión' : 'Nueva Sesión'}</DialogTitle>
+            <DialogDescription className="sr-only">Formulario de configuración de sesión</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
             {/* Section Navigation Pills */}
