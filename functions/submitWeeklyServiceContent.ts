@@ -369,12 +369,15 @@ ${content.substring(0, 15000)}`;
                     const aiTakeawaysEs = llmResponse?.key_takeaways_es || [];
                     const detectedLang = llmResponse?.source_language || 'es';
                     
-                    // Trust AI verses over Regex if it found any
-                    if (aiVerses.length > 0) {
+                    // 2026-03-04 FIX: Only use LLM verses as FALLBACK when regex found nothing.
+                    // Regex produces properly bilingual output; LLM frequently duplicates same language.
+                    if (aiVerses.length > 0 && parsedData.sections.length === 0) {
                         parsedData.sections = aiVerses;
                         parsedData.type = 'verse_list';
                         scriptureReferences = aiVerses.map(v => v.content).join('\n');
-                        console.log(`[TAKEAWAYS_PIPELINE] LLM overrode regex with ${aiVerses.length} verses`);
+                        console.log(`[TAKEAWAYS_PIPELINE] LLM provided ${aiVerses.length} verses (regex found none)`);
+                    } else if (aiVerses.length > 0) {
+                        console.log(`[TAKEAWAYS_PIPELINE] LLM found ${aiVerses.length} verses but regex has ${parsedData.sections.length} — keeping regex`);
                     }
 
                     // Store bilingual takeaways + source language
