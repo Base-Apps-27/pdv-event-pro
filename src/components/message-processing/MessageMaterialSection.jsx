@@ -14,13 +14,13 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Pencil, Save, X, ExternalLink, FileText, Presentation, Sparkles } from 'lucide-react';
-import FileOrLinkInput from '@/components/publicforms/FileOrLinkInput';
+import MultiFileOrLinkInput from '@/components/publicforms/MultiFileOrLinkInput';
 import { toast } from 'sonner';
 
 export default function MessageMaterialSection({ segment, onUpdated }) {
   const [editing, setEditing] = useState(false);
-  const [presentationUrl, setPresentationUrl] = useState(segment.presentation_url || '');
-  const [notesUrl, setNotesUrl] = useState(segment.notes_url || '');
+  const [presentationUrls, setPresentationUrls] = useState(segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+  const [notesUrls, setNotesUrls] = useState(segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
   const [slidesOnly, setSlidesOnly] = useState(!!segment.content_is_slides_only);
   const [saving, setSaving] = useState(false);
 
@@ -29,8 +29,8 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.Segment.update(segment.id, {
-      presentation_url: presentationUrl,
-      notes_url: notesUrl,
+      presentation_url: presentationUrls.join(','),
+      notes_url: notesUrls.join(','),
       content_is_slides_only: slidesOnly,
     });
     setSaving(false);
@@ -40,8 +40,8 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
   };
 
   const handleCancel = () => {
-    setPresentationUrl(segment.presentation_url || '');
-    setNotesUrl(segment.notes_url || '');
+    setPresentationUrls(segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+    setNotesUrls(segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
     setSlidesOnly(!!segment.content_is_slides_only);
     setEditing(false);
   };
@@ -66,22 +66,22 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
                 <Sparkles className="w-3 h-3 mr-1" /> Solo Slides
               </Badge>
             )}
-            {segment.presentation_url && (
-              <a href={segment.presentation_url} target="_blank" rel="noopener noreferrer"
+            {segment.presentation_url && segment.presentation_url.split(',').map((url, i) => url.trim() ? (
+              <a key={`pres-${i}`} href={url.trim()} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-teal-700 hover:underline truncate">
                 <Presentation className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{segment.presentation_url}</span>
+                <span className="truncate">{url.trim()}</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />
               </a>
-            )}
-            {segment.notes_url && (
-              <a href={segment.notes_url} target="_blank" rel="noopener noreferrer"
+            ) : null)}
+            {segment.notes_url && segment.notes_url.split(',').map((url, i) => url.trim() ? (
+              <a key={`note-${i}`} href={url.trim()} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-teal-700 hover:underline truncate">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{segment.notes_url}</span>
+                <span className="truncate">{url.trim()}</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />
               </a>
-            )}
+            ) : null)}
           </div>
         )}
       </div>
@@ -103,9 +103,10 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
         </div>
       </div>
 
-      <FileOrLinkInput
-        value={presentationUrl}
-        onChange={setPresentationUrl}
+      <MultiFileOrLinkInput
+        urls={presentationUrls}
+        onChange={setPresentationUrls}
+        maxCount={4}
         label="Presentación / Slides Finales"
         accept="image/*,.pdf"
         placeholder="https://drive.google.com/..."
@@ -113,9 +114,10 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
         variant="compact"
       />
 
-      <FileOrLinkInput
-        value={notesUrl}
-        onChange={setNotesUrl}
+      <MultiFileOrLinkInput
+        urls={notesUrls}
+        onChange={setNotesUrls}
+        maxCount={4}
         label="Bosquejo / Notas Finales (PDF o Doc)"
         accept=".pdf,.doc,.docx"
         placeholder="https://..."
