@@ -368,9 +368,21 @@ export default function FileOrLinkInput({
               onChange(e.target.value);
               setUploadedFileName('');
             }}
+            onBlur={handleLinkBlur}
+            readOnly={isLinkLocked}
             placeholder={placeholder}
-            className={`flex-1 min-w-0 ${inputClass}`}
+            className={`flex-1 min-w-0 ${inputClass} ${isLinkLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-transparent' : ''}`}
           />
+          {hasValue && isLinkLocked && (
+            <button
+              type="button"
+              onClick={() => setIsLinkLocked(false)}
+              className="p-1 shrink-0 text-gray-400 hover:text-blue-500 transition-colors"
+              title={tFn('Editar enlace', 'Edit link')}
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
           {hasValue && (
             confirmingDelete ? (
               <div className="flex items-center gap-1 shrink-0">
