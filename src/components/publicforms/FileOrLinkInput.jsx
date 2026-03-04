@@ -55,12 +55,14 @@ function extractFilename(url) {
     const lastPart = parts[parts.length - 1];
     if (!lastPart) return url;
     
-    // Decode the URI component to handle spaces and special chars
     let decoded = decodeURIComponent(lastPart);
     
-    // Base44 files might have a uuid prefix like UUID_filename.ext
-    // If we detect a standard 36-char uuid prefix with underscore, we can strip it for cleaner display,
-    // but just decoding and showing the last part is usually good enough.
+    // Strip common storage prefixes (e.g. 9-char hex + underscore, or 36-char uuid + underscore)
+    const prefixMatch = decoded.match(/^[a-fA-F0-9-]{8,36}_(.*)/);
+    if (prefixMatch && prefixMatch[1]) {
+      return prefixMatch[1];
+    }
+    
     return decoded;
   } catch {
     return url;
