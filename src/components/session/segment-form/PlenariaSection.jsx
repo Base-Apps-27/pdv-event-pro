@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import ParsedContentPreview from "@/components/service/ParsedContentPreview";
+import MultiFileOrLinkInput from "@/components/publicforms/MultiFileOrLinkInput";
 
 export default function PlenariaSection({ formData, setFormData, onOpenVerseParser }) {
   const { language } = useLanguage();
