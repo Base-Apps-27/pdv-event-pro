@@ -28,10 +28,15 @@ Deno.serve(async (req) => {
 
         let migratedSegments = 0;
         let migratedVersions = 0;
+        
+        // Helper to delay
+        const delay = ms => new Promise(r => setTimeout(r, ms));
 
         // Migrate Segments
+        // We might want to use pagination if there are too many, but .filter({}) maxes at 1000 typically
         const segments = await base44.asServiceRole.entities.Segment.filter({});
-        for (const segment of segments) {
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
             const updates = {};
             let needsUpdate = false;
 
@@ -45,12 +50,14 @@ Deno.serve(async (req) => {
             if (needsUpdate) {
                 await base44.asServiceRole.entities.Segment.update(segment.id, updates);
                 migratedSegments++;
+                if (migratedSegments % 10 === 0) await delay(100); // Prevent rate limit
             }
         }
 
         // Migrate SpeakerSubmissionVersion
         const versions = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter({});
-        for (const version of versions) {
+        for (let i = 0; i < versions.length; i++) {
+            const version = versions[i];
             const updates = {};
             let needsUpdate = false;
 
@@ -66,6 +73,7 @@ Deno.serve(async (req) => {
             if (needsUpdate) {
                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(version.id, updates);
                 migratedVersions++;
+                if (migratedVersions % 10 === 0) await delay(100); // Prevent rate limit
             }
         }
 
