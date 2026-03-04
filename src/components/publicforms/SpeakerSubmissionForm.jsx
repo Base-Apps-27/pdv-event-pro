@@ -64,8 +64,8 @@ export default function SpeakerSubmissionForm({ options }) {
             segment_id: segmentId,
             content: content,
             title: title,
-            presentation_url: presentationUrls.join(','),
-            notes_url: notesUrls.join(','),
+            presentation_url: presentationUrls,
+            notes_url: notesUrls,
             content_is_slides_only: slidesOnly,
             idempotencyKey: idempotencyKey,
             // 2026-03-01: Browser/device metadata for audit trail

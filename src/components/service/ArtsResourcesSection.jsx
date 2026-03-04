@@ -40,7 +40,7 @@ function InfoRow({ label, value, icon }) {
 
 function LinkRow({ label, url, type = 'link' }) {
   if (!url) return null;
-  const urls = url.split(',').map(u => u.trim()).filter(Boolean);
+  const urls = (Array.isArray(url) ? url : url.split(',')).map(u => u.trim()).filter(Boolean);
   if (urls.length === 0) return null;
   
   const icons = {
@@ -251,11 +251,11 @@ export default function ArtsResourcesSection({ segment, language = 'es' }) {
       })}
 
       {/* Run of show PDF — bottom of arts section */}
-      {segment.arts_run_of_show_url && segment.arts_run_of_show_url.split(',').map((u, i) => u.trim() ? (
+      {segment.arts_run_of_show_url && (Array.isArray(segment.arts_run_of_show_url) ? segment.arts_run_of_show_url : segment.arts_run_of_show_url.split(',')).map((u, i, arr) => u.trim() ? (
         <a key={i} href={u.trim()} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-xs transition-colors mb-1">
           <FileText className="w-4 h-4 text-red-600 shrink-0" />
-          <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}{segment.arts_run_of_show_url.split(',').length > 1 ? ` (${i + 1})` : ''}</span>
+          <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}{arr.length > 1 ? ` (${i + 1})` : ''}</span>
           <Play className="w-3 h-3 text-gray-400 shrink-0" />
         </a>
       ) : null)}

@@ -76,7 +76,7 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
           return (
             <div key={f.column} className="text-xs">
               <span className="font-semibold">{pLabel}:</span>{' '}
-              {val.split(',').map((u, i) => {
+              {(Array.isArray(val) ? val : val.split(',')).map((u, i) => {
                 const url = u.trim();
                 if (!url) return null;
                 return (
@@ -98,9 +98,10 @@ export default memo(function SpeakerMaterialSection({ segment, onWrite }) {
 });
 
 const SpeakerInput = memo(function SpeakerInput({ segment, column, placeholder, onWrite }) {
-  const value = segment[column] || '';
-  const [local, setLocal] = useState(value);
-  useEffect(() => { setLocal(value); }, [value]);
+  const value = segment[column] || [];
+  const stringValue = Array.isArray(value) ? value.join(', ') : (value || '');
+  const [local, setLocal] = useState(stringValue);
+  useEffect(() => { setLocal(Array.isArray(value) ? value.join(', ') : (value || '')); }, [value]);
   
   // Basic check: if any of the comma-separated parts is a valid URL
   const hasUrl = local.split(',').some(u => isValidUrl(u.trim()));
@@ -111,7 +112,8 @@ const SpeakerInput = memo(function SpeakerInput({ segment, column, placeholder, 
       placeholder={placeholder + " (comma separated for multiple)"}
       onChange={(e) => {
         setLocal(e.target.value);
-        onWrite(segment.id, column, e.target.value);
+        const newArray = e.target.value.split(',').map(s=>s.trim()).filter(Boolean);
+        onWrite(segment.id, column, newArray);
       }}
       className={`text-xs bg-white ${hasUrl ? 'border-green-400 focus:border-green-500' : ''}`}
     />

@@ -32,7 +32,7 @@ export default function CompactFileAttach({
 
   // Extract display name from URL (last path segment or domain)
   const displayNames = hasValue
-    ? value.split(',').map(v => v.trim()).filter(Boolean).map(val => {
+    ? (Array.isArray(value) ? value : value.split(',')).map(v => v.trim()).filter(Boolean).map(val => {
         try {
           const url = new URL(val);
           const parts = url.pathname.split('/').filter(Boolean);
@@ -49,7 +49,7 @@ export default function CompactFileAttach({
         <div className="flex-1 min-w-0">
           <span className="text-xs font-medium text-green-800 truncate block">{label}</span>
           <div className="space-y-1 mt-1">
-            {value.split(',').map((v, i) => v.trim() ? (
+            {(Array.isArray(value) ? value : value.split(',')).map((v, i) => v.trim() ? (
               <a key={i} href={v.trim()} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block">
                 {displayNames[i]}
               </a>
@@ -95,10 +95,9 @@ export default function CompactFileAttach({
         </button>
       </div>
       <MultiFileOrLinkInput
-        urls={value ? value.split(',').map(s=>s.trim()).filter(Boolean) : []}
+        urls={Array.isArray(value) ? value : (value ? value.split(',').map(s=>s.trim()).filter(Boolean) : [])}
         onChange={(arr) => {
-          const v = arr.join(',');
-          onChange(v);
+          onChange(arr);
         }}
         maxCount={4}
         accept={accept}
