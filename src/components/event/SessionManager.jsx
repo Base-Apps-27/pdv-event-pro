@@ -696,6 +696,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
         <DialogContent className="max-w-6xl max-h-[95vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
             <DialogTitle className="text-2xl font-bold text-gray-900 font-['Bebas_Neue'] tracking-wide uppercase">{editingSegment ? 'Editar Segmento' : 'Nuevo Segmento'}</DialogTitle>
+            <DialogDescription className="sr-only">Formulario de segmento</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <SegmentFormTwoColumn 
