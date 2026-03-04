@@ -252,10 +252,10 @@ export default function FileOrLinkInput({
           {tFn('Enlace', 'Link')}
         </button>
         </div>
-        )}
+      )}
 
-        {/* Upload mode */}
-        {displayMode === 'upload' && (
+      {/* Upload mode */}
+      {displayMode === 'upload' && (
         <div>
           {!hasValue ? (
             <div
