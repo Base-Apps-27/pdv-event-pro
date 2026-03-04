@@ -47,6 +47,26 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function extractFilename(url) {
+  if (!url) return '';
+  try {
+    const urlWithoutQuery = url.split('?')[0];
+    const parts = urlWithoutQuery.split('/');
+    const lastPart = parts[parts.length - 1];
+    if (!lastPart) return url;
+    
+    // Decode the URI component to handle spaces and special chars
+    let decoded = decodeURIComponent(lastPart);
+    
+    // Base44 files might have a uuid prefix like UUID_filename.ext
+    // If we detect a standard 36-char uuid prefix with underscore, we can strip it for cleaner display,
+    // but just decoding and showing the last part is usually good enough.
+    return decoded;
+  } catch {
+    return url;
+  }
+}
+
 export default function FileOrLinkInput({
   value,
   onChange,
