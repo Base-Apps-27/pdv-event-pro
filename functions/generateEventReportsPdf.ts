@@ -133,7 +133,14 @@ function detailedTableForSession(session, segments, tSizes) {
     };
 
     const detailsStack = [];
-    detailsStack.push({ text: seg.title || '', style: 'rowTitle' });
+    const titleParts = [{ text: seg.title || '', style: 'rowTitle' }];
+    if ((seg.presentation_url && seg.presentation_url.length > 0) || (seg.notes_url && seg.notes_url.length > 0) || seg.content_is_slides_only) {
+      titleParts.push({ text: '  [RECURSOS]', color: '#3b82f6', fontSize: tSizes.tiny, bold: true });
+    }
+    if (seg.parsed_verse_data?.key_takeaways?.length > 0 || seg.scripture_references) {
+      titleParts.push({ text: '  [VERSOS]', color: '#f59e0b', fontSize: tSizes.tiny, bold: true });
+    }
+    detailsStack.push({ text: titleParts });
     if (seg.segment_type) detailsStack.push({ text: seg.segment_type, style: 'badge' });
     if (seg.presenter) detailsStack.push({ text: seg.presenter, color: '#2563eb', bold: true, fontSize: tSizes.small });
 
@@ -245,21 +252,29 @@ function simpleNotesTable(session, segments, columnTitle, selector, tSizes) {
 }
 
 function headerBand(event, session, sizes) {
-  const line = [];
-  line.push({ text: event.name || '', color: '#1F8A70', bold: true });
-  line.push(' — ');
-  line.push({ text: session.name || '', bold: true });
   const meta = [];
   if (session.date) meta.push(session.date);
   if (session.planned_start_time) meta.push(formatTimeToESTLocal(session.planned_start_time));
   if (session.location) meta.push(session.location);
-  const hospitalityIcon = { text: ' ', width: 0 };
+  
   return {
     columns: [
-      { text: [{ text: event.name || '', color: '#1F8A70', bold: true }, { text: ' — ' }, { text: session.name || '', bold: true }], fontSize: sizes.header },
-      { text: meta.join(' • '), alignment: 'right', color: '#374151', fontSize: sizes.small },
+      {
+        width: '*',
+        stack: [
+          { text: [{ text: event.name || '', color: '#1F8A70', bold: true }, { text: ' — ' }, { text: session.name || '', bold: true }], fontSize: sizes.header, margin: [0, 0, 0, 2] },
+          { text: meta.join(' • '), color: '#374151', fontSize: sizes.small }
+        ]
+      },
+      {
+        width: 50,
+        stack: [
+          { qr: 'https://pdv-event-pro.base44.app', fit: 36, alignment: 'right', foreground: '#1F8A70' },
+          { text: 'SCAN', fontSize: 5, alignment: 'right', color: '#6b7280', margin: [0, 1, 0, 0] }
+        ]
+      }
     ],
-    margin: [0, 0, 0, 6],
+    margin: [0, 0, 0, 8],
   };
 }
 

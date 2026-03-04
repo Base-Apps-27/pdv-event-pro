@@ -100,8 +100,14 @@ const SegmentReportRow = React.memo(function SegmentReportRow({
   return (
     <div className={durantActions.length > 0 ? "grid grid-cols-2 gap-1" : ""}>
       <div className={durantActions.length > 0 ? "space-y-0.5" : "space-y-0.5"}>
-        <div className="text-gray-900 font-bold uppercase text-[10px]">
-          {segment.title}
+        <div className="text-gray-900 font-bold uppercase text-[10px] flex items-center flex-wrap gap-1">
+          <span>{segment.title}</span>
+          {((segment.presentation_url && segment.presentation_url.length > 0) || (segment.notes_url && segment.notes_url.length > 0) || segment.content_is_slides_only) && (
+            <span title="Recursos adjuntos" className="text-blue-500 bg-blue-50 px-1 rounded text-[8px] flex items-center gap-0.5"><span className="text-[10px]">📎</span> RECURSOS</span>
+          )}
+          {(segment.parsed_verse_data?.key_takeaways?.length > 0 || segment.scripture_references) && (
+            <span title="Versículos adjuntos" className="text-amber-600 bg-amber-50 px-1 rounded text-[8px] flex items-center gap-0.5"><span className="text-[10px]">💡</span> VERSOS</span>
+          )}
         </div>
         
         {segment.segment_type && (

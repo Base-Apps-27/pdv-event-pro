@@ -143,22 +143,35 @@ export function buildSessionHeader(event, session, hasHospitalityTasks = false) 
     titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
   }
 
-  stack.push({
-    text: titleParts,
-    margin: [0, 0, 0, 1],
-  });
-
   // Date/time/location line
   const meta = [dateStr, timeStr, locStr].filter(x => x).join(' • ');
-  if (meta || arrivalStr) {
-    stack.push({
-      text: [
-        { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.base },
-        arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.base, bold: true } : '',
-      ],
-      margin: [0, 0, 0, 1],
-    });
-  }
+  const metaLine = (meta || arrivalStr) ? {
+    text: [
+      { text: meta, color: pdfTheme.text.secondary, fontSize: pdfTheme.fontSize.base },
+      arrivalStr ? { text: ` • ${arrivalStr}`, color: '#EA580C', fontSize: pdfTheme.fontSize.base, bold: true } : '',
+    ],
+    margin: [0, 0, 0, 1],
+  } : '';
+
+  stack.push({
+    columns: [
+      {
+        width: '*',
+        stack: [
+          { text: titleParts, margin: [0, 0, 0, 1] },
+          metaLine
+        ]
+      },
+      {
+        width: 50,
+        stack: [
+          { qr: 'https://pdv-event-pro.base44.app', fit: 36, alignment: 'right', foreground: '#1F8A70' },
+          { text: 'SCAN', fontSize: 5, alignment: 'right', color: '#6b7280', margin: [0, 1, 0, 0] }
+        ]
+      }
+    ],
+    margin: [0, 0, 0, 4]
+  });
 
   // Team info grid - matching HTML exactly (full team roster)
   const teams = [];

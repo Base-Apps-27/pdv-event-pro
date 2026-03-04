@@ -375,6 +375,8 @@ function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColo
         // pdfmake: ★ replaced with ASCII-safe marker — Roboto doesn't include ★ reliably
         isSpecialSegment ? { text: '  * ', bold: true, color: '#F59E0B', fontSize: 10.5 * scale } : '',
         { text: (isSpecialSegment ? '' : '  ') + (seg.title || '').toUpperCase(), bold: true, color: BRAND.BLACK, fontSize: 10.5 * scale },
+        ((seg.presentation_url && seg.presentation_url.length > 0) || (seg.notes_url && seg.notes_url.length > 0) || seg.content_is_slides_only) ? { text: '  [RECURSOS]', color: '#3B82F6', fontSize: 7 * scale, bold: true } : '',
+        (seg.parsed_verse_data?.key_takeaways?.length > 0 || seg.scripture_references) ? { text: '  [VERSOS]', color: '#F59E0B', fontSize: 7 * scale, bold: true } : '',
         seg.type ? { text: `  ${seg.type.toUpperCase()}  `, color: '#374151', background: '#F3F4F6', fontSize: 7 * scale, bold: true } : '',
         { text: ` (${seg.duration} min)`, color: BRAND.GRAY, fontSize: 9 * scale }
       ],
