@@ -55,7 +55,7 @@ function SongSlot({ prefix, index, formData, setFormData, language, onRemove }) 
       />
       <Input
         value={Array.isArray(formData[urlField]) ? formData[urlField].join(', ') : (formData[urlField] || "")}
-        onChange={(e) => setFormData({ ...formData, [urlField]: e.target.value.split(',').map(s=>s.trim()).filter(Boolean), [metaField]: null })}
+        onChange={(e) => setFormData({ ...formData, [urlField]: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : [], [metaField]: null })}
         placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'}
         className="h-8 text-sm"
       />
