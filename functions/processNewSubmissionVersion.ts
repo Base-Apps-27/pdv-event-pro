@@ -247,12 +247,18 @@ ${submission.content.substring(0, 15000)}
                 const aiTakeawaysEs = llmResponse?.key_takeaways_es || [];
                 const detectedLang = llmResponse?.source_language || 'es';
 
-                // If AI found verses, trust them over the regex
-                if (aiVerses.length > 0) {
+                // 2026-03-04 FIX: Only use LLM verses as FALLBACK when regex found nothing.
+                // The regex produces properly bilingual output ("Ruth 1:1-5 | Rut 1:1-5")
+                // while the LLM frequently duplicates the same language on both sides.
+                // Decision: Regex is canonical for verse formatting; LLM only adds value for
+                // verses the regex couldn't detect (e.g. "read from John chapter 3 starting at verse 16").
+                if (aiVerses.length > 0 && parsedData.sections.length === 0) {
                     parsedData.sections = aiVerses;
                     parsedData.type = 'verse_list';
                     scriptureReferences = aiVerses.map(v => v.content).join('\n');
-                    console.log(`[TAKEAWAYS_PIPELINE] LLM overrode regex with ${aiVerses.length} verses`);
+                    console.log(`[TAKEAWAYS_PIPELINE] LLM provided ${aiVerses.length} verses (regex found none)`);
+                } else if (aiVerses.length > 0) {
+                    console.log(`[TAKEAWAYS_PIPELINE] LLM found ${aiVerses.length} verses but regex already has ${parsedData.sections.length} — keeping regex (canonical)`);
                 }
 
                 // Store bilingual takeaways + source language
