@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import ArtsTypeOrderEditor from "@/components/session/ArtsTypeOrderEditor";
 import VideoDurationInput from "@/components/publicforms/VideoDurationInput";
+import MultiFileOrLinkInput from "@/components/publicforms/MultiFileOrLinkInput";
 
 // Toggle helper for Artes multiselect
 const toggleArtType = (formData, setFormData, val) => {
