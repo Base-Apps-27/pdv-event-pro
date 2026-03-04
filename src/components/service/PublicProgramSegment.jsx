@@ -478,7 +478,7 @@ export default function PublicProgramSegment({
           {/* Action Buttons Row (Scriptures, Resources) */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {/* Presentation / Slides Button */}
-            {presentationUrl && (
+            {arrHas(presentationUrl) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -494,7 +494,7 @@ export default function PublicProgramSegment({
             )}
 
             {/* Notes Button */}
-            {notesUrl && (
+            {arrHas(notesUrl) && (
               <Button
                 variant="outline"
                 size="sm"
