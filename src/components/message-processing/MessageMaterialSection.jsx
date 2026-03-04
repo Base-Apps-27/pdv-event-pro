@@ -29,8 +29,8 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.Segment.update(segment.id, {
-      presentation_url: presentationUrls.join(','),
-      notes_url: notesUrls.join(','),
+      presentation_url: presentationUrls,
+      notes_url: notesUrls,
       content_is_slides_only: slidesOnly,
     });
     setSaving(false);
@@ -40,8 +40,8 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
   };
 
   const handleCancel = () => {
-    setPresentationUrls(segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
-    setNotesUrls(segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+    setPresentationUrls(Array.isArray(segment.presentation_url) ? segment.presentation_url : (segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []));
+    setNotesUrls(Array.isArray(segment.notes_url) ? segment.notes_url : (segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []));
     setSlidesOnly(!!segment.content_is_slides_only);
     setEditing(false);
   };
