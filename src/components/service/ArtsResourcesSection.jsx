@@ -40,6 +40,9 @@ function InfoRow({ label, value, icon }) {
 
 function LinkRow({ label, url, type = 'link' }) {
   if (!url) return null;
+  const urls = url.split(',').map(u => u.trim()).filter(Boolean);
+  if (urls.length === 0) return null;
+  
   const icons = {
     song: <Music className="w-3.5 h-3.5 text-pink-600" />,
     video: <Video className="w-3.5 h-3.5 text-blue-600" />,
@@ -47,13 +50,18 @@ function LinkRow({ label, url, type = 'link' }) {
     audio: <Music className="w-3.5 h-3.5 text-purple-600" />,
     link: <ExternalLink className="w-3.5 h-3.5 text-gray-500" />,
   };
+  
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer"
-      className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 text-xs transition-colors">
-      {icons[type] || icons.link}
-      <span className="flex-1 text-gray-700 truncate">{label}</span>
-      <Play className="w-3 h-3 text-gray-400 shrink-0" />
-    </a>
+    <div className="space-y-1">
+      {urls.map((u, i) => (
+        <a key={i} href={u} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 text-xs transition-colors">
+          {icons[type] || icons.link}
+          <span className="flex-1 text-gray-700 truncate">{label}{urls.length > 1 ? ` (${i + 1})` : ''}</span>
+          <Play className="w-3 h-3 text-gray-400 shrink-0" />
+        </a>
+      ))}
+    </div>
   );
 }
 
@@ -243,14 +251,14 @@ export default function ArtsResourcesSection({ segment, language = 'es' }) {
       })}
 
       {/* Run of show PDF — bottom of arts section */}
-      {segment.arts_run_of_show_url && (
-        <a href={segment.arts_run_of_show_url} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-xs transition-colors">
+      {segment.arts_run_of_show_url && segment.arts_run_of_show_url.split(',').map((u, i) => u.trim() ? (
+        <a key={i} href={u.trim()} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-xs transition-colors mb-1">
           <FileText className="w-4 h-4 text-red-600 shrink-0" />
-          <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}</span>
+          <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}{segment.arts_run_of_show_url.split(',').length > 1 ? ` (${i + 1})` : ''}</span>
           <Play className="w-3 h-3 text-gray-400 shrink-0" />
         </a>
-      )}
+      ) : null)}
 
       {/* Description/notes if present */}
       {segment.description_details && (
