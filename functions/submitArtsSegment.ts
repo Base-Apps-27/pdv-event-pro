@@ -162,15 +162,17 @@ Deno.serve(async (req) => {
         ];
         for (const field of URL_FIELDS) {
             const val = data[field];
-            if (val && typeof val === 'string' && val.trim() !== '') {
-                const urls = val.split(',').map(u => u.trim()).filter(Boolean);
+            if (val) {
+                const urls = Array.isArray(val) ? val : (typeof val === 'string' ? val.split(',').map(u => u.trim()).filter(Boolean) : []);
                 for (const u of urls) {
-                    const trimmed = u.toLowerCase();
-                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                        return Response.json(
-                            { error: `Invalid URL in field "${field}". Only http/https URLs are allowed.` },
-                            { status: 400, headers: corsHeaders }
-                        );
+                    if (typeof u === 'string' && u.trim() !== '') {
+                        const trimmed = u.trim().toLowerCase();
+                        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                            return Response.json(
+                                { error: `Invalid URL in field "${field}". Only http/https URLs are allowed.` },
+                                { status: 400, headers: corsHeaders }
+                            );
+                        }
                     }
                 }
             }
@@ -180,7 +182,11 @@ Deno.serve(async (req) => {
         const updatePayload = {};
         for (const field of ALLOWED_FIELDS) {
             if (data[field] !== undefined) {
-                updatePayload[field] = data[field];
+                if (URL_FIELDS.includes(field)) {
+                    updatePayload[field] = Array.isArray(data[field]) ? data[field] : (data[field] ? [data[field]] : []);
+                } else {
+                    updatePayload[field] = data[field];
+                }
             }
         }
 
