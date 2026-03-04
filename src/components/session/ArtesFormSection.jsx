@@ -247,7 +247,13 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           {formData.spoken_word_has_music && (
             <div className="space-y-2 pl-3 border-l-2 border-pink-200">
               <Input value={formData.spoken_word_music_title || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_title: e.target.value })} placeholder={language === 'es' ? 'Título de la pista' : 'Track title'} className="h-8 text-sm" />
-              <Input value={Array.isArray(formData.spoken_word_music_url) ? formData.spoken_word_music_url.join(', ') : (formData.spoken_word_music_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_music_url: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : [] })} placeholder={language === 'es' ? 'Enlace al archivo de música' : 'Music file URL'} className="h-8 text-sm" />
+              <div className="pt-1 pb-1">
+                <MultiFileOrLinkInput 
+                   urls={formData.spoken_word_music_url} 
+                   onChange={(urls) => setFormData({ ...formData, spoken_word_music_url: urls })} 
+                   placeholder={language === 'es' ? 'Enlace al archivo de música' : 'Music file URL'} 
+                />
+              </div>
               <Input value={formData.spoken_word_music_owner || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_owner: e.target.value })} placeholder={language === 'es' ? 'Persona a cargo' : 'Person in charge'} className="h-8 text-sm" />
             </div>
           )}
