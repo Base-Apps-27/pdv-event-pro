@@ -72,9 +72,15 @@ function SongSlot({ prefix, index, formData, setFormData, language, onRemove }) 
 }
 
 // Renders a multi-song list (up to 3) for dance or drama
+// Safe string check: value may be string or array (url fields are schema type "array")
+function hasContent(val) {
+  if (Array.isArray(val)) return val.some(v => typeof v === 'string' && v.trim());
+  return typeof val === 'string' && val.trim();
+}
+
 function SongList({ prefix, formData, setFormData, language }) {
-  const hasSong2 = formData[`_show_${prefix}_song_2`] || formData[`${prefix}_song_2_title`]?.trim() || formData[`${prefix}_song_2_url`]?.trim();
-  const hasSong3 = formData[`_show_${prefix}_song_3`] || formData[`${prefix}_song_3_title`]?.trim() || formData[`${prefix}_song_3_url`]?.trim();
+  const hasSong2 = formData[`_show_${prefix}_song_2`] || hasContent(formData[`${prefix}_song_2_title`]) || hasContent(formData[`${prefix}_song_2_url`]);
+  const hasSong3 = formData[`_show_${prefix}_song_3`] || hasContent(formData[`${prefix}_song_3_title`]) || hasContent(formData[`${prefix}_song_3_url`]);
 
   const clearSong = (index) => {
     const titleField = `${prefix}_song_${index}_title`;
