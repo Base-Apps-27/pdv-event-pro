@@ -16,6 +16,7 @@ import { Trash2, AlertTriangle } from "lucide-react";
 import PrintSettingsModal from "@/components/print/PrintSettingsModal";
 import VerseParserDialog from "@/components/service/VerseParserDialog";
 import StaticAnnouncementForm from "@/components/announcements/StaticAnnouncementForm";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function WeeklyServiceDialogs({
   // Delete confirmation
@@ -50,6 +51,8 @@ export default function WeeklyServiceDialogs({
   optimizeAnnouncementWithAI,
   optimizingAnnouncement,
 }) {
+  // i18n (2026-03-04): Migrated hardcoded Spanish strings to t() keys
+  const { t } = useLanguage();
   // RESET-SLOT-FIX (2026-02-20): Per-slot selection state for reset dialog
   const [resetSlots, setResetSlots] = useState({});
 
@@ -71,12 +74,12 @@ export default function WeeklyServiceDialogs({
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
         <DialogContent className="max-w-sm bg-white">
           <DialogHeader>
-            <DialogTitle>Confirmar Eliminación</DialogTitle>
+            <DialogTitle>{t('dialogs.confirmDelete')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600">¿Estás seguro de que deseas eliminar este anuncio?</p>
+          <p className="text-sm text-gray-600">{t('dialogs.deleteAnnouncementConfirm')}</p>
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button 
               className="bg-red-600 text-white hover:bg-red-700"
@@ -85,7 +88,7 @@ export default function WeeklyServiceDialogs({
                 setDeleteConfirmId(null);
               }}
             >
-              Eliminar
+              {t('common.delete')}
             </Button>
           </div>
         </DialogContent>
@@ -108,17 +111,17 @@ export default function WeeklyServiceDialogs({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
-              Confirmar Restablecimiento
+              {t('dialogs.confirmReset')}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Esto restablecerá los segmentos y campos al diseño del Blueprint. Se perderán los datos ingresados en los horarios seleccionados.
+            {t('dialogs.resetDescription')}
           </p>
 
           {/* Per-slot checkboxes — only show when more than 1 slot exists */}
           {slotNames.length > 1 && (
             <div className="bg-gray-50 rounded-lg p-3 space-y-2 mt-2">
-              <Label className="text-xs text-gray-500 uppercase font-semibold">Selecciona qué horarios restablecer:</Label>
+              <Label className="text-xs text-gray-500 uppercase font-semibold">{t('dialogs.selectSlotsToReset')}</Label>
               {slotNames.map(name => (
                 <div key={name} className="flex items-center gap-3 py-1">
                   <Checkbox
@@ -136,7 +139,7 @@ export default function WeeklyServiceDialogs({
 
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button 
               className="bg-red-600 text-white hover:bg-red-700"
@@ -149,9 +152,9 @@ export default function WeeklyServiceDialogs({
                 executeResetToBlueprint(slotsToReset);
               }}
             >
-              Restablecer {slotNames.length > 1 && selectedSlotCount < slotNames.length
+              {t('dialogs.reset')} {slotNames.length > 1 && selectedSlotCount < slotNames.length
                 ? `(${selectedSlotCount})`
-                : 'Todo'}
+                : t('dialogs.resetAll')}
             </Button>
           </div>
         </DialogContent>
@@ -172,7 +175,7 @@ export default function WeeklyServiceDialogs({
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>
-                {editingAnnouncement ? "Editar Anuncio / Edit Announcement" : "Nuevo Anuncio / New Announcement"}
+                {editingAnnouncement ? t('dialogs.editAnnouncement') : t('dialogs.newAnnouncement')}
               </DialogTitle>
               {editingAnnouncement && (
                 <Button
@@ -185,7 +188,7 @@ export default function WeeklyServiceDialogs({
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Eliminar / Delete
+                  {t('common.delete')}
                 </Button>
               )}
             </div>

@@ -56,8 +56,6 @@ import CustomEditorV2 from './pages/CustomEditorV2';
 import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
-import DataFlowMap from './pages/DataFlowMap';
-import DataSeeder from './pages/DataSeeder';
 import DependencyTracker from './pages/DependencyTracker';
 import DetailedProgram from './pages/DetailedProgram';
 import DirectorConsole from './pages/DirectorConsole';
@@ -82,7 +80,6 @@ import SchemaGuide from './pages/SchemaGuide';
 import ServiceAnnouncementBuilder from './pages/ServiceAnnouncementBuilder';
 import ServiceBlueprints from './pages/ServiceBlueprints';
 import ServiceDetail from './pages/ServiceDetail';
-import ServiceQuickEditor from './pages/ServiceQuickEditor';
 import Services from './pages/Services';
 import SessionDetail from './pages/SessionDetail';
 import SoundView from './pages/SoundView';
@@ -106,8 +103,6 @@ export const PAGES = {
     "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
-    "DataFlowMap": DataFlowMap,
-    "DataSeeder": DataSeeder,
     "DependencyTracker": DependencyTracker,
     "DetailedProgram": DetailedProgram,
     "DirectorConsole": DirectorConsole,
@@ -132,7 +127,6 @@ export const PAGES = {
     "ServiceAnnouncementBuilder": ServiceAnnouncementBuilder,
     "ServiceBlueprints": ServiceBlueprints,
     "ServiceDetail": ServiceDetail,
-    "ServiceQuickEditor": ServiceQuickEditor,
     "Services": Services,
     "SessionDetail": SessionDetail,
     "SoundView": SoundView,
