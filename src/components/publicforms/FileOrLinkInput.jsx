@@ -346,38 +346,45 @@ export default function FileOrLinkInput({
               />
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-2.5 bg-green-50 border border-green-200 rounded-md">
-              <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <a 
-                  href={value} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-xs font-medium text-green-800 hover:text-green-900 hover:underline truncate block" 
-                  title={uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
-                >
-                  {uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
-                </a>
-                <span className="text-[10px] text-green-600 truncate block">
-                  {tFn('Documento adjunto', 'Document attached')}
-                </span>
-              </div>
-              {/* Delete with confirmation */}
-              {confirmingDelete ? (
-                <div className="flex items-center gap-1 shrink-0">
-                  <button type="button" onClick={handleDeleteClick} className="px-2 py-1 text-[10px] font-bold text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors">
-                    {tFn('Sí, eliminar', 'Yes, remove')}
-                  </button>
-                  <button type="button" onClick={cancelDelete} className="px-2 py-1 text-[10px] font-bold text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
-                    {tFn('No', 'No')}
-                  </button>
+            (() => {
+              const cat = getFileCategory(value);
+              const style = FILE_CATEGORY_STYLES[cat];
+              const CatIcon = style.Icon;
+              return (
+                <div className={`flex items-center gap-2 p-2.5 ${style.bg} border ${style.border} rounded-md`}>
+                  <CatIcon className={`w-4 h-4 ${style.icon} shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <a 
+                      href={value} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className={`text-xs font-medium ${style.text} hover:underline truncate block`}
+                      title={uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
+                    >
+                      {uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
+                    </a>
+                    <span className={`text-[10px] ${style.icon} truncate block`}>
+                      {tFn(style.labelEs, style.labelEn)}
+                    </span>
+                  </div>
+                  {/* Delete with confirmation */}
+                  {confirmingDelete ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button type="button" onClick={handleDeleteClick} className="px-2 py-1 text-[10px] font-bold text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors">
+                        {tFn('Sí, eliminar', 'Yes, remove')}
+                      </button>
+                      <button type="button" onClick={cancelDelete} className="px-2 py-1 text-[10px] font-bold text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+                        {tFn('No', 'No')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={handleDeleteClick} className="p-1 text-gray-400 hover:text-red-500 transition-colors" title={tFn('Eliminar archivo', 'Remove file')}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button type="button" onClick={handleDeleteClick} className="p-1 text-gray-400 hover:text-red-500 transition-colors" title={tFn('Eliminar archivo', 'Remove file')}>
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+              );
+            })()
           )}
         </div>
       )}
