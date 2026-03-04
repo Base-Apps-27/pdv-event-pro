@@ -53,7 +53,6 @@ import ArtsSubmissions from './pages/ArtsSubmissions';
 import BuildMemory from './pages/BuildMemory';
 import Calendar from './pages/Calendar';
 import CustomEditorV2 from './pages/CustomEditorV2';
-import CustomServiceBuilder from './pages/CustomServiceBuilder';
 import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
 import DependencyTracker from './pages/DependencyTracker';
@@ -100,7 +99,6 @@ export const PAGES = {
     "BuildMemory": BuildMemory,
     "Calendar": Calendar,
     "CustomEditorV2": CustomEditorV2,
-    "CustomServiceBuilder": CustomServiceBuilder,
     "CustomServicesManager": CustomServicesManager,
     "Dashboard": Dashboard,
     "DependencyTracker": DependencyTracker,
