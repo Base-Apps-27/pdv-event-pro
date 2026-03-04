@@ -192,8 +192,17 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       { url: formData.arts_run_of_show_url, metaField: 'arts_run_of_show_url_meta', currentMeta: formData.arts_run_of_show_url_meta },
     ];
     const fetchPromises = urlsToFetch
-      .filter(({ url, currentMeta }) => url && url.trim() && !currentMeta)
-      .map(async ({ url, metaField }) => { const meta = await fetchMetaForUrl(url); if (meta) metaUpdates[metaField] = meta; });
+      .filter(({ url, currentMeta }) => {
+        if (!url || currentMeta) return false;
+        // Handle array of URLs vs string URL
+        const firstUrl = Array.isArray(url) ? url[0] : url;
+        return typeof firstUrl === 'string' && firstUrl.trim();
+      })
+      .map(async ({ url, metaField }) => {
+        const firstUrl = Array.isArray(url) ? url[0] : url;
+        const meta = await fetchMetaForUrl(firstUrl); 
+        if (meta) metaUpdates[metaField] = meta; 
+      });
     await Promise.all(fetchPromises);
 
     // Auto-insertion order (Gap-Fit, order-only) for new segments
