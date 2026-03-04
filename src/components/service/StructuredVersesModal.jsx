@@ -65,6 +65,28 @@ export default function StructuredVersesModal({
     );
   }
 
+  // 2026-03-04: Parse bilingual verse content for proper display.
+  // Verse content is stored as "English Book Ch:Vs | Spanish Book Ch:Vs".
+  // If LLM duplicated the same language on both sides, detect and show only one.
+  const renderVerseContent = (content) => {
+    if (!content || !content.includes('|')) {
+      return <span className="text-gray-800 text-base leading-relaxed flex-1">{content}</span>;
+    }
+    const parts = content.split('|').map(s => s.trim());
+    // If both sides are identical (LLM duplication bug), show just one
+    if (parts.length === 2 && parts[0] === parts[1]) {
+      return <span className="text-gray-800 text-base leading-relaxed flex-1">{parts[0]}</span>;
+    }
+    // Show bilingual: EN on left, ES on right with visual separator
+    return (
+      <span className="text-gray-800 text-base leading-relaxed flex-1">
+        <span className="text-blue-800">{parts[0]}</span>
+        <span className="text-gray-400 mx-1.5">|</span>
+        <span className="text-green-800">{parts[1]}</span>
+      </span>
+    );
+  };
+
   const renderContent = () => {
     if (parsedData.type === 'verse_list' && parsedData.sections?.length > 0) {
       return (
@@ -72,7 +94,7 @@ export default function StructuredVersesModal({
           {parsedData.sections.map((item, idx) => (
             <div key={idx} className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <span className="text-pdv-teal font-bold text-lg">{idx + 1}.</span>
-              <span className="text-gray-800 text-base leading-relaxed flex-1">{item.content}</span>
+              {renderVerseContent(item.content)}
             </div>
           ))}
         </div>
