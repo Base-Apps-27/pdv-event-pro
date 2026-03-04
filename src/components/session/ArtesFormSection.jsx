@@ -54,12 +54,13 @@ function SongSlot({ prefix, index, formData, setFormData, language, onRemove }) 
         placeholder={language === 'es' ? 'Título' : 'Title'}
         className="h-8 text-sm"
       />
-      <Input
-        value={Array.isArray(formData[urlField]) ? formData[urlField].join(', ') : (formData[urlField] || "")}
-        onChange={(e) => setFormData({ ...formData, [urlField]: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : [], [metaField]: null })}
-        placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'}
-        className="h-8 text-sm"
-      />
+      <div className="pt-1 pb-1">
+        <MultiFileOrLinkInput
+          urls={formData[urlField]}
+          onChange={(urls) => setFormData({ ...formData, [urlField]: urls, [metaField]: null })}
+          placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'}
+        />
+      </div>
       <Input
         value={formData[ownerField] || ""}
         onChange={(e) => setFormData({ ...formData, [ownerField]: e.target.value })}
