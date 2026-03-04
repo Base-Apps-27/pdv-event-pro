@@ -65,12 +65,15 @@ Deno.serve(async (req) => {
         const URL_FIELDS_TO_CHECK = { presentation_url, notes_url };
         for (const [fieldName, val] of Object.entries(URL_FIELDS_TO_CHECK)) {
             if (val && typeof val === 'string' && val.trim() !== '') {
-                const trimmed = val.trim().toLowerCase();
-                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                    return Response.json(
-                        { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
-                        { status: 400, headers: corsHeaders }
-                    );
+                const urls = val.split(',').map(u => u.trim()).filter(Boolean);
+                for (const u of urls) {
+                    const trimmed = u.toLowerCase();
+                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                        return Response.json(
+                            { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                            { status: 400, headers: corsHeaders }
+                        );
+                    }
                 }
             }
         }

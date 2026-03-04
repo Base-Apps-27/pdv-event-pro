@@ -14,7 +14,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
-import FileOrLinkInput from './FileOrLinkInput';
+import MultiFileOrLinkInput from './MultiFileOrLinkInput';
 import { usePublicLang } from './PublicFormLangContext';
 import SubmissionPathSelector from './SubmissionPathSelector';
 import { collectDeviceInfo } from './collectDeviceInfo';
@@ -25,8 +25,8 @@ export default function SpeakerSubmissionForm({ options }) {
     const [segmentId, setSegmentId] = useState('');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [presentationUrl, setPresentationUrl] = useState('');
-    const [notesUrl, setNotesUrl] = useState('');
+    const [presentationUrls, setPresentationUrls] = useState([]);
+    const [notesUrls, setNotesUrls] = useState([]);
     const [website, setWebsite] = useState(''); // Honeypot: hidden from humans, bots auto-fill
     const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
