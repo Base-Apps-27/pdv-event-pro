@@ -49,8 +49,8 @@ export default function VideoSection({ formData, setFormData, isVideoType, isBre
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URL)' : 'Video Link (URL)'}</Label>
-          <Input value={formData.video_url} onChange={(e) => setFormData({...formData, video_url: e.target.value, video_url_meta: null})} placeholder="https://youtube.com/watch?v=..." className="h-9 text-sm" />
+          <Label className="text-xs">{language === 'es' ? 'Enlace al Video (URLs separadas por coma)' : 'Video Link (Comma separated URLs)'}</Label>
+          <Input value={Array.isArray(formData.video_url) ? formData.video_url.join(', ') : (formData.video_url || '')} onChange={(e) => setFormData({...formData, video_url: e.target.value.split(',').map(s=>s.trim()).filter(Boolean), video_url_meta: null})} placeholder="https://youtube.com/watch?v=..." className="h-9 text-sm" />
         </div>
       </div>
     );

@@ -54,8 +54,8 @@ function SongSlot({ prefix, index, formData, setFormData, language, onRemove }) 
         className="h-8 text-sm"
       />
       <Input
-        value={formData[urlField] || ""}
-        onChange={(e) => setFormData({ ...formData, [urlField]: e.target.value, [metaField]: null })}
+        value={Array.isArray(formData[urlField]) ? formData[urlField].join(', ') : (formData[urlField] || "")}
+        onChange={(e) => setFormData({ ...formData, [urlField]: e.target.value.split(',').map(s=>s.trim()).filter(Boolean), [metaField]: null })}
         placeholder={language === 'es' ? 'Enlace (URL)' : 'Link (URL)'}
         className="h-8 text-sm"
       />
@@ -224,11 +224,11 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           </div>
           <div className="space-y-1">
             <Label className="text-xs">{language === 'es' ? 'Guión / Script (URL)' : 'Script / Guide (URL)'}</Label>
-            <Input value={formData.spoken_word_script_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_script_url: e.target.value })} placeholder="https://..." className="h-8 text-sm" />
+            <Input value={Array.isArray(formData.spoken_word_script_url) ? formData.spoken_word_script_url.join(', ') : (formData.spoken_word_script_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_script_url: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) })} placeholder="https://..." className="h-8 text-sm" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">{language === 'es' ? 'Audio del Spoken Word (URL)' : 'Spoken Word Audio (URL)'}</Label>
-            <Input value={formData.spoken_word_audio_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_audio_url: e.target.value })} placeholder="https://..." className="h-8 text-sm" />
+            <Input value={Array.isArray(formData.spoken_word_audio_url) ? formData.spoken_word_audio_url.join(', ') : (formData.spoken_word_audio_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_audio_url: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) })} placeholder="https://..." className="h-8 text-sm" />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Checkbox id="spoken_word_has_music" checked={formData.spoken_word_has_music} onCheckedChange={(checked) => setFormData({ ...formData, spoken_word_has_music: checked })} />
@@ -237,7 +237,7 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           {formData.spoken_word_has_music && (
             <div className="space-y-2 pl-3 border-l-2 border-pink-200">
               <Input value={formData.spoken_word_music_title || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_title: e.target.value })} placeholder={language === 'es' ? 'Título de la pista' : 'Track title'} className="h-8 text-sm" />
-              <Input value={formData.spoken_word_music_url || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_url: e.target.value })} placeholder={language === 'es' ? 'Enlace al archivo de música' : 'Music file URL'} className="h-8 text-sm" />
+              <Input value={Array.isArray(formData.spoken_word_music_url) ? formData.spoken_word_music_url.join(', ') : (formData.spoken_word_music_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_music_url: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) })} placeholder={language === 'es' ? 'Enlace al archivo de música' : 'Music file URL'} className="h-8 text-sm" />
               <Input value={formData.spoken_word_music_owner || ""} onChange={(e) => setFormData({ ...formData, spoken_word_music_owner: e.target.value })} placeholder={language === 'es' ? 'Persona a cargo' : 'Person in charge'} className="h-8 text-sm" />
             </div>
           )}

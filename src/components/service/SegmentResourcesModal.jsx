@@ -127,28 +127,33 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
 
   // --- SPEAKER RESOURCES (Slides, Notes, Verses, Key Points) ---
   const speakerResources = [];
-  const presentationUrl = getData('presentation_url');
-  const notesUrl = getData('notes_url');
+  
+  const presData = getData('presentation_url');
+  const presentationUrls = Array.isArray(presData) ? presData : (presData ? presData.split(',').map(s=>s.trim()).filter(Boolean) : []);
+  
+  const notesData = getData('notes_url');
+  const notesUrls = Array.isArray(notesData) ? notesData : (notesData ? notesData.split(',').map(s=>s.trim()).filter(Boolean) : []);
+  
   const parsedVerses = getData('parsed_verse_data');
   const hasKeyTakeaways = parsedVerses?.key_takeaways?.length > 0;
   
-  if (presentationUrl) {
+  presentationUrls.forEach((url, index) => {
     speakerResources.push({
-      title: language === 'es' ? 'Presentación (Slides)' : 'Presentation Slides',
-      url: presentationUrl,
+      title: (language === 'es' ? 'Presentación (Slides)' : 'Presentation Slides') + (presentationUrls.length > 1 ? ` ${index + 1}` : ''),
+      url: url,
       type: 'slides',
       icon: <Monitor className="w-4 h-4 text-blue-600" />
     });
-  }
+  });
 
-  if (notesUrl) {
+  notesUrls.forEach((url, index) => {
     speakerResources.push({
-      title: language === 'es' ? 'Notas del Orador' : 'Speaker Notes',
-      url: notesUrl,
+      title: (language === 'es' ? 'Notas del Orador' : 'Speaker Notes') + (notesUrls.length > 1 ? ` ${index + 1}` : ''),
+      url: url,
       type: 'notes',
       icon: <FileText className="w-4 h-4 text-purple-600" />
     });
-  }
+  });
 
   // Verses & Key Points Action (if handler provided)
   if (parsedVerses && onOpenVerses) {
@@ -179,17 +184,20 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
   
   // For non-Artes segments that happen to have video, show legacy video card
   if (!hasArtsData && segment.video_url) {
-    resources.push({
-      category: t('resources.video'),
-      items: [{
-        title: segment.video_url_meta?.title || segment.video_name || 'Video',
-        subtitle: segment.video_location,
-        url: segment.video_url,
-        thumbnail: segment.video_url_meta?.thumbnail,
-        type: 'video',
-        owner: segment.video_owner
-      }]
-    });
+    const videoUrls = Array.isArray(segment.video_url) ? segment.video_url : (typeof segment.video_url === 'string' ? segment.video_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+    if (videoUrls.length > 0) {
+      resources.push({
+        category: t('resources.video'),
+        items: videoUrls.map((url, index) => ({
+          title: (segment.video_url_meta?.title || segment.video_name || 'Video') + (videoUrls.length > 1 ? ` ${index + 1}` : ''),
+          subtitle: segment.video_location,
+          url: url,
+          thumbnail: segment.video_url_meta?.thumbnail,
+          type: 'video',
+          owner: segment.video_owner
+        }))
+      });
+    }
   }
 
   const hasResources = resources.length > 0;
