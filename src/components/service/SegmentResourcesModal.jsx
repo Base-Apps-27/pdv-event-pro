@@ -183,8 +183,11 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
   const hasArtsData = (segment.art_types?.length > 0);
   
   // For non-Artes segments that happen to have video, show legacy video card
-  if (!hasArtsData && segment.video_url) {
-    const videoUrls = Array.isArray(segment.video_url) ? segment.video_url : (typeof segment.video_url === 'string' ? segment.video_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+  // 2026-03-04 FIX: empty array [] is truthy — check .length
+  const videoUrlRaw = segment.video_url;
+  const hasVideoUrl = Array.isArray(videoUrlRaw) ? videoUrlRaw.length > 0 : !!videoUrlRaw;
+  if (!hasArtsData && hasVideoUrl) {
+    const videoUrls = Array.isArray(videoUrlRaw) ? videoUrlRaw : (typeof videoUrlRaw === 'string' ? videoUrlRaw.split(',').map(s=>s.trim()).filter(Boolean) : []);
     if (videoUrls.length > 0) {
       resources.push({
         category: t('resources.video'),
@@ -200,6 +203,7 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
     }
   }
 
+  // 2026-03-04 FIX: Also check arts data has actual content, not just empty arrays
   const hasResources = resources.length > 0;
 
   return (
