@@ -19,12 +19,12 @@ import { toast } from 'sonner';
 
 export default function MessageMaterialSection({ segment, onUpdated }) {
   const [editing, setEditing] = useState(false);
-  const [presentationUrls, setPresentationUrls] = useState(segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
-  const [notesUrls, setNotesUrls] = useState(segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []);
+  const [presentationUrls, setPresentationUrls] = useState(Array.isArray(segment.presentation_url) ? segment.presentation_url : (segment.presentation_url ? segment.presentation_url.split(',').map(s=>s.trim()).filter(Boolean) : []));
+  const [notesUrls, setNotesUrls] = useState(Array.isArray(segment.notes_url) ? segment.notes_url : (segment.notes_url ? segment.notes_url.split(',').map(s=>s.trim()).filter(Boolean) : []));
   const [slidesOnly, setSlidesOnly] = useState(!!segment.content_is_slides_only);
   const [saving, setSaving] = useState(false);
 
-  const hasMaterial = segment.presentation_url || segment.notes_url || segment.content_is_slides_only;
+  const hasMaterial = (segment.presentation_url && segment.presentation_url.length > 0) || (segment.notes_url && segment.notes_url.length > 0) || segment.content_is_slides_only;
 
   const handleSave = async () => {
     setSaving(true);

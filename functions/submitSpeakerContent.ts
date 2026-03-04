@@ -64,15 +64,17 @@ Deno.serve(async (req) => {
         // Only http/https schemes allowed. Blocks javascript:, data:, file: injection.
         const URL_FIELDS_TO_CHECK = { presentation_url, notes_url };
         for (const [fieldName, val] of Object.entries(URL_FIELDS_TO_CHECK)) {
-            if (val && typeof val === 'string' && val.trim() !== '') {
-                const urls = val.split(',').map(u => u.trim()).filter(Boolean);
+            if (val) {
+                const urls = Array.isArray(val) ? val : val.split(',').map(u => u.trim()).filter(Boolean);
                 for (const u of urls) {
-                    const trimmed = u.toLowerCase();
-                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                        return Response.json(
-                            { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
-                            { status: 400, headers: corsHeaders }
-                        );
+                    if (typeof u === 'string' && u.trim() !== '') {
+                        const trimmed = u.trim().toLowerCase();
+                        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                            return Response.json(
+                                { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                                { status: 400, headers: corsHeaders }
+                            );
+                        }
                     }
                 }
             }
@@ -142,8 +144,8 @@ Deno.serve(async (req) => {
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: segment_id,
                 content: content,
-                presentation_url: presentation_url || "",
-                notes_url: notes_url || "",
+                presentation_url: Array.isArray(presentation_url) ? presentation_url : (presentation_url ? [presentation_url] : []),
+                notes_url: Array.isArray(notes_url) ? notes_url : (notes_url ? [notes_url] : []),
                 content_is_slides_only: !!content_is_slides_only,
                 submitted_at: new Date().toISOString(),
                 source: 'public_form',
@@ -164,8 +166,8 @@ Deno.serve(async (req) => {
             submission_status: 'pending',
             // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data lives on the segment.
             // Raw content is archived in SpeakerSubmissionVersion only.
-            presentation_url: presentation_url || "",
-            notes_url: notes_url || "",
+            presentation_url: Array.isArray(presentation_url) ? presentation_url : (presentation_url ? [presentation_url] : []),
+            notes_url: Array.isArray(notes_url) ? notes_url : (notes_url ? [notes_url] : []),
             content_is_slides_only: !!content_is_slides_only
         };
         if (title && title.trim() !== '') {
