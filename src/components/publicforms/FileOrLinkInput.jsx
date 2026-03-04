@@ -404,9 +404,9 @@ export default function FileOrLinkInput({
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-xs font-medium text-sky-700 hover:text-sky-900 hover:underline truncate block" 
-                  title={value}
+                  title={safeValue}
                 >
-                  {value}
+                  {safeValue}
                 </a>
                 <span className="text-[10px] text-sky-500 truncate block">
                   {tFn('Enlace adjunto', 'Link attached')}
