@@ -66,7 +66,7 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
                 <Sparkles className="w-3 h-3 mr-1" /> Solo Slides
               </Badge>
             )}
-            {segment.presentation_url && segment.presentation_url.split(',').map((url, i) => url.trim() ? (
+            {segment.presentation_url && (Array.isArray(segment.presentation_url) ? segment.presentation_url : segment.presentation_url.split(',')).map((url, i) => url.trim() ? (
               <a key={`pres-${i}`} href={url.trim()} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-teal-700 hover:underline truncate">
                 <Presentation className="w-3.5 h-3.5 shrink-0" />
@@ -74,7 +74,7 @@ export default function MessageMaterialSection({ segment, onUpdated }) {
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />
               </a>
             ) : null)}
-            {segment.notes_url && segment.notes_url.split(',').map((url, i) => url.trim() ? (
+            {segment.notes_url && (Array.isArray(segment.notes_url) ? segment.notes_url : segment.notes_url.split(',')).map((url, i) => url.trim() ? (
               <a key={`note-${i}`} href={url.trim()} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-teal-700 hover:underline truncate">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
