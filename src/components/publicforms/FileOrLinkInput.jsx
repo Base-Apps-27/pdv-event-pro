@@ -362,14 +362,25 @@ export default function FileOrLinkInput({
             className={`flex-1 min-w-0 ${inputClass}`}
           />
           {hasValue && (
-            <button
-              type="button"
-              onClick={handleClearLink}
-              className="p-1 shrink-0 text-gray-400 hover:text-red-500 transition-colors"
-              title={tFn('Eliminar enlace', 'Remove link')}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            confirmingDelete ? (
+              <div className="flex items-center gap-1 shrink-0">
+                <button type="button" onClick={handleDeleteClick} className="px-2 py-1 text-[10px] font-bold text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors">
+                  {tFn('Sí, eliminar', 'Yes, remove')}
+                </button>
+                <button type="button" onClick={cancelDelete} className="px-2 py-1 text-[10px] font-bold text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+                  {tFn('No', 'No')}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDeleteClick}
+                className="p-1 shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+                title={tFn('Eliminar enlace', 'Remove link')}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )
           )}
         </div>
       )}
