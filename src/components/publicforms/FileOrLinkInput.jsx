@@ -350,7 +350,7 @@ export default function FileOrLinkInput({
             </div>
           ) : (
             (() => {
-              const cat = getFileCategory(value);
+              const cat = getFileCategory(safeValue);
               const style = FILE_CATEGORY_STYLES[cat];
               const CatIcon = style.Icon;
               return (
