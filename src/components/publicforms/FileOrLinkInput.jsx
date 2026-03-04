@@ -350,7 +350,7 @@ export default function FileOrLinkInput({
 
       {/* Link mode */}
       {displayMode === 'link' && (
-        <div className="relative">
+        <div className="flex items-center gap-2">
           <input
             type="url"
             value={value || ''}
@@ -359,15 +359,16 @@ export default function FileOrLinkInput({
               setUploadedFileName('');
             }}
             placeholder={placeholder}
-            className={inputClass}
+            className={`flex-1 min-w-0 ${inputClass}`}
           />
           {hasValue && (
             <button
               type="button"
               onClick={handleClearLink}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500"
+              className="p-1 shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+              title={tFn('Eliminar enlace', 'Remove link')}
             >
-              <X className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
