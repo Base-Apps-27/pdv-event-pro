@@ -440,7 +440,7 @@ export default function FileOrLinkInput({
             <div className="flex items-center gap-2">
               <input
                 type="url"
-                value={value || ''}
+                value={safeValue || ''}
                 onChange={e => {
                   onChange(e.target.value);
                   setUploadedFileName('');
