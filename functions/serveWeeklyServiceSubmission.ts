@@ -16,7 +16,8 @@
 Deno.serve(async (req) => {
     const url = new URL(req.url);
     
-    const appOrigin = url.origin;
+    // Force redirect to the new custom domain so old links are upgraded automatically
+    const appOrigin = 'https://vidaevents.co';
     const reactPagePath = '/PublicWeeklyForm';
 
     return new Response(null, {

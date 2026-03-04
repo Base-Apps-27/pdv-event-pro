@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
     const eventId = url.searchParams.get('event_id');
     
     // Build redirect URL to the React page
-    // Use the app's origin (not the function URL) for the React page
-    const appOrigin = url.origin;
+    // Force redirect to the new custom domain so old links are upgraded automatically
+    const appOrigin = 'https://vidaevents.co';
     const reactPagePath = '/PublicSpeakerForm';
     const redirectUrl = eventId 
         ? `${appOrigin}${reactPagePath}?event_id=${encodeURIComponent(eventId)}`
