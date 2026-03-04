@@ -13,8 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NOTES_FIELDS } from "../constants/fieldMap";
 import SegmentActionsEditor from "@/components/session/SegmentActionsEditor";
+import AutocompleteInput from "@/components/ui/AutocompleteInput";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
 const VISIBILITY_TOGGLES = [
