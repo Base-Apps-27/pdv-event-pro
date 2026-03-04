@@ -61,8 +61,12 @@ export default function SegmentNotesPanel({ segment, onWrite, onWriteDuration })
         language="es"
       />
 
-      {/* Translation section — available for all segment types except Breakout */}
-      <TranslationSection segment={segment} onWrite={onWrite} />
+      {/* Translation section — shown when segment doesn't already have 'translator' in ui_fields.
+         * Segments with 'translator' in ui_fields get the inline translator field on the card itself.
+         * This ensures Especial, MC, Artes, etc. can still configure translation from "Más detalles". */}
+      {!(segment.ui_fields || []).includes('translator') && (
+        <TranslationSection segment={segment} onWrite={onWrite} />
+      )}
 
       {/* Notes fields */}
       {NOTES_FIELDS.map(f => (
