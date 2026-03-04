@@ -214,6 +214,13 @@ export default function FileOrLinkInput({
     setUploadError('');
   };
 
+  const handleLinkBlur = (e) => {
+    // Only lock if there is an actual value
+    if (e.target.value.trim() !== '') {
+      setIsLinkLocked(true);
+    }
+  };
+
   const hasValue = value && value.trim();
   const isUploaded = hasValue && (value.includes('/storage/v1/object/public/') || value.includes('base44'));
   const displayMode = hasValue ? (isUploaded ? 'upload' : 'link') : mode;
