@@ -486,7 +486,7 @@ export default function PublicProgramSegment({
                 className={`h-7 px-2 border-2 text-xs gap-1 ${isSlidesOnly ? 'border-amber-500 text-amber-700 hover:bg-amber-50' : 'border-blue-500 text-blue-700 hover:bg-blue-50'}`}
                 title="Abrir Presentación"
               >
-                <a href={presentationUrl} target="_blank" rel="noopener noreferrer">
+                <a href={Array.isArray(presentationUrl) ? presentationUrl[0] : presentationUrl} target="_blank" rel="noopener noreferrer">
                   {isSlidesOnly ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-4 h-4" />}
                   <span>{isSlidesOnly ? 'Solo Slides' : 'Abrir Slides'}</span>
                 </a>
@@ -502,7 +502,7 @@ export default function PublicProgramSegment({
                 className="h-7 px-2 border-2 border-purple-500 text-purple-700 hover:bg-purple-50 text-xs gap-1"
                 title="Abrir Notas"
               >
-                <a href={notesUrl} target="_blank" rel="noopener noreferrer">
+                <a href={Array.isArray(notesUrl) ? notesUrl[0] : notesUrl} target="_blank" rel="noopener noreferrer">
                   <BookOpen className="w-4 h-4" />
                   <span>Notas</span>
                 </a>
