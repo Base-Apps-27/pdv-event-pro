@@ -69,6 +69,8 @@ function extractFilename(url) {
   }
 }
 
+import { Pencil } from 'lucide-react'; // Add this import at the top if it isn't there already
+
 export default function FileOrLinkInput({
   value,
   onChange,
@@ -86,6 +88,7 @@ export default function FileOrLinkInput({
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isLinkLocked, setIsLinkLocked] = useState(!!value && !value.includes('/storage/v1/object/public/') && !value.includes('base44'));
   const fileInputRef = useRef(null);
   const progressTimerRef = useRef(null);
 
