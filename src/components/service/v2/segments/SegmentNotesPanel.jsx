@@ -142,6 +142,68 @@ function VisibilityToggle({ segment, column, label, onWrite }) {
   );
 }
 
+/**
+ * TranslationSection — inline translation toggle + mode + translator name.
+ * 2026-03-04: Ensures ALL segment types (including Especial) can set translation options
+ * from the "Más detalles" panel. Previously only segments with 'translator' in ui_fields
+ * got this option, leaving Especial and other types without it.
+ */
+function TranslationSection({ segment, onWrite }) {
+  const { t, language } = useLanguage();
+  // Don't show for Breakout segments (they have per-room translation)
+  if (segment.segment_type === 'Breakout') return null;
+
+  const checked = !!segment.requires_translation;
+  const mode = segment.translation_mode || 'InPerson';
+  const translatorName = segment.translator_name || '';
+
+  return (
+    <div className="space-y-2 border-t pt-2">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(val) => onWrite(segment.id, 'requires_translation', !!val)}
+          id={`translation-${segment.id}`}
+          className="h-3.5 w-3.5"
+        />
+        <label htmlFor={`translation-${segment.id}`} className="text-xs font-semibold text-purple-800 cursor-pointer">
+          🌐 {language === 'es' ? 'Requiere Traducción' : 'Requires Translation'}
+        </label>
+      </div>
+      {checked && (
+        <div className="space-y-2 pl-5">
+          <div className="space-y-1">
+            <Label className="text-[10px] text-purple-700">{language === 'es' ? 'Modo' : 'Mode'}</Label>
+            <Select value={mode} onValueChange={(val) => onWrite(segment.id, 'translation_mode', val)}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="InPerson">{language === 'es' ? 'En Persona (en tarima)' : 'In Person (on stage)'}</SelectItem>
+                <SelectItem value="RemoteBooth">{language === 'es' ? 'Cabina Remota (audífonos)' : 'Remote Booth (headphones)'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-purple-700">
+              {mode === 'InPerson'
+                ? (language === 'es' ? 'Traductor (en tarima)' : 'Translator (on stage)')
+                : (language === 'es' ? 'Traductor (cabina)' : 'Translator (booth)')}
+            </Label>
+            <AutocompleteInput
+              type="translator"
+              value={translatorName}
+              onChange={(e) => onWrite(segment.id, 'translator_name', e.target.value)}
+              placeholder={language === 'es' ? 'Nombre del traductor' : 'Translator name'}
+              className="text-xs h-8"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NoteTextarea({ segment, column, placeholder, onWrite }) {
   const value = segment[column] || '';
   const [local, setLocal] = useState(value);
