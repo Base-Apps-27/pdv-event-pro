@@ -76,12 +76,15 @@ export default function PublicProgramSegment({
     arrHas(segment.arts_run_of_show_url) ||
     segment.art_other_description
   );
+  // 2026-03-04: Resources button should only appear when the modal adds value BEYOND
+  // what inline buttons already show (Slides, Notes, Verses).
+  // Show Resources for: arts data, video attachments, drama/dance song URLs.
+  // Do NOT show for speaker-only resources (those are fully covered inline).
   const hasResourceLinks = hasArtsOperationalData ||
     arrHas(segment.video_url) || 
     arrHas(segment.drama_song_source) || arrHas(segment.drama_song_2_url) || arrHas(segment.drama_song_3_url) ||
     arrHas(segment.dance_song_source) || arrHas(segment.dance_song_2_url) || arrHas(segment.dance_song_3_url) ||
-    arrHas(segment.arts_run_of_show_url) ||
-    arrHas(presentationUrl) || arrHas(notesUrl);
+    arrHas(segment.arts_run_of_show_url);
   
   // Determine segment type and characteristics
   const segmentType = segment.segment_type || segment.type || getData('type') || 'Especial';
