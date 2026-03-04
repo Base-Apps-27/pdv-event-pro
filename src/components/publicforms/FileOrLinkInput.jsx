@@ -309,10 +309,10 @@ export default function FileOrLinkInput({
             <div className="flex items-center gap-2 p-2.5 bg-green-50 border border-green-200 rounded-md">
               <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-green-800 truncate">
-                  {uploadedFileName || tFn('Archivo subido', 'File uploaded')}
+                <p className="text-xs font-medium text-green-800 truncate" title={uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}>
+                  {uploadedFileName || extractFilename(value) || tFn('Archivo subido', 'File uploaded')}
                 </p>
-                <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block">
+                <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline truncate block" title={value}>
                   {value}
                 </a>
               </div>
