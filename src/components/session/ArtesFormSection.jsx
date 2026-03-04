@@ -225,12 +225,20 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
             </select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">{language === 'es' ? 'Guión / Script (URL)' : 'Script / Guide (URL)'}</Label>
-            <Input value={Array.isArray(formData.spoken_word_script_url) ? formData.spoken_word_script_url.join(', ') : (formData.spoken_word_script_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_script_url: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : [] })} placeholder="https://..." className="h-8 text-sm" />
+            <Label className="text-xs">{language === 'es' ? 'Guión / Script' : 'Script / Guide'}</Label>
+            <MultiFileOrLinkInput 
+               urls={formData.spoken_word_script_url} 
+               onChange={(urls) => setFormData({ ...formData, spoken_word_script_url: urls })} 
+               placeholder="https://..." 
+            />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">{language === 'es' ? 'Audio del Spoken Word (URL)' : 'Spoken Word Audio (URL)'}</Label>
-            <Input value={Array.isArray(formData.spoken_word_audio_url) ? formData.spoken_word_audio_url.join(', ') : (formData.spoken_word_audio_url || "")} onChange={(e) => setFormData({ ...formData, spoken_word_audio_url: e.target.value ? e.target.value.split(',').map(s=>s.trim()).filter(Boolean) : [] })} placeholder="https://..." className="h-8 text-sm" />
+            <Label className="text-xs">{language === 'es' ? 'Audio del Spoken Word' : 'Spoken Word Audio'}</Label>
+            <MultiFileOrLinkInput 
+               urls={formData.spoken_word_audio_url} 
+               onChange={(urls) => setFormData({ ...formData, spoken_word_audio_url: urls })} 
+               placeholder="https://..." 
+            />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Checkbox id="spoken_word_has_music" checked={formData.spoken_word_has_music} onCheckedChange={(checked) => setFormData({ ...formData, spoken_word_has_music: checked })} />
