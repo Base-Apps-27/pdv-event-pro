@@ -344,8 +344,8 @@ export default function CoordinatorActionsDisplay({
                           {isUrgent && <AlertCircle className="w-2.5 h-2.5 text-amber-600 animate-pulse" />}
                         </div>
 
-                        {/* Label */}
-                        <h4 className="text-[9px] font-bold text-slate-900 uppercase leading-tight mb-0.5 line-clamp-2">
+                        {/* Label — 2026-03-05: Allow 3 lines with smaller font for TV display */}
+                        <h4 className="text-[8px] font-bold text-slate-900 uppercase leading-tight mb-0.5 line-clamp-3">
                           {action.label}
                         </h4>
 
