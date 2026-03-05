@@ -61,8 +61,8 @@ function resolveSegmentEnum(rawType) {
 
 /**
  * BUGFIX (2026-03-04): Derive planned_start_time from slot name like "9:30am".
- * Without this, sessions are created without planned_start_time, which breaks
- * segment time calculation in buildProgramSnapshot and SlotColumn display.
+ * Used ONLY as a last-resort fallback when ServiceSchedule.sessions[].planned_start_time
+ * is not available. The primary source is the schedule's session definition.
  */
 function parseSlotNameToTime(slotName) {
   if (!slotName) return null;
@@ -234,15 +234,18 @@ Deno.serve(async (req) => {
         }
 
         // Create Session entity
-        // BUGFIX (2026-03-04): Include planned_start_time derived from slot name.
-        // Without this, computeSegmentTimes in buildProgramSnapshot can't calculate
-        // segment start/end times, causing "–" to display instead of actual times.
+        // BUGFIX (2026-03-04): Include planned_start_time so computeSegmentTimes
+        // in buildProgramSnapshot can calculate segment start/end times.
+        // Primary source: ServiceSchedule.sessions[].planned_start_time (authoritative).
+        // Fallback: parse from slot name like "9:30am" (best-effort).
+        const sessionDef2 = schedule.sessions?.find(s => s.name === slotName);
+        const plannedStart = sessionDef2?.planned_start_time || parseSlotNameToTime(slotName);
         const session = await base44.asServiceRole.entities.Session.create({
           service_id: newService.id,
           name: slotName,
           date: dateStr,
           order: slotNames.indexOf(slotName) + 1,
-          planned_start_time: parseSlotNameToTime(slotName),
+          planned_start_time: plannedStart,
         });
         console.log(`[ENSURE_RECURRING] Created Session "${slotName}" (id: ${session.id})`);
 
