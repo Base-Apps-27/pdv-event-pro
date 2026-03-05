@@ -23,7 +23,7 @@ import HelpTooltip from "@/components/utils/HelpTooltip";
 // 2026-03-05: Max label length for action instructions.
 // Derived from longest real-world label: "CONFIRMAR LA LLEGADA DE LAS PERSONAS DE MINISTRACIÓN Y LA BIENVENIDA" (70 chars).
 // Enforced across all 3 editors: SegmentActionsEditor, SegmentNotesPanel (V2), CustomServiceBuilder.
-const ACTION_LABEL_MAX = 70;
+export const ACTION_LABEL_MAX = 70;
 
 const DEPARTMENTS = [
   "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
