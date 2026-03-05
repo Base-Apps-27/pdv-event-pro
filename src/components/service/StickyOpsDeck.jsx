@@ -483,9 +483,9 @@ export default function StickyOpsDeck({
                   </span>
                 </div>
 
-                {/* Row 2: Action label — 2-line clamp instead of single-line truncate */}
+                {/* Row 2: Action label — allow full wrap on mobile, 2-line clamp on wider screens */}
                 <div className="flex items-start gap-2">
-                  <h4 className={`font-bold text-base leading-snug line-clamp-2 ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                  <h4 className={`font-bold text-sm sm:text-base leading-snug line-clamp-3 sm:line-clamp-2 ${isPast ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                     {activeAction.label}
                   </h4>
                   
