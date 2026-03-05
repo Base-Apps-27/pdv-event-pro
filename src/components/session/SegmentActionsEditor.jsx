@@ -20,6 +20,11 @@ import { Plus, Trash2, Zap } from "lucide-react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import HelpTooltip from "@/components/utils/HelpTooltip";
 
+// 2026-03-05: Max label length for action instructions.
+// Derived from longest real-world label: "CONFIRMAR LA LLEGADA DE LAS PERSONAS DE MINISTRACIÓN Y LA BIENVENIDA" (70 chars).
+// Enforced across all 3 editors: SegmentActionsEditor, SegmentNotesPanel (V2), CustomServiceBuilder.
+const ACTION_LABEL_MAX = 70;
+
 const DEPARTMENTS = [
   "Admin", "MC", "Sound", "Projection", "Hospitality", "Ujieres", "Kids", "Coordinador", "Stage & Decor", "Alabanza", "Translation", "Other"
 ];
@@ -103,12 +108,20 @@ export default function SegmentActionsEditor({ actions, onChange, formData, lang
               <Card key={idx} className="p-3 bg-orange-50/30 border-orange-200">
                 <div className="flex items-start gap-2 mb-2">
                   <div className="flex-1 flex items-center gap-2">
-                    <Input
-                      placeholder="Etiqueta (ej: A&A sube)"
-                      className="flex-1 h-8 text-sm bg-white"
-                      value={action.label || ""}
-                      onChange={(e) => handleUpdate(idx, 'label', e.target.value)}
-                    />
+                    <div className="flex-1 relative">
+                      <Input
+                        placeholder="Etiqueta (ej: A&A sube)"
+                        className="flex-1 h-8 text-sm bg-white pr-12"
+                        value={action.label || ""}
+                        maxLength={ACTION_LABEL_MAX}
+                        onChange={(e) => handleUpdate(idx, 'label', e.target.value)}
+                      />
+                      <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-[10px] tabular-nums ${
+                        (action.label || '').length >= ACTION_LABEL_MAX ? 'text-red-500 font-bold' : 'text-slate-400'
+                      }`}>
+                        {(action.label || '').length}/{ACTION_LABEL_MAX}
+                      </span>
+                    </div>
                     {actionTime && (
                       <span className="text-xs font-mono font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded whitespace-nowrap">
                         @ {actionTime}

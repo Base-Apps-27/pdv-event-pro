@@ -278,7 +278,8 @@ export default function CoordinatorActionsDisplay({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-1 mb-0.5">
-                        <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight leading-tight">
+                        {/* 2026-03-05: Allow up to 3 lines with reduced font to show full action label on TV */}
+                        <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-tight leading-tight line-clamp-3">
                           {action.label}
                         </h4>
                         {isUrgent && <AlertCircle className="w-3 h-3 text-amber-600 animate-pulse flex-shrink-0" />}
