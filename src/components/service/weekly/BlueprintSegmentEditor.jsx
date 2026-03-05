@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp, Trash2, Plus, GripVertical } from "lucide-react";
+import { ACTION_LABEL_MAX } from "@/components/session/SegmentActionsEditor";
 
 const SEGMENT_TYPES = [
   { value: "worship", label: "Alabanza" },
@@ -251,12 +252,20 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
               </div>
               {(segment.actions || []).map((action, idx) => (
                 <div key={idx} className="flex items-center gap-2 bg-amber-50 rounded p-2">
-                  <Input
-                    value={action.label || ""}
-                    onChange={(e) => updateAction(idx, "label", e.target.value)}
-                    placeholder="Descripción de la acción"
-                    className="text-xs h-7 flex-1"
-                  />
+                  <div className="flex-1 relative">
+                    <Input
+                      value={action.label || ""}
+                      onChange={(e) => updateAction(idx, "label", e.target.value)}
+                      maxLength={ACTION_LABEL_MAX}
+                      placeholder="Descripción de la acción"
+                      className="text-xs h-7 pr-12"
+                    />
+                    <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tabular-nums ${
+                      (action.label || '').length >= ACTION_LABEL_MAX ? 'text-red-500 font-bold' : 'text-slate-400'
+                    }`}>
+                      {(action.label || '').length}/{ACTION_LABEL_MAX}
+                    </span>
+                  </div>
                   <Select
                     value={action.timing || "before_start"}
                     onValueChange={(v) => updateAction(idx, "timing", v)}
