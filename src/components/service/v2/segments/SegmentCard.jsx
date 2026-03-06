@@ -37,6 +37,22 @@ const COLOR_MAP = {
   default: { border: '', bg: 'bg-white' },
 };
 
+/**
+ * ACCENT_INLINE_STYLES: Concrete CSS for accent colors.
+ * Avoids dynamic Tailwind class purging (e.g. `border-l-${color}-500` gets purged).
+ */
+const ACCENT_INLINE = {
+  green:  { borderL: '#22c55e', iconColor: '#16a34a' },
+  blue:   { borderL: '#3b82f6', iconColor: '#2563eb' },
+  pink:   { borderL: '#ec4899', iconColor: '#db2777' },
+  orange: { borderL: '#f97316', iconColor: '#ea580c' },
+  yellow: { borderL: '#f59e0b', iconColor: '#d97706' },
+  amber:  { borderL: '#f59e0b', iconColor: '#d97706' },
+  purple: { borderL: '#a855f7', iconColor: '#9333ea' },
+  red:    { borderL: '#ef4444', iconColor: '#dc2626' },
+  teal:   { borderL: '#14b8a6', iconColor: '#0d9488' },
+};
+
 const SegmentCard = memo(function SegmentCard({
   segment,
   children: childSegments,
