@@ -41,35 +41,13 @@ export default function Events() {
 
   const events = allEvents.filter(e => e.status !== 'template');
 
-  // P0-2: Added onError toast handlers (2026-02-12)
-  const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Event.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['events']);
-      setShowDialog(false);
-      setEditingEvent(null);
-      toast.success(t('events.newEvent') + ' ✓');
-    },
-    onError: (err) => toast.error(t('errors.createFailed') + ': ' + err.message),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Event.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['events']);
-      setShowDialog(false);
-      setEditingEvent(null);
-      toast.success(t('btn.save') + ' ✓');
-    },
-    onError: (err) => toast.error(t('errors.updateFailed') + ': ' + err.message),
-  });
-
+  // UX-AUDIT #6 FIX (2026-03-06): create/update now handled by EventEditDialog.
+  // Only deleteMutation remains here since DeleteEventDialog needs it.
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Event.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
       setEventToDelete(null);
-      // Toast handled in DeleteEventDialog itself
     },
     onError: (err) => toast.error(t('errors.deleteFailed') + ': ' + err.message),
   });

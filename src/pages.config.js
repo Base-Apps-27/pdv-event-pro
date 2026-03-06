@@ -57,6 +57,7 @@ import CustomServicesManager from './pages/CustomServicesManager';
 import Dashboard from './pages/Dashboard';
 import DependencyTracker from './pages/DependencyTracker';
 import DetailedProgram from './pages/DetailedProgram';
+import DevTools from './pages/DevTools';
 import DirectorConsole from './pages/DirectorConsole';
 import EventDetail from './pages/EventDetail';
 import Events from './pages/Events';
@@ -88,7 +89,6 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import DevTools from './pages/DevTools';
 import __Layout from './Layout.jsx';
 
 
@@ -103,6 +103,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DependencyTracker": DependencyTracker,
     "DetailedProgram": DetailedProgram,
+    "DevTools": DevTools,
     "DirectorConsole": DirectorConsole,
     "EventDetail": EventDetail,
     "Events": Events,
@@ -134,7 +135,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "DevTools": DevTools,
 }
 
 export const pagesConfig = {
