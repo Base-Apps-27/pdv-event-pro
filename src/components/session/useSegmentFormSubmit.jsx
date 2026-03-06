@@ -71,12 +71,17 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
   const [showStaleWarning, setShowStaleWarning] = useState(false);
   const [staleInfo, setStaleInfo] = useState(null);
 
-  // Capture baseline from segment on mount (segment.updated_date is set by platform)
-  useState(() => {
-    if (segment?.updated_date) {
-      captureBaseline(segment.updated_date);
-    }
-  });
+  // FIX 2026-03-06 (v3): useState initializer was being misused as a side effect.
+  // useState(() => {...}) only returns initial state — it doesn't run as an effect.
+  // This meant captureBaseline was called once on first render with segment?.updated_date,
+  // but the ref was never updated when the segment prop changed (e.g. after a refetch).
+  // Result: stale guard compared an outdated baseline and always flagged as stale,
+  // silently blocking every save. Fix: use a proper ref initialization + useEffect sync.
+  const baselineInitialized = useRef(false);
+  if (!baselineInitialized.current && segment?.updated_date) {
+    captureBaseline(segment.updated_date);
+    baselineInitialized.current = true;
+  }
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
