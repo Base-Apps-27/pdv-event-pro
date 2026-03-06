@@ -678,6 +678,8 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                             onEdit={(segment) => handleEditSegment(segment, session.id)}
                             onEditPreSession={() => setShowPreSessionDetailsDialog(true)}
                             user={user}
+                            sessions={sessions}
+                            allEventSegments={segments}
                           />
                         </div>
                       )}
