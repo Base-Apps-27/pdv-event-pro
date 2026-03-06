@@ -15,8 +15,8 @@ import { toast } from "sonner";
 export function useSpecialSegment(queryKey) {
   const queryClient = useQueryClient();
 
-  // 2026-03-06: Added requires_translation + translation_mode support
-  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType, requires_translation, translation_mode }) => {
+  // 2026-03-06: Added requires_translation + translation_mode + default_translator_source support
+  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType, requires_translation, translation_mode, default_translator_source }) => {
     if (!sessionId || !serviceId) {
       toast.error("Faltan datos: sessionId o serviceId");
       return;
@@ -28,6 +28,22 @@ export function useSpecialSegment(queryKey) {
     try {
       console.log(`[V2 Special] Adding "${resolvedTitle}" to session ${sessionId} after idx ${insertAfterIdx}`);
 
+      // 2026-03-06: Resolve translator from source segment when auto_from_segment:* pattern
+      let resolvedTranslator = translator || "";
+      if (requires_translation && default_translator_source?.startsWith('auto_from_segment:')) {
+        const sourceId = default_translator_source.split(':')[1];
+        try {
+          const allSegs = await base44.entities.Segment.filter({ session_id: sessionId });
+          const sourceSegment = allSegs.find(s => s.id === sourceId || String(allSegs.indexOf(s)) === sourceId);
+          if (sourceSegment?.translator_name) {
+            resolvedTranslator = sourceSegment.translator_name;
+            console.log(`[V2 Special] Auto-resolved translator "${resolvedTranslator}" from segment ${sourceId}`);
+          }
+        } catch (err) {
+          console.warn('[V2 Special] Could not resolve translator source:', err.message);
+        }
+      }
+
       const created = await base44.entities.Segment.create({
         session_id: sessionId,
         service_id: serviceId,
@@ -36,10 +52,11 @@ export function useSpecialSegment(queryKey) {
         segment_type: resolvedType,
         duration_min: Math.max(1, duration || 15),
         presenter: presenter || "",
-        translator_name: translator || "",
+        translator_name: resolvedTranslator,
         // 2026-03-06: Translation fields from SpecialSegmentDialog
         requires_translation: !!requires_translation,
         translation_mode: requires_translation ? (translation_mode || "InPerson") : undefined,
+        default_translator_source: requires_translation ? (default_translator_source || "manual") : undefined,
         show_in_general: true,
         show_in_projection: true,
         show_in_sound: true,
