@@ -363,6 +363,8 @@ export const en = {
   'eventDetail.tabs.info': 'Information',
   'eventDetail.tabs.sessions': 'Sessions',
   'eventDetail.tabs.calendar': 'Calendar',
+  'eventDetail.redirecting': 'Redirecting to Events list...',
+  'eventDetail.goToEvents': 'Go to Events',
 
   // Rooms
   'rooms.title': 'Rooms',
