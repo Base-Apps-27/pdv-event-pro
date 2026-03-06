@@ -131,7 +131,9 @@ const SegmentCard = memo(function SegmentCard({
   }
 
   return (
-    <Card className={`border-2 border-gray-300 border-l-4 ${colors.border || `border-l-${accentColor}-500`} ${colors.bg}`}>
+    <Card className={`border-2 border-gray-300 border-l-4 ${colors.border} ${colors.bg}`}
+      style={!colors.border ? { borderLeftColor: (ACCENT_INLINE[accentColor] || ACCENT_INLINE.teal).borderL } : undefined}
+    >
       <CardHeader className={`pb-2 ${isSpecial ? '' : 'bg-gray-50/50'}`}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
