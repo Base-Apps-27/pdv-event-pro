@@ -242,11 +242,21 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       'spoken_word_music_url', 'spoken_word_script_url', 'spoken_word_audio_url'
     ];
     
+    // FIX 2026-03-06 (v2): Handle ALL invalid states: null, undefined, string, and malformed arrays.
+    // The DB stores null for unset array fields. buildFormData catches most, but any path
+    // that merges raw segment data can re-introduce nulls.
     arrayUrlFields.forEach(field => {
-      if (typeof cleanedFormData[field] === 'string') {
-        cleanedFormData[field] = cleanedFormData[field].trim() ? cleanedFormData[field].split(',').map(s => s.trim()).filter(Boolean) : [];
-      } else if (Array.isArray(cleanedFormData[field])) {
-        cleanedFormData[field] = cleanedFormData[field].map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
+      const val = cleanedFormData[field];
+      if (val == null) {
+        // null or undefined → safe empty array
+        cleanedFormData[field] = [];
+      } else if (typeof val === 'string') {
+        cleanedFormData[field] = val.trim() ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+      } else if (Array.isArray(val)) {
+        cleanedFormData[field] = val.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
+      } else {
+        // Unknown type — safe fallback
+        cleanedFormData[field] = [];
       }
     });
 
