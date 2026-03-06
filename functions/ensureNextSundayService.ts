@@ -51,8 +51,8 @@ const FALLBACK_BLUEPRINT = {
   ],
   "11:30am": [
     { type: "worship", title: "Equipo de A&A", duration: 35, fields: ["leader", "songs", "ministry_leader", "translator"], data: {}, actions: [], sub_assignments: [{ label: "Ministración de Sanidad y Milagros", person_field_name: "ministry_leader", duration_min: 5 }], songs: [{ title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }, { title: "", lead: "", key: "" }], requires_translation: true, default_translator_source: "manual" },
-    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
-    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "worship_segment_translator" },
+    { type: "welcome", title: "Bienvenida y Anuncios", duration: 5, fields: ["presenter", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "auto_from:0" },
+    { type: "offering", title: "Ofrendas", duration: 5, fields: ["presenter", "verse", "translator"], data: {}, actions: [], sub_assignments: [], requires_translation: true, default_translator_source: "auto_from:0" },
     { type: "message", title: "Mensaje", duration: 45, fields: ["preacher", "title", "verse", "translator"], data: {}, actions: [{ label: "Pianista Sube", timing: "before_end", offset_min: 10, department: "Alabanza" }, { label: "Equipo de A&A sube", timing: "before_end", offset_min: 5, department: "Alabanza" }], sub_assignments: [{ label: "Cierre", person_field_name: "cierre_leader", duration_min: 5 }], requires_translation: true, default_translator_source: "manual" }
   ]
 };
