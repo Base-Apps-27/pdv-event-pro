@@ -136,6 +136,23 @@ function buildFormData(segment, suggestedStartTime) {
     presentation_url: segment?.presentation_url || [],
     notes_url: segment?.notes_url || [],
     content_is_slides_only: segment?.content_is_slides_only || false,
+    // FIX 2026-03-06 (v2): Include all fields present in DB to prevent stale/missing data on re-save.
+    // Without these, editing a segment would silently drop these values.
+    livestream_notes: segment?.livestream_notes || "",
+    coordinator_notes: segment?.coordinator_notes || "",
+    microphone_assignments: segment?.microphone_assignments || "",
+    show_in_livestream: segment?.show_in_livestream ?? true,
+    song_1_key: segment?.song_1_key || "",
+    song_2_key: segment?.song_2_key || "",
+    song_3_key: segment?.song_3_key || "",
+    song_4_key: segment?.song_4_key || "",
+    song_5_key: segment?.song_5_key || "",
+    song_6_key: segment?.song_6_key || "",
+    submitted_content: segment?.submitted_content || "",
+    submission_status: segment?.submission_status || "ignored",
+    arts_type_order: segment?.arts_type_order || [],
+    ui_fields: segment?.ui_fields || [],
+    ui_sub_assignments: segment?.ui_sub_assignments || [],
   };
 }
 
