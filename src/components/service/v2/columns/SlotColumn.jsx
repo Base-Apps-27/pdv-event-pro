@@ -156,7 +156,7 @@ export default memo(function SlotColumn({
           )}
         </div>
         <div className="text-sm text-gray-600 flex items-center gap-3 flex-wrap">
-          <Badge variant="outline" className={isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : `bg-${accentColor}-50`}>
+          <Badge variant="outline" className={isOverage ? "bg-amber-100 border-amber-400 text-amber-900 font-bold" : ""} style={!isOverage ? { backgroundColor: colorStyles.bg50 } : undefined}>
             {totalDuration} {t('slot.minTotal')}{isOverage && ` (+${totalDuration - targetMin} min)`}
           </Badge>
           <Badge variant="outline" className="text-xs text-gray-500">
