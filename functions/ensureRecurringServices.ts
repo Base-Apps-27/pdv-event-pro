@@ -240,12 +240,15 @@ Deno.serve(async (req) => {
         // Fallback: parse from slot name like "9:30am" (best-effort).
         const sessionDef2 = schedule.sessions?.find(s => s.name === slotName);
         const plannedStart = sessionDef2?.planned_start_time || parseSlotNameToTime(slotName);
+        // BUGFIX (2026-03-06): Thread session_color from ServiceSchedule definition
+        // so the weekly editor renders the configured accent color instead of defaulting to "blue".
         const session = await base44.asServiceRole.entities.Session.create({
           service_id: newService.id,
           name: slotName,
           date: dateStr,
           order: slotNames.indexOf(slotName) + 1,
           planned_start_time: plannedStart,
+          session_color: sessionDef2?.color || undefined,
         });
         console.log(`[ENSURE_RECURRING] Created Session "${slotName}" (id: ${session.id})`);
 
