@@ -296,7 +296,12 @@ export default function FileOrLinkInput({
   // Normalise to string so .trim()/.includes() never crash.
   const safeValue = typeof value === 'string' ? value : (Array.isArray(value) ? (value[0] || '') : '');
   const hasValue = safeValue && safeValue.trim();
-  const isUploaded = hasValue && (safeValue.includes('/storage/v1/object/public/') || safeValue.includes('base44'));
+  // Treat Base44 CDN URLs and Google Drive links (from overflow uploads) as "uploaded" files
+  const isUploaded = hasValue && (
+    safeValue.includes('/storage/v1/object/public/') ||
+    safeValue.includes('base44') ||
+    safeValue.includes('drive.google.com/file/')
+  );
   const displayMode = hasValue ? (isUploaded ? 'upload' : 'link') : mode;
 
   return (
