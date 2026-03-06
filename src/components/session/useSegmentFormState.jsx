@@ -211,6 +211,7 @@ export default function useSegmentFormState({ segment, session, allSegments, tem
           show_in_projection: template.show_in_projection ?? true,
           show_in_sound: template.show_in_sound ?? true,
           show_in_ushers: template.show_in_ushers ?? true,
+          show_in_livestream: template.show_in_livestream ?? true,
         }));
         setFieldOrigins(prev => ({
           ...prev,

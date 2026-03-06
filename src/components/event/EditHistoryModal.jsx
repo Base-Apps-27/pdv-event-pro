@@ -26,6 +26,7 @@ import { formatTimestampToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
 import { toast } from "sonner";
 import { undoUpdate, undoDelete } from "@/components/utils/editActionLogger";
+import { invalidateSegmentCaches, sessionKeys } from "@/components/utils/queryKeys";
 
 const ACTION_ICONS = {
   create: Plus,
@@ -337,9 +338,10 @@ export default function EditHistoryModal({ open, onClose, eventId, sessions = []
   
   // Fetch logs for this event and all its sessions
   const sessionIds = React.useMemo(() => sessions.map(s => s.id), [sessions]);
-  
+  const sessionIdsKey = React.useMemo(() => [...sessionIds].sort().join(','), [sessionIds]);
+
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['editActionLogs', eventId, sessionIds.join(',')],
+    queryKey: ['editActionLogs', eventId, sessionIdsKey],
     queryFn: async () => {
       // Fetch logs for the event itself
       const eventLogs = await base44.entities.EditActionLog.filter(
@@ -454,10 +456,9 @@ export default function EditHistoryModal({ open, onClose, eventId, sessions = []
                         sessions={sessions}
                         currentUser={currentUser}
                         onUndo={() => {
-                          // Invalidate logs and entity queries
-                          queryClient.invalidateQueries(['editActionLogs']);
-                          queryClient.invalidateQueries(['sessions']);
-                          queryClient.invalidateQueries(['segments']);
+                          // Use centralized invalidation for segments and sessions
+                          invalidateSegmentCaches(queryClient);
+                          sessionKeys.invalidateAll(queryClient);
                           queryClient.invalidateQueries(['event']);
                         }}
                       />
