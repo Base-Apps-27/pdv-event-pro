@@ -24,7 +24,7 @@ export const en = {
   'nav.activityLog': 'Activity Log',
   'nav.artsSubmissions': 'Arts Submissions',
   'nav.devTools': 'Developer Tools',
-  'nav.specialServices': 'Custom Services',
+  'nav.specialServices': 'Special Services',
 
   // Sections
   'section.main': 'Main Panel',
@@ -41,7 +41,7 @@ export const en = {
   'dashboard.liveProgram.subtitle': 'See what’s happening now',
   'dashboard.weeklyServices.title': 'Sunday Weekly Service',
   'dashboard.weeklyServices.subtitle': 'Sunday weekly service',
-  'dashboard.otherServices.title': 'Custom Services',
+  'dashboard.otherServices.title': 'Special Services',
   'dashboard.otherServices.subtitle': 'One-time and special services',
   'dashboard.recent': 'Recent Events',
   'dashboard.events.title': 'Special Events',
@@ -312,7 +312,7 @@ export const en = {
   'adjustments.timeSlot1130am': '11:30 A.M.',
 
   // Services
-  'service.specialService': 'Custom service',
+  'service.specialService': 'Special service',
 
   // Panel
   'panel.moderators': 'Moderator(s)',
@@ -750,12 +750,12 @@ export const en = {
   'weekly.configSchedules': 'Configure Schedules',
 
   // CustomServicesManager (2026-03-06 i18n sweep)
-  'custom.title': 'Custom Services',
-  'custom.subtitle': 'Create and manage custom services and one-time events',
+  'custom.title': 'Special Services',
+  'custom.subtitle': 'Create and manage special services and one-time events',
   'custom.upcomingTitle': 'Upcoming Services',
   'custom.scheduledCount': '{count} service(s) scheduled',
   'custom.createService': 'Create Service',
-  'custom.noServices': 'No custom services scheduled',
+  'custom.noServices': 'No special services scheduled',
   'custom.createFirst': 'Create First One',
   'custom.pastServices': 'Past Services',
   'custom.noDate': 'No Date',

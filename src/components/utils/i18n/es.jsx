@@ -23,7 +23,7 @@ export const es = {
   'nav.dependencies': 'Dependencias',
   'nav.artsSubmissions': 'Envíos de Artes',
   'nav.devTools': 'Herramientas Dev',
-  'nav.specialServices': 'Servicios Personalizados',
+  'nav.specialServices': 'Servicios Especiales',
 
   // Sections
   'section.main': 'Panel Principal',
@@ -40,7 +40,7 @@ export const es = {
   'dashboard.liveProgram.subtitle': 'Ver qué está pasando ahora',
   'dashboard.weeklyServices.title': 'Servicios Dominicales',
   'dashboard.weeklyServices.subtitle': 'Servicio dominical semanal',
-  'dashboard.otherServices.title': 'Servicios Personalizados',
+  'dashboard.otherServices.title': 'Servicios Especiales',
   'dashboard.otherServices.subtitle': 'Servicios únicos y especiales',
   'dashboard.recent': 'Eventos Recientes',
   'dashboard.events.title': 'Eventos Especiales',
@@ -164,7 +164,7 @@ export const es = {
   'adjustments.timeSlot1130am': '11:30 A.M.',
 
   // Services (es)
-  'service.specialService': 'Servicio personalizado',
+  'service.specialService': 'Servicio especial',
 
   // Panel
   'panel.moderators': 'Moderador(es)',
@@ -750,12 +750,12 @@ export const es = {
   'weekly.configSchedules': 'Configurar Horarios',
 
   // CustomServicesManager (2026-03-06 i18n sweep)
-  'custom.title': 'Servicios Personalizados',
-  'custom.subtitle': 'Crea y gestiona servicios personalizados y eventos únicos',
+  'custom.title': 'Servicios Especiales',
+  'custom.subtitle': 'Crea y gestiona servicios especiales y eventos únicos',
   'custom.upcomingTitle': 'Próximos Servicios',
   'custom.scheduledCount': '{count} servicio(s) programado(s)',
   'custom.createService': 'Crear Servicio',
-  'custom.noServices': 'No hay servicios personalizados programados',
+  'custom.noServices': 'No hay servicios especiales programados',
   'custom.createFirst': 'Crear el Primero',
   'custom.pastServices': 'Servicios Pasados',
   'custom.noDate': 'Sin Fecha',
