@@ -176,8 +176,9 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       }
     }
 
-    // Auto-fetch metadata for URLs (non-blocking — don't hold up the save)
-    const metaUpdates = {};
+    // Auto-fetch metadata for URLs — best-effort, non-blocking.
+    // FIX (2026-03-06): Previously metaUpdates was built but never persisted.
+    // Now we fire-and-forget a background update after the main save succeeds.
     const urlsToFetch = [
       { url: formData.video_url, metaField: 'video_url_meta', currentMeta: formData.video_url_meta },
       { url: formData.drama_song_source, metaField: 'drama_song_1_url_meta', currentMeta: formData.drama_song_1_url_meta },
@@ -187,20 +188,11 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       { url: formData.dance_song_2_url, metaField: 'dance_song_2_url_meta', currentMeta: formData.dance_song_2_url_meta },
       { url: formData.dance_song_3_url, metaField: 'dance_song_3_url_meta', currentMeta: formData.dance_song_3_url_meta },
       { url: formData.arts_run_of_show_url, metaField: 'arts_run_of_show_url_meta', currentMeta: formData.arts_run_of_show_url_meta },
-    ];
-    const fetchPromises = urlsToFetch
-      .filter(({ url, currentMeta }) => {
-        if (!url || currentMeta) return false;
-        const firstUrl = Array.isArray(url) ? url[0] : url;
-        return typeof firstUrl === 'string' && firstUrl.trim();
-      })
-      .map(async ({ url, metaField }) => {
-        const firstUrl = Array.isArray(url) ? url[0] : url;
-        const meta = await fetchMetaForUrl(firstUrl);
-        if (meta) metaUpdates[metaField] = meta;
-      });
-    // Fire-and-forget — metadata is nice-to-have, not save-blocking
-    Promise.all(fetchPromises).catch(() => {});
+    ].filter(({ url, currentMeta }) => {
+      if (!url || currentMeta) return false;
+      const firstUrl = Array.isArray(url) ? url[0] : url;
+      return typeof firstUrl === 'string' && firstUrl.trim();
+    });
 
     // Auto-insertion order (Gap-Fit, order-only) for new segments
     let insertionOrder = null;
