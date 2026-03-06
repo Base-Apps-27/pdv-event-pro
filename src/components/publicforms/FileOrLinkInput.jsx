@@ -20,8 +20,11 @@
  *   label        - field label (bilingual)
  *   placeholder  - input placeholder
  *   helpText     - optional guidance text shown below
- *   maxSizeMB    - max file size in MB (default 50)
+ *   maxSizeMB    - max file size in MB (default 50) — files larger than this route to Google Drive
+ *   driveMaxSizeMB - hard ceiling for Drive uploads (default 500)
  *   variant      - 'default' | 'compact' for admin vs public form contexts
+ *   eventName    - (optional) event name for Drive folder organization
+ *   eventYear    - (optional) event year for Drive folder organization
  */
 import React, { useState, useRef, useContext, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
