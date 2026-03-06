@@ -234,7 +234,8 @@ export default function Reports() {
   const handleExportAllPdfs = async () => {
     if (!selectedEventId) return;
     const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
-    const types = ['detailed','general','projection','sound','ushers','hospitality'];
+    // 2026-03-06 audit: Added 'livestream' — was missing from export-all despite having a tab
+    const types = ['detailed','general','projection','sound','ushers','hospitality','livestream'];
     for (const rt of types) {
       const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
       await downloadPdf(rt, bytes);
