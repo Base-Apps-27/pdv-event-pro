@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, ScrollText } from "lucide-react";
+import { Save, X, ScrollText, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import HelpTooltip from "@/components/utils/HelpTooltip";
 import OverlapDetectedDialog from "./OverlapDetectedDialog";
 import ShiftPreviewModal from "./ShiftPreviewModal";
@@ -45,7 +46,6 @@ import AnnouncementSeriesSection from "./AnnouncementSeriesSection";
 import TeamNotesSection from "./TeamNotesSection";
 import VisibilityTogglesSection from "./VisibilityTogglesSection";
 import { useLanguage } from "@/components/utils/i18n";
-import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 
 // Phase 3B extracted hooks and components
 import useSegmentFormState from "./useSegmentFormState";
@@ -53,8 +53,6 @@ import useSegmentFormSubmit, { calculateTimes } from "./useSegmentFormSubmit";
 import VideoSection from "./segment-form/VideoSection";
 import PlenariaSection from "./segment-form/PlenariaSection";
 import PanelSection from "./segment-form/PanelSection";
-import StaleEditWarningDialog from "./StaleEditWarningDialog";
-import { sanitizeSegmentPayload } from "@/components/utils/sanitizeSegmentPayload";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
@@ -71,7 +69,6 @@ const TYPE_TO_COLOR = {
 const getColorForType = (type) => TYPE_TO_COLOR[type] || "default";
 
 export default function SegmentFormTwoColumn({ session, segment, templates, onClose, sessionId, user }) {
-  const queryClient = useQueryClient();
   const { t, language } = useLanguage();
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   const [showVerseParser, setShowVerseParser] = useState(false);
@@ -106,13 +103,11 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
   // Phase 3B: extracted submit hook
   const {
     handleSubmit: rawHandleSubmit,
+    isSaving,
     createMutation, updateMutation,
     showOverlapDialog, setShowOverlapDialog, overlapText,
     showShiftPreview, setShowShiftPreview,
-    // Phase 5: Concurrent editing guard
-    showStaleWarning, setShowStaleWarning,
-    staleInfo,
-    forceSave,
+    saveSegmentOnly,
   } = useSegmentFormSubmit({ segment, sessionId, session, user, allSegments, nextOrder, onClose });
 
   const times = calculateTimes(formData.start_time, formData.duration_min);
@@ -373,8 +368,9 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
-              <Button type="submit" disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                <Save className="w-4 h-4 mr-2" />{segment ? (t('btn.save') || 'Guardar') : (t('btn.confirm') || 'Crear')}
+              <Button type="submit" disabled={!canSubmit || isSaving} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {isSaving ? (language === 'es' ? 'Guardando...' : 'Saving...') : (segment ? (t('btn.save') || 'Guardar') : (t('btn.confirm') || 'Crear'))}
               </Button>
             </span>
           </TooltipTrigger>
@@ -398,7 +394,6 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
       {showSeriesManager && <AnnouncementSeriesManager isOpen={showSeriesManager} onClose={() => setShowSeriesManager(false)} initialSeriesId={formData.announcement_series_id || "new"} onSelect={(seriesId) => updateField('announcement_series_id', seriesId)} />}
       <VerseParserDialog open={showVerseParser} onOpenChange={setShowVerseParser} initialText={formData.scripture_references} onSave={({ parsed_data, verse }) => { setFormData(prev => ({ ...prev, scripture_references: verse, parsed_verse_data: parsed_data })); }} language={language} />
       <OverlapDetectedDialog open={showOverlapDialog} message={overlapText} onCancel={() => setShowOverlapDialog(false)} onProceed={() => { setShowOverlapDialog(false); setShowShiftPreview(true); }} />
-      <StaleEditWarningDialog open={showStaleWarning} onCancel={() => setShowStaleWarning(false)} onForceSave={forceSave} staleInfo={staleInfo} language={language} />
       <ShiftPreviewModal
         open={showShiftPreview}
         onClose={() => setShowShiftPreview(false)}
@@ -407,18 +402,19 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
         editedSegment={segment}
         newStartTime={formData.start_time}
         onConfirm={async ({ affected }) => {
-          const updates = [];
-          for (const a of affected) { updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd })); }
-          const currentTimes = calculateTimes(formData.start_time, formData.duration_min);
-          // FIX 2026-03-06 (v4): Apply sanitizer to the shift-preview bypass path too.
-          // This path previously sent raw formData directly, bypassing the submit hook's cleanup.
-          const sanitized = sanitizeSegmentPayload(formData);
-          const currentData = { session_id: sessionId, ...sanitized, ...currentTimes, breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined, field_origins: fieldOrigins };
-          if (segment) { updates.push(base44.entities.Segment.update(segment.id, currentData)); } else { updates.push(base44.entities.Segment.create(currentData)); }
-          await Promise.all(updates);
-          invalidateSegmentCaches(queryClient);
-          setShowShiftPreview(false);
-          onClose();
+          try {
+            // Shift downstream segments
+            const updates = affected.map(a =>
+              base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd })
+            );
+            await Promise.all(updates);
+            // Save current segment via unified path
+            await saveSegmentOnly({ formData, breakoutRooms, fieldOrigins });
+            setShowShiftPreview(false);
+          } catch (err) {
+            console.error('[SegmentSave] Shift+save failed:', err);
+            toast.error(t('error.save_failed'));
+          }
         }}
       />
     </form>

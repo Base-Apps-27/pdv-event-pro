@@ -5,7 +5,7 @@
  * Verbatim extraction — zero logic changes.
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,7 +13,6 @@ import { useLanguage } from "@/components/utils/i18n";
 import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
-import useStaleGuard from "@/components/utils/useStaleGuard";
 import { sanitizeSegmentPayload } from "@/components/utils/sanitizeSegmentPayload";
 
 /**
@@ -64,25 +63,7 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
   const [showOverlapDialog, setShowOverlapDialog] = useState(false);
   const [overlapText, setOverlapText] = useState("");
   const [showShiftPreview, setShowShiftPreview] = useState(false);
-
-  // Phase 5: Concurrent editing guard — capture baseline on hook init
-  const { captureBaseline, checkStale, updateBaseline } = useStaleGuard();
-  // pendingSubmit holds form args when awaiting user force-save decision
-  const pendingSubmitRef = useRef(null);
-  const [showStaleWarning, setShowStaleWarning] = useState(false);
-  const [staleInfo, setStaleInfo] = useState(null);
-
-  // FIX 2026-03-06 (v3): useState initializer was being misused as a side effect.
-  // useState(() => {...}) only returns initial state — it doesn't run as an effect.
-  // This meant captureBaseline was called once on first render with segment?.updated_date,
-  // but the ref was never updated when the segment prop changed (e.g. after a refetch).
-  // Result: stale guard compared an outdated baseline and always flagged as stale,
-  // silently blocking every save. Fix: use a proper ref initialization + useEffect sync.
-  const baselineInitialized = useRef(false);
-  if (!baselineInitialized.current && segment?.updated_date) {
-    captureBaseline(segment.updated_date);
-    baselineInitialized.current = true;
-  }
+  const [isSaving, setIsSaving] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -90,8 +71,6 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       await logCreate('Segment', created, sessionId, user);
       return created;
     },
-    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento creado ✓"); },
-    onError: () => { toast.error(t('error.save_failed')); },
   });
 
   const updateMutation = useMutation({
@@ -100,46 +79,53 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
       return updated;
     },
-    onSuccess: (result) => {
-      // FIX 2026-03-06 (v3): Update stale guard baseline after successful save.
-      // Without this, the next save attempt sees server updated_date > old baseline → false stale.
-      if (result?.updated_date) updateBaseline(result.updated_date);
-      invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento guardado ✓");
-    },
-    onError: () => { toast.error(t('error.save_failed')); },
   });
-
-  /**
-   * Build and execute submit. Receives all form state as arguments
-   * to avoid coupling this hook to formData/breakoutRooms/fieldOrigins state.
-   */
-  /**
-   * Force-save: bypasses stale check (user chose to overwrite).
-   */
-  const forceSave = useCallback(() => {
-    if (!pendingSubmitRef.current) return;
-    const { formData, breakoutRooms, fieldOrigins } = pendingSubmitRef.current;
-    pendingSubmitRef.current = null;
-    setShowStaleWarning(false);
-    setStaleInfo(null);
-    executeSubmit({ formData, breakoutRooms, fieldOrigins });
-  }, []);
 
   const handleSubmit = async (e, { formData, breakoutRooms, fieldOrigins }) => {
     e.preventDefault();
-
-    // Phase 5: Stale check before save (only for existing segments)
-    if (segment?.id) {
-      const stale = await checkStale("Segment", segment.id);
-      if (stale.isStale) {
-        pendingSubmitRef.current = { formData, breakoutRooms, fieldOrigins };
-        setStaleInfo(stale);
-        setShowStaleWarning(true);
-        return; // Halt — user must confirm or cancel
-      }
+    setIsSaving(true);
+    try {
+      await executeSubmit({ formData, breakoutRooms, fieldOrigins });
+    } catch (err) {
+      console.error('[SegmentSave] Save failed:', err);
+      toast.error(t('error.save_failed'));
+    } finally {
+      setIsSaving(false);
     }
+  };
 
-    executeSubmit({ formData, breakoutRooms, fieldOrigins });
+  /**
+   * Build the sanitized payload for a segment save.
+   * Shared by both executeSubmit and saveSegmentOnly.
+   */
+  const buildPayload = ({ formData, breakoutRooms, fieldOrigins, insertionOrder }) => {
+    const times = calculateTimes(formData.start_time, formData.duration_min);
+    const cleanedFormData = sanitizeSegmentPayload(formData);
+    return {
+      session_id: sessionId,
+      ...cleanedFormData,
+      ...(segment ? {} : { order: insertionOrder ?? nextOrder }),
+      ...times,
+      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
+      parsed_verse_data: formData.parsed_verse_data || undefined,
+      field_origins: fieldOrigins,
+    };
+  };
+
+  /**
+   * Save a segment without validation/overlap checks.
+   * Used by ShiftPreviewModal's confirm path (validation already passed).
+   */
+  const saveSegmentOnly = async ({ formData, breakoutRooms, fieldOrigins }) => {
+    const data = buildPayload({ formData, breakoutRooms, fieldOrigins });
+    if (segment) {
+      await updateMutation.mutateAsync({ id: segment.id, data, previousState: segment });
+    } else {
+      await createMutation.mutateAsync(data);
+    }
+    invalidateSegmentCaches(queryClient);
+    onClose();
+    toast.success(segment ? "Segmento guardado ✓" : "Segmento creado ✓");
   };
 
   const executeSubmit = async ({ formData, breakoutRooms, fieldOrigins }) => {
@@ -149,14 +135,14 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     const isBreakTypeNow = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
     const isTechOnlyNow = formData.segment_type === "TechOnly";
     const isBreakoutTypeNow = formData.segment_type === "Breakout";
-    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow;
+    const isPanelTypeNow = formData.segment_type === "Panel";
+    const needsPresenterNow = !isBreakTypeNow && !isTechOnlyNow && !isBreakoutTypeNow && !isPanelTypeNow;
 
     const missing = [];
     if (!formData.title?.trim()) missing.push(t('field.title'));
     if (!formData.start_time) missing.push(t('field.start_time'));
     if (!formData.duration_min || formData.duration_min <= 0) missing.push(t('field.duration_min'));
-    const isBreakTypeNowForValidation = ["Break", "Receso", "Almuerzo"].includes(formData.segment_type);
-    if (needsPresenterNow && !isBreakTypeNowForValidation && !formData.presenter?.trim()) missing.push(t('field.presenter'));
+    if (needsPresenterNow && !isBreakTypeNow && !formData.presenter?.trim()) missing.push(t('field.presenter'));
     if (missing.length > 0) {
       toast.error(`${t('error.required_fields_missing')}: ${missing.join(', ')}`);
       return;
@@ -190,7 +176,7 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       }
     }
 
-    // Auto-fetch metadata for URLs
+    // Auto-fetch metadata for URLs (non-blocking — don't hold up the save)
     const metaUpdates = {};
     const urlsToFetch = [
       { url: formData.video_url, metaField: 'video_url_meta', currentMeta: formData.video_url_meta },
@@ -205,16 +191,16 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     const fetchPromises = urlsToFetch
       .filter(({ url, currentMeta }) => {
         if (!url || currentMeta) return false;
-        // Handle array of URLs vs string URL
         const firstUrl = Array.isArray(url) ? url[0] : url;
         return typeof firstUrl === 'string' && firstUrl.trim();
       })
       .map(async ({ url, metaField }) => {
         const firstUrl = Array.isArray(url) ? url[0] : url;
-        const meta = await fetchMetaForUrl(firstUrl); 
-        if (meta) metaUpdates[metaField] = meta; 
+        const meta = await fetchMetaForUrl(firstUrl);
+        if (meta) metaUpdates[metaField] = meta;
       });
-    await Promise.all(fetchPromises);
+    // Fire-and-forget — metadata is nice-to-have, not save-blocking
+    Promise.all(fetchPromises).catch(() => {});
 
     // Auto-insertion order (Gap-Fit, order-only) for new segments
     let insertionOrder = null;
@@ -241,39 +227,26 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       }
     }
 
-    // FIX 2026-03-06 (v4): Schema-driven sanitization via single source of truth.
-    // Replaces 3 separate manually-maintained field lists with sanitizeSegmentPayload().
-    // See components/utils/sanitizeSegmentPayload.js for type registry and rationale.
-    const cleanedFormData = sanitizeSegmentPayload(formData);
-
-    const data = {
-      session_id: sessionId,
-      ...cleanedFormData,
-      ...metaUpdates,
-      ...(segment ? {} : { order: insertionOrder ?? nextOrder }),
-      ...times,
-      breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined,
-      parsed_verse_data: formData.parsed_verse_data || undefined,
-      field_origins: fieldOrigins,
-    };
+    const data = buildPayload({ formData, breakoutRooms, fieldOrigins, insertionOrder });
 
     if (segment) {
-      updateMutation.mutate({ id: segment.id, data, previousState: segment });
+      await updateMutation.mutateAsync({ id: segment.id, data, previousState: segment });
     } else {
-      createMutation.mutate(data);
+      await createMutation.mutateAsync(data);
     }
+    invalidateSegmentCaches(queryClient);
+    onClose();
+    toast.success(segment ? "Segmento guardado ✓" : "Segmento creado ✓");
   };
 
   return {
     handleSubmit,
+    isSaving,
     createMutation,
     updateMutation,
     showOverlapDialog, setShowOverlapDialog, overlapText,
     showShiftPreview, setShowShiftPreview,
     calculateTimes,
-    // Phase 5: Stale guard exports
-    showStaleWarning, setShowStaleWarning,
-    staleInfo,
-    forceSave,
+    saveSegmentOnly,
   };
 }
