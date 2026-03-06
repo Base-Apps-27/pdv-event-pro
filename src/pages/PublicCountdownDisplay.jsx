@@ -215,7 +215,7 @@ export default function PublicCountdownDisplay() {
                 />
               ) : (
                 <div className="bg-white rounded-2xl border-2 border-slate-200 p-4 flex items-center justify-center min-h-[120px]">
-                  <p className="text-slate-400 italic text-xs">No active segment</p>
+                  <p className="text-slate-400 italic text-xs">{t('tv.noActiveSegment')}</p>
                 </div>
               )}
             </div>
@@ -237,17 +237,17 @@ export default function PublicCountdownDisplay() {
           <div className="flex flex-col gap-1 h-full min-w-0 overflow-hidden p-1">
             <div className="flex-1 flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm min-h-0">
               <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200 flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
-                    <Layout className="w-3 h-3" />
-                    Room Program
-                  </div>
-                  {upcomingSegments.length > 0 && (
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                      A Continuación
-                    </div>
-                  )}
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                  <Layout className="w-3 h-3" />
+                  {t('tv.roomProgram')}
                 </div>
+                {upcomingSegments.length > 0 && (
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                    {t('tv.upNext')}
+                  </div>
+                )}
+              </div>
               </div>
               <div className="flex-1 relative p-1.5 min-h-0">
                 <div className="absolute inset-0 p-1.5 overflow-y-auto">

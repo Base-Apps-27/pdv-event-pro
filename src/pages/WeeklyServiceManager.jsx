@@ -254,7 +254,7 @@ export default function WeeklyServiceManager() {
       {/* Header — Row 1: Title + view buttons + menu */}
       <div className="space-y-2 print:hidden">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">Servicios</h1>
+          <h1 className="text-xl md:text-3xl text-gray-900 uppercase tracking-tight leading-tight">{t('weekly.title')}</h1>
           <div className="flex gap-1.5 items-center flex-shrink-0">
             <Button onClick={() => navigate(createPageUrl('PublicProgramView') + `?date=${dayDates[activeDay] || selectedDate}`)} variant="outline" size="sm" className="border-pdv-teal text-pdv-teal hover:bg-pdv-teal hover:text-white border-2 font-semibold text-xs px-2 py-1 h-8">
               <Eye className="w-3.5 h-3.5 md:mr-1.5" /><span className="hidden md:inline">{t('btn.live_view')}</span>
@@ -274,18 +274,18 @@ export default function WeeklyServiceManager() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => window.open(createPageUrl('PublicWeeklyForm'), '_blank')} className="gap-2">
                   <ExternalLink className="w-4 h-4 text-purple-500" />
-                  <span>Link para Oradores</span>
+                  <span>{t('weekly.speakerLink')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowPrintSettings(true)} className="gap-2">
                   <Settings className="w-4 h-4 text-gray-500" />
-                  <span>Ajustes de Impresión</span>
+                  <span>{t('weekly.printSettings')}</span>
                 </DropdownMenuItem>
                 {hasPermission(user, 'edit_services') && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setShowScheduleManager(true)} className="gap-2">
                       <Wrench className="w-4 h-4 text-purple-500" />
-                      <span>Configurar Horarios</span>
+                      <span>{t('weekly.configSchedules')}</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -296,6 +296,7 @@ export default function WeeklyServiceManager() {
 
         {/* Row 2: Date centered, prominent — visually separated */}
         <div className="flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm">
+          {/* UX-AUDIT i18n (2026-03-06): Use language-aware date formatting */}
           <span className="text-2xl md:text-3xl text-pdv-teal tracking-tight leading-tight" style={{ fontFamily: "'Anton', sans-serif", textTransform: 'uppercase' }}>
             {selectedDate ? formatDate(new Date(selectedDate + 'T12:00:00'), "d 'de' MMMM", { locale: es }) : ""}
           </span>
@@ -393,7 +394,7 @@ export default function WeeklyServiceManager() {
       <Dialog open={showScheduleManager} onOpenChange={setShowScheduleManager}>
         <DialogContent className="max-w-3xl bg-white max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Configurar Horarios</DialogTitle>
+            <DialogTitle>{t('weekly.configSchedules')}</DialogTitle>
           </DialogHeader>
           <ServiceScheduleManager />
         </DialogContent>

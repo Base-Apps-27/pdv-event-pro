@@ -89,15 +89,14 @@ export default function CustomServicesManager() {
   };
 
   const getStatusLabel = (service) => {
-    if (!service.date) return language === 'es' ? 'Sin Fecha' : 'No Date';
+    if (!service.date) return t('custom.noDate');
     const serviceDate = parseLocalDate(service.date);
     const daysUntil = Math.floor((serviceDate - today) / (1000 * 60 * 60 * 24));
     
-    if (daysUntil < 0) return language === 'es' ? 'Pasado' : 'Past';
-    if (daysUntil === 0) return language === 'es' ? 'HOY' : 'TODAY';
-    if (daysUntil === 1) return language === 'es' ? 'Mañana' : 'Tomorrow';
-    if (daysUntil <= 7) return language === 'es' ? `En ${daysUntil} días` : `In ${daysUntil} days`;
-    return language === 'es' ? `En ${daysUntil} días` : `In ${daysUntil} days`;
+    if (daysUntil < 0) return t('custom.past');
+    if (daysUntil === 0) return t('custom.today');
+    if (daysUntil === 1) return t('custom.tomorrow');
+    return t('custom.inDays').replace('{n}', daysUntil);
   };
 
   return (
@@ -106,12 +105,10 @@ export default function CustomServicesManager() {
       <div style={gradientStyle} className="px-6 py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-4xl uppercase text-white mb-2">
-            {language === 'es' ? 'Servicios Personalizados' : 'Custom Services'}
+            {t('custom.title')}
           </h1>
           <p className="text-white/90">
-            {language === 'es' 
-              ? 'Crea y gestiona servicios especiales y eventos únicos' 
-              : 'Create and manage special services and one-time events'}
+            {t('custom.subtitle')}
           </p>
         </div>
       </div>
@@ -121,12 +118,10 @@ export default function CustomServicesManager() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl text-gray-900">
-              {language === 'es' ? 'Próximos Servicios' : 'Upcoming Services'}
+              {t('custom.upcomingTitle')}
             </h2>
             <p className="text-gray-600 text-sm">
-              {language === 'es' 
-                ? `${upcoming.length} servicio${upcoming.length !== 1 ? 's' : ''} programado${upcoming.length !== 1 ? 's' : ''}`
-                : `${upcoming.length} service${upcoming.length !== 1 ? 's' : ''} scheduled`}
+              {t('custom.scheduledCount').replace('{count}', upcoming.length)}
             </p>
           </div>
           {hasPermission(user, 'create_services') && (
@@ -137,7 +132,7 @@ export default function CustomServicesManager() {
               size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
-              {language === 'es' ? 'Crear Servicio' : 'Create Service'}
+              {t('custom.createService')}
             </Button>
           )}
         </div>
@@ -146,20 +141,18 @@ export default function CustomServicesManager() {
         {isLoading ? (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {language === 'es' ? 'Cargando...' : 'Loading...'}
+              {t('common.loading')}
             </p>
           </div>
         ) : upcoming.length === 0 ? (
           <Card className="p-12 text-center border-2 border-dashed border-gray-300">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
-              {language === 'es' 
-                ? 'No hay servicios personalizados programados' 
-                : 'No custom services scheduled'}
+              {t('custom.noServices')}
             </p>
             <Button onClick={handleCreateNew} variant="outline">
               <Plus className="w-4 h-4 mr-2" />
-              {language === 'es' ? 'Crear el Primero' : 'Create First One'}
+              {t('custom.createFirst')}
             </Button>
           </Card>
         ) : (
@@ -176,7 +169,7 @@ export default function CustomServicesManager() {
                       {getStatusLabel(service)}
                     </Badge>
                     <span className="text-xs text-gray-500">
-                      {service.segments?.length || 0} {language === 'es' ? 'segmentos' : 'segments'}
+                      {service.segments?.length || 0} {t('common.segments')}
                     </span>
                   </div>
                   <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
@@ -219,7 +212,7 @@ export default function CustomServicesManager() {
                       className="mb-4 text-gray-700"
                       >
                       <Archive className="w-4 h-4 mr-2" />
-                      {language === 'es' ? 'Servicios Pasados' : 'Past Services'} ({archived.length})
+                      {t('custom.pastServices')} ({archived.length})
                       {showArchived ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
                       </Button>
 
@@ -234,11 +227,11 @@ export default function CustomServicesManager() {
                       <CardHeader className="pb-3">
                       <div className="flex justify-between items-start mb-2">
                        <Badge className="bg-gray-500 text-white">
-                         {language === 'es' ? 'Finalizado' : 'Completed'}
-                       </Badge>
-                       <span className="text-xs text-gray-500">
-                         {service.segments?.length || 0} {language === 'es' ? 'segmentos' : 'segments'}
-                       </span>
+                         {t('custom.completed')}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {service.segments?.length || 0} {t('common.segments')}
+                        </span>
                       </div>
                       <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
                       </CardHeader>
