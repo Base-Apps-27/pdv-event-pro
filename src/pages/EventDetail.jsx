@@ -26,6 +26,35 @@ import EditHistoryModal from "../components/event/EditHistoryModal";
 import { hasPermission } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
+/**
+ * StaleEventRedirect — shown when EventDetail can't find the event.
+ * Common cause: user returns to a stale tab the next day.
+ * Auto-redirects to Events list after 3 seconds to avoid a dead-end.
+ */
+function StaleEventRedirect({ navigate, t }) {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate(createPageUrl("Events"), { replace: true });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  return (
+    <div className="p-8 text-center space-y-3">
+      <p className="text-red-600">{t('eventDetail.notFound')}</p>
+      <p className="text-sm text-gray-500">
+        {t('eventDetail.redirecting')}
+      </p>
+      <Button
+        variant="outline"
+        onClick={() => navigate(createPageUrl("Events"), { replace: true })}
+      >
+        {t('eventDetail.goToEvents')}
+      </Button>
+    </div>
+  );
+}
+
 export default function EventDetail() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -138,12 +167,11 @@ export default function EventDetail() {
     );
   }
   
+  // Stale-tab recovery (2026-03-06): If the event isn't found (e.g. user returns
+  // to a stale tab the next day, or event was deleted), redirect to Events list
+  // after a brief delay instead of showing a dead-end error screen.
   if (!event) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-600">{t('eventDetail.notFound')}</p>
-      </div>
-    );
+    return <StaleEventRedirect navigate={navigate} t={t} />;
   }
 
   const e = headerEvent ?? event;
