@@ -95,8 +95,10 @@ export default memo(function SlotColumn({
   style,
 }) {
   const { t } = useLanguage();
-  // Use session entity's session_color if set; fall back to positional color
-  const accentColor = SESSION_COLOR_MAP[session.session_color] || SLOT_COLORS_FALLBACK[slotIndex % SLOT_COLORS_FALLBACK.length];
+  // Resolve concrete color styles from session_color entity field (not dynamic Tailwind classes)
+  const colorStyles = resolveColorStyles(session.session_color, slotIndex);
+  // Keep string key for components that still need it (TeamSection, SegmentCard)
+  const accentColor = session.session_color || SLOT_COLORS_FALLBACK[slotIndex % SLOT_COLORS_FALLBACK.length];
 
   // Calculate timing
   const { totalDuration, startTime, endTime, isOverage, targetMin } = useMemo(() => {
