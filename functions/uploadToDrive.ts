@@ -5,18 +5,25 @@
  * Uses the googledrive app connector (drive.file scope).
  * Folder structure: PDV-Uploads / {eventName}-{year} /
  *
- * Flow:
- *   1. Frontend sends file as multipart/form-data + eventName + year as query-like params in JSON
- *   2. This function uploads to Google Drive under an organized folder
- *   3. Sets file permission to "anyone with link can view"
- *   4. Returns the shareable webViewLink
+ * Architecture (2026-03-06 v2 — stall fix):
+ *   Two-action design to avoid base64-in-JSON browser stalls:
+ *
+ *   action: "init"
+ *     → Creates folder hierarchy on Drive
+ *     → Initiates a resumable upload session via Google Drive API
+ *     → Returns { uploadUrl } — a resumable upload URI the frontend PUTs bytes to directly
+ *
+ *   action: "finalize"
+ *     → Receives { driveFileId }
+ *     → Sets "anyone with link" permission
+ *     → Returns { url, driveFileId, fileName }
+ *
+ * Why: Reading a 200MB+ file into a base64 string freezes the browser tab.
+ * The resumable upload lets the browser stream raw bytes directly to Google,
+ * with real XMLHttpRequest progress events.
  *
  * Auth: Requires authenticated user (any role — public form users also upload).
  * Connector: googledrive (app builder's account via OAuth).
- *
- * IMPORTANT: The file comes as raw bytes in the request body because Base44
- * functions receive the payload from base44.functions.invoke(). We accept
- * { file, fileName, eventName, year } where file is a base64-encoded string.
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
@@ -28,7 +35,6 @@ const DRIVE_API = 'https://www.googleapis.com/';
  * Returns the folder ID.
  */
 async function findOrCreateFolder(accessToken, folderName, parentId = null) {
-  // Search for existing folder
   let q = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   if (parentId) q += ` and '${parentId}' in parents`;
 
@@ -42,7 +48,6 @@ async function findOrCreateFolder(accessToken, folderName, parentId = null) {
     return searchData.files[0].id;
   }
 
-  // Create folder
   const metadata = {
     name: folderName,
     mimeType: 'application/vnd.google-apps.folder',
@@ -88,16 +93,102 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Parse payload — expecting { fileBase64, fileName, mimeType, eventName, year }
     const body = await req.json();
-    const { fileBase64, fileName, mimeType, eventName, year } = body;
-
-    if (!fileBase64 || !fileName) {
-      return Response.json({ error: 'Missing fileBase64 or fileName' }, { status: 400 });
-    }
+    const { action } = body;
 
     // Get Google Drive access token via app connector
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
+
+    // ─── ACTION: INIT ───
+    // Creates folder hierarchy and returns a resumable upload URL.
+    // The frontend will PUT raw bytes directly to this URL.
+    if (action === 'init') {
+      const { fileName, mimeType, eventName, year, fileSize } = body;
+
+      if (!fileName) {
+        return Response.json({ error: 'Missing fileName' }, { status: 400 });
+      }
+
+      // Create folder hierarchy: PDV-Uploads / {EventName}-{Year}
+      const rootFolderId = await findOrCreateFolder(accessToken, 'PDV-Uploads');
+      const subFolderName = eventName && year
+        ? `${eventName}-${year}`
+        : `General-${new Date().getFullYear()}`;
+      const subFolderId = await findOrCreateFolder(accessToken, subFolderName, rootFolderId);
+
+      // Initiate resumable upload session
+      // https://developers.google.com/drive/api/guides/manage-uploads#resumable
+      const metadata = {
+        name: fileName,
+        parents: [subFolderId],
+      };
+
+      const initRes = await fetch(
+        `${DRIVE_API}upload/drive/v3/files?uploadType=resumable`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Type': mimeType || 'application/octet-stream',
+            ...(fileSize ? { 'X-Upload-Content-Length': String(fileSize) } : {}),
+          },
+          body: JSON.stringify(metadata),
+        }
+      );
+
+      if (!initRes.ok) {
+        const errText = await initRes.text();
+        console.error('[uploadToDrive:init] Drive API error:', initRes.status, errText);
+        return Response.json({ error: `Drive init failed: ${initRes.status}` }, { status: 502 });
+      }
+
+      // The resumable URI is in the Location header
+      const uploadUrl = initRes.headers.get('Location');
+      if (!uploadUrl) {
+        console.error('[uploadToDrive:init] No Location header in resumable init response');
+        return Response.json({ error: 'Drive did not return upload URL' }, { status: 502 });
+      }
+
+      console.log(`[uploadToDrive:init] Resumable session created for ${fileName} (folder: ${subFolderName})`);
+
+      return Response.json({ uploadUrl, accessToken });
+    }
+
+    // ─── ACTION: FINALIZE ───
+    // After frontend has uploaded bytes directly to Drive, call this to set permissions + get share URL.
+    if (action === 'finalize') {
+      const { driveFileId, fileName } = body;
+
+      if (!driveFileId) {
+        return Response.json({ error: 'Missing driveFileId' }, { status: 400 });
+      }
+
+      // Make file publicly viewable via link
+      await makePublicViewable(accessToken, driveFileId);
+
+      // Get shareable URL
+      const fileRes = await fetch(
+        `${DRIVE_API}drive/v3/files/${driveFileId}?fields=webViewLink,name`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const fileData = await fileRes.json();
+      const shareableUrl = fileData.webViewLink || `https://drive.google.com/file/d/${driveFileId}/view?usp=sharing`;
+
+      console.log(`[uploadToDrive:finalize] ${fileName || fileData.name} → ${shareableUrl}`);
+
+      return Response.json({
+        url: shareableUrl,
+        driveFileId,
+        fileName: fileName || fileData.name,
+      });
+    }
+
+    // ─── LEGACY: base64 path (kept for backward compat, not recommended for large files) ───
+    const { fileBase64, fileName, mimeType, eventName, year } = body;
+    if (!fileBase64 || !fileName) {
+      return Response.json({ error: 'Missing action or fileBase64+fileName' }, { status: 400 });
+    }
 
     // Decode base64 to binary
     const binaryStr = atob(fileBase64);
@@ -106,30 +197,20 @@ Deno.serve(async (req) => {
       bytes[i] = binaryStr.charCodeAt(i);
     }
 
-    // Create folder hierarchy: PDV-Uploads / {EventName}-{Year}
     const rootFolderId = await findOrCreateFolder(accessToken, 'PDV-Uploads');
     const subFolderName = eventName && year
       ? `${eventName}-${year}`
       : `General-${new Date().getFullYear()}`;
     const subFolderId = await findOrCreateFolder(accessToken, subFolderName, rootFolderId);
 
-    // Upload file using multipart upload
-    const metadata = {
-      name: fileName,
-      parents: [subFolderId],
-    };
-
+    const metadata = { name: fileName, parents: [subFolderId] };
     const boundary = '---PDVUploadBoundary';
-    const metadataPart = JSON.stringify(metadata);
     const fileContentType = mimeType || 'application/octet-stream';
-
-    // Build multipart body manually
     const encoder = new TextEncoder();
     const pre = encoder.encode(
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadataPart}\r\n--${boundary}\r\nContent-Type: ${fileContentType}\r\n\r\n`
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${fileContentType}\r\n\r\n`
     );
     const post = encoder.encode(`\r\n--${boundary}--`);
-
     const multipartBody = new Uint8Array(pre.length + bytes.length + post.length);
     multipartBody.set(pre, 0);
     multipartBody.set(bytes, pre.length);
@@ -154,20 +235,16 @@ Deno.serve(async (req) => {
     }
 
     const uploadData = await uploadRes.json();
-
-    // Make file publicly viewable via link
     await makePublicViewable(accessToken, uploadData.id);
 
-    // Fetch the updated file to get the webViewLink (not always returned on upload)
     const fileRes = await fetch(
       `${DRIVE_API}drive/v3/files/${uploadData.id}?fields=webViewLink,webContentLink`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     const fileData = await fileRes.json();
-
     const shareableUrl = fileData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view?usp=sharing`;
 
-    console.log(`[uploadToDrive] Success: ${fileName} → ${shareableUrl} (folder: ${subFolderName})`);
+    console.log(`[uploadToDrive:legacy] ${fileName} → ${shareableUrl} (folder: ${subFolderName})`);
 
     return Response.json({
       url: shareableUrl,
