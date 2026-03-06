@@ -73,6 +73,22 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
   const [showRangeFix, setShowRangeFix] = useState(false);
   const [pendingRange, setPendingRange] = useState({ start: '', end: '' });
 
+  // Create mutation — used when event is null (new event flow)
+  const createMutation = useMutation({
+    mutationFn: async (data) => {
+      return await base44.entities.Event.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      if (onSaved) onSaved();
+      toast.success("Evento creado ✓");
+      onOpenChange(false);
+    },
+    onError: (err) => {
+      toast.error(`Error al crear: ${err.message}`);
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, data, previousState }) => {
       const updated = await base44.entities.Event.update(id, data);
@@ -80,10 +96,9 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
       return updated;
     },
     onSuccess: () => {
-      // Refresh both list and detail caches
-      queryClient.invalidateQueries(['events']);
-      queryClient.invalidateQueries(['event', event?.id]);
-      queryClient.invalidateQueries(['editActionLogs']);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['event', event?.id] });
+      queryClient.invalidateQueries({ queryKey: ['editActionLogs'] });
       if (onSaved) onSaved();
       toast.success("Evento actualizado ✓");
       // If range changed, open session-fix modal
@@ -101,7 +116,6 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!event) return;
     const slug = formData.slug || generateSlug(formData.name, formData.year);
     const data = {
       ...formData,
@@ -113,8 +127,15 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
         .map(s => s.trim())
         .filter(Boolean),
     };
-    setPendingRange({ start: data.start_date || '', end: data.end_date || '' });
-    updateMutation.mutate({ id: event.id, data, previousState: event });
+
+    if (event) {
+      // Edit path
+      setPendingRange({ start: data.start_date || '', end: data.end_date || '' });
+      updateMutation.mutate({ id: event.id, data, previousState: event });
+    } else {
+      // Create path
+      createMutation.mutate(data);
+    }
   };
 
   return (
