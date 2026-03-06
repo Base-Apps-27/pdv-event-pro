@@ -71,11 +71,16 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
       // This ensures useSegmentMutation has IDs to write to.
       for (const slotName of slotNames) {
         // 1. Create Session
+        // BUGFIX (2026-03-06): Thread session_color from ServiceSchedule definition
+        // so the UI renders the configured accent color instead of defaulting to "blue".
+        const slotDef = sessionDefs?.find(s => s.name === slotName);
         const session = await base44.entities.Session.create({
           service_id: createdService.id,
           name: slotName,
           date: date,
-          order: slotNames.indexOf(slotName) + 1
+          order: slotNames.indexOf(slotName) + 1,
+          session_color: slotDef?.color || undefined,
+          planned_start_time: slotDef?.planned_start_time || slotDef?.time || undefined,
         });
 
         // 2. Create Segments for this session
