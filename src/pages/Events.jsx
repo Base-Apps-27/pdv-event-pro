@@ -29,8 +29,6 @@ export default function Events() {
   const [eventToTemplate, setEventToTemplate] = useState(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [fieldOrigins, setFieldOrigins] = useState({});
   // P1-4: Replaced duplicate user fetch with shared hook (2026-02-12)
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
@@ -77,64 +75,13 @@ export default function Events() {
     onError: (err) => toast.error(t('errors.deleteFailed') + ': ' + err.message),
   });
 
-  // Phase 1: Replaced window.confirm with direct dialog flow (2026-02-11)
-  // DeleteEventDialog already provides a proper confirmation UI
   const handleDeleteClick = (event) => {
     setEventToDelete(event);
   };
 
-  const updateFormField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (fieldOrigins[field] && fieldOrigins[field] !== 'manual') {
-      setFieldOrigins(prev => ({ ...prev, [field]: 'manual' }));
-    }
-  };
-
-  const generateSlug = (name, year) => {
-    return `${name}-${year}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const slug = formData.slug || generateSlug(formData.name, formData.year);
-    const data = {
-      ...formData,
-      slug,
-      year: parseInt(formData.year),
-      field_origins: fieldOrigins,
-      promotion_targets: formData.promotion_targets.split(',').map(s => s.trim()).filter(Boolean),
-    };
-
-    if (editingEvent) {
-      updateMutation.mutate({ id: editingEvent.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
-
+  // UX-AUDIT #6 (2026-03-06): Use shared EventEditDialog instead of inline form
   const openEditDialog = (event) => {
     setEditingEvent(event);
-    setFieldOrigins(event?.field_origins || {});
-    setFormData({
-      name: event?.name || '',
-      slug: event?.slug || '',
-      theme: event?.theme || '',
-      year: event?.year || new Date().getFullYear(),
-      location: event?.location || '',
-      start_date: event?.start_date || '',
-      end_date: event?.end_date || '',
-      description: event?.description || '',
-      status: event?.status || 'planning',
-      print_color: event?.print_color || 'blue',
-      promote_in_announcements: event?.promote_in_announcements || false,
-      promotion_start_date: event?.promotion_start_date || '',
-      promotion_end_date: event?.promotion_end_date || '',
-      announcement_blurb: event?.announcement_blurb || '',
-      promotion_targets: event?.promotion_targets ? event.promotion_targets.join(', ') : '',
-    });
     setShowDialog(true);
   };
 
@@ -261,216 +208,18 @@ export default function Events() {
         ))}
       </div>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-gray-900 tracking-wide uppercase">{editingEvent ? t('events.editEvent') : t('events.newEvent')}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('events.form.name')}</Label>
-                <div className="relative">
-                  <Input 
-                    id="name" 
-                    name="name" 
-                    value={formData.name}
-                    onChange={(e) => updateFormField('name', e.target.value)}
-                    required 
-                    placeholder={t('placeholder.eventName')}
-                  />
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'name')} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="year">{t('events.form.year')}</Label>
-                <div className="relative">
-                  <Input 
-                    id="year" 
-                    name="year" 
-                    type="number"
-                    value={formData.year}
-                    onChange={(e) => updateFormField('year', e.target.value)}
-                    required 
-                  />
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'year')} />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="theme">{t('events.form.theme')}</Label>
-              <div className="relative">
-                <Input 
-                  id="theme" 
-                  name="theme" 
-                  value={formData.theme}
-                  onChange={(e) => updateFormField('theme', e.target.value)}
-                  placeholder={t('placeholder.theme')}
-                />
-                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'theme')} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">{t('events.form.location')}</Label>
-              <div className="relative">
-                <Input 
-                  id="location" 
-                  name="location" 
-                  value={formData.location}
-                  onChange={(e) => updateFormField('location', e.target.value)}
-                  placeholder={t('placeholder.location')}
-                />
-                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'location')} />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">{t('events.form.startDate')}</Label>
-                <div className="relative">
-                  <DatePicker
-                    value={formData.start_date}
-                    onChange={(val) => updateFormField('start_date', val)}
-                    placeholder={t('placeholder.selectDate')}
-                  />
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'start_date')} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">{t('events.form.endDate')}</Label>
-                <div className="relative">
-                  <DatePicker
-                    value={formData.end_date}
-                    onChange={(val) => updateFormField('end_date', val)}
-                    placeholder={t('placeholder.selectDate')}
-                  />
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'end_date')} />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">{t('events.form.status')}</Label>
-                <div className="relative">
-                  <Select name="status" value={formData.status} onValueChange={(value) => updateFormField('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">{t('status.planning')}</SelectItem>
-                      <SelectItem value="confirmed">{t('status.confirmed')}</SelectItem>
-                      <SelectItem value="in_progress">{t('status.in_progress')}</SelectItem>
-                      <SelectItem value="completed">{t('status.completed')}</SelectItem>
-                      <SelectItem value="archived">{t('status.archived')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'status')} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="print_color">{t('events.form.printColor')}</Label>
-                <div className="relative">
-                  <Select name="print_color" value={formData.print_color} onValueChange={(value) => updateFormField('print_color', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blue">{t('color.blue')}</SelectItem>
-                      <SelectItem value="green">{t('color.green')}</SelectItem>
-                      <SelectItem value="pink">{t('color.pink')}</SelectItem>
-                      <SelectItem value="orange">{t('color.orange')}</SelectItem>
-                      <SelectItem value="yellow">{t('color.yellow')}</SelectItem>
-                      <SelectItem value="purple">{t('color.purple')}</SelectItem>
-                      <SelectItem value="red">{t('color.red')}</SelectItem>
-                      <SelectItem value="teal">{t('color.teal')}</SelectItem>
-                      <SelectItem value="charcoal">{t('color.charcoal')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'print_color')} />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">{t('events.form.description')}</Label>
-              <div className="relative">
-                <Textarea 
-                  id="description" 
-                  name="description" 
-                  value={formData.description}
-                  onChange={(e) => updateFormField('description', e.target.value)}
-                  rows={3}
-                  placeholder={t('placeholder.eventDescription')}
-                />
-                <FieldOriginIndicator origin={getFieldOrigin(fieldOrigins, 'description')} />
-              </div>
-            </div>
-
-            <div className="border-t pt-4 mt-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox 
-                  id="promote_in_announcements" 
-                  checked={formData.promote_in_announcements}
-                  onCheckedChange={(checked) => updateFormField('promote_in_announcements', checked)}
-                />
-                <Label htmlFor="promote_in_announcements" className="font-bold" style={{ color: '#1F8A70' }}>{t('events.form.promoteInAnnouncements')}</Label>
-              </div>
-
-              {formData.promote_in_announcements && (
-                <div className="space-y-4 pl-6 border-l-2" style={{ borderColor: 'rgba(31, 138, 112, 0.2)' }}>
-                   <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                         <Label>{t('events.form.promotionStart')}</Label>
-                         <DatePicker
-                           value={formData.promotion_start_date}
-                           onChange={(val) => updateFormField('promotion_start_date', val)}
-                           placeholder={t('placeholder.selectDate')}
-                         />
-                       </div>
-                       <div className="space-y-2">
-                         <Label>{t('events.form.promotionEnd')}</Label>
-                         <DatePicker
-                           value={formData.promotion_end_date}
-                           onChange={(val) => updateFormField('promotion_end_date', val)}
-                           placeholder={t('placeholder.selectDate')}
-                         />
-                       </div>
-                   </div>
-                   <div className="space-y-2">
-                      <Label>{t('events.form.announcementBlurb')}</Label>
-                      <Textarea 
-                        value={formData.announcement_blurb}
-                        onChange={(e) => updateFormField('announcement_blurb', e.target.value)}
-                        rows={2}
-                        placeholder={t('placeholder.announcementBlurb')}
-                      />
-                   </div>
-                   <div className="space-y-2">
-                      <Label>{t('events.form.targets')}</Label>
-                      <Input 
-                        value={formData.promotion_targets}
-                        onChange={(e) => updateFormField('promotion_targets', e.target.value)}
-                        placeholder={t('placeholder.targets')}
-                      />
-                   </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
-                {t('btn.cancel')}
-              </Button>
-              <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle}>
-                {editingEvent ? t('btn.save') : t('btn.create_event')}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* UX-AUDIT #6 (2026-03-06): Unified EventEditDialog for both create and edit */}
+      <EventEditDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        event={editingEvent}
+        onSaved={() => {
+          queryClient.invalidateQueries(['events']);
+          setShowDialog(false);
+          setEditingEvent(null);
+        }}
+        user={user}
+      />
 
       <DeleteEventDialog 
         open={!!eventToDelete} 
