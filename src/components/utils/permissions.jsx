@@ -178,8 +178,13 @@ export function hasAllPermissions(user, permissionKeys) {
 export function getLandingPage(user) {
   if (!user) return 'MyProgram';
 
-  // Tier 1: Dashboard (admin / editor roles)
-  if (hasPermission(user, 'view_events') || hasPermission(user, 'view_services')) {
+  // Tier 1: Service editors → go straight to the weekly editor (2026-03-06 UX-AUDIT #1)
+  if (hasPermission(user, 'view_services')) {
+    return 'WeeklyServiceManager';
+  }
+
+  // Tier 1b: Event-only users → Dashboard
+  if (hasPermission(user, 'view_events')) {
     return 'Dashboard';
   }
 
