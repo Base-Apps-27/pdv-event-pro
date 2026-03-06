@@ -14,7 +14,8 @@ import OutOfRangeSessionsModal from "./OutOfRangeSessionsModal";
 import { logUpdate } from "@/components/utils/editActionLogger";
 import { toast } from "sonner";
 
-// Edit dialog used in EventDetail (edit-only). Mirrors the Events page form for consistency.
+// UX-AUDIT #6 FIX (2026-03-06): Supports BOTH create (event=null) and edit (event=object).
+// Previously bailed on !event — now routes to createMutation when no event passed.
 export default function EventEditDialog({ open, onOpenChange, event, onSaved, user }) {
   const queryClient = useQueryClient();
   const gradientStyle = {
