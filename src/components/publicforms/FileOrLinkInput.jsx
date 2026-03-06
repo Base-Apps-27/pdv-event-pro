@@ -383,7 +383,10 @@ export default function FileOrLinkInput({
                     }
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {tFn(`Máx ${maxSizeMB}MB`, `Max ${maxSizeMB}MB`)}
+                    {tFn(
+                      `Máx ${driveMaxSizeMB}MB · Archivos mayores de ${maxSizeMB}MB se suben a Google Drive`,
+                      `Max ${driveMaxSizeMB}MB · Files over ${maxSizeMB}MB upload to Google Drive`
+                    )}
                   </p>
                 </>
               )}
