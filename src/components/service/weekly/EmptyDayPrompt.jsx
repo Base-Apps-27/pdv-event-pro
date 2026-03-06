@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
-export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintData, onServiceCreated }) {
+export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintData, onServiceCreated, sessionDefs }) {
   // blueprintData: the resolved Service blueprint object (status='blueprint'), or null
   const { t } = useLanguage();
   const [creating, setCreating] = useState(false);
