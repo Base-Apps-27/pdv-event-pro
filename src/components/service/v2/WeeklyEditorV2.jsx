@@ -354,6 +354,7 @@ export default function WeeklyEditorV2({
         dayOfWeek={dayOfWeek}
         date={date}
         slotNames={(sessionDefs || []).map(s => s.name)}
+        sessionDefs={sessionDefs}
         blueprintData={resolvedBlueprint}
         onServiceCreated={() => {
           queryClient.invalidateQueries({ queryKey: ['dayServiceV2', date, dayOfWeek] });
