@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { Languages } from "lucide-react";
 
 /**
  * CountdownBlock
@@ -172,6 +173,15 @@ export default function CountdownBlock({
             {segment.presenter && (
               <div className="text-sm md:text-base text-slate-600 font-medium">
                 {segment.presenter}
+              </div>
+            )}
+            {/* Translator — 2026-03-06: Was missing from active segment display */}
+            {(segment.translator_name || segment.translator) && (
+              <div className="flex items-center justify-center gap-1 mt-0.5">
+                <Languages className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-xs md:text-sm font-semibold text-blue-600 uppercase tracking-wide">
+                  {segment.translator_name || segment.translator}
+                </span>
               </div>
             )}
           </div>
