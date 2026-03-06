@@ -221,11 +221,26 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
 
     const data = buildPayload({ formData, breakoutRooms, fieldOrigins, insertionOrder });
 
+    let savedSegmentId = segment?.id;
     if (segment) {
       await updateMutation.mutateAsync({ id: segment.id, data, previousState: segment });
     } else {
-      await createMutation.mutateAsync(data);
+      const created = await createMutation.mutateAsync(data);
+      savedSegmentId = created?.id;
     }
+
+    // Background metadata enrichment — patch the saved segment after save completes.
+    // This keeps the save fast while still persisting URL thumbnails/titles.
+    if (urlsToFetch.length > 0 && savedSegmentId) {
+      Promise.all(urlsToFetch.map(async ({ url, metaField }) => {
+        const firstUrl = Array.isArray(url) ? url[0] : url;
+        const meta = await fetchMetaForUrl(firstUrl);
+        if (meta) {
+          await base44.entities.Segment.update(savedSegmentId, { [metaField]: meta });
+        }
+      })).catch((err) => console.warn('[SegmentSave] Background metadata fetch failed:', err));
+    }
+
     invalidateSegmentCaches(queryClient);
     onClose();
     toast.success(segment ? "Segmento guardado ✓" : "Segmento creado ✓");
