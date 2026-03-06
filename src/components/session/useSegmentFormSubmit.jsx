@@ -233,7 +233,8 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     // Strip internal UI state flags
     const cleanedFormData = Object.fromEntries(Object.entries(formData).filter(([key]) => !key.startsWith('_')));
 
-    // Legacy schema cleanup: ensure URL array fields are actually arrays, not empty strings
+    // FIX 2026-03-06: Schema-safe cleanup — prevent 422 errors from invalid field types.
+    // 1. Array-type fields: ensure they're arrays, not strings
     const arrayUrlFields = [
       'presentation_url', 'notes_url', 'video_url', 'arts_run_of_show_url',
       'drama_song_source', 'drama_song_2_url', 'drama_song_3_url',
@@ -245,8 +246,15 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       if (typeof cleanedFormData[field] === 'string') {
         cleanedFormData[field] = cleanedFormData[field].trim() ? cleanedFormData[field].split(',').map(s => s.trim()).filter(Boolean) : [];
       } else if (Array.isArray(cleanedFormData[field])) {
-        // Also cleanup arrays that might have empty strings in them
         cleanedFormData[field] = cleanedFormData[field].map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
+      }
+    });
+
+    // 2. Enum fields: empty strings are NOT valid enum values — strip them to avoid 422
+    const enumFields = ['spoken_word_mic_position', 'color_code', 'segment_type', 'translation_mode', 'live_status', 'timing_source', 'live_hold_status'];
+    enumFields.forEach(field => {
+      if (cleanedFormData[field] === '' || cleanedFormData[field] === undefined) {
+        delete cleanedFormData[field];
       }
     });
 
