@@ -410,7 +410,10 @@ export default function SegmentFormTwoColumn({ session, segment, templates, onCl
           const updates = [];
           for (const a of affected) { updates.push(base44.entities.Segment.update(a.id, { start_time: a.newStart, end_time: a.newEnd })); }
           const currentTimes = calculateTimes(formData.start_time, formData.duration_min);
-          const currentData = { session_id: sessionId, ...formData, ...currentTimes, breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined, field_origins: fieldOrigins };
+          // FIX 2026-03-06 (v4): Apply sanitizer to the shift-preview bypass path too.
+          // This path previously sent raw formData directly, bypassing the submit hook's cleanup.
+          const sanitized = sanitizeSegmentPayload(formData);
+          const currentData = { session_id: sessionId, ...sanitized, ...currentTimes, breakout_rooms: formData.segment_type === "Breakout" ? breakoutRooms : undefined, field_origins: fieldOrigins };
           if (segment) { updates.push(base44.entities.Segment.update(segment.id, currentData)); } else { updates.push(base44.entities.Segment.create(currentData)); }
           await Promise.all(updates);
           invalidateSegmentCaches(queryClient);
