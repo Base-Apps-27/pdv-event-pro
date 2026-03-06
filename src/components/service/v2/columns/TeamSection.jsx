@@ -22,13 +22,30 @@ const AUTOCOMPLETE_TYPE_MAP = {
   photography_team: 'person',
 };
 
+/**
+ * TEAM_COLOR_STYLES: Concrete CSS for team card background + border.
+ * Avoids dynamic Tailwind class purging (e.g. `bg-${color}-50` gets purged at build).
+ */
+const TEAM_COLOR_STYLES = {
+  green:  { bg: '#f0fdf4', border: '#86efac' },
+  blue:   { bg: '#eff6ff', border: '#93c5fd' },
+  pink:   { bg: '#fdf2f8', border: '#f9a8d4' },
+  orange: { bg: '#fff7ed', border: '#fdba74' },
+  yellow: { bg: '#fffbeb', border: '#fcd34d' },
+  amber:  { bg: '#fffbeb', border: '#fcd34d' },
+  purple: { bg: '#faf5ff', border: '#d8b4fe' },
+  red:    { bg: '#fef2f2', border: '#fca5a5' },
+  teal:   { bg: '#f0fdfa', border: '#5eead4' },
+};
+
 export default memo(function TeamSection({ session, accentColor = 'teal', onWriteSession, label }) {
   const { t } = useLanguage();
   // Phase 2 (2026-03-02): Optional label prop overrides default team header
   // Used by CustomEditorV2 to show custom label instead of a generic session name
   const displayLabel = label || t('team.label').replace('{name}', session.name);
+  const teamColors = TEAM_COLOR_STYLES[accentColor] || TEAM_COLOR_STYLES.teal;
   return (
-    <Card className={`bg-${accentColor}-50 border-${accentColor}-300 border-2`}>
+    <Card className="border-2" style={{ backgroundColor: teamColors.bg, borderColor: teamColors.border }}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm print:text-xs">{displayLabel}</CardTitle>
       </CardHeader>
