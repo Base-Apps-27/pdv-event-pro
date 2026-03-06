@@ -38,15 +38,15 @@ import ServiceScheduleManager from "@/components/service/weekly/ServiceScheduleM
 import WeeklyEditorV2 from "@/components/service/v2/WeeklyEditorV2";
 import { useServiceSchedules } from "@/components/service/weekly/useServiceSchedules";
 
-// Weekday definitions — ordered Mon→Sun matching ISO week. Labels in Spanish.
+// UX-AUDIT #9 (2026-03-06): Weekday labels now use i18n keys instead of hardcoded Spanish.
 const WEEKDAYS = [
-  { key: 'monday', label: 'Lun', fullLabel: 'Lunes', dayIndex: 1, dayName: 'Monday' },
-  { key: 'tuesday', label: 'Mar', fullLabel: 'Martes', dayIndex: 2, dayName: 'Tuesday' },
-  { key: 'wednesday', label: 'Mié', fullLabel: 'Miércoles', dayIndex: 3, dayName: 'Wednesday' },
-  { key: 'thursday', label: 'Jue', fullLabel: 'Jueves', dayIndex: 4, dayName: 'Thursday' },
-  { key: 'friday', label: 'Vie', fullLabel: 'Viernes', dayIndex: 5, dayName: 'Friday' },
-  { key: 'saturday', label: 'Sáb', fullLabel: 'Sábado', dayIndex: 6, dayName: 'Saturday' },
-  { key: 'sunday', label: 'Dom', fullLabel: 'Domingo', dayIndex: 0, dayName: 'Sunday' },
+  { key: 'monday', labelKey: 'day.Mon', fullLabelKey: 'day.Monday', dayIndex: 1, dayName: 'Monday' },
+  { key: 'tuesday', labelKey: 'day.Tue', fullLabelKey: 'day.Tuesday', dayIndex: 2, dayName: 'Tuesday' },
+  { key: 'wednesday', labelKey: 'day.Wed', fullLabelKey: 'day.Wednesday', dayIndex: 3, dayName: 'Wednesday' },
+  { key: 'thursday', labelKey: 'day.Thu', fullLabelKey: 'day.Thursday', dayIndex: 4, dayName: 'Thursday' },
+  { key: 'friday', labelKey: 'day.Fri', fullLabelKey: 'day.Friday', dayIndex: 5, dayName: 'Friday' },
+  { key: 'saturday', labelKey: 'day.Sat', fullLabelKey: 'day.Saturday', dayIndex: 6, dayName: 'Saturday' },
+  { key: 'sunday', labelKey: 'day.Sun', fullLabelKey: 'day.Sunday', dayIndex: 0, dayName: 'Sunday' },
 ];
 
 export default function WeeklyServiceManager() {
@@ -350,8 +350,8 @@ export default function WeeklyServiceManager() {
                 className="px-4 py-1.5 text-sm font-bold text-gray-700"
                 data-weekday-tab="true"
               >
-                <span className="hidden sm:inline">{day.fullLabel}</span>
-                <span className="sm:hidden">{day.label}</span>
+                <span className="hidden sm:inline">{t(day.fullLabelKey)}</span>
+                <span className="sm:hidden">{t(day.labelKey)}</span>
               </TabsTrigger>
             ))}
           </TabsList>

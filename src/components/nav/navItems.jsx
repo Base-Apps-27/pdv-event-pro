@@ -1,10 +1,11 @@
+
 // Shared navigation structure — single source of truth for desktop + mobile
 // Each section has a label key, icon, and items. Permission gating happens at render time.
 // 2026-02-14: consolidated into primary rail + secondary "More" tray.
 // 2026-02-18: slimmed secondary from 12→6 items. Admin tools moved to separate adminNav
 //   to prevent "More" tray overflow on mobile. Merged roles into users matchPages.
 
-import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, MapPin, Copy, Sparkles, Shield, FileCode, Wrench, Activity, Palette } from "lucide-react";
+import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, MapPin, Copy, Sparkles, Shield, FileCode, Wrench, Palette } from "lucide-react";
 
 // PRIMARY: always visible in rail / bottom bar (max 5-6)
 export const primaryNav = [
@@ -54,7 +55,7 @@ export const secondaryNav = [
   },
   {
     id: 'custom-services',
-    labelKey: 'nav.oneOffServices',
+    labelKey: 'nav.specialServices',
     icon: Plus,
     page: 'CustomServicesManager',
     permission: 'view_services',
@@ -131,28 +132,12 @@ export const adminNav = [
     matchPages: ['MessageProcessing'],
   },
   {
-    id: 'schema',
-    labelKey: 'nav.schema',
+    id: 'dev-tools',
+    labelKey: 'nav.devTools',
     icon: FileCode,
-    page: 'SchemaGuide',
+    page: 'DevTools',
     permission: 'manage_users',
-    matchPages: ['SchemaGuide'],
-  },
-  {
-    id: 'dependencies',
-    labelKey: 'nav.dependencies',
-    icon: FileCode,
-    page: 'DependencyTracker',
-    permission: 'manage_users',
-    matchPages: ['DependencyTracker'],
-  },
-  {
-    id: 'activity-log',
-    labelKey: 'nav.activityLog',
-    icon: Activity,
-    page: 'ActivityLog',
-    permission: 'manage_users',
-    matchPages: ['ActivityLog'],
+    matchPages: ['DevTools', 'SchemaGuide', 'DependencyTracker', 'ActivityLog'],
   },
   {
     id: 'arts-submissions',

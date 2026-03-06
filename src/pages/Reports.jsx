@@ -51,6 +51,8 @@ export default function Reports() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const eventIdFromUrl = urlParams.get('eventId');
+  // UX-AUDIT #4 (2026-03-06): Auto-select most recent non-template event if none in URL.
+  // Also persist selection to URL for deep-linking.
   const [selectedEventId, setSelectedEventId] = useState(eventIdFromUrl || "");
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
@@ -125,6 +127,23 @@ export default function Reports() {
     queryFn: () => base44.entities.Room.list(),
   });
 
+  // UX-AUDIT #4 (2026-03-06): Auto-select most recent non-template event on first load
+  React.useEffect(() => {
+    if (!selectedEventId && events.length > 0) {
+      const mostRecent = events[0]; // already sorted by -year
+      if (mostRecent) setSelectedEventId(mostRecent.id);
+    }
+  }, [events, selectedEventId]);
+
+  // Persist event selection in URL for deep-linking
+  React.useEffect(() => {
+    if (selectedEventId && selectedEventId !== eventIdFromUrl) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('eventId', selectedEventId);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [selectedEventId]);
+
   const selectedEvent = events.find(e => e.id === selectedEventId);
   // Keep Reports in sync with Session Editor: primary sort by explicit 'order' if set, otherwise chronological
   const eventSessions = sessions
@@ -156,7 +175,8 @@ export default function Reports() {
   };
 
   const getPublicViewUrl = () => {
-    const baseUrl = 'https://pdv-event-pro.base44.app';
+    // UX-AUDIT #8 (2026-03-06): Use production domain
+    const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'vidaevents.co' ? window.location.origin : 'https://vidaevents.co';
     const pagePath = createPageUrl("PublicProgramView");
     const eventSlug = selectedEvent?.slug;
     if (eventSlug) {

@@ -288,7 +288,8 @@ export default function EventDetail() {
                 <DropdownMenuItem
                   onClick={async () => {
                     // Production custom domain — stable, not tied to builder preview origin
-                    const prodOrigin = 'https://vidaevents.co';
+                    // UX-AUDIT #8 (2026-03-06): Centralized production URL
+                    const prodOrigin = typeof window !== 'undefined' && window.location.hostname === 'vidaevents.co' ? window.location.origin : 'https://vidaevents.co';
                     const url = `${prodOrigin}${createPageUrl('PublicSpeakerForm')}?event_id=${eventId}`;
                     try {
                       await navigator.clipboard.writeText(url);
@@ -303,7 +304,8 @@ export default function EventDetail() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
-                    const prodOrigin = 'https://vidaevents.co';
+                    // UX-AUDIT #8 (2026-03-06): Centralized production URL
+                    const prodOrigin = typeof window !== 'undefined' && window.location.hostname === 'vidaevents.co' ? window.location.origin : 'https://vidaevents.co';
                     const url = `${prodOrigin}${createPageUrl('PublicArtsForm')}?event_id=${eventId}`;
                     try {
                       await navigator.clipboard.writeText(url);
