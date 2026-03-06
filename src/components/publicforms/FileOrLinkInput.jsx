@@ -106,7 +106,10 @@ export default function FileOrLinkInput({
   placeholder = 'https://drive.google.com/...',
   helpText,
   maxSizeMB = 50,
+  driveMaxSizeMB = 500,
   variant = 'default',
+  eventName = '',
+  eventYear = '',
 }) {
   const [mode, setMode] = useState('upload'); // 'link' | 'upload'  — default to upload (primary action)
   const [uploading, setUploading] = useState(false);
