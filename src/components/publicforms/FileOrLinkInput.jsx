@@ -5,6 +5,10 @@
  * Stores a single URL string. Upload produces a CDN URL, paste is used as-is.
  * 
  * Decision: "File Upload Strategy: Base44 Upload + Link Fallback" (2026-02-28)
+ * Decision: "Drive overflow abandoned — CORS + Deno limits" (2026-03-06)
+ *   Google Drive resumable upload hit CORS (browser can't PUT to googleapis.com)
+ *   and Deno Deploy CPU limits (can't proxy large files through backend).
+ *   Reverted to Base44 ≤50MB upload + manual link paste for larger files.
  * 
  * Features:
  *   - Drag-and-drop support with visual feedback
@@ -20,11 +24,8 @@
  *   label        - field label (bilingual)
  *   placeholder  - input placeholder
  *   helpText     - optional guidance text shown below
- *   maxSizeMB    - max file size in MB (default 50) — files larger than this route to Google Drive
- *   driveMaxSizeMB - hard ceiling for Drive uploads (default 500)
+ *   maxSizeMB    - max file size in MB (default 50)
  *   variant      - 'default' | 'compact' for admin vs public form contexts
- *   eventName    - (optional) event name for Drive folder organization
- *   eventYear    - (optional) event year for Drive folder organization
  */
 import React, { useState, useRef, useContext, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
@@ -106,10 +107,7 @@ export default function FileOrLinkInput({
   placeholder = 'https://drive.google.com/...',
   helpText,
   maxSizeMB = 50,
-  driveMaxSizeMB = 500,
   variant = 'default',
-  eventName = '',
-  eventYear = '',
 }) {
   const [mode, setMode] = useState('upload'); // 'link' | 'upload'  — default to upload (primary action)
   const [uploading, setUploading] = useState(false);
@@ -155,61 +153,7 @@ export default function FileOrLinkInput({
     }
   }, []);
 
-  /**
-   * Upload a file directly to Google Drive using a resumable upload session.
-   * Two-step: backend creates session URL → frontend streams raw bytes with real progress.
-   * This avoids the base64 stall that freezes the browser on large files (2026-03-06 v2 fix).
-   */
-  const uploadToDriveResumable = useCallback(async (file) => {
-    // Step 1: Ask backend to create resumable session + folder structure
-    const initRes = await base44.functions.invoke('uploadToDrive', {
-      action: 'init',
-      fileName: file.name,
-      mimeType: file.type || 'application/octet-stream',
-      fileSize: file.size,
-      eventName: eventName || '',
-      year: eventYear || String(new Date().getFullYear()),
-    });
-
-    const { uploadUrl } = initRes.data;
-
-    // Step 2: PUT raw file bytes directly to the Google resumable URL.
-    // Uses XMLHttpRequest for real upload progress events.
-    const driveFileId = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', uploadUrl);
-      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(pct);
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.id);
-        } else {
-          reject(new Error(`Drive upload failed: ${xhr.status}`));
-        }
-      };
-      xhr.onerror = () => reject(new Error('Network error during Drive upload'));
-      xhr.send(file); // Raw file — no base64 encoding needed
-    });
-
-    // Step 3: Ask backend to set public permissions and return share URL
-    const finalRes = await base44.functions.invoke('uploadToDrive', {
-      action: 'finalize',
-      driveFileId,
-      fileName: file.name,
-    });
-
-    return finalRes.data.url;
-  }, [eventName, eventYear]);
-
-  /** Validate and upload a file — routes to Drive if >maxSizeMB */
+  /** Validate and upload a file (Base44 CDN, ≤maxSizeMB). Larger files → use link paste. */
   const processFile = useCallback(async (file) => {
     if (!file) return;
     setUploadError('');
@@ -217,60 +161,44 @@ export default function FileOrLinkInput({
 
     const fileSizeBytes = file.size;
     const maxBytes = maxSizeMB * 1024 * 1024;
-    const driveMaxBytes = driveMaxSizeMB * 1024 * 1024;
-    const useDriveOverflow = fileSizeBytes > maxBytes;
 
-    // Hard ceiling — even Drive has limits
-    if (fileSizeBytes > driveMaxBytes) {
+    // Size check — over limit, guide user to paste a link instead
+    if (fileSizeBytes > maxBytes) {
       setUploadError(
         tFn(
-          `El archivo es muy grande (${formatFileSize(fileSizeBytes)}). El máximo permitido es ${driveMaxSizeMB}MB.`,
-          `File is too large (${formatFileSize(fileSizeBytes)}). Maximum allowed is ${driveMaxSizeMB}MB.`
+          `El archivo es muy grande (${formatFileSize(fileSizeBytes)}). El máximo es ${maxSizeMB}MB. Por favor suba a Google Drive y pegue el enlace.`,
+          `File is too large (${formatFileSize(fileSizeBytes)}). Max is ${maxSizeMB}MB. Please upload to Google Drive and paste the link.`
         )
       );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Validate file type (only for Base44 direct upload — Drive accepts anything)
-    if (!useDriveOverflow) {
-      const ext = getFileExtension(file.name);
-      if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-        setUploadError(
-          tFn(
-            `El formato "${ext}" no es compatible para subida directa. Formatos aceptados: PDF, imágenes, MP4, MP3, PPTX, Word. Puede subir a Google Drive y pegar el enlace.`,
-            `The "${ext}" format is not supported for direct upload. Accepted formats: PDF, images, MP4, MP3, PPTX, Word. You can upload to Google Drive and paste the link.`
-          )
-        );
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
+    // Validate file type
+    const ext = getFileExtension(file.name);
+    if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+      setUploadError(
+        tFn(
+          `El formato "${ext}" no es compatible. Formatos aceptados: PDF, imágenes, MP4, MP3, PPTX, Word. Puede subir a Google Drive y pegar el enlace.`,
+          `The "${ext}" format is not supported. Accepted formats: PDF, images, MP4, MP3, PPTX, Word. You can upload to Google Drive and paste the link.`
+        )
+      );
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
 
     setUploading(true);
 
-    if (useDriveOverflow) {
-      // Google Drive resumable upload — real progress via XHR (2026-03-06 v2)
-      // Progress is set directly by xhr.upload.onprogress, no simulated timer needed
-      setUploadProgress(0);
-      const driveUrl = await uploadToDriveResumable(file);
-      setUploadProgress(100);
-      setTimeout(() => setUploadProgress(0), 600);
-      setUploading(false);
-      setUploadedFileName(file.name);
-      onChange(driveUrl);
-    } else {
-      // Standard Base44 upload path (≤50MB) — simulated progress
-      startProgress();
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      stopProgress(true);
-      setUploading(false);
-      setUploadedFileName(file.name);
-      onChange(file_url);
-    }
+    // Standard Base44 upload path (≤50MB) — simulated progress
+    startProgress();
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    stopProgress(true);
+    setUploading(false);
+    setUploadedFileName(file.name);
+    onChange(file_url);
 
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [maxSizeMB, driveMaxSizeMB, tFn, onChange, startProgress, stopProgress, uploadToDriveResumable]);
+  }, [maxSizeMB, tFn, onChange, startProgress, stopProgress]);
 
   const handleFileSelect = (e) => {
     processFile(e.target.files?.[0]);
@@ -330,11 +258,10 @@ export default function FileOrLinkInput({
   // Normalise to string so .trim()/.includes() never crash.
   const safeValue = typeof value === 'string' ? value : (Array.isArray(value) ? (value[0] || '') : '');
   const hasValue = safeValue && safeValue.trim();
-  // Treat Base44 CDN URLs and Google Drive links (from overflow uploads) as "uploaded" files
+  // Treat Base44 CDN URLs as "uploaded" files; everything else is a pasted link
   const isUploaded = hasValue && (
     safeValue.includes('/storage/v1/object/public/') ||
-    safeValue.includes('base44') ||
-    safeValue.includes('drive.google.com/file/')
+    safeValue.includes('base44')
   );
   const displayMode = hasValue ? (isUploaded ? 'upload' : 'link') : mode;
 
@@ -423,8 +350,8 @@ export default function FileOrLinkInput({
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     {tFn(
-                      `Máx ${driveMaxSizeMB}MB · Archivos mayores de ${maxSizeMB}MB se suben a Google Drive`,
-                      `Max ${driveMaxSizeMB}MB · Files over ${maxSizeMB}MB upload to Google Drive`
+                      `Máx ${maxSizeMB}MB · Para archivos más grandes, use la opción "Enlace"`,
+                      `Max ${maxSizeMB}MB · For larger files, use the "Link" option`
                     )}
                   </p>
                 </>
