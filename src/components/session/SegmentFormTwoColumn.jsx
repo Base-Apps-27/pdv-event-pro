@@ -54,6 +54,7 @@ import VideoSection from "./segment-form/VideoSection";
 import PlenariaSection from "./segment-form/PlenariaSection";
 import PanelSection from "./segment-form/PanelSection";
 import StaleEditWarningDialog from "./StaleEditWarningDialog";
+import { sanitizeSegmentPayload } from "@/components/utils/sanitizeSegmentPayload";
 
 const SEGMENT_TYPES = [
   "Alabanza", "Bienvenida", "Ofrenda", "Plenaria", "Video",
