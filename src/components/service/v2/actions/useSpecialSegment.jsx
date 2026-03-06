@@ -15,7 +15,8 @@ import { toast } from "sonner";
 export function useSpecialSegment(queryKey) {
   const queryClient = useQueryClient();
 
-  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType }) => {
+  // 2026-03-06: Added requires_translation + translation_mode support
+  const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType, requires_translation, translation_mode }) => {
     if (!sessionId || !serviceId) {
       toast.error("Faltan datos: sessionId o serviceId");
       return;
@@ -36,6 +37,9 @@ export function useSpecialSegment(queryKey) {
         duration_min: Math.max(1, duration || 15),
         presenter: presenter || "",
         translator_name: translator || "",
+        // 2026-03-06: Translation fields from SpecialSegmentDialog
+        requires_translation: !!requires_translation,
+        translation_mode: requires_translation ? (translation_mode || "InPerson") : undefined,
         show_in_general: true,
         show_in_projection: true,
         show_in_sound: true,
