@@ -83,7 +83,8 @@ export default memo(function SlotColumn({
   style,
 }) {
   const { t } = useLanguage();
-  const accentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
+  // Use session entity's session_color if set; fall back to positional color
+  const accentColor = SESSION_COLOR_MAP[session.session_color] || SLOT_COLORS_FALLBACK[slotIndex % SLOT_COLORS_FALLBACK.length];
 
   // Calculate timing
   const { totalDuration, startTime, endTime, isOverage, targetMin } = useMemo(() => {
