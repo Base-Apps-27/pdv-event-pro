@@ -8,7 +8,6 @@ import { useLanguage } from "@/components/utils/i18n.jsx";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Plus, Calendar, MapPin, Edit, Trash2, Copy, Save } from "lucide-react";
 import { toast } from "sonner";
-import DatePicker from "@/components/ui/DatePicker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
