@@ -171,6 +171,7 @@ export default function BlueprintEditor({ blueprintId }) {
             segment={seg}
             index={idx}
             total={segments.length}
+            allSegments={segments}
             onChange={(i, updated) => updateSegment(i, updated)}
             onRemove={(i) => removeSegment(i)}
             onMove={(i, dir) => moveSegment(i, dir)}
