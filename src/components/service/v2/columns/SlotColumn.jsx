@@ -19,7 +19,21 @@ import RecesoSection from "./RecesoSection";
 import TeamSection from "./TeamSection";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
-const SLOT_COLORS = ['teal', 'blue', 'purple', 'amber', 'green'];
+/**
+ * SESSION_COLOR_MAP: Maps Session entity session_color values → Tailwind color prefixes.
+ * Session entity enum: green, blue, pink, orange, yellow, purple, red
+ * Fallback array used when session_color is not set.
+ */
+const SESSION_COLOR_MAP = {
+  green:  'green',
+  blue:   'blue',
+  pink:   'pink',
+  orange: 'orange',
+  yellow: 'amber',   // Tailwind amber is closest to "yellow" for contrast
+  purple: 'purple',
+  red:    'red',
+};
+const SLOT_COLORS_FALLBACK = ['teal', 'blue', 'purple', 'amber', 'green'];
 const DEFAULT_TARGET_MIN = 90;
 
 function safeParseTime(slotName) {
