@@ -14,6 +14,7 @@ import { logCreate, logUpdate } from "@/components/utils/editActionLogger";
 import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import useStaleGuard from "@/components/utils/useStaleGuard";
+import { sanitizeSegmentPayload } from "@/components/utils/sanitizeSegmentPayload";
 
 /**
  * Calculate end time from start + duration.
