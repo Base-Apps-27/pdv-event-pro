@@ -131,7 +131,7 @@ export default memo(function SlotColumn({
       {/* Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2 className={`text-3xl text-${accentColor}-600`}>
+          <h2 className="text-3xl" style={{ color: colorStyles.text }}>
             {session.name?.replace('am', ' a.m.').replace('pm', ' p.m.')}
           </h2>
           {canEdit && (
