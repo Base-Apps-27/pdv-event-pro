@@ -25,8 +25,9 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
   const [formData, setFormData] = useState({});
   const [fieldOrigins, setFieldOrigins] = useState({});
 
+  // Reset form when dialog opens — supports both create (event=null) and edit
   useEffect(() => {
-    if (!event) return;
+    if (!open) return;
     setFieldOrigins(event?.field_origins || {});
     setFormData({
       name: event?.name || '',
@@ -45,7 +46,7 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
       announcement_blurb: event?.announcement_blurb || '',
       promotion_targets: event?.promotion_targets ? event.promotion_targets.join(', ') : '',
     });
-  }, [event]);
+  }, [event, open]);
 
   const updateFormField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
