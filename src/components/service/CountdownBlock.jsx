@@ -162,8 +162,8 @@ export default function CountdownBlock({
           </h2>
         </div>
 
-        {/* Segment Type & Presenter */}
-        {(segment.segment_type || segment.type || segment.presenter) && (
+        {/* Segment Type, Presenter & Translator */}
+        {(segment.segment_type || segment.type || segment.presenter || segment.translator_name || segment.translator) && (
           <div className="flex flex-col items-center gap-1 text-center">
             {(segment.segment_type || segment.type) && (
               <div className="text-base md:text-lg font-semibold text-pdv-teal uppercase tracking-wider">
