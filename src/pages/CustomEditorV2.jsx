@@ -121,8 +121,10 @@ export default function CustomEditorV2() {
 
   // ── Dialog state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
+  // 2026-03-06: Added requires_translation + translation_mode to special segment dialog state
   const [specialDetails, setSpecialDetails] = useState({
     sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '',
+    requires_translation: false, translation_mode: 'InPerson',
   });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserSegmentId, setVerseParserSegmentId] = useState(null);
@@ -195,8 +197,12 @@ export default function CustomEditorV2() {
       translator: specialDetails.translator || '',
       insertAfterIdx: specialDetails.insertAfterIdx,
       segmentType,
+      // 2026-03-06: Thread translation fields
+      requires_translation: specialDetails.requires_translation,
+      translation_mode: specialDetails.translation_mode,
     });
     setShowSpecialDialog(false);
+    setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson' });
   }, [session, serviceId, specialDetails, addSpecial]);
 
   // ── New service creation ──
