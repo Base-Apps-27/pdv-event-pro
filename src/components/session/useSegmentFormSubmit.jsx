@@ -99,7 +99,12 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       await logUpdate('Segment', id, previousState, { ...previousState, ...data }, sessionId, user);
       return updated;
     },
-    onSuccess: () => { invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento guardado ✓"); },
+    onSuccess: (result) => {
+      // FIX 2026-03-06 (v3): Update stale guard baseline after successful save.
+      // Without this, the next save attempt sees server updated_date > old baseline → false stale.
+      if (result?.updated_date) updateBaseline(result.updated_date);
+      invalidateSegmentCaches(queryClient); onClose(); toast.success("Segmento guardado ✓");
+    },
     onError: () => { toast.error(t('error.save_failed')); },
   });
 
