@@ -20,21 +20,33 @@ import TeamSection from "./TeamSection";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
 /**
- * SESSION_COLOR_MAP: Maps Session entity session_color values → Tailwind color prefixes.
+ * SESSION_COLOR_STYLES: Maps Session entity session_color values → concrete CSS values.
+ * IMPORTANT: Tailwind purges dynamic class templates like `text-${color}-600`.
+ * We must use inline styles or fully-written class names instead.
  * Session entity enum: green, blue, pink, orange, yellow, purple, red
- * Fallback array used when session_color is not set.
  */
-const SESSION_COLOR_MAP = {
-  green:  'green',
-  blue:   'blue',
-  pink:   'pink',
-  orange: 'orange',
-  yellow: 'amber',   // Tailwind amber is closest to "yellow" for contrast
-  purple: 'purple',
-  red:    'red',
+const SESSION_COLOR_STYLES = {
+  green:  { text: '#16a34a', bg50: '#f0fdf4', border: '#22c55e', borderL: '#22c55e' },
+  blue:   { text: '#2563eb', bg50: '#eff6ff', border: '#3b82f6', borderL: '#3b82f6' },
+  pink:   { text: '#db2777', bg50: '#fdf2f8', border: '#ec4899', borderL: '#ec4899' },
+  orange: { text: '#ea580c', bg50: '#fff7ed', border: '#f97316', borderL: '#f97316' },
+  yellow: { text: '#d97706', bg50: '#fffbeb', border: '#f59e0b', borderL: '#f59e0b' },
+  purple: { text: '#9333ea', bg50: '#faf5ff', border: '#a855f7', borderL: '#a855f7' },
+  red:    { text: '#dc2626', bg50: '#fef2f2', border: '#ef4444', borderL: '#ef4444' },
+  teal:   { text: '#0d9488', bg50: '#f0fdfa', border: '#14b8a6', borderL: '#14b8a6' },
+  amber:  { text: '#d97706', bg50: '#fffbeb', border: '#f59e0b', borderL: '#f59e0b' },
 };
 const SLOT_COLORS_FALLBACK = ['teal', 'blue', 'purple', 'amber', 'green'];
 const DEFAULT_TARGET_MIN = 90;
+
+/** Resolve session_color entity value → concrete style object */
+function resolveColorStyles(sessionColor, slotIndex) {
+  if (sessionColor && SESSION_COLOR_STYLES[sessionColor]) {
+    return SESSION_COLOR_STYLES[sessionColor];
+  }
+  const fallbackKey = SLOT_COLORS_FALLBACK[slotIndex % SLOT_COLORS_FALLBACK.length];
+  return SESSION_COLOR_STYLES[fallbackKey] || SESSION_COLOR_STYLES.teal;
+}
 
 function safeParseTime(slotName) {
   const match = slotName?.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
