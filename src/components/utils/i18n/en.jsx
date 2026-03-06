@@ -24,7 +24,7 @@ export const en = {
   'nav.activityLog': 'Activity Log',
   'nav.artsSubmissions': 'Arts Submissions',
   'nav.devTools': 'Developer Tools',
-  'nav.specialServices': 'Special Services',
+  'nav.specialServices': 'Custom Services',
 
   // Sections
   'section.main': 'Main Panel',
@@ -41,8 +41,8 @@ export const en = {
   'dashboard.liveProgram.subtitle': 'See what’s happening now',
   'dashboard.weeklyServices.title': 'Sunday Weekly Service',
   'dashboard.weeklyServices.subtitle': 'Sunday weekly service',
-  'dashboard.otherServices.title': 'Other Services',
-  'dashboard.otherServices.subtitle': 'Additional services',
+  'dashboard.otherServices.title': 'Custom Services',
+  'dashboard.otherServices.subtitle': 'One-time and special services',
   'dashboard.recent': 'Recent Events',
   'dashboard.events.title': 'Special Events',
   'dashboard.events.subtitle': 'Conferences, retreats, special gatherings',
@@ -312,7 +312,7 @@ export const en = {
   'adjustments.timeSlot1130am': '11:30 A.M.',
 
   // Services
-  'service.specialService': 'Special service',
+  'service.specialService': 'Custom service',
 
   // Panel
   'panel.moderators': 'Moderator(s)',
@@ -742,4 +742,39 @@ export const en = {
   'dialogs.resetAll': 'All',
   'dialogs.editAnnouncement': 'Edit Announcement',
   'dialogs.newAnnouncement': 'New Announcement',
+
+  // WeeklyServiceManager (2026-03-06 i18n sweep)
+  'weekly.title': 'Services',
+  'weekly.speakerLink': 'Speaker Link',
+  'weekly.printSettings': 'Print Settings',
+  'weekly.configSchedules': 'Configure Schedules',
+
+  // CustomServicesManager (2026-03-06 i18n sweep)
+  'custom.title': 'Custom Services',
+  'custom.subtitle': 'Create and manage custom services and one-time events',
+  'custom.upcomingTitle': 'Upcoming Services',
+  'custom.scheduledCount': '{count} service(s) scheduled',
+  'custom.createService': 'Create Service',
+  'custom.noServices': 'No custom services scheduled',
+  'custom.createFirst': 'Create First One',
+  'custom.pastServices': 'Past Services',
+  'custom.noDate': 'No Date',
+  'custom.past': 'Past',
+  'custom.today': 'TODAY',
+  'custom.tomorrow': 'Tomorrow',
+  'custom.inDays': 'In {n} days',
+  'custom.completed': 'Completed',
+
+  // PublicCountdownDisplay (2026-03-06 i18n sweep)
+  'tv.noActiveSegment': 'No active segment',
+  'tv.roomProgram': 'Room Program',
+  'tv.upNext': 'Up Next',
+
+  // DirectorConsole (2026-03-06 i18n sweep)
+  'director.sessionNotFound': 'Session Not Found',
+  'director.sessionNotFoundDesc': 'The specified session was not found or you do not have access.',
+  'director.backToEvents': 'Back to Events',
+  'director.accessDenied': 'Access Denied',
+  'director.accessDeniedDesc': 'You do not have permission to access the Director Console.',
+  'director.backToProgram': 'Back to Program',
 };

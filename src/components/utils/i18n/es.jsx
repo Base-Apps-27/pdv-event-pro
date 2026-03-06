@@ -23,7 +23,7 @@ export const es = {
   'nav.dependencies': 'Dependencias',
   'nav.artsSubmissions': 'Envíos de Artes',
   'nav.devTools': 'Herramientas Dev',
-  'nav.specialServices': 'Servicios Especiales',
+  'nav.specialServices': 'Servicios Personalizados',
 
   // Sections
   'section.main': 'Panel Principal',
@@ -40,8 +40,8 @@ export const es = {
   'dashboard.liveProgram.subtitle': 'Ver qué está pasando ahora',
   'dashboard.weeklyServices.title': 'Servicios Dominicales',
   'dashboard.weeklyServices.subtitle': 'Servicio dominical semanal',
-  'dashboard.otherServices.title': 'Otros Servicios',
-  'dashboard.otherServices.subtitle': 'Servicios adicionales',
+  'dashboard.otherServices.title': 'Servicios Personalizados',
+  'dashboard.otherServices.subtitle': 'Servicios únicos y especiales',
   'dashboard.recent': 'Eventos Recientes',
   'dashboard.events.title': 'Eventos Especiales',
   'dashboard.events.subtitle': 'Congresos, retiros, conferencias',
@@ -164,7 +164,7 @@ export const es = {
   'adjustments.timeSlot1130am': '11:30 A.M.',
 
   // Services (es)
-  'service.specialService': 'Servicio especial',
+  'service.specialService': 'Servicio personalizado',
 
   // Panel
   'panel.moderators': 'Moderador(es)',
@@ -742,4 +742,39 @@ export const es = {
   'dialogs.resetAll': 'Todo',
   'dialogs.editAnnouncement': 'Editar Anuncio',
   'dialogs.newAnnouncement': 'Nuevo Anuncio',
+
+  // WeeklyServiceManager (2026-03-06 i18n sweep)
+  'weekly.title': 'Servicios',
+  'weekly.speakerLink': 'Link para Oradores',
+  'weekly.printSettings': 'Ajustes de Impresión',
+  'weekly.configSchedules': 'Configurar Horarios',
+
+  // CustomServicesManager (2026-03-06 i18n sweep)
+  'custom.title': 'Servicios Personalizados',
+  'custom.subtitle': 'Crea y gestiona servicios personalizados y eventos únicos',
+  'custom.upcomingTitle': 'Próximos Servicios',
+  'custom.scheduledCount': '{count} servicio(s) programado(s)',
+  'custom.createService': 'Crear Servicio',
+  'custom.noServices': 'No hay servicios personalizados programados',
+  'custom.createFirst': 'Crear el Primero',
+  'custom.pastServices': 'Servicios Pasados',
+  'custom.noDate': 'Sin Fecha',
+  'custom.past': 'Pasado',
+  'custom.today': 'HOY',
+  'custom.tomorrow': 'Mañana',
+  'custom.inDays': 'En {n} días',
+  'custom.completed': 'Finalizado',
+
+  // PublicCountdownDisplay (2026-03-06 i18n sweep)
+  'tv.noActiveSegment': 'Sin segmento activo',
+  'tv.roomProgram': 'Programa del Salón',
+  'tv.upNext': 'A Continuación',
+
+  // DirectorConsole (2026-03-06 i18n sweep)
+  'director.sessionNotFound': 'Sesión no encontrada',
+  'director.sessionNotFoundDesc': 'No se encontró la sesión especificada o no tienes acceso.',
+  'director.backToEvents': 'Volver a Eventos',
+  'director.accessDenied': 'Acceso Denegado',
+  'director.accessDeniedDesc': 'No tienes permiso para acceder al Director Console.',
+  'director.backToProgram': 'Volver al Programa',
 };
