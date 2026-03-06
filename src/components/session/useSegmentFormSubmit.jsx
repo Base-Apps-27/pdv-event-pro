@@ -261,10 +261,24 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
     });
 
     // 2. Enum fields: empty strings are NOT valid enum values — strip them to avoid 422
-    const enumFields = ['spoken_word_mic_position', 'color_code', 'segment_type', 'translation_mode', 'live_status', 'timing_source', 'live_hold_status'];
+    // IMPORTANT: Only delete if truly empty. Valid enum values like "preach", "Plenaria" must be kept.
+    const enumFields = ['spoken_word_mic_position', 'live_status', 'timing_source', 'live_hold_status', 'live_status'];
     enumFields.forEach(field => {
-      if (cleanedFormData[field] === '' || cleanedFormData[field] === undefined) {
+      if (cleanedFormData[field] === '' || cleanedFormData[field] === undefined || cleanedFormData[field] === null) {
         delete cleanedFormData[field];
+      }
+    });
+
+    // 3. Number-type fields: empty strings are invalid for number schema — convert to null
+    const numberFields = ['video_length_sec', 'drama_handheld_mics', 'drama_headset_mics', 'dance_handheld_mics', 'dance_headset_mics', 'duration_min', 'order', 'stage_call_offset_min', 'number_of_songs'];
+    numberFields.forEach(field => {
+      const val = cleanedFormData[field];
+      if (val === '' || val === undefined) {
+        // Send null for optional number fields; platform accepts null but not ""
+        delete cleanedFormData[field];
+      } else if (val !== null && val !== undefined) {
+        const num = Number(val);
+        cleanedFormData[field] = isFinite(num) ? num : null;
       }
     });
 
