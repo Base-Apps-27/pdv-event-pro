@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { logCreate, logUpdate, logDelete } from "@/components/utils/editActionLogger";
 import { hasPermission } from "@/components/utils/permissions";
+import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 
 // SessionManager - handles session CRUD with edit logging
 // user prop is required for audit logging of create/update/delete actions
@@ -150,7 +151,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['segments']);
+      invalidateSegmentCaches(queryClient);
     },
   });
 
@@ -278,6 +279,17 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
     setShowSegmentForm(false);
     setEditingSegment(null);
   };
+
+  // Close segment form if the segment was deleted externally (e.g. by another user)
+  React.useEffect(() => {
+    if (showSegmentForm && editingSegment && segments) {
+      const stillExists = segments.some(s => s.id === editingSegment.id);
+      if (!stillExists) {
+        handleCloseSegmentForm();
+        toast.info("El segmento ya no existe");
+      }
+    }
+  }, [showSegmentForm, editingSegment, segments]);
 
   const handleAddSegment = (sessionId) => {
     setExpandedSessionId(sessionId);
@@ -540,9 +552,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                           <Edit className="w-4 h-4 mr-1" />
                           Editar
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
+                          disabled={deleteMutation.isPending}
                           onClick={() => {
                             if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
                               deleteMutation.mutate(session);
@@ -705,7 +718,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
           <div className="flex-1 overflow-y-auto">
             <SegmentFormTwoColumn 
               session={sessions.find(s => s.id === expandedSessionId)}
-              segment={editingSegment ? segments.find(s => s.id === editingSegment.id) || editingSegment : null}
+              segment={editingSegment ? segments.find(s => s.id === editingSegment.id) : null}
               templates={templates}
               onClose={handleCloseSegmentForm}
               sessionId={expandedSessionId}

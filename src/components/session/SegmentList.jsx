@@ -73,7 +73,7 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
     if (hasDup || hasZero) {
       Promise.all(
         segments.map((s, i) => reorderMutation.mutateAsync({ segmentId: s.id, newOrder: i + 1 }))
-      ).then(() => { normalizedOnce.current = true; }).catch(() => {});
+      ).then(() => { normalizedOnce.current = true; }).catch(err => console.warn('[SegmentList] Order normalization failed:', err));
     }
   }, [segments]);
 
