@@ -146,7 +146,7 @@ const SegmentCard = memo(function SegmentCard({
                 <ChevronDown className="w-3 h-3" />
               </Button>
             </div>
-            {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className={`w-4 h-4 text-${accentColor}-600`} />}
+            {isSpecial ? <Sparkles className="w-4 h-4 text-orange-600" /> : <Clock className="w-4 h-4" style={{ color: (ACCENT_INLINE[accentColor] || ACCENT_INLINE.teal).iconColor }} />}
             {segment.title}
             {isSpecial && <Badge className="ml-1 bg-orange-200 text-orange-800 text-[10px]">{t('segment.special')}</Badge>}
             {segment.color_code && segment.color_code !== 'default' && !isSpecial && (
