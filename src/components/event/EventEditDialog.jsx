@@ -280,7 +280,7 @@ export default function EventEditDialog({ open, onOpenChange, event, onSaved, us
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle} disabled={updateMutation.isPending}>
+            <Button type="submit" className="text-white font-bold uppercase" style={gradientStyle} disabled={updateMutation.isPending || createMutation.isPending}>
               Guardar
             </Button>
           </div>
