@@ -161,11 +161,16 @@ Deno.serve(async (req) => {
       }
 
       const sessionOrder = slotNames.indexOf(slotName) + 1;
+      // BUGFIX (2026-03-06): Thread session_color from ServiceSchedule definition
+      // so the weekly editor renders the configured accent color instead of defaulting to "blue".
+      const sessionDef = schedules.length > 0 ? schedules[0].sessions?.find(s => s.name === slotName) : null;
       const session = await base44.asServiceRole.entities.Session.create({
         service_id: newService.id,
         name: slotName,
         date: dateStr,
         order: sessionOrder,
+        session_color: sessionDef?.color || undefined,
+        planned_start_time: sessionDef?.planned_start_time || undefined,
       });
 
       for (let i = 0; i < bpSegments.length; i++) {
