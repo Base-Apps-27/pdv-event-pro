@@ -155,48 +155,88 @@ export default function FileOrLinkInput({
     }
   }, []);
 
-  /** Validate and upload a file */
+  /**
+   * Convert a File to base64 string for Drive upload.
+   * Google Drive overflow (2026-03-06): files >50MB bypass Base44 and go to Drive.
+   */
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Strip the data:...;base64, prefix
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  /** Validate and upload a file — routes to Drive if >maxSizeMB */
   const processFile = useCallback(async (file) => {
     if (!file) return;
     setUploadError('');
     setConfirmingDelete(false);
 
-    // Validate file size
+    const fileSizeBytes = file.size;
     const maxBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxBytes) {
+    const driveMaxBytes = driveMaxSizeMB * 1024 * 1024;
+    const useDriveOverflow = fileSizeBytes > maxBytes;
+
+    // Hard ceiling — even Drive has limits
+    if (fileSizeBytes > driveMaxBytes) {
       setUploadError(
         tFn(
-          `El archivo es muy grande (${formatFileSize(file.size)}). El máximo permitido es ${maxSizeMB}MB. Puede subirlo a Google Drive y pegar el enlace.`,
-          `File is too large (${formatFileSize(file.size)}). Maximum allowed is ${maxSizeMB}MB. You can upload it to Google Drive and paste the link.`
+          `El archivo es muy grande (${formatFileSize(fileSizeBytes)}). El máximo permitido es ${driveMaxSizeMB}MB.`,
+          `File is too large (${formatFileSize(fileSizeBytes)}). Maximum allowed is ${driveMaxSizeMB}MB.`
         )
       );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Validate file type
-    const ext = getFileExtension(file.name);
-    if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-      setUploadError(
-        tFn(
-          `El formato "${ext}" no es compatible para subida directa. Formatos aceptados: PDF, imágenes, MP4, MP3, PPTX, Word. Puede subir a Google Drive y pegar el enlace.`,
-          `The "${ext}" format is not supported for direct upload. Accepted formats: PDF, images, MP4, MP3, PPTX, Word. You can upload to Google Drive and paste the link.`
-        )
-      );
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
+    // Validate file type (only for Base44 direct upload — Drive accepts anything)
+    if (!useDriveOverflow) {
+      const ext = getFileExtension(file.name);
+      if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+        setUploadError(
+          tFn(
+            `El formato "${ext}" no es compatible para subida directa. Formatos aceptados: PDF, imágenes, MP4, MP3, PPTX, Word. Puede subir a Google Drive y pegar el enlace.`,
+            `The "${ext}" format is not supported for direct upload. Accepted formats: PDF, images, MP4, MP3, PPTX, Word. You can upload to Google Drive and paste the link.`
+          )
+        );
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
     }
 
-    // Upload via Base44
     setUploading(true);
     startProgress();
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    stopProgress(true);
-    setUploading(false);
-    setUploadedFileName(file.name);
-    onChange(file_url);
+
+    if (useDriveOverflow) {
+      // Google Drive overflow path (2026-03-06 Decision)
+      // Convert file to base64 and send to backend function
+      const fileBase64 = await fileToBase64(file);
+      const response = await base44.functions.invoke('uploadToDrive', {
+        fileBase64,
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        eventName: eventName || '',
+        year: eventYear || String(new Date().getFullYear()),
+      });
+      stopProgress(true);
+      setUploading(false);
+      setUploadedFileName(file.name);
+      onChange(response.data.url);
+    } else {
+      // Standard Base44 upload path (≤50MB)
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      stopProgress(true);
+      setUploading(false);
+      setUploadedFileName(file.name);
+      onChange(file_url);
+    }
+
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [maxSizeMB, tFn, onChange, startProgress, stopProgress]);
+  }, [maxSizeMB, driveMaxSizeMB, tFn, onChange, startProgress, stopProgress, eventName, eventYear]);
 
   const handleFileSelect = (e) => {
     processFile(e.target.files?.[0]);
