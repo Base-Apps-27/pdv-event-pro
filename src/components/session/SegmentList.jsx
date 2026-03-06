@@ -4,15 +4,21 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock, ChevronUp, ChevronDown, ArrowRightLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
 import { logDelete, logReorder } from "@/components/utils/editActionLogger";
 import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
+import { useLanguage } from "@/components/utils/i18n";
+import MoveSegmentDialog from "./MoveSegmentDialog";
 
-export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user }) {
+export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user, sessions, allEventSegments }) {
+  const { t } = useLanguage();
+  const [moveSegment, setMoveSegment] = React.useState(null);
+  // Show move button only when there are other sessions to move to
+  const canMove = sessions && sessions.length > 1;
   const queryClient = useQueryClient();
 
   const { data: allActions = [] } = useQuery({
@@ -441,6 +447,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                     <Button variant="ghost" size="sm" onClick={() => onEdit(segment)}>
                       <Edit className="w-4 h-4" />
                     </Button>
+                    {canMove && (
+                      <Button variant="ghost" size="sm" onClick={() => setMoveSegment(segment)} title={t('move.moveToSession')}>
+                        <ArrowRightLeft className="w-4 h-4 text-blue-500" />
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -633,6 +644,11 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="h-7 px-2">
                                 <Edit className="w-3 h-3" />
                               </Button>
+                              {canMove && (
+                                <Button variant="outline" size="sm" onClick={() => setMoveSegment(segment)} className="h-7 px-2" title={t('move.moveToSession')}>
+                                  <ArrowRightLeft className="w-3 h-3 text-blue-500" />
+                                </Button>
+                              )}
                               <Button 
                                 variant="ghost" 
                                 size="sm"
@@ -653,6 +669,16 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
               })}
             </div>
       </div>
+      {/* Move Segment Dialog */}
+      <MoveSegmentDialog
+        open={!!moveSegment}
+        onOpenChange={(open) => { if (!open) setMoveSegment(null); }}
+        segment={moveSegment}
+        sessions={sessions}
+        allSegments={allEventSegments || segments}
+        currentSessionId={sessionId}
+        user={user}
+      />
     </>
   );
 }
