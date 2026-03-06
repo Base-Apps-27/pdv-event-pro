@@ -395,10 +395,12 @@ export default function FileOrLinkInput({
                   </p>
                 </>
               )}
+              {/* No accept filter — Drive overflow accepts any format.
+                   Base44-only formats are validated in processFile for ≤50MB files. */}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={accept || SUPPORTED_EXTENSIONS.join(',')}
+                accept={accept}
                 onChange={handleFileSelect}
                 className="hidden"
               />
