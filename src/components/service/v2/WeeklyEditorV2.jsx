@@ -172,8 +172,8 @@ export default function WeeklyEditorV2({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetTargetSessionId, setResetTargetSessionId] = useState(null); // null = all, string = single session
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
-  // 2026-03-06: Added requires_translation + translation_mode to special segment dialog state
-  const [specialDetails, setSpecialDetails] = useState({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson' });
+  // 2026-03-06: Added requires_translation + translation_mode + default_translator_source to special segment dialog state
+  const [specialDetails, setSpecialDetails] = useState({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson', default_translator_source: 'manual' });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserSegmentId, setVerseParserSegmentId] = useState(null);
   // BUGFIX (2026-03-02): Moved here from after early returns to respect Rules of Hooks
@@ -534,10 +534,11 @@ export default function WeeklyEditorV2({
             // 2026-03-06: Thread translation fields to entity creation
             requires_translation: specialDetails.requires_translation,
             translation_mode: specialDetails.translation_mode,
+            default_translator_source: specialDetails.default_translator_source,
           });
           setShowSpecialDialog(false);
           // Reset dialog state for next use
-          setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson' });
+          setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson', default_translator_source: 'manual' });
         }}
         tealStyle={{ backgroundColor: '#1F8A70', color: '#ffffff' }}
       />

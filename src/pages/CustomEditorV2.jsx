@@ -121,10 +121,10 @@ export default function CustomEditorV2() {
 
   // ── Dialog state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
-  // 2026-03-06: Added requires_translation + translation_mode to special segment dialog state
+  // 2026-03-06: Added requires_translation + translation_mode + default_translator_source to special segment dialog state
   const [specialDetails, setSpecialDetails] = useState({
     sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '',
-    requires_translation: false, translation_mode: 'InPerson',
+    requires_translation: false, translation_mode: 'InPerson', default_translator_source: 'manual',
   });
   const [verseParserOpen, setVerseParserOpen] = useState(false);
   const [verseParserSegmentId, setVerseParserSegmentId] = useState(null);
@@ -200,9 +200,10 @@ export default function CustomEditorV2() {
       // 2026-03-06: Thread translation fields
       requires_translation: specialDetails.requires_translation,
       translation_mode: specialDetails.translation_mode,
+      default_translator_source: specialDetails.default_translator_source,
     });
     setShowSpecialDialog(false);
-    setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson' });
+    setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson', default_translator_source: 'manual' });
   }, [session, serviceId, specialDetails, addSpecial]);
 
   // ── New service creation ──
