@@ -269,11 +269,15 @@ export default function WeeklyEditorV2({
     try {
       for (const slotDef of sessionDefs) {
         // 1. Create Session entity
+        // BUGFIX (2026-03-06): Thread session_color from ServiceSchedule definition
+        // so the UI renders the configured accent color instead of defaulting to "blue".
         const session = await base44.entities.Session.create({
           service_id: serviceId,
           name: slotDef.name,
           date: date,
           order: slotDef.order || (sessionDefs.indexOf(slotDef) + 1),
+          session_color: slotDef.color || undefined,
+          planned_start_time: slotDef.planned_start_time || slotDef.time || undefined,
         });
 
         // 2. Resolve blueprint segments for this session
