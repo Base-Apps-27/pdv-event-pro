@@ -22,6 +22,8 @@ export const es = {
   'nav.expandMenu': 'Expandir',
   'nav.dependencies': 'Dependencias',
   'nav.artsSubmissions': 'Envíos de Artes',
+  'nav.devTools': 'Herramientas Dev',
+  'nav.specialServices': 'Servicios Especiales',
 
   // Sections
   'section.main': 'Panel Principal',
@@ -564,6 +566,7 @@ export const es = {
   // Day labels
   'day.Sunday': 'Domingo', 'day.Monday': 'Lunes', 'day.Tuesday': 'Martes',
   'day.Wednesday': 'Miércoles', 'day.Thursday': 'Jueves', 'day.Friday': 'Viernes', 'day.Saturday': 'Sábado',
+  'day.Sun': 'Dom', 'day.Mon': 'Lun', 'day.Tue': 'Mar', 'day.Wed': 'Mié', 'day.Thu': 'Jue', 'day.Fri': 'Vie', 'day.Sat': 'Sáb',
 
   // WeeklyEditorV2
   'weekly.toast.generatingProgram': 'Generando PDF del Programa...',

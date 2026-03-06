@@ -23,6 +23,8 @@ export const en = {
   'nav.dependencies': 'Dependencies',
   'nav.activityLog': 'Activity Log',
   'nav.artsSubmissions': 'Arts Submissions',
+  'nav.devTools': 'Developer Tools',
+  'nav.specialServices': 'Special Services',
 
   // Sections
   'section.main': 'Main Panel',
@@ -564,6 +566,7 @@ export const en = {
   // Day labels
   'day.Sunday': 'Sunday', 'day.Monday': 'Monday', 'day.Tuesday': 'Tuesday',
   'day.Wednesday': 'Wednesday', 'day.Thursday': 'Thursday', 'day.Friday': 'Friday', 'day.Saturday': 'Saturday',
+  'day.Sun': 'Sun', 'day.Mon': 'Mon', 'day.Tue': 'Tue', 'day.Wed': 'Wed', 'day.Thu': 'Thu', 'day.Fri': 'Fri', 'day.Sat': 'Sat',
 
   // WeeklyEditorV2
   'weekly.toast.generatingProgram': 'Generating Program PDF...',
