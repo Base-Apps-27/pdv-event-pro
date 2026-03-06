@@ -156,19 +156,58 @@ export default function FileOrLinkInput({
   }, []);
 
   /**
-   * Convert a File to base64 string for Drive upload.
-   * Google Drive overflow (2026-03-06): files >50MB bypass Base44 and go to Drive.
+   * Upload a file directly to Google Drive using a resumable upload session.
+   * Two-step: backend creates session URL → frontend streams raw bytes with real progress.
+   * This avoids the base64 stall that freezes the browser on large files (2026-03-06 v2 fix).
    */
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      // Strip the data:...;base64, prefix
-      const base64 = reader.result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  const uploadToDriveResumable = useCallback(async (file) => {
+    // Step 1: Ask backend to create resumable session + folder structure
+    const initRes = await base44.functions.invoke('uploadToDrive', {
+      action: 'init',
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      fileSize: file.size,
+      eventName: eventName || '',
+      year: eventYear || String(new Date().getFullYear()),
+    });
+
+    const { uploadUrl } = initRes.data;
+
+    // Step 2: PUT raw file bytes directly to the Google resumable URL.
+    // Uses XMLHttpRequest for real upload progress events.
+    const driveFileId = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(pct);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.id);
+        } else {
+          reject(new Error(`Drive upload failed: ${xhr.status}`));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during Drive upload'));
+      xhr.send(file); // Raw file — no base64 encoding needed
+    });
+
+    // Step 3: Ask backend to set public permissions and return share URL
+    const finalRes = await base44.functions.invoke('uploadToDrive', {
+      action: 'finalize',
+      driveFileId,
+      fileName: file.name,
+    });
+
+    return finalRes.data.url;
+  }, [eventName, eventYear]);
 
   /** Validate and upload a file — routes to Drive if >maxSizeMB */
   const processFile = useCallback(async (file) => {
@@ -209,25 +248,20 @@ export default function FileOrLinkInput({
     }
 
     setUploading(true);
-    startProgress();
 
     if (useDriveOverflow) {
-      // Google Drive overflow path (2026-03-06 Decision)
-      // Convert file to base64 and send to backend function
-      const fileBase64 = await fileToBase64(file);
-      const response = await base44.functions.invoke('uploadToDrive', {
-        fileBase64,
-        fileName: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        eventName: eventName || '',
-        year: eventYear || String(new Date().getFullYear()),
-      });
-      stopProgress(true);
+      // Google Drive resumable upload — real progress via XHR (2026-03-06 v2)
+      // Progress is set directly by xhr.upload.onprogress, no simulated timer needed
+      setUploadProgress(0);
+      const driveUrl = await uploadToDriveResumable(file);
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 600);
       setUploading(false);
       setUploadedFileName(file.name);
-      onChange(response.data.url);
+      onChange(driveUrl);
     } else {
-      // Standard Base44 upload path (≤50MB)
+      // Standard Base44 upload path (≤50MB) — simulated progress
+      startProgress();
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       stopProgress(true);
       setUploading(false);
@@ -236,7 +270,7 @@ export default function FileOrLinkInput({
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [maxSizeMB, driveMaxSizeMB, tFn, onChange, startProgress, stopProgress, eventName, eventYear]);
+  }, [maxSizeMB, driveMaxSizeMB, tFn, onChange, startProgress, stopProgress, uploadToDriveResumable]);
 
   const handleFileSelect = (e) => {
     processFile(e.target.files?.[0]);
