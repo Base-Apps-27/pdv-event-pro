@@ -241,57 +241,10 @@ export default function useSegmentFormSubmit({ segment, sessionId, session, user
       }
     }
 
-    // Strip internal UI state flags
-    const cleanedFormData = Object.fromEntries(Object.entries(formData).filter(([key]) => !key.startsWith('_')));
-
-    // FIX 2026-03-06: Schema-safe cleanup — prevent 422 errors from invalid field types.
-    // 1. Array-type fields: ensure they're arrays, not strings
-    const arrayUrlFields = [
-      'presentation_url', 'notes_url', 'video_url', 'arts_run_of_show_url',
-      'drama_song_source', 'drama_song_2_url', 'drama_song_3_url',
-      'dance_song_source', 'dance_song_2_url', 'dance_song_3_url',
-      'spoken_word_music_url', 'spoken_word_script_url', 'spoken_word_audio_url'
-    ];
-    
-    // FIX 2026-03-06 (v2): Handle ALL invalid states: null, undefined, string, and malformed arrays.
-    // The DB stores null for unset array fields. buildFormData catches most, but any path
-    // that merges raw segment data can re-introduce nulls.
-    arrayUrlFields.forEach(field => {
-      const val = cleanedFormData[field];
-      if (val == null) {
-        // null or undefined → safe empty array
-        cleanedFormData[field] = [];
-      } else if (typeof val === 'string') {
-        cleanedFormData[field] = val.trim() ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
-      } else if (Array.isArray(val)) {
-        cleanedFormData[field] = val.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
-      } else {
-        // Unknown type — safe fallback
-        cleanedFormData[field] = [];
-      }
-    });
-
-    // 2. Enum fields: empty strings are NOT valid enum values — strip them to avoid 422
-    // IMPORTANT: Only delete if truly empty. Valid enum values like "preach", "Plenaria" must be kept.
-    const enumFields = ['spoken_word_mic_position', 'live_status', 'timing_source', 'live_hold_status', 'live_status'];
-    enumFields.forEach(field => {
-      if (cleanedFormData[field] === '' || cleanedFormData[field] === undefined || cleanedFormData[field] === null) {
-        delete cleanedFormData[field];
-      }
-    });
-
-    // 3. Number-type fields: empty strings are invalid for number schema — convert to null
-    const numberFields = ['video_length_sec', 'drama_handheld_mics', 'drama_headset_mics', 'dance_handheld_mics', 'dance_headset_mics', 'duration_min', 'order', 'stage_call_offset_min', 'number_of_songs'];
-    numberFields.forEach(field => {
-      const val = cleanedFormData[field];
-      if (val === '' || val === undefined) {
-        // Send null for optional number fields; platform accepts null but not ""
-        delete cleanedFormData[field];
-      } else if (val !== null && val !== undefined) {
-        const num = Number(val);
-        cleanedFormData[field] = isFinite(num) ? num : null;
-      }
-    });
+    // FIX 2026-03-06 (v4): Schema-driven sanitization via single source of truth.
+    // Replaces 3 separate manually-maintained field lists with sanitizeSegmentPayload().
+    // See components/utils/sanitizeSegmentPayload.js for type registry and rationale.
+    const cleanedFormData = sanitizeSegmentPayload(formData);
 
     const data = {
       session_id: sessionId,
