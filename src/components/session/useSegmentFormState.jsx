@@ -31,6 +31,7 @@ function buildFormData(segment, suggestedStartTime) {
     show_in_projection: segment?.show_in_projection ?? true,
     show_in_sound: segment?.show_in_sound ?? true,
     show_in_ushers: segment?.show_in_ushers ?? true,
+    show_in_livestream: segment?.show_in_livestream ?? true,
     color_code: segment?.color_code || "default",
     order: segment?.order || 1,
     message_title: segment?.message_title || "",
