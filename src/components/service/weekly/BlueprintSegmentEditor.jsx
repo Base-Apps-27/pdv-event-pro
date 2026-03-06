@@ -197,35 +197,44 @@ export default function BlueprintSegmentEditor({ segment, index, total, onChange
                 />
                 <Label className="text-xs">Requiere traducción</Label>
               </div>
-              {segment.requires_translation && (
-                <div className="pl-6 border-l-2 border-gray-200 space-y-1">
-                  <Label className="text-[10px] text-gray-500">Fuente del traductor</Label>
-                  <Select
-                    value={segment.default_translator_source || "manual"}
-                    onValueChange={(v) => update("default_translator_source", v)}
-                  >
-                    <SelectTrigger className="h-7 w-full text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Manual (escribir nombre)</SelectItem>
-                      {/* Dynamic: show all segments that come BEFORE this one */}
-                      {allSegments
-                        .filter((_, i) => i < index)
-                        .map((seg, i) => {
-                          const segLabel = seg.title || SEGMENT_TYPES.find(t => t.value === seg.type)?.label || `Segmento ${i + 1}`;
-                          return (
-                            <SelectItem key={i} value={`auto_from:${i}`}>
-                              Auto → {segLabel}
-                            </SelectItem>
-                          );
-                        })
-                      }
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-gray-400">
-                    "Auto" copia el traductor del segmento seleccionado al crear el servicio.
-                  </p>
-                </div>
-              )}
+              {segment.requires_translation && (() => {
+                // Backward compat: map legacy "worship_segment_translator" to the
+                // first worship-type segment index, or fall back to auto_from:0
+                let currentValue = segment.default_translator_source || "manual";
+                if (currentValue === "worship_segment_translator") {
+                  const worshipIdx = allSegments.findIndex(s => s.type === "worship");
+                  currentValue = worshipIdx >= 0 && worshipIdx < index ? `auto_from:${worshipIdx}` : "manual";
+                }
+                return (
+                  <div className="pl-6 border-l-2 border-gray-200 space-y-1">
+                    <Label className="text-[10px] text-gray-500">Fuente del traductor</Label>
+                    <Select
+                      value={currentValue}
+                      onValueChange={(v) => update("default_translator_source", v)}
+                    >
+                      <SelectTrigger className="h-7 w-full text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual (escribir nombre)</SelectItem>
+                        {/* Dynamic: show all segments that come BEFORE this one */}
+                        {allSegments
+                          .filter((_, i) => i < index)
+                          .map((seg, i) => {
+                            const segLabel = seg.title || SEGMENT_TYPES.find(t => t.value === seg.type)?.label || `Segmento ${i + 1}`;
+                            return (
+                              <SelectItem key={i} value={`auto_from:${i}`}>
+                                Auto → {segLabel}
+                              </SelectItem>
+                            );
+                          })
+                        }
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-gray-400">
+                      "Auto" copia el traductor del segmento seleccionado al crear el servicio.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Sub-Assignments */}
