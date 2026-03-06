@@ -112,17 +112,51 @@ export default function SpecialSegmentDialog({
                   </Select>
                 </div>
 
-                {/* Translator name */}
+                {/* 2026-03-06: Translator source — manual or auto from preceding segment */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">{en ? 'Translator' : 'Traductor'}</Label>
-                  <AutocompleteInput
-                    type="translator"
-                    value={details.translator || ''}
-                    onChange={(e) => setDetails(prev => ({ ...prev, translator: e.target.value }))}
-                    placeholder={en ? 'Translator name (optional)' : 'Nombre del traductor (opcional)'}
-                    className="text-sm h-8"
-                  />
+                  <Label className="text-xs text-gray-500">{en ? 'Translator Source' : 'Fuente del Traductor'}</Label>
+                  <Select
+                    value={details.default_translator_source || 'manual'}
+                    onValueChange={(value) => setDetails(prev => ({
+                      ...prev,
+                      default_translator_source: value,
+                      // Clear manual translator when switching to auto
+                      ...(value !== 'manual' ? { translator: '' } : {}),
+                    }))}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">{en ? 'Enter manually' : 'Escribir manualmente'}</SelectItem>
+                      {/* Show preceding segments that have translation enabled */}
+                      {(serviceSegments || []).map((seg, idx) => (
+                        <SelectItem key={idx} value={`auto_from_segment:${seg.id || idx}`}>
+                          Auto → {seg.title || seg.type || `Segment ${idx + 1}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {details.default_translator_source && details.default_translator_source !== 'manual' && (
+                    <p className="text-[10px] text-gray-400">
+                      {en ? 'Will copy the translator from the selected segment.' : 'Copiará el traductor del segmento seleccionado.'}
+                    </p>
+                  )}
                 </div>
+
+                {/* Manual translator name — only when source is manual */}
+                {(!details.default_translator_source || details.default_translator_source === 'manual') && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">{en ? 'Translator' : 'Traductor'}</Label>
+                    <AutocompleteInput
+                      type="translator"
+                      value={details.translator || ''}
+                      onChange={(e) => setDetails(prev => ({ ...prev, translator: e.target.value }))}
+                      placeholder={en ? 'Translator name (optional)' : 'Nombre del traductor (opcional)'}
+                      className="text-sm h-8"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
