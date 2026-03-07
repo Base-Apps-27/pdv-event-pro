@@ -39,9 +39,20 @@ export default function ArtsTypeDance({ seg, updateField, isUnica }) {
         </div>
       </div>
 
+      {/* Outfit and special items */}
+      <div>
+        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Vestuario (Colores)', 'Outfit (Colors)')}</label>
+        <AutoGrowTextarea value={seg.dance_outfit_colors || ''} onChange={e => updateField('dance_outfit_colors', e.target.value)} placeholder={t('Describe los colores y estilos...', 'Describe colors and styles...')} minRows={2} />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Artículos Especiales (Alas, Banderas, etc.)', 'Special Items (Wings, Flags, etc.)')}</label>
+        <AutoGrowTextarea value={seg.dance_special_items || ''} onChange={e => updateField('dance_special_items', e.target.value)} placeholder={t('Alas, banderas, accesorios...', 'Wings, flags, accessories...')} minRows={2} />
+      </div>
+
       {/* Song toggle — dance always shows songs (dance_has_song defaults to true visually 
-           because dance almost always has music, but we still save the toggle for parity with the schema) */}
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
+            because dance almost always has music, but we still save the toggle for parity with the schema) */}
+       <label className="flex items-center gap-2 text-sm cursor-pointer">
         <input type="checkbox" checked={seg.dance_has_song !== false} onChange={e => updateField('dance_has_song', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />
         {t('Incluye playlist/canción(es)', 'Includes playlist/song(s)')}
       </label>

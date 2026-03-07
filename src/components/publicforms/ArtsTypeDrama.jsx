@@ -24,14 +24,25 @@ export default function ArtsTypeDrama({ seg, updateField, isUnica }) {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Inicio', 'Start Cue')}</label>
-          <AutoGrowTextarea value={seg.drama_start_cue || ''} onChange={e => updateField('drama_start_cue', e.target.value)} minRows={2} />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Fin', 'End Cue')}</label>
-          <AutoGrowTextarea value={seg.drama_end_cue || ''} onChange={e => updateField('drama_end_cue', e.target.value)} minRows={2} />
-        </div>
+       <div>
+         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Inicio', 'Start Cue')}</label>
+         <AutoGrowTextarea value={seg.drama_start_cue || ''} onChange={e => updateField('drama_start_cue', e.target.value)} minRows={2} />
+       </div>
+       <div>
+         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Cue de Fin', 'End Cue')}</label>
+         <AutoGrowTextarea value={seg.drama_end_cue || ''} onChange={e => updateField('drama_end_cue', e.target.value)} minRows={2} />
+       </div>
+      </div>
+
+      {/* Outfit and special items */}
+      <div>
+       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Vestuario (Colores)', 'Outfit (Colors)')}</label>
+       <AutoGrowTextarea value={seg.drama_outfit_colors || ''} onChange={e => updateField('drama_outfit_colors', e.target.value)} placeholder={t('Describe los colores y estilos...', 'Describe colors and styles...')} minRows={2} />
+      </div>
+
+      <div>
+       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Artículos Especiales (Props, etc.)', 'Special Items (Props, etc.)')}</label>
+       <AutoGrowTextarea value={seg.drama_special_items || ''} onChange={e => updateField('drama_special_items', e.target.value)} placeholder={t('Props, accesorios, elementos especiales...', 'Props, accessories, special elements...')} minRows={2} />
       </div>
       <label className="flex items-center gap-2 text-sm cursor-pointer">
         <input type="checkbox" checked={seg.drama_has_song || false} onChange={e => updateField('drama_has_song', e.target.checked)} className="w-4 h-4 accent-[#1F8A70]" />

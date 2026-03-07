@@ -23,17 +23,28 @@ export default function ArtsTypeSpokenWord({ seg, updateField }) {
           placeholder={t('Título, tema y contexto...', 'Title, theme, and context...')} minRows={2} />
       </div>
       <div>
-        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
-        <select value={seg.spoken_word_mic_position || ''} onChange={e => updateField('spoken_word_mic_position', e.target.value)}
-          className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]">
-          <option value="">{t('Seleccione...', 'Select...')}</option>
-          <option value="headset">Headset</option>
-          <option value="handheld">Handheld</option>
-          <option value="stand">{t('Atril / Stand', 'On a Stand')}</option>
-          <option value="off_stage">{t('Fuera del escenario', 'Off Stage')}</option>
-          <option value="lapel">Lapel</option>
-          <option value="podium">{t('Podio', 'Podium')}</option>
-        </select>
+       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Posición del Micrófono', 'Microphone Position')}</label>
+       <select value={seg.spoken_word_mic_position || ''} onChange={e => updateField('spoken_word_mic_position', e.target.value)}
+         className="w-full p-2.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:border-[#1F8A70]">
+         <option value="">{t('Seleccione...', 'Select...')}</option>
+         <option value="headset">Headset</option>
+         <option value="handheld">Handheld</option>
+         <option value="stand">{t('Atril / Stand', 'On a Stand')}</option>
+         <option value="off_stage">{t('Fuera del escenario', 'Off Stage')}</option>
+         <option value="lapel">Lapel</option>
+         <option value="podium">{t('Podio', 'Podium')}</option>
+       </select>
+      </div>
+
+      {/* Outfit and special items */}
+      <div>
+       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Vestuario (Colores)', 'Outfit (Colors)')}</label>
+       <AutoGrowTextarea value={seg.spoken_word_outfit_colors || ''} onChange={e => updateField('spoken_word_outfit_colors', e.target.value)} placeholder={t('Describe los colores y estilos...', 'Describe colors and styles...')} minRows={2} />
+      </div>
+
+      <div>
+       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Artículos Especiales', 'Special Items')}</label>
+       <AutoGrowTextarea value={seg.spoken_word_special_items || ''} onChange={e => updateField('spoken_word_special_items', e.target.value)} placeholder={t('Props, accesorios, elementos especiales...', 'Props, accessories, special elements...')} minRows={2} />
       </div>
       <div className="space-y-2">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{t('📎 ARCHIVOS', '📎 FILES')}</p>
