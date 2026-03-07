@@ -129,21 +129,14 @@ Deno.serve(async (req) => {
         // Verify segment exists and is correct type (DECISION-007: validation before write)
         const segment = await base44.asServiceRole.entities.Segment.get(segment_id);
         if (!segment) {
-             if (idempotencyKey) {
-                const existing = await base44.asServiceRole.entities.PublicFormIdempotency.filter({ idempotency_key: idempotencyKey });
-                if (existing.length) await base44.asServiceRole.entities.PublicFormIdempotency.update(existing[0].id, { status: 'failed' });
-             }
-             return Response.json({ error: "Segment not found" }, { status: 404, headers: corsHeaders });
+            return Response.json({ error: "Segment not found" }, { status: 404, headers: corsHeaders });
         }
         
         // Validate segment is message-type (Plenaria, Predica, Mensaje, Message)
         const VALID_TYPES = ['plenaria', 'predica', 'mensaje', 'message'];
-        if (!VALID_TYPES.includes((segment.segment_type || '').toLowerCase())) {
+        const segmentType = (segment.segment_type || '').toLowerCase();
+        if (!VALID_TYPES.includes(segmentType)) {
             console.warn(`[SpeakerSubmission] Rejected: segment ${segment_id} is type "${segment.segment_type}", not a message type`);
-            if (idempotencyKey) {
-                const existing = await base44.asServiceRole.entities.PublicFormIdempotency.filter({ idempotency_key: idempotencyKey });
-                if (existing.length) await base44.asServiceRole.entities.PublicFormIdempotency.update(existing[0].id, { status: 'failed' });
-            }
             return Response.json({ error: "This segment does not accept speaker submissions" }, { status: 403, headers: corsHeaders });
         }
 
