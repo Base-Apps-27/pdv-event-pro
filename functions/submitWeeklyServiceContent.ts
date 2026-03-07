@@ -310,13 +310,15 @@ Deno.serve(async (req) => {
             console.log(`[INLINE_PROCESS] Local regex parsed ${parsedData.sections.length} verse references`);
 
             // PIPELINE 2: Extract Key Takeaways (bilingual) & Verses via LLM
-            // 2026-03-01: Bilingual takeaways — LLM detects source language, returns EN + ES.
-            // Stored as key_takeaways_en, key_takeaways_es, source_language on parsed_verse_data.
-            // Legacy key_takeaways kept for backward compat (= source language version).
-            try {
-                if (content && content.length > 100) {
-                    console.log(`[TAKEAWAYS_PIPELINE] Starting bilingual LLM extraction for submission`);
-                    const prompt = `
+             // 2026-03-01: Bilingual takeaways — LLM detects source language, returns EN + ES.
+             // Stored as key_takeaways_en, key_takeaways_es, source_language on parsed_verse_data.
+             // Legacy key_takeaways kept for backward compat (= source language version).
+             // 2026-03-07 FIX: Skip LLM on public forms (no auth context). Regex-only is sufficient.
+             try {
+                 const authed = await base44.auth.isAuthenticated();
+                 if (content && content.length > 100 && authed) {
+                     console.log(`[TAKEAWAYS_PIPELINE] Starting bilingual LLM extraction for submission`);
+                     const prompt = `
 You are an expert bilingual (English/Spanish) sermon analysis assistant.
 
 STEP 1: Detect the primary language of the speaker notes below. It will be either English ("en") or Spanish ("es").
