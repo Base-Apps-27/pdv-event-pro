@@ -204,7 +204,8 @@ const TYPE_RENDERERS = {
 
 export default function ArtsResourcesSection({ segment, language = 'es' }) {
   if (!segment) return null;
-  const artTypes = segment.art_types || [];
+  // 2026-03-07: Handle both root-level and nested data.art_types
+  const artTypes = segment.art_types || segment.data?.art_types || [];
   if (artTypes.length === 0) return null;
 
   // Use arts_type_order for sequencing, fall back to art_types array order
@@ -264,21 +265,30 @@ export default function ArtsResourcesSection({ segment, language = 'es' }) {
       })}
 
       {/* Run of show PDF — bottom of arts section */}
-      {segment.arts_run_of_show_url && (Array.isArray(segment.arts_run_of_show_url) ? segment.arts_run_of_show_url : segment.arts_run_of_show_url.split(',')).map((u, i, arr) => u.trim() ? (
-        <a key={i} href={u.trim()} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-xs transition-colors mb-1">
-          <FileText className="w-4 h-4 text-red-600 shrink-0" />
-          <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}{arr.length > 1 ? ` (${i + 1})` : ''}</span>
-          <Play className="w-3 h-3 text-gray-400 shrink-0" />
-        </a>
-      ) : null)}
+      {(() => {
+       const getField = (field) => segment[field] !== undefined ? segment[field] : segment.data?.[field];
+       const artUrl = getField('arts_run_of_show_url');
+       const urls = artUrl ? (Array.isArray(artUrl) ? artUrl : artUrl.split(',')) : [];
+       return urls.map((u, i, arr) => u.trim() ? (
+         <a key={i} href={u.trim()} target="_blank" rel="noopener noreferrer"
+           className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-xs transition-colors mb-1">
+           <FileText className="w-4 h-4 text-red-600 shrink-0" />
+           <span className="flex-1 text-gray-700">{es ? 'Guía de Artes (PDF)' : 'Arts Directions (PDF)'}{arr.length > 1 ? ` (${i + 1})` : ''}</span>
+           <Play className="w-3 h-3 text-gray-400 shrink-0" />
+         </a>
+       ) : null);
+      })()}
 
       {/* Description/notes if present */}
-      {segment.description_details && (
-        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-100 whitespace-pre-wrap">
-          <span className="font-semibold text-gray-600">{es ? 'Notas:' : 'Notes:'}</span> {segment.description_details}
-        </div>
-      )}
+      {(() => {
+       const getField = (field) => segment[field] !== undefined ? segment[field] : segment.data?.[field];
+       const desc = getField('description_details');
+       return desc ? (
+         <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-100 whitespace-pre-wrap">
+           <span className="font-semibold text-gray-600">{es ? 'Notas:' : 'Notes:'}</span> {desc}
+         </div>
+       ) : null;
+      })()}
     </div>
   );
 }
