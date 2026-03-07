@@ -419,9 +419,9 @@ Deno.serve(async (req) => {
             console.log("[LEGACY_PATH] Service JSON updated successfully");
         }
 
-        // Create Version Record for audit trail — already processed, no automation needed
-        // The entity automation may still fire but processNewSubmissionVersion will see
-        // processing_status='processed' and the safety net will skip it too.
+        // Create Version Record for audit trail — marked as pending
+        // Entity automation on Segment will trigger → processSegmentSubmission function
+        // that performs verse parsing + LLM, then marks as 'processed'
         // Audit trail — primary submission
         console.log("[INLINE_PROCESS] Creating audit trail record...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
