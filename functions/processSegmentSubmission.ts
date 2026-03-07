@@ -118,8 +118,10 @@ function parseScriptureReferences(rawText) {
   return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
 }
 
+// Unified submission processor for Weekly + Event speakers (DECISION-007)
 // Entity automation triggered on Segment.submission_status → 'pending'
 // Payload: { event: { type, entity_name, entity_id }, data: currentSegment }
+// Both submitWeeklyServiceContent + submitSpeakerContent set status='pending' → triggers this
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -138,7 +140,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true, reason: 'Not pending status' });
     }
 
-    console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (submission_status=pending)`);
+    console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (unified weekly + event speaker pipeline)`);
 
     let parsedData = { type: 'empty', sections: [] };
     let scriptureReferences = '';
