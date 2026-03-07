@@ -220,23 +220,47 @@ ${content.substring(0, 15000)}`;
             parsedData.key_takeaways = detectedLang === 'en' ? aiTakeawaysEn : aiTakeawaysEs;
             console.log(`[PROCESS_SEGMENT] Detected lang=${detectedLang}, EN=${aiTakeawaysEn.length}, ES=${aiTakeawaysEs.length}`);
           } catch (llmErr) {
+            // FIX (2026-03-07): Log LLM failures for coordinator visibility, do NOT fail processing
             console.error(`[PROCESS_SEGMENT] LLM extraction failed: ${llmErr.message}`);
-            // Silent fail — fallback to regex-only
+            parsedData.llm_error = llmErr.message;
+            parsedData.llm_status = 'failed_fallback_to_regex';
+            // Fallback to regex-only — processing continues
           }
         }
 
-        // Update Segment entity with processed data
-        await base44.asServiceRole.entities.Segment.update(segmentId, {
-          parsed_verse_data: parsedData,
-          scripture_references: scriptureReferences,
-          submission_status: 'processed'
-        });
+        // Update Segment entity with processed data (FIX: explicit status tracking)
+        try {
+          await base44.asServiceRole.entities.Segment.update(segmentId, {
+            parsed_verse_data: parsedData,
+            scripture_references: scriptureReferences,
+            submission_status: 'processed'
+          });
+          console.log(`[PROCESS_SEGMENT] Segment ${segmentId} marked as processed`);
+        } catch (segmentUpdateErr) {
+          console.error(`[PROCESS_SEGMENT] CRITICAL: Failed to update segment status: ${segmentUpdateErr.message}`);
+          // Try to mark as failed in audit trail
+          try {
+            await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+              processing_status: 'failed',
+              error_message: `Segment update failed: ${segmentUpdateErr.message}`
+            });
+          } catch (auditErr) {
+            console.error(`[PROCESS_SEGMENT] Could not record failure in audit: ${auditErr.message}`);
+          }
+          throw segmentUpdateErr;
+        }
 
-        // Update audit record
-        await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-          processing_status: 'processed',
-          parsed_data_snapshot: parsedData
-        });
+        // Update audit record (FIX: capture processing result)
+        try {
+          await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+            processing_status: 'processed',
+            parsed_data_snapshot: parsedData,
+            processed_at: new Date().toISOString()
+          });
+        } catch (auditErr) {
+          console.error(`[PROCESS_SEGMENT] Warning: Failed to update audit record: ${auditErr.message}`);
+          // Non-critical — segment was already updated
+        }
 
         console.log(`[PROCESS_SEGMENT] Segment ${segmentId} processed successfully`);
       } else {
