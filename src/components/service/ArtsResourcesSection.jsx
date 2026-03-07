@@ -67,23 +67,26 @@ function LinkRow({ label, url, type = 'link' }) {
 
 function DanceSection({ seg, lang }) {
   const es = lang === 'es';
+  // 2026-03-07: Access segment fields safely from both root and data sub-object
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
   const mics = [];
-  if (seg.dance_handheld_mics > 0) mics.push(`${seg.dance_handheld_mics} handheld`);
-  if (seg.dance_headset_mics > 0) mics.push(`${seg.dance_headset_mics} headset`);
+  if (getField('dance_handheld_mics') > 0) mics.push(`${getField('dance_handheld_mics')} handheld`);
+  if (getField('dance_headset_mics') > 0) mics.push(`${getField('dance_headset_mics')} headset`);
 
   // 2026-02-28: Show songs based on data presence, NOT the dance_has_song checkbox.
   // The checkbox may not be set even when song data was submitted via the public form.
   const songs = [
-    { title: seg.dance_song_title, url: seg.dance_song_source, owner: seg.dance_song_owner },
-    { title: seg.dance_song_2_title, url: seg.dance_song_2_url, owner: seg.dance_song_2_owner },
-    { title: seg.dance_song_3_title, url: seg.dance_song_3_url, owner: seg.dance_song_3_owner },
+    { title: getField('dance_song_title'), url: getField('dance_song_source'), owner: getField('dance_song_owner') },
+    { title: getField('dance_song_2_title'), url: getField('dance_song_2_url'), owner: getField('dance_song_2_owner') },
+    { title: getField('dance_song_3_title'), url: getField('dance_song_3_url'), owner: getField('dance_song_3_owner') },
   ].filter(s => s.title || s.url);
 
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
-      {seg.dance_start_cue && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={seg.dance_start_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
-      {seg.dance_end_cue && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={seg.dance_end_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
+      {getField('dance_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('dance_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
+      {getField('dance_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('dance_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
       {songs.map((s, i) => s.url
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
@@ -94,23 +97,25 @@ function DanceSection({ seg, lang }) {
 
 function DramaSection({ seg, lang }) {
   const es = lang === 'es';
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
   const mics = [];
-  if (seg.drama_handheld_mics > 0) mics.push(`${seg.drama_handheld_mics} handheld`);
-  if (seg.drama_headset_mics > 0) mics.push(`${seg.drama_headset_mics} headset`);
+  if (getField('drama_handheld_mics') > 0) mics.push(`${getField('drama_handheld_mics')} handheld`);
+  if (getField('drama_headset_mics') > 0) mics.push(`${getField('drama_headset_mics')} headset`);
 
   // 2026-02-28: Show songs based on data presence, NOT the drama_has_song checkbox.
   // The checkbox may not be set even when song data was submitted via the public form.
   const songs = [
-    { title: seg.drama_song_title, url: seg.drama_song_source, owner: seg.drama_song_owner },
-    { title: seg.drama_song_2_title, url: seg.drama_song_2_url, owner: seg.drama_song_2_owner },
-    { title: seg.drama_song_3_title, url: seg.drama_song_3_url, owner: seg.drama_song_3_owner },
+    { title: getField('drama_song_title'), url: getField('drama_song_source'), owner: getField('drama_song_owner') },
+    { title: getField('drama_song_2_title'), url: getField('drama_song_2_url'), owner: getField('drama_song_2_owner') },
+    { title: getField('drama_song_3_title'), url: getField('drama_song_3_url'), owner: getField('drama_song_3_owner') },
   ].filter(s => s.title || s.url);
 
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
-      {seg.drama_start_cue && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={seg.drama_start_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
-      {seg.drama_end_cue && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={seg.drama_end_cue} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
+      {getField('drama_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('drama_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
+      {getField('drama_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('drama_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
       {songs.map((s, i) => s.url
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
@@ -121,61 +126,69 @@ function DramaSection({ seg, lang }) {
 
 function VideoSection({ seg, lang }) {
   const es = lang === 'es';
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
   return (
     <div className="space-y-1.5">
-      {seg.video_name && <InfoRow label={es ? 'Nombre' : 'Name'} value={seg.video_name} />}
-      {seg.video_owner && <InfoRow label={es ? 'Responsable' : 'Owner'} value={seg.video_owner} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
-      {seg.video_location && <InfoRow label={es ? 'Ubicación' : 'Location'} value={seg.video_location} />}
-      {seg.video_length_sec > 0 && <InfoRow label={es ? 'Duración' : 'Duration'} value={`${Math.floor(seg.video_length_sec / 60)}:${String(seg.video_length_sec % 60).padStart(2, '0')}`} />}
-      <LinkRow label={seg.video_url_meta?.title || seg.video_name || 'Video'} url={seg.video_url} type="video" />
+      {getField('video_name') && <InfoRow label={es ? 'Nombre' : 'Name'} value={getField('video_name')} />}
+      {getField('video_owner') && <InfoRow label={es ? 'Responsable' : 'Owner'} value={getField('video_owner')} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
+      {getField('video_location') && <InfoRow label={es ? 'Ubicación' : 'Location'} value={getField('video_location')} />}
+      {getField('video_length_sec') > 0 && <InfoRow label={es ? 'Duración' : 'Duration'} value={`${Math.floor(getField('video_length_sec') / 60)}:${String(getField('video_length_sec') % 60).padStart(2, '0')}`} />}
+      <LinkRow label={getField('video_url_meta')?.title || getField('video_name') || 'Video'} url={getField('video_url')} type="video" />
     </div>
   );
 }
 
 function SpokenWordSection({ seg, lang }) {
   const es = lang === 'es';
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
   const micLabels = { headset: 'Headset', handheld: 'Handheld', stand: es ? 'Atril' : 'Stand', off_stage: es ? 'Fuera del escenario' : 'Off Stage', lapel: 'Lapel', podium: es ? 'Podio' : 'Podium' };
   return (
     <div className="space-y-1.5">
-      {seg.spoken_word_speaker && <InfoRow label={es ? 'Orador' : 'Speaker'} value={seg.spoken_word_speaker} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
-      {seg.spoken_word_description && <InfoRow label={es ? 'Pieza' : 'Piece'} value={seg.spoken_word_description} />}
-      {seg.spoken_word_mic_position && <InfoRow label={es ? 'Micrófono' : 'Mic'} value={micLabels[seg.spoken_word_mic_position] || seg.spoken_word_mic_position} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
-      <LinkRow label={es ? 'Guión / Script' : 'Script'} url={seg.spoken_word_script_url} type="pdf" />
-      <LinkRow label={es ? 'Audio del Spoken Word' : 'Spoken Word Audio'} url={seg.spoken_word_audio_url} type="audio" />
+      {getField('spoken_word_speaker') && <InfoRow label={es ? 'Orador' : 'Speaker'} value={getField('spoken_word_speaker')} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
+      {getField('spoken_word_description') && <InfoRow label={es ? 'Pieza' : 'Piece'} value={getField('spoken_word_description')} />}
+      {getField('spoken_word_mic_position') && <InfoRow label={es ? 'Micrófono' : 'Mic'} value={micLabels[getField('spoken_word_mic_position')] || getField('spoken_word_mic_position')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
+      <LinkRow label={es ? 'Guión / Script' : 'Script'} url={getField('spoken_word_script_url')} type="pdf" />
+      <LinkRow label={es ? 'Audio del Spoken Word' : 'Spoken Word Audio'} url={getField('spoken_word_audio_url')} type="audio" />
       {/* 2026-02-28: Show music based on data presence, NOT the spoken_word_has_music checkbox.
        * The checkbox may not be set even when music data was submitted. */}
-      {(seg.spoken_word_music_title || seg.spoken_word_music_url) && (
-        seg.spoken_word_music_url
-          ? <LinkRow label={seg.spoken_word_music_title || (es ? 'Música de fondo' : 'Background Music')} url={seg.spoken_word_music_url} type="song" />
-          : <InfoRow label={es ? 'Música' : 'Music'} value={`${seg.spoken_word_music_title}${seg.spoken_word_music_owner ? ` — ${seg.spoken_word_music_owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
+      {(getField('spoken_word_music_title') || getField('spoken_word_music_url')) && (
+        getField('spoken_word_music_url')
+          ? <LinkRow label={getField('spoken_word_music_title') || (es ? 'Música de fondo' : 'Background Music')} url={getField('spoken_word_music_url')} type="song" />
+          : <InfoRow label={es ? 'Música' : 'Music'} value={`${getField('spoken_word_music_title')}${getField('spoken_word_music_owner') ? ` — ${getField('spoken_word_music_owner')}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
       )}
-      {seg.spoken_word_notes && <InfoRow label={es ? 'Notas' : 'Notes'} value={seg.spoken_word_notes} />}
+      {getField('spoken_word_notes') && <InfoRow label={es ? 'Notas' : 'Notes'} value={getField('spoken_word_notes')} />}
     </div>
   );
 }
 
 function PaintingSection({ seg, lang }) {
   const es = lang === 'es';
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
   const needs = [];
-  if (seg.painting_needs_easel) needs.push(es ? 'Caballete' : 'Easel');
-  if (seg.painting_needs_drop_cloth) needs.push(es ? 'Protección de piso' : 'Drop Cloth');
-  if (seg.painting_needs_lighting) needs.push(es ? 'Iluminación especial' : 'Special Lighting');
+  if (getField('painting_needs_easel')) needs.push(es ? 'Caballete' : 'Easel');
+  if (getField('painting_needs_drop_cloth')) needs.push(es ? 'Protección de piso' : 'Drop Cloth');
+  if (getField('painting_needs_lighting')) needs.push(es ? 'Iluminación especial' : 'Special Lighting');
 
   return (
     <div className="space-y-1.5">
       {needs.length > 0 && <InfoRow label={es ? 'Necesita' : 'Needs'} value={needs.join(', ')} icon={<Palette className="w-3.5 h-3.5 text-gray-400" />} />}
-      {seg.painting_canvas_size && <InfoRow label={es ? 'Lienzo' : 'Canvas'} value={seg.painting_canvas_size} />}
-      {seg.painting_other_setup && <InfoRow label="Setup" value={seg.painting_other_setup} />}
-      {seg.painting_notes && <InfoRow label={es ? 'Notas' : 'Notes'} value={seg.painting_notes} />}
+      {getField('painting_canvas_size') && <InfoRow label={es ? 'Lienzo' : 'Canvas'} value={getField('painting_canvas_size')} />}
+      {getField('painting_other_setup') && <InfoRow label="Setup" value={getField('painting_other_setup')} />}
+      {getField('painting_notes') && <InfoRow label={es ? 'Notas' : 'Notes'} value={getField('painting_notes')} />}
     </div>
   );
 }
 
 function OtherSection({ seg, lang }) {
-  if (!seg.art_other_description) return null;
+  const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
+  
+  if (!getField('art_other_description')) return null;
   return (
     <div className="space-y-1.5">
-      <InfoRow label={lang === 'es' ? 'Descripción' : 'Description'} value={seg.art_other_description} />
+      <InfoRow label={lang === 'es' ? 'Descripción' : 'Description'} value={getField('art_other_description')} />
     </div>
   );
 }
