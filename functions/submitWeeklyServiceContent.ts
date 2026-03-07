@@ -423,7 +423,7 @@ Deno.serve(async (req) => {
         // Entity automation on Segment will trigger → processSegmentSubmission function
         // that performs verse parsing + LLM, then marks as 'processed'
         // Audit trail — primary submission
-        console.log("[INLINE_PROCESS] Creating audit trail record...");
+        console.log("[SUBMIT] Creating audit trail record (marked pending)...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
             segment_id: segment_id,
             content: content,
@@ -434,14 +434,14 @@ Deno.serve(async (req) => {
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
             source: 'weekly_service_form',
-            processing_status: 'processed',
-            // 2026-03-01: Browser/device metadata for audit trail
+            processing_status: 'pending',
+            // Browser/device metadata for audit trail
             ...(device_info ? { device_info } : {}),
         });
 
         // Audit trail — mirrored submissions (dynamic)
         for (const mirrorId of effectiveMirrors) {
-            console.log(`[MIRROR] Creating audit trail for mirrored submission: ${mirrorId}`);
+            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId}`);
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: mirrorId,
                 content: content,
@@ -452,12 +452,12 @@ Deno.serve(async (req) => {
                 parsed_data_snapshot: parsedData,
                 submitted_at: new Date().toISOString(),
                 source: 'weekly_service_form_mirror',
-                processing_status: 'processed',
-                // 2026-03-01: Same device_info for mirrored audit records
+                processing_status: 'pending',
+                // Same device_info for mirrored audit records
                 ...(device_info ? { device_info } : {}),
             });
         }
-        console.log("[INLINE_PROCESS] Audit record(s) created");
+        console.log("[SUBMIT] Audit record(s) created (pending async processing)");
 
         // EXPLICIT CACHE REFRESH: Since Segment entity automation is disabled,
         // we explicitly trigger a cache rebuild so the public displays update instantly.
