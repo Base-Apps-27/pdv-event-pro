@@ -343,9 +343,9 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               </div>
             )}
 
-            {/* Operator Resource Links (Next) */}
+            {/* Operator Resource Links (Next) — 2026-03-07: arrHas guards against empty arrays */}
             <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-gray-100">
-              {getSegmentData(nextSegment, 'presentation_url') && (
+              {arrHas(getSegmentData(nextSegment, 'presentation_url')) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -353,13 +353,13 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   className="h-6 px-2 text-xs gap-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <a href={getSegmentData(nextSegment, 'presentation_url')} target="_blank" rel="noopener noreferrer">
+                  <a href={firstUrl(getSegmentData(nextSegment, 'presentation_url'))} target="_blank" rel="noopener noreferrer">
                     <Monitor className="w-3 h-3" />
                     <span>Slides</span>
                   </a>
                 </Button>
               )}
-              {getSegmentData(nextSegment, 'notes_url') && (
+              {arrHas(getSegmentData(nextSegment, 'notes_url')) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -367,7 +367,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   className="h-6 px-2 text-xs gap-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <a href={getSegmentData(nextSegment, 'notes_url')} target="_blank" rel="noopener noreferrer">
+                  <a href={firstUrl(getSegmentData(nextSegment, 'notes_url'))} target="_blank" rel="noopener noreferrer">
                     <BookOpen className="w-3 h-3" />
                     <span>Notas</span>
                   </a>
