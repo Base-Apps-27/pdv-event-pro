@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n.jsx";
@@ -551,6 +551,9 @@ export default function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Account Deletion Section — 2026-03-07: iOS App Store compliance */}
+      <AccountDeletionSection />
 
       {/* Bulk Action Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
