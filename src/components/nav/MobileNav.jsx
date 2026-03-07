@@ -3,7 +3,7 @@
 // Shared navItems data with desktop sidebar. Permission-gated.
 
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 import { hasPermission, hasDashboardAccess } from "@/components/utils/permissions";
@@ -17,11 +17,22 @@ const GRADIENT_H = 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%
 export default function MobileNav({ user }) {
   const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
 
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
+
+  // Apple HIG: Tapping active tab pops to root (2026-03-07)
+  const handleTabClick = (item) => {
+    const isActive = isPageActive(item.matchPages);
+    if (isActive) {
+      // Pop to root by navigating to the tab's main page
+      navigate(createPageUrl(item.page), { replace: true });
+      // Scroll to top (let parent page handle scroll reset if needed)
+    }
+  };
 
   const visiblePrimary = primaryNav.filter(item => {
     if (!item.permission) return true;
@@ -56,9 +67,9 @@ export default function MobileNav({ user }) {
             const active = isPageActive(item.matchPages);
             const Icon = item.icon;
             return (
-              <Link
+              <button
                 key={item.id}
-                to={createPageUrl(item.page)}
+                onClick={() => handleTabClick(item)}
                 className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors no-select ${
                   active ? 'text-[#1F8A70]' : 'text-gray-400'
                 }`}
@@ -70,7 +81,7 @@ export default function MobileNav({ user }) {
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
-              </Link>
+              </button>
             );
           })}
 
@@ -79,9 +90,9 @@ export default function MobileNav({ user }) {
             const active = isPageActive(item.matchPages);
             const Icon = item.icon;
             return (
-              <Link
+              <button
                 key={item.id}
-                to={createPageUrl(item.page)}
+                onClick={() => handleTabClick(item)}
                 className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors no-select ${
                   active ? 'text-[#1F8A70]' : 'text-gray-400'
                 }`}
@@ -93,7 +104,7 @@ export default function MobileNav({ user }) {
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-medium leading-tight truncate max-w-[52px]">{t(item.labelKey)}</span>
-              </Link>
+              </button>
             );
           })}
 
