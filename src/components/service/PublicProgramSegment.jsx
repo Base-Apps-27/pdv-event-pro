@@ -63,7 +63,13 @@ export default function PublicProgramSegment({
   // speaker resources (slides, notes), video URLs, song URLs, run-of-show PDF.
   // 2026-03-04 FIX: URL fields are arrays — empty [] is truthy in JS.
   // Must check .length > 0 to avoid phantom "Recursos" buttons on segments with no actual URLs.
-  const arrHas = (v) => Array.isArray(v) ? v.length > 0 : !!v;
+  // 2026-03-07 FIX: Also filter out arrays containing only empty/whitespace strings
+  // (e.g. [""] or [" "]) which are functionally empty but pass .length > 0.
+  const arrHas = (v) => {
+    if (Array.isArray(v)) return v.some(item => typeof item === 'string' ? item.trim().length > 0 : !!item);
+    if (typeof v === 'string') return v.trim().length > 0;
+    return !!v;
+  };
   const hasArtsOperationalData = (segment.art_types?.length > 0) && (
     segment.drama_handheld_mics > 0 || segment.drama_headset_mics > 0 ||
     segment.drama_start_cue || segment.drama_end_cue ||
