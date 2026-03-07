@@ -14,6 +14,22 @@ import { getSegmentData } from "@/components/utils/segmentDataUtils";
  * Optional: currentStreamBlock shows what the livestream is currently on,
  * independently of the main room program. Clicking LS line triggers onStreamBlockClick.
  */
+
+// 2026-03-07 FIX: Resource link guard — identical to PublicProgramSegment.arrHas.
+// Prevents phantom Slides/Notes buttons when entity fields are null, [], or [""].
+// getSegmentData may return [], null, "" — all are "empty" but [] is truthy in JS.
+const arrHas = (v) => {
+  if (Array.isArray(v)) return v.some(item => typeof item === 'string' ? item.trim().length > 0 : !!item);
+  if (typeof v === 'string') return v.trim().length > 0;
+  return !!v;
+};
+
+// Extract the first usable URL from a field value (array or string)
+const firstUrl = (v) => {
+  if (Array.isArray(v)) return v.find(item => typeof item === 'string' && item.trim().length > 0) || '';
+  return typeof v === 'string' ? v : '';
+};
+
 export default function LiveStatusCard({ segments, currentTime, onScrollTo, liveAdjustmentEnabled, serviceDate, currentStreamBlock, onStreamBlockClick }) {
   const { t } = useLanguage();
   // Helper to parse "HH:MM" to Date object
