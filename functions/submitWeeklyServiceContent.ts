@@ -293,10 +293,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
 
-        // 2026-03-07: SUBMISSION ONLY MODE (DECISION-007)
-        // No inline processing. Mark for async automation.
-        // Coordinators: submission marked 'pending' triggers entity automation → async processing
-        // Speakers: Rapid response, no LLM wait blocking submit
+        // 2026-03-07: SUBMISSION ONLY MODE (DECISION-007 — Unified Architecture)
+        // No inline processing. Mark for async automation via Segment update.
+        // Applies to both weekly (submitWeeklyServiceContent) + event speakers (submitSpeakerContent).
+        // Both pipelines: submission_status='pending' → processSegmentSubmission automation
 
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
