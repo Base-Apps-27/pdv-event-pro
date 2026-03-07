@@ -261,21 +261,23 @@ ${content.substring(0, 15000)}`;
           throw segmentUpdateErr;
         }
 
-        // Update audit record (FIX: capture processing result)
-        try {
-          await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-            processing_status: 'processed',
-            parsed_data_snapshot: parsedData,
-            processed_at: new Date().toISOString()
-          });
-        } catch (auditErr) {
-          console.error(`[PROCESS_SEGMENT] Warning: Failed to update audit record: ${auditErr.message}`);
-          // Non-critical — segment was already updated
+        // Update audit record ONLY if it exists (speaker submission path)
+        if (submission) {
+          try {
+            await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+              processing_status: 'processed',
+              parsed_data_snapshot: parsedData,
+              processed_at: new Date().toISOString()
+            });
+          } catch (auditErr) {
+            console.error(`[PROCESS_SEGMENT] Warning: Failed to update audit record: ${auditErr.message}`);
+            // Non-critical — segment was already updated
+          }
         }
 
         console.log(`[PROCESS_SEGMENT] Segment ${segmentId} processed successfully`);
       } else {
-        console.log(`[PROCESS_SEGMENT] No pending submission found for ${segmentId}`);
+        console.log(`[PROCESS_SEGMENT] No content found for ${segmentId} (neither SpeakerSubmissionVersion nor submitted_content)`);
       }
     } else {
       console.log(`[PROCESS_SEGMENT] Slides-only mode — marking processed without parsing`);
