@@ -218,9 +218,9 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
               </div>
             )}
 
-            {/* Operator Resource Links */}
+            {/* Operator Resource Links — 2026-03-07: arrHas guards against empty arrays */}
             <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-gray-100">
-              {getSegmentData(currentSegment, 'presentation_url') && (
+              {arrHas(getSegmentData(currentSegment, 'presentation_url')) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -228,13 +228,13 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   className={`h-7 px-2 border text-xs gap-1.5 ${getSegmentData(currentSegment, 'content_is_slides_only') ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'border-blue-200 text-blue-700 hover:bg-blue-50'}`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <a href={getSegmentData(currentSegment, 'presentation_url')} target="_blank" rel="noopener noreferrer">
+                  <a href={firstUrl(getSegmentData(currentSegment, 'presentation_url'))} target="_blank" rel="noopener noreferrer">
                     {getSegmentData(currentSegment, 'content_is_slides_only') ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
                     <span>Slides</span>
                   </a>
                 </Button>
               )}
-              {getSegmentData(currentSegment, 'notes_url') && (
+              {arrHas(getSegmentData(currentSegment, 'notes_url')) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -242,7 +242,7 @@ export default function LiveStatusCard({ segments, currentTime, onScrollTo, live
                   className="h-7 px-2 border border-purple-200 text-purple-700 hover:bg-purple-50 text-xs gap-1.5"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <a href={getSegmentData(currentSegment, 'notes_url')} target="_blank" rel="noopener noreferrer">
+                  <a href={firstUrl(getSegmentData(currentSegment, 'notes_url'))} target="_blank" rel="noopener noreferrer">
                     <BookOpen className="w-3 h-3" />
                     <span>Notas</span>
                   </a>
