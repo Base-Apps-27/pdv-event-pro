@@ -777,4 +777,14 @@ export const es = {
   'director.accessDenied': 'Acceso Denegado',
   'director.accessDeniedDesc': 'No tienes permiso para acceder al Director Console.',
   'director.backToProgram': 'Volver al Programa',
+
+  // Account Deletion (2026-03-07 — iOS App Store compliance)
+  'account.deleteTitle': 'Eliminar Cuenta',
+  'account.deleteDescription': 'Elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.',
+  'account.deleteButton': 'Eliminar Mi Cuenta',
+  'account.deleteConfirmTitle': '¿Estás seguro?',
+  'account.deleteConfirmDescription': 'Esto eliminará permanentemente tu cuenta y todos tus datos. Esta acción no se puede revertir.',
+  'account.deleteConfirmButton': 'Sí, Eliminar Mi Cuenta',
+  'account.deleteSuccess': 'Solicitud de eliminación de cuenta enviada.',
+  'account.deleteError': 'Error al enviar la solicitud de eliminación.',
 };

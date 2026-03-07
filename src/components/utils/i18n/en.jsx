@@ -777,4 +777,14 @@ export const en = {
   'director.accessDenied': 'Access Denied',
   'director.accessDeniedDesc': 'You do not have permission to access the Director Console.',
   'director.backToProgram': 'Back to Program',
+
+  // Account Deletion (2026-03-07 — iOS App Store compliance)
+  'account.deleteTitle': 'Delete Account',
+  'account.deleteDescription': 'Permanently delete your account and all associated data. This action cannot be undone.',
+  'account.deleteButton': 'Delete My Account',
+  'account.deleteConfirmTitle': 'Are you sure?',
+  'account.deleteConfirmDescription': 'This will permanently delete your account and remove all your data. This action cannot be reversed.',
+  'account.deleteConfirmButton': 'Yes, Delete My Account',
+  'account.deleteSuccess': 'Account deletion request submitted.',
+  'account.deleteError': 'Failed to submit deletion request.',
 };
