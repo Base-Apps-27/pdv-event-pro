@@ -226,8 +226,8 @@ export default function MyProgram() {
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
-      {/* Header — thin bar: name + date */}
-      <div style={gradientStyle} className="py-2 px-4 shadow-sm">
+      {/* Header — thin bar: name + date + profile link for MyProgram-only users */}
+       <div style={gradientStyle} className="py-2 px-4 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-white font-bold text-sm truncate">{contextName}</span>
@@ -235,7 +235,16 @@ export default function MyProgram() {
               <span className="text-orange-300 text-[10px] font-semibold">🧪 TEST MODE</span>
             )}
           </div>
-          <span className="text-white/80 text-xs whitespace-nowrap ml-3">{contextDate ? formatDateET(contextDate) : ''}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-white/80 text-xs whitespace-nowrap">{contextDate ? formatDateET(contextDate) : ''}</span>
+            <Link
+              to={createPageUrl('Profile')}
+              className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors no-select"
+              title={t('nav.profile')}
+            >
+              <User className="w-4 h-4 text-white" />
+            </Link>
+          </div>
         </div>
       </div>
 
