@@ -255,23 +255,32 @@ export default function MobileNav({ user }) {
             </div>
 
             {/* Footer actions */}
-            <div className="border-t border-gray-100 p-4 flex gap-2">
-              <button
-                onClick={() => {
-                  setLanguage(language === 'es' ? 'en' : 'es');
-                  setSheetOpen(false);
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+            <div className="border-t border-gray-100 p-4 space-y-2">
+              <Link
+                to={createPageUrl('Profile')}
+                onClick={() => setSheetOpen(false)}
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors no-select"
               >
-                <Languages className="w-4 h-4" />
-                {language === 'es' ? 'English' : 'Español'}
-              </button>
-              <button
-                onClick={() => base44.auth.logout()}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+                👤 {t('nav.profile')}
+              </Link>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setLanguage(language === 'es' ? 'en' : 'es');
+                    setSheetOpen(false);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+                >
+                  <Languages className="w-4 h-4" />
+                  {language === 'es' ? 'English' : 'Español'}
+                </button>
+                <button
+                  onClick={() => base44.auth.logout()}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Safe area padding for iOS */}
