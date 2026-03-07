@@ -18,6 +18,17 @@ import {
   ArrowRight, Palette, BookOpen
 } from 'lucide-react';
 
+/**
+ * 2026-03-07 FIX: Check if a URL field has actual content.
+ * URL fields are schema type "array" — empty arrays [] are truthy in JS,
+ * which caused songs to pass filters but render nothing (LinkRow returns null for []).
+ * This helper properly checks for actual URL strings inside the value.
+ */
+function hasUrlContent(url) {
+  if (Array.isArray(url)) return url.some(u => typeof u === 'string' && u.trim());
+  return typeof url === 'string' && url.trim().length > 0;
+}
+
 const TYPE_LABELS = {
   DANCE: { es: '🩰 Danza', en: '🩰 Dance' },
   DRAMA: { es: '🎭 Drama', en: '🎭 Drama' },
@@ -69,25 +80,27 @@ function DanceSection({ seg, lang }) {
   const es = lang === 'es';
   // 2026-03-07: Access segment fields safely from both root and data sub-object
   const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
-  
+
   const mics = [];
   if (getField('dance_handheld_mics') > 0) mics.push(`${getField('dance_handheld_mics')} handheld`);
   if (getField('dance_headset_mics') > 0) mics.push(`${getField('dance_headset_mics')} headset`);
 
   // 2026-02-28: Show songs based on data presence, NOT the dance_has_song checkbox.
   // The checkbox may not be set even when song data was submitted via the public form.
+  // 2026-03-07 FIX: URL fields are schema type "array" — [] is truthy in JS.
+  // Must check for actual URL content, not just truthiness, to avoid silent render failures.
   const songs = [
     { title: getField('dance_song_title'), url: getField('dance_song_source'), owner: getField('dance_song_owner') },
     { title: getField('dance_song_2_title'), url: getField('dance_song_2_url'), owner: getField('dance_song_2_owner') },
     { title: getField('dance_song_3_title'), url: getField('dance_song_3_url'), owner: getField('dance_song_3_owner') },
-  ].filter(s => s.title || s.url);
+  ].filter(s => s.title || hasUrlContent(s.url));
 
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {getField('dance_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('dance_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {getField('dance_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('dance_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
-      {songs.map((s, i) => s.url
+      {songs.map((s, i) => hasUrlContent(s.url)
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
       )}
@@ -98,25 +111,25 @@ function DanceSection({ seg, lang }) {
 function DramaSection({ seg, lang }) {
   const es = lang === 'es';
   const getField = (field) => seg[field] !== undefined ? seg[field] : seg.data?.[field];
-  
+
   const mics = [];
   if (getField('drama_handheld_mics') > 0) mics.push(`${getField('drama_handheld_mics')} handheld`);
   if (getField('drama_headset_mics') > 0) mics.push(`${getField('drama_headset_mics')} headset`);
 
   // 2026-02-28: Show songs based on data presence, NOT the drama_has_song checkbox.
-  // The checkbox may not be set even when song data was submitted via the public form.
+  // 2026-03-07 FIX: Use hasUrlContent() — same empty-array fix as DanceSection.
   const songs = [
     { title: getField('drama_song_title'), url: getField('drama_song_source'), owner: getField('drama_song_owner') },
     { title: getField('drama_song_2_title'), url: getField('drama_song_2_url'), owner: getField('drama_song_2_owner') },
     { title: getField('drama_song_3_title'), url: getField('drama_song_3_url'), owner: getField('drama_song_3_owner') },
-  ].filter(s => s.title || s.url);
+  ].filter(s => s.title || hasUrlContent(s.url));
 
   return (
     <div className="space-y-1.5">
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {getField('drama_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('drama_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {getField('drama_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('drama_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
-      {songs.map((s, i) => s.url
+      {songs.map((s, i) => hasUrlContent(s.url)
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
       )}
@@ -152,9 +165,9 @@ function SpokenWordSection({ seg, lang }) {
       <LinkRow label={es ? 'Guión / Script' : 'Script'} url={getField('spoken_word_script_url')} type="pdf" />
       <LinkRow label={es ? 'Audio del Spoken Word' : 'Spoken Word Audio'} url={getField('spoken_word_audio_url')} type="audio" />
       {/* 2026-02-28: Show music based on data presence, NOT the spoken_word_has_music checkbox.
-       * The checkbox may not be set even when music data was submitted. */}
-      {(getField('spoken_word_music_title') || getField('spoken_word_music_url')) && (
-        getField('spoken_word_music_url')
+       * 2026-03-07 FIX: Use hasUrlContent() to avoid empty-array truthiness bug. */}
+      {(getField('spoken_word_music_title') || hasUrlContent(getField('spoken_word_music_url'))) && (
+        hasUrlContent(getField('spoken_word_music_url'))
           ? <LinkRow label={getField('spoken_word_music_title') || (es ? 'Música de fondo' : 'Background Music')} url={getField('spoken_word_music_url')} type="song" />
           : <InfoRow label={es ? 'Música' : 'Music'} value={`${getField('spoken_word_music_title')}${getField('spoken_word_music_owner') ? ` — ${getField('spoken_word_music_owner')}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
       )}
