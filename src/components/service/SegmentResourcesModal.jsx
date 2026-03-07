@@ -125,6 +125,27 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
   // Collect all resources
   const resources = [];
 
+  // --- MUSIC RESOURCES (Alabanza + Worship segments) ---
+  // 2026-03-07: Display worship songs from segment if present (e.g. song_1_title, song_2_title, etc.)
+  const musicResources = [];
+  for (let i = 1; i <= 6; i++) {
+    const titleKey = i === 1 ? 'song_1_title' : `song_${i}_title`;
+    const leadKey = i === 1 ? 'song_1_lead' : `song_${i}_lead`;
+    const keyKey = i === 1 ? 'song_1_key' : `song_${i}_key`;
+    
+    const title = getData(titleKey);
+    const lead = getData(leadKey);
+    const key = getData(keyKey);
+    
+    if (title) {
+      musicResources.push({
+        title: title,
+        subtitle: [lead, key].filter(Boolean).join(' • '),
+        type: 'song'
+      });
+    }
+  }
+
   // --- SPEAKER RESOURCES (Slides, Notes, Verses, Key Points) ---
   const speakerResources = [];
   
@@ -168,6 +189,13 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
       }),
       type: 'verses',
       icon: hasKeyTakeaways ? <Lightbulb className="w-4 h-4 text-amber-600" /> : <BookOpen className="w-4 h-4 text-green-600" />
+    });
+  }
+
+  if (musicResources.length > 0) {
+    resources.push({
+      category: language === 'es' ? 'Música' : 'Music',
+      items: musicResources
     });
   }
 
