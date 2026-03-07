@@ -787,4 +787,24 @@ export const es = {
   'account.deleteConfirmButton': 'Sí, Eliminar Mi Cuenta',
   'account.deleteSuccess': 'Solicitud de eliminación de cuenta enviada.',
   'account.deleteError': 'Error al enviar la solicitud de eliminación.',
-};
+
+  // Profile Page (2026-03-07)
+  'nav.profile': 'Perfil',
+  'profile.title': 'Configuración de Cuenta',
+  'profile.displayName': 'Nombre',
+  'profile.displayNameDesc': 'Tu nombre como aparece en toda la aplicación',
+  'profile.displayNamePlaceholder': 'Ingresa tu nombre',
+  'profile.save': 'Guardar',
+  'profile.saving': 'Guardando...',
+  'profile.cancel': 'Cancelar',
+  'profile.deleteAccount': 'Eliminar Cuenta',
+  'profile.deleteAccountDesc': 'Esta acción es permanente y no se puede deshacer',
+  'profile.deleteWarning': 'Eliminar tu cuenta eliminará permanentemente todos tus datos del sistema. Esto incluye toda tu información personal, configuración e historial.',
+  'profile.deleteButton': 'Eliminar Mi Cuenta',
+  'profile.confirmDelete': '¿Eliminar Cuenta?',
+  'profile.confirmDeleteDesc': 'Esto eliminará permanentemente tu cuenta y todos los datos asociados. No podrás recuperar esta información.',
+  'profile.deleteIrreversible': '⚠ Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente.',
+  'profile.cancelDelete': 'Cancelar',
+  'profile.deleteConfirm': 'Sí, Eliminar Mi Cuenta',
+  'profile.deleting': 'Eliminando...',
+  };
