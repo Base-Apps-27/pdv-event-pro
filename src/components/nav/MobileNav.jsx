@@ -48,7 +48,8 @@ export default function MobileNav({ user }) {
   return (
     <>
       {/* Fixed bottom tab bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 print:hidden safe-area-bottom">
+      {/* 2026-03-07: pb-[env(safe-area-inset-bottom)] ensures iOS Home Indicator clearance during active nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 print:hidden safe-area-bottom pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-center justify-around h-16 px-1">
           {/* Core primary items */}
           {visiblePrimary.slice(0, 4).map(item => {
@@ -58,7 +59,7 @@ export default function MobileNav({ user }) {
               <Link
                 key={item.id}
                 to={createPageUrl(item.page)}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors no-select ${
                   active ? 'text-[#1F8A70]' : 'text-gray-400'
                 }`}
               >
@@ -81,7 +82,7 @@ export default function MobileNav({ user }) {
               <Link
                 key={item.id}
                 to={createPageUrl(item.page)}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors no-select ${
                   active ? 'text-[#1F8A70]' : 'text-gray-400'
                 }`}
               >
@@ -100,7 +101,7 @@ export default function MobileNav({ user }) {
           {visibleSecondary.length > 0 && (
             <button
               onClick={() => setSheetOpen(true)}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 rounded-lg transition-colors no-select ${
                 sheetOpen ? 'text-[#1F8A70]' : 'text-gray-400'
               }`}
             >

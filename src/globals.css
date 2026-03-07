@@ -94,6 +94,11 @@
     @apply border-border;
   }
   
+  /* 2026-03-07: Prevent overscroll bounce on iOS/Android for native app feel */
+  html, body {
+    overscroll-behavior: none;
+  }
+
   body {
     @apply bg-background text-foreground;
     /* Inter with robust system font fallback for Safari/iOS compatibility */
@@ -214,6 +219,13 @@
 
 .border-pdv-green {
   border-color: var(--brand-green);
+}
+
+/* 2026-03-07: Prevent text selection on interactive elements for mobile app feel */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Button hover effects - 15% brightness lift */
