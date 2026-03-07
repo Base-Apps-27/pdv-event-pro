@@ -787,4 +787,24 @@ export const en = {
   'account.deleteConfirmButton': 'Yes, Delete My Account',
   'account.deleteSuccess': 'Account deletion request submitted.',
   'account.deleteError': 'Failed to submit deletion request.',
-};
+
+  // Profile Page (2026-03-07)
+  'nav.profile': 'Profile',
+  'profile.title': 'Account Settings',
+  'profile.displayName': 'Display Name',
+  'profile.displayNameDesc': 'Your name as it appears throughout the app',
+  'profile.displayNamePlaceholder': 'Enter your name',
+  'profile.save': 'Save',
+  'profile.saving': 'Saving...',
+  'profile.cancel': 'Cancel',
+  'profile.deleteAccount': 'Delete Account',
+  'profile.deleteAccountDesc': 'This action is permanent and cannot be undone',
+  'profile.deleteWarning': 'Deleting your account will permanently remove all your data from the system. This includes all personal information, settings, and history.',
+  'profile.deleteButton': 'Delete My Account',
+  'profile.confirmDelete': 'Delete Account?',
+  'profile.confirmDeleteDesc': 'This will permanently delete your account and all associated data. You will not be able to recover this information.',
+  'profile.deleteIrreversible': '⚠ This action cannot be undone. All your data will be permanently removed.',
+  'profile.cancelDelete': 'Cancel',
+  'profile.deleteConfirm': 'Delete My Account',
+  'profile.deleting': 'Deleting...',
+  };
