@@ -145,17 +145,28 @@ Deno.serve(async (req) => {
     let parsedData = { type: 'empty', sections: [] };
     let scriptureReferences = '';
 
-    // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion)
+    // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion or Segment)
     if (!segment.content_is_slides_only) {
-      // Fetch audit record to get original content
+      // Fetch audit record to get original content (speaker submission path)
       const auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
         { segment_id: segmentId, processing_status: 'pending' },
         '-submitted_at', 1
       );
 
+      // Determine content source: SpeakerSubmissionVersion (events) OR Segment.submitted_content (weekly)
+      let content = '';
+      let submission = null;
+      
       if (auditRecords.length > 0) {
-        const submission = auditRecords[0];
-        const content = submission.content || '';
+        // Speaker submission path (public form)
+        submission = auditRecords[0];
+        content = submission.content || '';
+      } else if (segment.submitted_content) {
+        // Weekly submission path (submitWeeklyServiceContent)
+        content = segment.submitted_content;
+      }
+
+      if (content) {
 
         // STEP 1: Regex verse parsing
         console.log(`[PROCESS_SEGMENT] Parsing verses via regex...`);
