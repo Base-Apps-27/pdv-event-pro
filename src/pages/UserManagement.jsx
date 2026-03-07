@@ -12,6 +12,7 @@ import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare,
 import { toast } from "sonner";
 import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n.jsx";
+import AccountDeletionSection from "@/components/settings/AccountDeletionSection";
 
 export default function UserManagement() {
   const { language, t } = useLanguage();
