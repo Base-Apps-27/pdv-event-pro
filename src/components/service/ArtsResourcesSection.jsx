@@ -85,6 +85,9 @@ function DanceSection({ seg, lang }) {
   if (getField('dance_handheld_mics') > 0) mics.push(`${getField('dance_handheld_mics')} handheld`);
   if (getField('dance_headset_mics') > 0) mics.push(`${getField('dance_headset_mics')} headset`);
 
+  // 2026-03-07: New outfit/items fields
+  const hasOutfitInfo = getField('dance_outfit_colors') || getField('dance_special_items');
+
   // 2026-02-28: Show songs based on data presence, NOT the dance_has_song checkbox.
   // The checkbox may not be set even when song data was submitted via the public form.
   // 2026-03-07 FIX: URL fields are schema type "array" — [] is truthy in JS.
@@ -100,6 +103,8 @@ function DanceSection({ seg, lang }) {
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {getField('dance_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('dance_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {getField('dance_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('dance_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
+      {getField('dance_outfit_colors') && <InfoRow label={es ? 'Vestuario' : 'Outfit'} value={getField('dance_outfit_colors')} />}
+      {getField('dance_special_items') && <InfoRow label={es ? 'Artículos especiales' : 'Special items'} value={getField('dance_special_items')} />}
       {songs.map((s, i) => hasUrlContent(s.url)
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
@@ -116,6 +121,9 @@ function DramaSection({ seg, lang }) {
   if (getField('drama_handheld_mics') > 0) mics.push(`${getField('drama_handheld_mics')} handheld`);
   if (getField('drama_headset_mics') > 0) mics.push(`${getField('drama_headset_mics')} headset`);
 
+  // 2026-03-07: New outfit/items fields
+  const hasOutfitInfo = getField('drama_outfit_colors') || getField('drama_special_items');
+
   // 2026-02-28: Show songs based on data presence, NOT the drama_has_song checkbox.
   // 2026-03-07 FIX: Use hasUrlContent() — same empty-array fix as DanceSection.
   const songs = [
@@ -129,6 +137,8 @@ function DramaSection({ seg, lang }) {
       {mics.length > 0 && <InfoRow label={es ? 'Micrófonos' : 'Mics'} value={mics.join(', ')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
       {getField('drama_start_cue') && <InfoRow label={es ? 'Cue inicio' : 'Start cue'} value={getField('drama_start_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-green-500" />} />}
       {getField('drama_end_cue') && <InfoRow label={es ? 'Cue fin' : 'End cue'} value={getField('drama_end_cue')} icon={<ArrowRight className="w-3.5 h-3.5 text-red-500" />} />}
+      {getField('drama_outfit_colors') && <InfoRow label={es ? 'Vestuario' : 'Outfit'} value={getField('drama_outfit_colors')} />}
+      {getField('drama_special_items') && <InfoRow label={es ? 'Artículos especiales' : 'Special items'} value={getField('drama_special_items')} />}
       {songs.map((s, i) => hasUrlContent(s.url)
         ? <LinkRow key={i} label={s.title || `${es ? 'Canción' : 'Song'} ${i + 1}`} url={s.url} type="song" />
         : <InfoRow key={i} label={`${es ? 'Canción' : 'Song'} ${i + 1}`} value={`${s.title}${s.owner ? ` — ${s.owner}` : ''}`} icon={<Music className="w-3.5 h-3.5 text-pink-600" />} />
@@ -162,6 +172,8 @@ function SpokenWordSection({ seg, lang }) {
       {getField('spoken_word_speaker') && <InfoRow label={es ? 'Orador' : 'Speaker'} value={getField('spoken_word_speaker')} icon={<User className="w-3.5 h-3.5 text-gray-400" />} />}
       {getField('spoken_word_description') && <InfoRow label={es ? 'Pieza' : 'Piece'} value={getField('spoken_word_description')} />}
       {getField('spoken_word_mic_position') && <InfoRow label={es ? 'Micrófono' : 'Mic'} value={micLabels[getField('spoken_word_mic_position')] || getField('spoken_word_mic_position')} icon={<Mic className="w-3.5 h-3.5 text-gray-400" />} />}
+      {getField('spoken_word_outfit_colors') && <InfoRow label={es ? 'Vestuario' : 'Outfit'} value={getField('spoken_word_outfit_colors')} />}
+      {getField('spoken_word_special_items') && <InfoRow label={es ? 'Artículos especiales' : 'Special items'} value={getField('spoken_word_special_items')} />}
       <LinkRow label={es ? 'Guión / Script' : 'Script'} url={getField('spoken_word_script_url')} type="pdf" />
       <LinkRow label={es ? 'Audio del Spoken Word' : 'Spoken Word Audio'} url={getField('spoken_word_audio_url')} type="audio" />
       {/* 2026-02-28: Show music based on data presence, NOT the spoken_word_has_music checkbox.
