@@ -116,13 +116,15 @@ function LayoutContentInner({ children }) {
     if (user && isPublicWithNav && hasDashboardAccess(user)) {
       // Authenticated admin/editor on a public page — show full nav
       return (
-        <div className="min-h-screen bg-[#F0F1F3]">
-          <DesktopSidebar user={user} />
-          <div className="lg:ml-[72px] print:ml-0 transition-all duration-200">
-            <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+        <PullToRefresh>
+          <div className="min-h-screen bg-[#F0F1F3]">
+            <DesktopSidebar user={user} />
+            <div className="lg:ml-[72px] print:ml-0 transition-all duration-200">
+              <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+            </div>
+            <MobileNav user={user} />
           </div>
-          <MobileNav user={user} />
-        </div>
+        </PullToRefresh>
       );
     }
     return <div className="min-h-screen bg-gray-50">{children}</div>;
