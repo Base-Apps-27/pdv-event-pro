@@ -180,7 +180,8 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
 
   // --- ARTS RESOURCES (2026-02-28: unified section with ordering + summary cards) ---
   // Check if this is an Artes segment with art types
-  const hasArtsData = (segment.art_types?.length > 0);
+  // 2026-03-07 FIX: Also check segment.data?.art_types for nested data structures
+  const hasArtsData = (segment.art_types?.length > 0) || (segment.data?.art_types?.length > 0);
   
   // For non-Artes segments that happen to have video, show legacy video card
   // 2026-03-04 FIX: empty array [] is truthy — check .length
