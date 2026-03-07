@@ -66,6 +66,7 @@ import Home from './pages/Home';
 import MessageProcessing from './pages/MessageProcessing';
 import MyProgram from './pages/MyProgram';
 import People from './pages/People';
+import Profile from './pages/Profile';
 import ProjectionView from './pages/ProjectionView';
 import PublicArtsForm from './pages/PublicArtsForm';
 import PublicCountdownDisplay from './pages/PublicCountdownDisplay';
@@ -89,7 +90,6 @@ import UserManagement from './pages/UserManagement';
 import UshersView from './pages/UshersView';
 import WeeklyServiceManager from './pages/WeeklyServiceManager';
 import WeeklyServiceReport from './pages/WeeklyServiceReport';
-import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -113,6 +113,7 @@ export const PAGES = {
     "MessageProcessing": MessageProcessing,
     "MyProgram": MyProgram,
     "People": People,
+    "Profile": Profile,
     "ProjectionView": ProjectionView,
     "PublicArtsForm": PublicArtsForm,
     "PublicCountdownDisplay": PublicCountdownDisplay,
@@ -136,7 +137,6 @@ export const PAGES = {
     "UshersView": UshersView,
     "WeeklyServiceManager": WeeklyServiceManager,
     "WeeklyServiceReport": WeeklyServiceReport,
-    "Profile": Profile,
 }
 
 export const pagesConfig = {

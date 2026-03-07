@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio, Palette } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Clock, Bookmark, Copy, Sparkles, FileText, History, Link as LinkIcon, MoreHorizontal, Tv, Radio, Palette } from "lucide-react";
+import HeaderBack from "@/components/ui/HeaderBack";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/components/utils/useCurrentUser";
@@ -182,9 +183,9 @@ export default function EventDetail() {
       <div className="relative z-10 bg-gradient-to-r from-gray-50 to-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-start gap-4">
           <div className="flex items-start gap-3 w-full md:w-auto">
-             <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl("Events"))} className="hover:bg-gray-100 rounded-full shrink-0">
-               <ArrowLeft className="w-6 h-6 text-gray-500" />
-             </Button>
+             <div className="pt-1">
+               <HeaderBack parentPage="Events" parentLabel={t('nav.events')} />
+             </div>
              <div className="flex-1 md:flex-none">
                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
               <h1 className="text-4xl md:text-5xl text-gray-900 uppercase tracking-tight">{e.name}</h1>
