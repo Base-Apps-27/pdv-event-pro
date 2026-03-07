@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { LanguageProvider } from "@/components/utils/i18n.jsx";
