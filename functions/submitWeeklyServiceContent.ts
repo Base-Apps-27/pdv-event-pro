@@ -293,118 +293,25 @@ Deno.serve(async (req) => {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
 
-        // --- INLINE PROCESSING: Parse verses right here, no automation dependency ---
+        // 2026-03-07: SUBMISSION ONLY MODE (DECISION-007)
+        // No inline processing. Mark for async automation.
+        // Coordinators: submission marked 'pending' triggers entity automation → async processing
+        // Speakers: Rapid response, no LLM wait blocking submit
+
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
 
         // Resolve base projection_notes from entity or JSON fallback
         let projectionNotes = targetSegmentEntity?.projection_notes || service[timeSlot]?.[segmentIdx]?.projection_notes || "";
 
-        if (!content_is_slides_only) {
-            console.log("[INLINE_PROCESS] Parsing scripture references...");
-            const localResult = parseScriptureReferences(content || "");
-            parsedData = localResult;
-            if (parsedData.type === 'verse_list' && parsedData.sections.length > 0) {
-                scriptureReferences = parsedData.sections.map(s => s.content).join('\n');
-            }
-            console.log(`[INLINE_PROCESS] Local regex parsed ${parsedData.sections.length} verse references`);
-
-            // PIPELINE 2: Extract Key Takeaways (bilingual) & Verses via LLM
-             // 2026-03-01: Bilingual takeaways — LLM detects source language, returns EN + ES.
-             // Stored as key_takeaways_en, key_takeaways_es, source_language on parsed_verse_data.
-             // Legacy key_takeaways kept for backward compat (= source language version).
-             // 2026-03-07 FIX: Skip LLM on public forms (no auth context). Regex-only is sufficient.
-             try {
-                 const authed = await base44.auth.isAuthenticated();
-                 if (content && content.length > 100 && authed) {
-                     console.log(`[TAKEAWAYS_PIPELINE] Starting bilingual LLM extraction for submission`);
-                     const prompt = `
-You are an expert bilingual (English/Spanish) sermon analysis assistant.
-
-STEP 1: Detect the primary language of the speaker notes below. It will be either English ("en") or Spanish ("es").
-
-STEP 2: Extract the main key takeaways (3-5 bullet points) in BOTH English AND Spanish.
-  - If the notes are in English, write the English takeaways first, then translate them to Spanish.
-  - If the notes are in Spanish, write the Spanish takeaways first, then translate them to English.
-  - Each takeaway should be a concise, complete sentence.
-
-STEP 3: Identify all actual biblical scripture references mentioned.
-   IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
-   Format each scripture reference EXACTLY as "Book Chapter:Verse | Libro Capítulo:Versículo" (English | Spanish).
-   If there are no verses, return an empty array for verses.
-
-Text to analyze:
-${content.substring(0, 15000)}`;
-
-                    const llmResponse = await base44.integrations.Core.InvokeLLM({
-                        prompt: prompt,
-                        response_json_schema: {
-                            type: "object",
-                            properties: {
-                                source_language: { type: "string", description: "Detected language: 'en' or 'es'" },
-                                key_takeaways_en: {
-                                    type: "array",
-                                    items: { type: "string" },
-                                    description: "Key takeaways in English"
-                                },
-                                key_takeaways_es: {
-                                    type: "array",
-                                    items: { type: "string" },
-                                    description: "Key takeaways in Spanish"
-                                },
-                                verses: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            content: { type: "string", description: "Format: English Book Ch:Vs | Spanish Book Ch:Vs" }
-                                        }
-                                    }
-                                }
-                            },
-                            required: ["source_language", "key_takeaways_en", "key_takeaways_es", "verses"]
-                        }
-                    });
-
-                    const aiVerses = llmResponse?.verses?.map(v => ({ type: 'verse', content: v.content })) || [];
-                    const aiTakeawaysEn = llmResponse?.key_takeaways_en || [];
-                    const aiTakeawaysEs = llmResponse?.key_takeaways_es || [];
-                    const detectedLang = llmResponse?.source_language || 'es';
-                    
-                    // 2026-03-04 FIX: Only use LLM verses as FALLBACK when regex found nothing.
-                    // Regex produces properly bilingual output; LLM frequently duplicates same language.
-                    if (aiVerses.length > 0 && parsedData.sections.length === 0) {
-                        parsedData.sections = aiVerses;
-                        parsedData.type = 'verse_list';
-                        scriptureReferences = aiVerses.map(v => v.content).join('\n');
-                        console.log(`[TAKEAWAYS_PIPELINE] LLM provided ${aiVerses.length} verses (regex found none)`);
-                    } else if (aiVerses.length > 0) {
-                        console.log(`[TAKEAWAYS_PIPELINE] LLM found ${aiVerses.length} verses but regex has ${parsedData.sections.length} — keeping regex`);
-                    }
-
-                    // Store bilingual takeaways + source language
-                    parsedData.source_language = detectedLang;
-                    parsedData.key_takeaways_en = aiTakeawaysEn;
-                    parsedData.key_takeaways_es = aiTakeawaysEs;
-                    // Backward compat: key_takeaways = source language version
-                    parsedData.key_takeaways = detectedLang === 'en' ? aiTakeawaysEn : aiTakeawaysEs;
-                    console.log(`[TAKEAWAYS_PIPELINE] Detected lang=${detectedLang}, EN=${aiTakeawaysEn.length}, ES=${aiTakeawaysEs.length} takeaways`);
-                }
-            } catch (llmError) {
-                console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
-                // Silent fail - falls back to local regex result
-            }
-        } else {
-            console.log("[INLINE_PROCESS] Slides Only mode - Skipping verse parsing.");
-            // DO NOT append raw content to projectionNotes.
-            // Raw content is embargoed from the Segment entity.
-        }
+        // Mark for pending processing, no inline LLM
+        console.log("[SUBMIT] Marking submission as pending — async processing will follow");
 
         // Shared update payload for both entity and JSON paths
         const commonFields = {
-            // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data.
+            // Mark as pending — will be processed asynchronously by entity automation
             parsed_verse_data: parsedData,
-            submission_status: 'processed',
+            submission_status: 'pending',
             scripture_references: scriptureReferences,
             presentation_url: presentation_url || "",
             notes_url: notes_url || "",
