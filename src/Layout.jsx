@@ -135,7 +135,7 @@ function LayoutContentInner({ children }) {
 
   // Minimal shell for users without dashboard permissions (Live View + MyProgram-only users)
   if (!hasDashboardAccess(user)) {
-    return <div className="min-h-screen bg-[#F0F1F3]">{children}</div>;
+    return <PullToRefresh><div className="min-h-screen bg-[#F0F1F3]">{children}</div></PullToRefresh>;
   }
 
   return (
