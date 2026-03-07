@@ -326,97 +326,79 @@ Deno.serve(async (req) => {
             effectiveMirrors.push(segment_id.replace('|9:30am|', '|11:30am|'));
         }
 
-        if (targetSegmentEntity) {
-            // ── PRIMARY PATH: Entity-backed service ──
-            // Write directly to Segment entity. No Service JSON write needed.
-            console.log("[ENTITY_FIRST] Writing to Segment entity (primary path)");
-            await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
-            console.log("[ENTITY_FIRST] Segment entity updated successfully");
+        if (!targetSegmentEntity) {
+            // ── ENTITY-FIRST MANDATE (DECISION-007): No Service JSON fallback ──
+            // Post-syncWeeklyToSessions, ALL services must be entity-backed.
+            // If no entity found after exhaustive search, reject the submission.
+            console.error("[ENTITY_FIRST] CRITICAL: No Segment entity found for service. Service not migrated to entity-first?");
+            return Response.json({
+                error: "This service is not yet set up for submissions. Please contact support.",
+            }, { status: 503, headers: corsHeaders });
+        }
 
-            // Handle entity mirrors (sibling sessions in same service)
-            for (const mirrorId of effectiveMirrors) {
-                const mirrorParts = mirrorId.split('|');
-                if (mirrorParts.length < 5) { console.warn("[MIRROR] Invalid mirror ID:", mirrorId); continue; }
-                const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
-                if (mirrorSvcId !== serviceId) { console.warn("[MIRROR] Cross-service mirror skipped"); continue; }
-                try {
-                    const sessions = allSessionsForService || await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
-                    const mirrorSession = sessions.find(s => s.name === mirrorSlotName);
-                    if (!mirrorSession) continue;
-                    const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
-                    const mirrorIdx = parseInt(mirrorIdxStr);
-                    let mirrorTarget = mirrorSegs[mirrorIdx];
-                    if (!mirrorTarget || !PLENARIA_TYPES.includes((mirrorTarget.segment_type || '').toLowerCase())) {
-                        mirrorTarget = mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
-                    }
-                    if (mirrorTarget) {
-                        // DO NOT append raw content to projection_notes (Embargo Policy)
-                        await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
-                            ...commonFields,
-                            // Preserve existing notes, do not append raw content
-                            projection_notes: mirrorTarget.projection_notes || "",
-                        });
-                        console.log(`[MIRROR] Entity mirror updated: ${mirrorSlotName}`);
-                    }
-                } catch (mirrorErr) {
-                    console.error("[MIRROR] Mirror entity update failed:", mirrorErr.message);
-                }
+        // ── PRIMARY PATH: Entity-backed service (DECISION-007 compliant) ──
+        // Write directly to Segment entity ONLY. Service JSON is read-only.
+        console.log(`[SUBMIT] Writing submission to Segment entity (primary: ${targetSegmentEntity.id})`);
+        await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
+        console.log("[SUBMIT] Primary segment updated");
+
+        // ── MIRROR VALIDATION & UPDATE ──
+        // Validate mirror targets before attempting updates (prevent silent failures).
+        const mirrorFailures = [];
+        for (const mirrorId of effectiveMirrors) {
+            const mirrorParts = mirrorId.split('|');
+            if (mirrorParts.length < 5) {
+                mirrorFailures.push(`Invalid mirror ID format: ${mirrorId}`);
+                continue;
             }
-        } else {
-            // ── LEGACY PATH: Pre-entity-lift service — write to Service JSON slot ──
-            console.log("[LEGACY_PATH] No entity segment found, writing to Service JSON slot");
-            const currentArray = [...(service[timeSlot] || [])];
-            const currentSegment = currentArray[segmentIdx] || {};
-            const updatedSegment = {
-                ...currentSegment,
-                ...commonFields,
-                data: {
-                    ...(currentSegment.data || {}),
-                    verse: scriptureReferences,
-                    scripture_references: scriptureReferences,
-                    presentation_url: presentation_url || "",
-                    notes_url: notes_url || "",
-                    content_is_slides_only: !!content_is_slides_only,
-                    ...(title?.trim() ? { message_title: title.trim() } : {}),
-                },
-            };
-            currentArray[segmentIdx] = updatedSegment;
-            const updatePayload = { [timeSlot]: currentArray };
+            const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
+            if (mirrorSvcId !== serviceId) {
+                mirrorFailures.push(`Cross-service mirror not supported: ${mirrorSlotName}`);
+                continue;
+            }
 
-            for (const mirrorId of effectiveMirrors) {
-                const mirrorParts = mirrorId.split('|');
-                if (mirrorParts.length < 5) { console.warn("[MIRROR] Invalid mirror ID:", mirrorId); continue; }
-                const [, mirrorServiceId, mirrorSlot, mirrorIdxStr] = mirrorParts;
-                if (mirrorServiceId !== serviceId) { console.warn("[MIRROR] Cross-service mirror skipped"); continue; }
+            try {
+                const sessions = allSessionsForService || await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+                const mirrorSession = sessions.find(s => s.name === mirrorSlotName);
+                if (!mirrorSession) {
+                    mirrorFailures.push(`Mirror session not found: ${mirrorSlotName}`);
+                    continue;
+                }
+
+                const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
                 const mirrorIdx = parseInt(mirrorIdxStr);
-                const otherArray = [...(service[mirrorSlot] || [])];
-                let targetIdx = mirrorIdx;
-                if (!otherArray[targetIdx] || !PLENARIA_TYPES.includes((otherArray[targetIdx]?.type || '').toLowerCase())) {
-                    targetIdx = otherArray.findIndex(s => PLENARIA_TYPES.includes((s.type || '').toLowerCase()));
-                }
-                if (targetIdx === -1 || !otherArray[targetIdx]) { console.warn(`[MIRROR] No message segment in ${mirrorSlot}`); continue; }
-                const otherSegment = otherArray[targetIdx];
-                // DO NOT append raw content to projection_notes (Embargo Policy)
-                otherArray[targetIdx] = {
-                    ...otherSegment,
-                    ...commonFields,
-                    projection_notes: otherSegment.projection_notes || "",
-                    data: {
-                        ...(otherSegment.data || {}),
-                        verse: scriptureReferences,
-                        scripture_references: scriptureReferences,
-                        presentation_url: presentation_url || "",
-                        notes_url: notes_url || "",
-                        content_is_slides_only: !!content_is_slides_only,
-                        ...(title?.trim() ? { message_title: title.trim() } : {}),
-                    },
-                };
-                updatePayload[mirrorSlot] = otherArray;
-            }
+                let mirrorTarget = mirrorSegs[mirrorIdx];
 
-            console.log("[LEGACY_PATH] Updating Service JSON...");
-            await base44.asServiceRole.entities.Service.update(serviceId, updatePayload);
-            console.log("[LEGACY_PATH] Service JSON updated successfully");
+                // Fallback: if exact position doesn't match plenaria type, find first plenaria
+                if (!mirrorTarget || !PLENARIA_TYPES.includes((mirrorTarget.segment_type || '').toLowerCase())) {
+                    mirrorTarget = mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
+                }
+
+                if (!mirrorTarget) {
+                    mirrorFailures.push(`No message segment in ${mirrorSlotName}`);
+                    continue;
+                }
+
+                // Validate mirror segment is plenaria-type
+                if (!PLENARIA_TYPES.includes((mirrorTarget.segment_type || '').toLowerCase())) {
+                    mirrorFailures.push(`Mirror segment ${mirrorSlotName} is not a message (type: ${mirrorTarget.segment_type})`);
+                    continue;
+                }
+
+                // Update mirror
+                await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, {
+                    ...commonFields,
+                    projection_notes: mirrorTarget.projection_notes || "",
+                });
+                console.log(`[SUBMIT] Mirror updated: ${mirrorSlotName}`);
+            } catch (mirrorErr) {
+                mirrorFailures.push(`Failed to update ${mirrorSlotName}: ${mirrorErr.message}`);
+            }
+        }
+
+        // Report mirror failures for coordinator awareness (do NOT fail primary on mirror failures)
+        if (mirrorFailures.length > 0) {
+            console.warn("[SUBMIT] Mirror update warnings:", mirrorFailures.join("; "));
         }
 
         // Create Version Record for audit trail — marked as pending
