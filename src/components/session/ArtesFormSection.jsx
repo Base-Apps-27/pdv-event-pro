@@ -165,6 +165,14 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
               <Textarea rows={2} value={formData.dance_end_cue} onChange={(e) => setFormData({ ...formData, dance_end_cue: e.target.value })} placeholder={language === 'es' ? 'Cue fin' : 'End cue'} className="text-sm" />
             </div>
           </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Vestuario (Colores)' : 'Outfit (Colors)'}</Label>
+            <Textarea rows={2} value={formData.dance_outfit_colors || ''} onChange={(e) => setFormData({ ...formData, dance_outfit_colors: e.target.value })} placeholder={language === 'es' ? 'Describe colores y estilos' : 'Describe colors and styles'} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Artículos Especiales (Alas, Banderas, etc.)' : 'Special Items (Wings, Flags, etc.)'}</Label>
+            <Textarea rows={2} value={formData.dance_special_items || ''} onChange={(e) => setFormData({ ...formData, dance_special_items: e.target.value })} placeholder={language === 'es' ? 'Alas, banderas, accesorios' : 'Wings, flags, accessories'} className="text-sm" />
+          </div>
           <div className="col-span-2 flex items-center gap-2 mt-1">
             <Checkbox id="dance_has_song" checked={formData.dance_has_song} onCheckedChange={(checked) => setFormData({ ...formData, dance_has_song: checked })} />
             <label htmlFor="dance_has_song" className="text-xs">{language === 'es' ? 'Incluye playlist/canción(es)' : 'Includes playlist/song(s)'}</label>
@@ -195,6 +203,14 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
               <Textarea rows={2} value={formData.drama_start_cue} onChange={(e) => setFormData({ ...formData, drama_start_cue: e.target.value })} placeholder={language === 'es' ? 'Cue inicio' : 'Start cue'} className="text-sm" />
               <Textarea rows={2} value={formData.drama_end_cue} onChange={(e) => setFormData({ ...formData, drama_end_cue: e.target.value })} placeholder={language === 'es' ? 'Cue fin' : 'End cue'} className="text-sm" />
             </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Vestuario (Colores)' : 'Outfit (Colors)'}</Label>
+            <Textarea rows={2} value={formData.drama_outfit_colors || ''} onChange={(e) => setFormData({ ...formData, drama_outfit_colors: e.target.value })} placeholder={language === 'es' ? 'Describe colores y estilos' : 'Describe colors and styles'} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Artículos Especiales (Props, etc.)' : 'Special Items (Props, etc.)'}</Label>
+            <Textarea rows={2} value={formData.drama_special_items || ''} onChange={(e) => setFormData({ ...formData, drama_special_items: e.target.value })} placeholder={language === 'es' ? 'Props, accesorios, elementos' : 'Props, accessories, elements'} className="text-sm" />
           </div>
           <div className="col-span-2 flex items-center gap-2 mt-1">
             <Checkbox id="drama_has_song" checked={formData.drama_has_song} onCheckedChange={(checked) => setFormData({ ...formData, drama_has_song: checked })} />
@@ -229,6 +245,14 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
               <option value="lapel">Lapel</option>
               <option value="podium">{language === 'es' ? 'Podio' : 'Podium'}</option>
             </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Vestuario (Colores)' : 'Outfit (Colors)'}</Label>
+            <Textarea rows={2} value={formData.spoken_word_outfit_colors || ''} onChange={(e) => setFormData({ ...formData, spoken_word_outfit_colors: e.target.value })} placeholder={language === 'es' ? 'Describe colores y estilos' : 'Describe colors and styles'} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{language === 'es' ? 'Artículos Especiales' : 'Special Items'}</Label>
+            <Textarea rows={2} value={formData.spoken_word_special_items || ''} onChange={(e) => setFormData({ ...formData, spoken_word_special_items: e.target.value })} placeholder={language === 'es' ? 'Props, accesorios, elementos' : 'Props, accessories, elements'} className="text-sm" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">{language === 'es' ? 'Guión / Script' : 'Script / Guide'}</Label>
