@@ -139,21 +139,23 @@ function LayoutContentInner({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F1F3]">
-      {/* Desktop: slim icon rail sidebar */}
-      <DesktopSidebar user={user} />
+    <PullToRefresh>
+      <div className="min-h-screen bg-[#F0F1F3]">
+        {/* Desktop: slim icon rail sidebar */}
+        <DesktopSidebar user={user} />
 
-      {/* Main content — offset for the 72px desktop rail */}
-      <div className="lg:ml-[72px] print:ml-0 transition-all duration-200">
-        {/* Mobile bottom padding so content doesn't hide behind the tab bar */}
-        <main className="flex-1 pb-20 lg:pb-0">
-          {children}
-        </main>
+        {/* Main content — offset for the 72px desktop rail */}
+        <div className="lg:ml-[72px] print:ml-0 transition-all duration-200">
+          {/* Mobile bottom padding so content doesn't hide behind the tab bar */}
+          <main className="flex-1 pb-20 lg:pb-0">
+            {children}
+          </main>
+        </div>
+
+        {/* Mobile: bottom tab bar */}
+        <MobileNav user={user} />
       </div>
-
-      {/* Mobile: bottom tab bar */}
-      <MobileNav user={user} />
-    </div>
+    </PullToRefresh>
   );
 }
 
