@@ -9,14 +9,17 @@ import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Clock, ChevronDown, ChevronUp, Archive } from "lucide-react";
+import { Plus, Calendar, Clock, ChevronDown, ChevronUp, Archive, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { es as esLocale } from "date-fns/locale";
+import DeleteServiceDialog from "@/components/service/DeleteServiceDialog";
 
 export default function CustomServicesManager() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
   // Audit fix: Use shared useCurrentUser hook instead of manual auth.me()
   const { user } = useCurrentUser();
 
@@ -26,7 +29,7 @@ export default function CustomServicesManager() {
 
   // Fetch one-off / custom services
   // Supports both new service_type field and legacy structural detection
-  const { data: allServices = [], isLoading } = useQuery({
+  const { data: allServices = [], isLoading, refetch } = useQuery({
     queryKey: ['customServices'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
@@ -66,6 +69,16 @@ export default function CustomServicesManager() {
   const handleEdit = (serviceId) => {
     // V2 (2026-03-02): Route to entity-first editor
     navigate(createPageUrl('CustomEditorV2') + `?id=${serviceId}`);
+  };
+
+  const handleDeleteClick = (e, service) => {
+    e.stopPropagation(); // Prevent card click navigation
+    setSelectedService(service);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    refetch();
   };
 
   // Helper to parse "YYYY-MM-DD" as local date at midnight to prevent timezone shifts
@@ -168,9 +181,20 @@ export default function CustomServicesManager() {
                     <Badge className={`${getStatusColor(service)} text-white`}>
                       {getStatusLabel(service)}
                     </Badge>
-                    <span className="text-xs text-gray-500">
-                      {service.segments?.length || 0} {t('common.segments')}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">
+                        {service.segments?.length || 0} {t('common.segments')}
+                      </span>
+                      {hasPermission(user, 'delete_services') && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, service)}
+                          className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                          title={t('common.delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
                 </CardHeader>
@@ -229,9 +253,20 @@ export default function CustomServicesManager() {
                        <Badge className="bg-gray-500 text-white">
                          {t('custom.completed')}
                         </Badge>
-                        <span className="text-xs text-gray-500">
-                          {service.segments?.length || 0} {t('common.segments')}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {service.segments?.length || 0} {t('common.segments')}
+                          </span>
+                          {hasPermission(user, 'delete_services') && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, service)}
+                              className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                              title={t('common.delete')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
                       </CardHeader>
@@ -253,6 +288,13 @@ export default function CustomServicesManager() {
             )}
           </div>
         )}
+
+        <DeleteServiceDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          service={selectedService}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
       </div>
     </div>
   );
