@@ -84,12 +84,14 @@ Deno.serve(async (req) => {
         }
 
         // ── PER-EMAIL RATE LIMIT (2026-02-28: prevents a single identity from rapid-fire saves) ──
-        const emailKey = `email:${submitter_email.toLowerCase()}`;
+        // FIX (2026-03-07): Normalize email to lowercase BEFORE rate limit check (not after)
+        const emailNormalized = (submitter_email || '').toLowerCase();
+        const emailKey = `email:${emailNormalized}`;
         const maxPerEmail = 6; // 6 saves per minute per email
         if (!rateLimiter.has(emailKey)) rateLimiter.set(emailKey, []);
         const emailAttempts = rateLimiter.get(emailKey).filter(t => now - t < windowMs);
         if (emailAttempts.length >= maxPerEmail) {
-            console.warn(`[ArtsSubmission] Email rate limit hit: ${submitter_email}`);
+            console.warn(`[ArtsSubmission] Email rate limit hit: ${emailNormalized}`);
             return Response.json({ error: 'Too many saves. Please wait a moment.' }, { status: 429, headers: corsHeaders });
         }
         emailAttempts.push(now);
@@ -97,13 +99,14 @@ Deno.serve(async (req) => {
 
         // Layer 2: Entity-based persistent rate limit (SEC-3/4, 2026-03-02).
         // ArtsSubmissionLog serves as the audit trail — count recent entries.
+        // FIX (2026-03-07): Use already-normalized emailNormalized (from line 88)
         const twoMinAgo = new Date(Date.now() - 120000).toISOString();
         const recentArtsSubmissions = await base44.asServiceRole.entities.ArtsSubmissionLog.filter(
-            { submitter_email: submitter_email.toLowerCase(), created_date: { $gte: twoMinAgo } },
+            { submitter_email: emailNormalized, created_date: { $gte: twoMinAgo } },
             '-created_date', 20
         );
         if (recentArtsSubmissions.length >= 12) {
-            console.warn(`[ArtsSubmission] Entity rate limit hit: ${submitter_email}, ${recentArtsSubmissions.length} in 2min`);
+            console.warn(`[ArtsSubmission] Entity rate limit hit: ${emailNormalized}, ${recentArtsSubmissions.length} in 2min`);
             return Response.json({ error: 'Too many saves. Please wait.' }, { status: 429, headers: corsHeaders });
         }
 
@@ -219,7 +222,7 @@ Deno.serve(async (req) => {
 
         // ── ARTS SUBMISSION TRACKING (2026-02-27) ──
         // 1. Stamp the segment with who submitted and when
-        updatePayload.arts_last_submitted_by = `${submitter_name || 'Unknown'} (${submitter_email || 'no-email'})`;
+        updatePayload.arts_last_submitted_by = `${submitter_name || 'Unknown'} (${emailNormalized || 'no-email'})`;
         updatePayload.arts_last_submitted_at = new Date().toISOString();
 
         // 2. Save to the Segment entity
@@ -250,9 +253,8 @@ Deno.serve(async (req) => {
             event_id: eventId || '',
             segment_title: segment.title || '',
             submitter_name: submitter_name || 'Unknown',
-            // FIX (2026-03-02): Normalize email to lowercase so entity rate limit query
-            // (which filters by lowercase email) matches consistently.
-            submitter_email: (submitter_email || '').toLowerCase(),
+            // FIX (2026-03-07): Use already-normalized emailNormalized (from line 88)
+            submitter_email: emailNormalized,
             submitted_at: new Date().toISOString(),
             data_snapshot: updatePayload,
             fields_changed: fieldsChanged,
