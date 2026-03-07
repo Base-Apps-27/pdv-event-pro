@@ -127,7 +127,7 @@ function LayoutContentInner({ children }) {
         </PullToRefresh>
       );
     }
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <PullToRefresh><div className="min-h-screen bg-gray-50">{children}</div></PullToRefresh>;
   }
 
   // Private pages block access if not authenticated
