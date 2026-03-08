@@ -244,14 +244,41 @@ Deno.serve(async (req) => {
     }
 
     // ─── STEP 4: Build full program snapshot ───
+    // HARDENING (2026-03-08): Wrapped in try/finally to guarantee the concurrency
+    // lock is always released. Previously, if buildProgramSnapshot threw (network error,
+    // timeout, rate limit), the catch block returned early WITHOUT clearing the lock,
+    // leaving refresh_in_progress=true for up to 30 seconds and blocking all subsequent
+    // automation triggers. This was the primary cause of the TV display going stale
+    // during a live service when a save triggered a refresh that happened to fail.
     let programSnapshot = null;
 
-    if (targetProgram) {
-      const response = await base44.functions.invoke('buildProgramSnapshot', {
-        targetProgram,
-        isEvent
-      });
-      programSnapshot = response.data;
+    try {
+      if (targetProgram) {
+        const response = await base44.functions.invoke('buildProgramSnapshot', {
+          targetProgram,
+          isEvent
+        });
+        programSnapshot = response.data;
+      }
+    } catch (snapshotErr) {
+      // Release the lock immediately so subsequent triggers can retry
+      console.error(`[refreshActiveProgram] buildProgramSnapshot failed: ${snapshotErr.message}. Releasing lock.`);
+      try {
+        const lockRecord = await withRetry(() =>
+          base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+        );
+        if (lockRecord?.[0]) {
+          await withRetry(() =>
+            base44.asServiceRole.entities.ActiveProgramCache.update(lockRecord[0].id, {
+              refresh_in_progress: false,
+            })
+          );
+        }
+      } catch (lockReleaseErr) {
+        console.error(`[refreshActiveProgram] Failed to release lock after snapshot error: ${lockReleaseErr.message}`);
+      }
+      // Re-throw so the outer catch returns a 500 and logs the full error
+      throw snapshotErr;
     }
 
     // ─── STEP 5: Write to ActiveProgramCache ───
