@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: segment_id,
                 content: content,
+                title: title || "",
                 presentation_url: Array.isArray(presentation_url) ? presentation_url : (presentation_url ? [presentation_url] : []),
                 notes_url: Array.isArray(notes_url) ? notes_url : (notes_url ? [notes_url] : []),
                 content_is_slides_only: !!content_is_slides_only,
