@@ -185,6 +185,27 @@ export default function CountdownBlock({
                 </span>
               </div>
             )}
+
+            {/* Sub-assignments — ISSUE-2 FIX (2026-03-08): Was missing from current segment display.
+                SegmentTimeline (upcoming list) showed them correctly; CountdownBlock did not.
+                Reads _resolved_sub_assignments (entity path) or ui_sub_assignments (JSON path). */}
+            {(() => {
+              const subs = (segment._resolved_sub_assignments || segment.ui_sub_assignments || [])
+                .filter(sub => sub.presenter);
+              if (subs.length === 0) return null;
+              return (
+                <div className="flex flex-col items-center gap-0.5 mt-1">
+                  {subs.map((sub, idx) => (
+                    <div key={idx} className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-purple-600">
+                        {sub.label}: {normalizeName(sub.presenter)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
