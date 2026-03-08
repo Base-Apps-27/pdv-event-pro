@@ -155,9 +155,8 @@ Deno.serve(async (req) => {
         // Mark for pending processing, no inline LLM
         console.log("[SUBMIT] Marking submission as pending — async processing will follow");
 
-        // Shared update payload for both entity and JSON paths
         const commonFields = {
-            // Mark as pending — will be processed asynchronously by entity automation
+            // Mark as pending — processNewSubmissionVersion will process asynchronously
             parsed_verse_data: parsedData,
             submission_status: 'pending',
             scripture_references: scriptureReferences,
