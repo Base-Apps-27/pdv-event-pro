@@ -207,6 +207,20 @@ export default function useActiveProgramCache(overrideParams = {}) {
     };
   }, [debouncedInvalidate]);
 
+  // ── HARDENING (2026-03-08): Visibility-change reconnection ──
+  // TV displays may sleep/wake (OS screen saver, browser throttling, tab switching).
+  // When the tab becomes visible again, immediately refetch instead of waiting
+  // for the next 2-min poll or relying on a subscription that may have disconnected.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries({ queryKey: ['activeProgramCache', activeCacheKey] });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [queryClient, activeCacheKey]);
+
   return {
     ...detected,
     programData,
