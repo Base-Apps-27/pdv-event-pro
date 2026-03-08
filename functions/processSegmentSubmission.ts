@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
     let scriptureReferences = '';
 
     // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion or Segment)
-    if (!segment.content_is_slides_only) {
+    if (!liveSegment.content_is_slides_only) {
       // Fetch audit record to get original content (speaker submission path)
       const auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
         { segment_id: segmentId, processing_status: 'pending' },
