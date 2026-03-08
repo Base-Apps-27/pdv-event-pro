@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
-import { Loader2, Layout } from "lucide-react";
+import { Loader2, Layout, WifiOff, AlertTriangle } from "lucide-react";
 
 import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
 import useSegmentDetection, { getTimeDate } from "@/components/tv/useSegmentDetection";
@@ -58,7 +58,7 @@ export default function PublicCountdownDisplay() {
   }, [mockTimeParam]);
 
   // ── Data: cache-first from ActiveProgramCache ──
-  const { programData, isLoading, _isOverride } = useActiveProgramCache({
+  const { programData, isLoading, isError, cacheRecord, _isOverride } = useActiveProgramCache({
     overrideServiceId,
     overrideEventId,
   });
@@ -117,10 +117,46 @@ export default function PublicCountdownDisplay() {
     return preSessionDetails.find(p => p.session_id === activeSession.id) || preSessionDetails[0] || null;
   }, [activeSession, preSessionDetails]);
 
-  const activeSessionSegments = useMemo(() => {
-    if (!activeSession) return segments;
-    return segments.filter(s => s.session_id === activeSession.id);
-  }, [segments, activeSession]);
+  // ── HARDENING (2026-03-08): Stale-data watchdog ──
+  // Tracks how long since the cache was last refreshed. If the TV has been
+  // running for 10+ minutes without a successful cache update, the subscription
+  // or polling may have silently died. Force a full page reload to re-establish
+  // all connections. This is the last-resort safety net for unattended TVs.
+  const lastReloadCheckRef = useRef(Date.now());
+  useEffect(() => {
+    if (mockTimeParam || !cacheRecord?.last_refresh_at) return;
+    const STALE_RELOAD_MS = 10 * 60 * 1000; // 10 min without cache update → reload
+    const checkInterval = setInterval(() => {
+      const cacheAge = Date.now() - new Date(cacheRecord.last_refresh_at).getTime();
+      const timeSinceLastCheck = Date.now() - lastReloadCheckRef.current;
+      // Only reload if: cache is stale AND we haven't just loaded the page
+      // (prevents reload loops if the backend is truly down)
+      if (cacheAge > STALE_RELOAD_MS && timeSinceLastCheck > STALE_RELOAD_MS) {
+        console.warn('[TV Watchdog] Cache stale for 10+ min. Reloading page.');
+        window.location.reload();
+      }
+    }, 60 * 1000); // Check every minute
+    return () => clearInterval(checkInterval);
+  }, [cacheRecord?.last_refresh_at, mockTimeParam]);
+
+  // ── Offline / error state detection ──
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Stale = cache older than 5 minutes (should refresh every ~2 min via poll)
+  const isStaleData = useMemo(() => {
+    if (!cacheRecord?.last_refresh_at) return false;
+    return (Date.now() - new Date(cacheRecord.last_refresh_at).getTime()) > 5 * 60 * 1000;
+  }, [cacheRecord?.last_refresh_at, currentTime]); // currentTime drives re-eval every second
 
   // ── Loading ──
   // Initial load only — isLoading in React Query v5 = isPending && isFetching,
@@ -170,6 +206,24 @@ export default function PublicCountdownDisplay() {
       {/* Top Gradient */}
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
+      {/* HARDENING (2026-03-08): Status indicators — offline/error/stale data warning */}
+      {(isOffline || isError || isStaleData) && (
+        <div className="absolute top-1.5 right-2 z-30 flex items-center gap-1.5">
+          {isOffline && (
+            <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-red-200">
+              <WifiOff className="w-3 h-3" />
+              <span>Sin conexión</span>
+            </div>
+          )}
+          {!isOffline && (isError || isStaleData) && (
+            <div className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-amber-200 animate-pulse">
+              <AlertTriangle className="w-3 h-3" />
+              <span>{isError ? 'Error de datos' : 'Datos desactualizados'}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header: title + clock */}
       <div className="w-full flex items-center justify-between px-2 py-1.5 z-20 relative mb-1">
         <div className="flex-1 text-center min-w-0">
@@ -178,7 +232,7 @@ export default function PublicCountdownDisplay() {
           </h1>
           {_isOverride && (
             <div className="text-xs text-orange-600 font-semibold mt-0.5">
-              🧪 TEST MODE (Override Active)
+              TEST MODE (Override Active)
             </div>
           )}
         </div>
