@@ -123,10 +123,10 @@ export default function PublicCountdownDisplay() {
   }, [segments, activeSession]);
 
   // ── Loading ──
-  // ISSUE-1 FIX (2026-03-08): Only show full-screen spinner on INITIAL load (no data yet).
-  // Background refetches (subscription-triggered invalidations) must NOT flash a blank screen —
-  // they should silently update in place. isLoading is true for both, so we guard on !programData.
-  if (isLoading && !programData) {
+  // Initial load only — isLoading in React Query v5 = isPending && isFetching,
+  // which is only true when there is NO cached data at all.
+  // Background refetches never set isLoading=true (handled by keepPreviousData in useActiveProgramCache).
+  if (isLoading) {
     return (
       <div className="w-full h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-pdv-teal animate-spin" />
