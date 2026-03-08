@@ -152,22 +152,37 @@ Deno.serve(async (req) => {
 
     // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion or Segment)
     if (!liveSegment.content_is_slides_only) {
-      // Fetch audit record to get original content (speaker submission path)
-      const auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+      // Fetch audit record to get original content.
+      // Search by direct segment_id first (event submissions use entity ID),
+      // then fall back to resolved_segment_entity_id (weekly submissions use composite IDs
+      // but store the resolved entity ID separately).
+      let auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
         { segment_id: segmentId, processing_status: 'pending' },
         '-submitted_at', 1
       );
 
-      // Determine content source: SpeakerSubmissionVersion (events) OR Segment.submitted_content (weekly)
+      // FIX (2026-03-08): Weekly submissions store composite IDs in segment_id,
+      // so the above filter misses them. Search by resolved_segment_entity_id as fallback.
+      if (auditRecords.length === 0) {
+        auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+          { resolved_segment_entity_id: segmentId, processing_status: 'pending' },
+          '-submitted_at', 1
+        );
+        if (auditRecords.length > 0) {
+          console.log(`[PROCESS_SEGMENT] Found version via resolved_segment_entity_id for ${segmentId}`);
+        }
+      }
+
+      // Determine content source: SpeakerSubmissionVersion (events + weekly) OR Segment.submitted_content (legacy fallback)
       let content = '';
       let submission = null;
-      
+
       if (auditRecords.length > 0) {
-        // Speaker submission path (public form)
+        // Speaker submission path (public form — event or weekly)
         submission = auditRecords[0];
         content = submission.content || '';
       } else if (liveSegment.submitted_content) {
-        // Weekly submission path (submitWeeklyServiceContent)
+        // Legacy fallback: content stored directly on Segment
         content = liveSegment.submitted_content;
       }
 
@@ -251,13 +266,20 @@ ${content.substring(0, 15000)}`;
           }
         }
 
-        // Update Segment entity with processed data (FIX: explicit status tracking)
+        // Update Segment entity with processed data
+        // FIX (2026-03-08): Aligned payload with processNewSubmissionVersion unified pipeline.
+        // Includes material URLs and metadata from submission version when available.
+        const segmentUpdateData = {
+          submission_status: 'processed',
+          parsed_verse_data: parsedData,
+          scripture_references: scriptureReferences,
+          ...(submission?.presentation_url ? { presentation_url: submission.presentation_url } : {}),
+          ...(submission?.notes_url ? { notes_url: submission.notes_url } : {}),
+          ...(submission ? { content_is_slides_only: !!submission.content_is_slides_only } : {}),
+          ...(submission?.title?.trim() ? { message_title: submission.title.trim() } : {}),
+        };
         try {
-          await base44.asServiceRole.entities.Segment.update(segmentId, {
-            parsed_verse_data: parsedData,
-            scripture_references: scriptureReferences,
-            submission_status: 'processed'
-          });
+          await base44.asServiceRole.entities.Segment.update(segmentId, segmentUpdateData);
           console.log(`[PROCESS_SEGMENT] Segment ${segmentId} marked as processed`);
         } catch (segmentUpdateErr) {
           console.error(`[PROCESS_SEGMENT] CRITICAL: Failed to update segment status: ${segmentUpdateErr.message}`);
@@ -294,7 +316,8 @@ ${content.substring(0, 15000)}`;
     } else {
       console.log(`[PROCESS_SEGMENT] Slides-only mode — marking processed without parsing`);
       await base44.asServiceRole.entities.Segment.update(segmentId, {
-        submission_status: 'processed'
+        submission_status: 'processed',
+        parsed_verse_data: { type: 'empty', sections: [] }
       });
     }
 
