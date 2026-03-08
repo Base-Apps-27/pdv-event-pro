@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { useLanguage } from "@/components/utils/i18n";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
-import { Languages } from "lucide-react";
+import { Languages, Sparkles } from "lucide-react";
+import { normalizeName } from "@/components/utils/textNormalization";
 
 /**
  * CountdownBlock
