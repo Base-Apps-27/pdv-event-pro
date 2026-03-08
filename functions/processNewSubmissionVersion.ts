@@ -368,6 +368,18 @@ ${submission.content.substring(0, 15000)}
             processing_status: 'processed'
         });
 
+        // FIX (2026-03-08): Trigger cache refresh so coordinators see updates immediately.
+        // Without this, getPublicProgramData serves stale cached snapshots for up to 5 minutes.
+        try {
+            await base44.asServiceRole.functions.invoke('refreshActiveProgram', {
+                trigger: 'submission_version_processed',
+                changedEntityType: 'Segment',
+                changedEntityId: targetEntityId
+            });
+        } catch (cacheErr) {
+            console.error(`[CACHE] refreshActiveProgram failed (non-critical): ${cacheErr.message}`);
+        }
+
         return Response.json({ success: true, processed: true });
 
     } catch (error) {

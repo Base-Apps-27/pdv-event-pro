@@ -239,16 +239,21 @@ Deno.serve(async (req) => {
         });
 
         // Audit trail — mirrored submissions (dynamic)
+        // FIX (2026-03-08): Always create audit records even when entity resolution failed.
+        // Without a SpeakerSubmissionVersion record, processNewSubmissionVersion and
+        // processPendingSubmissions can never retry the mirror — the submission is silently lost.
+        // The processor can resolve from the composite ID as a fallback.
         for (const mirrorId of effectiveMirrors) {
             const resolvedMirrorEntityId = mirrorResolvedIds.get(mirrorId);
             if (!resolvedMirrorEntityId) {
-                console.warn(`[SUBMIT] Skipping audit for unresolved mirror: ${mirrorId}`);
-                continue;
+                console.warn(`[SUBMIT] Mirror entity unresolved: ${mirrorId} — creating audit record anyway for async resolution`);
+            } else {
+                console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId} (entity ${resolvedMirrorEntityId})`);
             }
-            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId} (entity ${resolvedMirrorEntityId})`);
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: mirrorId,
-                resolved_segment_entity_id: resolvedMirrorEntityId,
+                // Pass resolved ID when available; processor falls back to composite resolution otherwise
+                ...(resolvedMirrorEntityId ? { resolved_segment_entity_id: resolvedMirrorEntityId } : {}),
                 content: content,
                 title: title || "",
                 presentation_url: presentation_url || "",
