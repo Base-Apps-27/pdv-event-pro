@@ -1,19 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// ROLE: Processes Event submissions ONLY via entity automation.
-// Weekly Service submissions are now processed inline by submitWeeklyServiceContent (v3.0).
-// If a weekly_service submission arrives here (e.g. automation fires on the audit record),
-// it will already be processing_status='processed' and will be skipped.
+// SOLE processing automation for speaker submissions (Event + Weekly).
+// Triggered by entity automation on SpeakerSubmissionVersion.create.
+// Handles both Event (numeric Segment ID) and Weekly (composite ID) paths.
 // Safety net: processPendingSubmissions (scheduled) catches anything stuck in 'pending'.
-
-// CTO-1 (2026-03-02): Verse parsing centralized in parseScriptureShared.
-// This file delegates to the shared function via base44.asServiceRole.functions.invoke().
-// VERSION_HASH: v1.0-2026-03-02 (must match parseScriptureShared)
-// Frontend VerseParserDialog keeps its own copy (cannot call backend synchronously).
 //
-// DEPRECATED INLINE COPY BELOW — kept temporarily for the automation handler
-// but all new code paths should use parseScriptureReferencesViaShared().
-// ╔══════════════════════════════════════════════════════════════════════╗
+// BIBLE_BOOKS + parseScriptureReferences: inline copy (Deno Deploy cannot share modules)
+// CANONICAL SOURCE: parseScriptureShared.ts
+// SYNC: If you change the parser, update all 3 copies + parseScriptureShared.
+// Files: processNewSubmissionVersion.ts, processPendingSubmissions.ts, processSegmentSubmission.ts
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
@@ -155,9 +150,9 @@ Deno.serve(async (req) => {
         
         const submission = await base44.asServiceRole.entities.SpeakerSubmissionVersion.get(submissionId);
         
-        // SKIP if already processed (inline processing by submitWeeklyServiceContent v3.0)
+        // SKIP if already processed (e.g. safety net already caught it)
         if (submission.processing_status === 'processed') {
-            console.log(`[SKIP] Submission ${submissionId} already processed (inline). No action needed.`);
+            console.log(`[SKIP] Submission ${submissionId} already processed. No action needed.`);
             return Response.json({ message: 'Already processed', skipped: true });
         }
 
@@ -276,54 +271,17 @@ ${submission.content.substring(0, 15000)}
 
         const segmentId = submission.segment_id;
 
-        // Weekly Service path — should not normally reach here anymore (inline handles it),
-        // but kept as defense-in-depth
+        // Weekly Service path — primary processing for weekly submissions
         if (segmentId.startsWith('weekly_service|')) {
-            console.log(`[WEEKLY_FALLBACK] Processing weekly submission ${submissionId} via automation fallback`);
+            console.log(`[WEEKLY] Processing weekly submission ${submissionId}`);
             const parts = segmentId.split('|');
             const serviceId = parts[1];
             const timeSlot = parts[2];
             const segmentIdx = parseInt(parts[3]);
+            const PLENARIA_TYPES = ['message', 'plenaria', 'predica', 'mensaje'];
 
-            const service = await base44.asServiceRole.entities.Service.get(serviceId);
-            if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
-                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-                    processing_status: 'failed',
-                    processing_error: 'Service or segment not found'
-                });
-                return Response.json({ error: "Service/Segment not found" });
-            }
-
-            const currentArray = [...service[timeSlot]];
-            const currentSegment = currentArray[segmentIdx];
-            const type = (currentSegment.type || "").toLowerCase();
-            
-            if (!['message', 'plenaria', 'predica', 'mensaje'].includes(type)) {
-                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-                    processing_status: 'failed',
-                    processing_error: 'Target segment is not a message type'
-                });
-                return Response.json({ error: "Invalid segment type" });
-            }
-
-            const updatedSegment = {
-                ...currentSegment,
-                // DO NOT SAVE RAW CONTENT TO SEGMENT.
-                parsed_verse_data: parsedData,
-                submission_status: 'processed',
-                scripture_references: scriptureReferences
-            };
-
-            if (submission.title && submission.title.trim() !== "") {
-                updatedSegment.message_title = submission.title.trim();
-                updatedSegment.data = { ...updatedSegment.data, message_title: submission.title.trim() };
-            }
-            updatedSegment.data = { ...updatedSegment.data, verse: scriptureReferences, scripture_references: scriptureReferences };
-            currentArray[segmentIdx] = updatedSegment;
-
-            await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
-
-            // Entity Lift: also update Segment entity (dual-write)
+            // Entity-first resolution: resolve Segment entity via Session
+            let targetSegmentEntity = null;
             try {
                 const sessions = await base44.asServiceRole.entities.Session.filter({
                     service_id: serviceId
@@ -333,28 +291,69 @@ ${submission.content.substring(0, 15000)}
                     const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
                         { session_id: targetSession.id }, 'order'
                     );
-                    const targetSegmentEntity = sessionSegments[segmentIdx];
-                    if (targetSegmentEntity) {
-                        const entityUpdate = {
-                            // DO NOT SAVE RAW CONTENT TO SEGMENT. Only parsed data.
-                            parsed_verse_data: parsedData,
-                            submission_status: 'processed',
-                            scripture_references: scriptureReferences,
-                            presentation_url: submission.presentation_url || "",
-                            notes_url: submission.notes_url || "",
-                            content_is_slides_only: !!submission.content_is_slides_only,
-                            message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
-                        };
-
-                        // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES
-                        // Raw content must only live in submitted_content or parsed_verse_data.
-                        // We never want large blobs of text leaking into the projection notes field which is visible in Live View.
-
-                        await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
+                    const candidate = sessionSegments[segmentIdx];
+                    if (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase())) {
+                        targetSegmentEntity = candidate;
+                    } else {
+                        // Position mismatch — use first Plenaria
+                        targetSegmentEntity = sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
                     }
                 }
-            } catch (entityErr) {
-                console.error("[ENTITY_LIFT] Segment entity update failed (non-blocking):", entityErr.message);
+            } catch (entityLookupErr) {
+                console.warn("[WEEKLY] Session/Segment entity lookup failed:", entityLookupErr.message);
+            }
+
+            if (targetSegmentEntity) {
+                // Primary path: write processed data to Segment entity
+                const entityUpdate = {
+                    parsed_verse_data: parsedData,
+                    submission_status: 'processed',
+                    scripture_references: scriptureReferences,
+                    presentation_url: submission.presentation_url || "",
+                    notes_url: submission.notes_url || "",
+                    content_is_slides_only: !!submission.content_is_slides_only,
+                    message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
+                };
+                await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
+                console.log(`[WEEKLY] Segment entity ${targetSegmentEntity.id} updated`);
+            } else {
+                // Fallback: pre-entity-lift services still use Service JSON slots
+                console.warn(`[WEEKLY] No Segment entity found, falling back to Service JSON`);
+                const service = await base44.asServiceRole.entities.Service.get(serviceId);
+                if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
+                    await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                        processing_status: 'failed',
+                        processing_error: 'Service or segment not found'
+                    });
+                    return Response.json({ error: "Service/Segment not found" });
+                }
+
+                const currentArray = [...service[timeSlot]];
+                const currentSegment = currentArray[segmentIdx];
+                const type = (currentSegment.type || "").toLowerCase();
+
+                if (!PLENARIA_TYPES.includes(type)) {
+                    await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                        processing_status: 'failed',
+                        processing_error: 'Target segment is not a message type'
+                    });
+                    return Response.json({ error: "Invalid segment type" });
+                }
+
+                const updatedSegment = {
+                    ...currentSegment,
+                    parsed_verse_data: parsedData,
+                    submission_status: 'processed',
+                    scripture_references: scriptureReferences,
+                };
+                if (submission.title && submission.title.trim() !== "") {
+                    updatedSegment.message_title = submission.title.trim();
+                    updatedSegment.data = { ...updatedSegment.data, message_title: submission.title.trim() };
+                }
+                updatedSegment.data = { ...updatedSegment.data, verse: scriptureReferences, scripture_references: scriptureReferences };
+                currentArray[segmentIdx] = updatedSegment;
+                await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
+                console.log(`[WEEKLY] Service JSON slot updated (legacy fallback)`);
             }
 
         } else {

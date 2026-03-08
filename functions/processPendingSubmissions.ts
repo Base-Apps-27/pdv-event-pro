@@ -1,13 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Scheduled cleanup job: processes any SpeakerSubmissionVersion records stuck in 'pending' status.
-// This is a safety net for when the entity automation fails to trigger properly.
-// v1.0 - Initial implementation
-
-// CTO-1 (2026-03-02): Verse parsing centralized in parseScriptureShared.
-// VERSION_HASH: v1.0-2026-03-02 (must match parseScriptureShared)
-// DEPRECATED INLINE COPY BELOW — kept for the safety net scheduler.
-// ╔══════════════════════════════════════════════════════════════════════╗
+// SAFETY NET: Scheduled job that processes any SpeakerSubmissionVersion records stuck in 'pending'.
+// Catches submissions where the primary automation (processNewSubmissionVersion) failed to trigger.
+// Handles both Event (numeric Segment ID) and Weekly (composite ID) paths.
+//
+// BIBLE_BOOKS + parseScriptureReferences: inline copy (Deno Deploy cannot share modules)
+// CANONICAL SOURCE: parseScriptureShared.ts
+// SYNC: If you change the parser, update all 3 copies + parseScriptureShared.
+// Files: processNewSubmissionVersion.ts, processPendingSubmissions.ts, processSegmentSubmission.ts
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },

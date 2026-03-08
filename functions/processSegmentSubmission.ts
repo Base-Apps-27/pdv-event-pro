@@ -1,10 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// UNIFIED ASYNC SUBMISSION PROCESSOR (Services + Events)
-// Triggered by entity automation on Segment: submission_status='pending'
-// Replaces inline processing from submitWeeklyServiceContent
-// Implements DECISION-007: Unified parity architecture
-// 2026-03-07 v1.0
+// ADMIN REPROCESSING ENDPOINT for speaker submissions.
+// Called on-demand from MessageProcessing.jsx admin UI (NOT by entity automation).
+// Use case: admin manually reprocesses a submission after edits, or retries a failed one.
+// The primary processing automation is processNewSubmissionVersion (on SpeakerSubmissionVersion.create).
+//
+// Accepts two invocation patterns:
+//   1. Direct invoke: { segmentId } — looks up latest SpeakerSubmissionVersion for content
+//   2. Legacy entity automation: { event: { entity_id }, data } — still handled for backward compat
+//
+// BIBLE_BOOKS + parseScriptureReferences: inline copy (Deno Deploy cannot share modules)
+// CANONICAL SOURCE: parseScriptureShared.ts
+// SYNC: If you change the parser, update all 3 copies + parseScriptureShared.
+// Files: processNewSubmissionVersion.ts, processPendingSubmissions.ts, processSegmentSubmission.ts
 
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
@@ -118,37 +126,23 @@ function parseScriptureReferences(rawText) {
   return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
 }
 
-// Unified submission processor for Weekly + Event speakers (DECISION-007)
-// Entity automation triggered on Segment.submission_status → 'pending'
-// Payload: { event: { type, entity_name, entity_id }, data: currentSegment }
-// Both submitWeeklyServiceContent + submitSpeakerContent set status='pending' → triggers this
+// Admin reprocessing endpoint for speaker submissions.
+// Accepts: { segmentId } (direct invoke) or { event: { entity_id } } (legacy automation compat)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const { event, data: segment } = payload;
 
-    if (!event || event.type !== 'update' || event.entity_name !== 'Segment' || !event.entity_id) {
-      return Response.json({ error: 'Invalid automation payload' }, { status: 400 });
+    // Resolve segmentId from either invocation pattern
+    const segmentId = payload.segmentId || payload.event?.entity_id;
+    if (!segmentId) {
+      return Response.json({ error: 'Missing segmentId' }, { status: 400 });
     }
 
-    const segmentId = event.entity_id;
-
-    // RESILIENCE FIX (2026-03-08): If automation payload data is missing/null (payload_too_large
-    // or stale snapshot), fetch the segment directly from the DB to guarantee fresh data.
-    let liveSegment = segment;
-    if (!segment || segment.submission_status === undefined || payload.payload_too_large) {
-      console.log(`[PROCESS_SEGMENT] Payload data missing or stale — fetching segment ${segmentId} from DB`);
-      liveSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
-      if (!liveSegment) {
-        return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
-      }
-    }
-
-    // Only process if status transitioned to 'pending'
-    if (liveSegment.submission_status !== 'pending') {
-      console.log(`[PROCESS_SEGMENT] Skipping non-pending status: ${liveSegment.submission_status}`);
-      return Response.json({ success: true, skipped: true, reason: 'Not pending status' });
+    // Always fetch fresh segment data
+    const liveSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
+    if (!liveSegment) {
+      return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
     }
 
     console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (unified weekly + event speaker pipeline)`);
