@@ -152,20 +152,25 @@ Deno.serve(async (req) => {
 
     // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion or Segment)
     if (!liveSegment.content_is_slides_only) {
-      // Fetch audit record to get original content.
+      // Fetch the LATEST submission version for content, regardless of processing status.
+      // FIX (2026-03-08): Previously filtered by processing_status: 'pending', which meant
+      // admin reprocessing of already-processed or failed submissions found no content and
+      // silently returned success. The whole point of admin reprocess is to re-run parsing
+      // on submissions that may have already been processed, edited, or failed.
+      //
       // Search by direct segment_id first (event submissions use entity ID),
       // then fall back to resolved_segment_entity_id (weekly submissions use composite IDs
       // but store the resolved entity ID separately).
       let auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-        { segment_id: segmentId, processing_status: 'pending' },
+        { segment_id: segmentId },
         '-submitted_at', 1
       );
 
-      // FIX (2026-03-08): Weekly submissions store composite IDs in segment_id,
+      // Weekly submissions store composite IDs in segment_id,
       // so the above filter misses them. Search by resolved_segment_entity_id as fallback.
       if (auditRecords.length === 0) {
         auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-          { resolved_segment_entity_id: segmentId, processing_status: 'pending' },
+          { resolved_segment_entity_id: segmentId },
           '-submitted_at', 1
         );
         if (auditRecords.length > 0) {
