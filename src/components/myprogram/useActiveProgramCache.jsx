@@ -146,6 +146,13 @@ export default function useActiveProgramCache(overrideParams = {}) {
     refetchInterval: 2 * 60 * 1000, // Safety net poll every 2 min (catches missed subs)
     retry: 3,                     // Retry 3 times with exponential backoff
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    // HARDENING (2026-03-08): Keep the last successfully fetched data visible while a
+    // background refetch is in-flight. Without this, invalidation from the subscription
+    // causes a brief window where cacheRecord is undefined, which flows through to
+    // normalizeProgramData returning null → service=null → TV shows blank StandbyScreen.
+    // keepPreviousData ensures the TV always displays the last known-good program data
+    // until the new fetch resolves successfully. This is the correct fix for issue #1.
+    placeholderData: keepPreviousData,
     enabled: !overrideServiceId && !overrideEventId, // Skip auto-detection when override is active
   });
 
