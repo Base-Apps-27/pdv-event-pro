@@ -27,7 +27,7 @@
  * Decision: "Single-subscription pattern to prevent invalidation storms"
  * Decision: "Multi-slot warm cache for actively-worked programs"
  */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useMemo, useEffect, useRef, useCallback } from 'react';
 import { sortSessionsChronologically, buildSessionIndexMap } from '@/components/utils/sessionSort';
