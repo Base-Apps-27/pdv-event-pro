@@ -121,41 +121,25 @@ Deno.serve(async (req) => {
         const [_, serviceId, timeSlot, segmentIdxStr, type] = parts;
         const segmentIdx = parseInt(segmentIdxStr);
 
-        // Fetch Service (needed for fallback path + audit)
-        const service = await base44.asServiceRole.entities.Service.get(serviceId);
-        if (!service) return Response.json({ error: "Service not found" }, { status: 404, headers: corsHeaders });
-
-        // ENTITY-FIRST SEGMENT RESOLUTION (2026-02-21)
-        // Entity-backed services (post-syncWeeklyToSessions) no longer store segment data
-        // in Service JSON slots — extractServiceMetadata strips them before save.
-        // Primary path: resolve Segment entity via Session.
-        // Legacy path: Service JSON slot (pre-entity-lift services only).
+        // Resolve Segment entity via Session
         const PLENARIA_TYPES = ['plenaria', 'message', 'predica', 'mensaje'];
-        let targetSegmentEntity = null;
-        let allSessionsForService = null;
-
-        try {
-            allSessionsForService = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
-            const targetSession = allSessionsForService.find(s => s.name === timeSlot);
-            if (targetSession) {
-                const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: targetSession.id }, 'order');
-                // Try exact position first (composite ID embeds the Plenaria's index in session segments)
-                const candidate = segs[segmentIdx];
-                if (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase())) {
-                    targetSegmentEntity = candidate;
-                } else {
-                    // Position mismatch (segment reorder since form was loaded) — use first Plenaria
-                    targetSegmentEntity = segs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
-                }
-            }
-        } catch (entityLookupErr) {
-            console.warn("[ENTITY_FIRST] Session/Segment lookup failed, falling back to Service JSON:", entityLookupErr.message);
+        const allSessionsForService = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+        const targetSession = allSessionsForService.find(s => s.name === timeSlot);
+        if (!targetSession) {
+            return Response.json({ error: "Session not found for this time slot" }, { status: 404, headers: corsHeaders });
         }
 
-        // Resolve segment for validation (entity path or legacy JSON fallback)
-        const segment = targetSegmentEntity || service[timeSlot]?.[segmentIdx];
-        if (!segment) return Response.json({ error: "Segment not found in service" }, { status: 404, headers: corsHeaders });
-        const segType = (targetSegmentEntity?.segment_type || segment.type || "").toLowerCase();
+        const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: targetSession.id }, 'order');
+        const candidate = segs[segmentIdx];
+        const targetSegmentEntity = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+            ? candidate
+            : segs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+
+        if (!targetSegmentEntity) {
+            return Response.json({ error: "No message-type segment found" }, { status: 404, headers: corsHeaders });
+        }
+
+        const segType = (targetSegmentEntity.segment_type || '').toLowerCase();
         if (!PLENARIA_TYPES.includes(segType)) {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
@@ -166,8 +150,7 @@ Deno.serve(async (req) => {
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
 
-        // Resolve base projection_notes from entity or JSON fallback
-        let projectionNotes = targetSegmentEntity?.projection_notes || service[timeSlot]?.[segmentIdx]?.projection_notes || "";
+        let projectionNotes = targetSegmentEntity.projection_notes || "";
 
         // Mark for pending processing, no inline LLM
         console.log("[SUBMIT] Marking submission as pending — async processing will follow");
@@ -191,19 +174,10 @@ Deno.serve(async (req) => {
             effectiveMirrors.push(segment_id.replace('|9:30am|', '|11:30am|'));
         }
 
-        // ── PRIMARY PATH: Entity-backed OR JSON fallback (DECISION-007 compliant migration) ──
-        if (targetSegmentEntity) {
-            console.log(`[SUBMIT] Writing to Segment entity (${targetSegmentEntity.id})`);
-            await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
-            console.log("[SUBMIT] Segment entity updated");
-        } else {
-            // Legacy: pre-entity services still use Service JSON slots
-            console.log("[SUBMIT] Writing to Service JSON slot (legacy path)");
-            const currentArray = [...(service[timeSlot] || [])];
-            currentArray[segmentIdx] = { ...currentArray[segmentIdx], ...commonFields };
-            await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
-            console.log("[SUBMIT] Service JSON updated");
-        }
+        // Write pending status to Segment entity
+        console.log(`[SUBMIT] Writing to Segment entity (${targetSegmentEntity.id})`);
+        await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
+        console.log("[SUBMIT] Segment entity updated");
 
         // ── MIRROR UPDATES ──
         for (const mirrorId of effectiveMirrors) {
@@ -214,30 +188,25 @@ Deno.serve(async (req) => {
             }
             const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
             if (mirrorSvcId !== serviceId) {
-                console.warn(`[SUBMIT] Cross-service mirror: ${mirrorSlotName}`);
+                console.warn(`[SUBMIT] Cross-service mirror not supported: ${mirrorSlotName}`);
                 continue;
             }
 
             try {
-                if (allSessionsForService) {
-                    // Try entity path first
-                    const mirrorSession = allSessionsForService.find(s => s.name === mirrorSlotName);
-                    if (mirrorSession) {
-                        const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
-                        const mirrorIdx = parseInt(mirrorIdxStr);
-                        let mirrorTarget = mirrorSegs[mirrorIdx] || mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
-                        if (mirrorTarget) {
-                            await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, { ...commonFields, projection_notes: mirrorTarget.projection_notes || "" });
-                            console.log(`[SUBMIT] Mirror entity updated: ${mirrorSlotName}`);
-                            continue;
-                        }
-                    }
+                const mirrorSession = allSessionsForService.find(s => s.name === mirrorSlotName);
+                if (!mirrorSession) {
+                    console.warn(`[SUBMIT] Mirror session not found: ${mirrorSlotName}`);
+                    continue;
                 }
-                // Fallback: JSON path
-                const otherArray = [...(service[mirrorSlotName] || [])];
-                otherArray[parseInt(mirrorIdxStr)] = { ...otherArray[parseInt(mirrorIdxStr)], ...commonFields };
-                await base44.asServiceRole.entities.Service.update(serviceId, { [mirrorSlotName]: otherArray });
-                console.log(`[SUBMIT] Mirror JSON updated: ${mirrorSlotName}`);
+                const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
+                const mirrorIdx = parseInt(mirrorIdxStr);
+                const mirrorTarget = mirrorSegs[mirrorIdx] || mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
+                if (mirrorTarget) {
+                    await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, { ...commonFields, projection_notes: mirrorTarget.projection_notes || "" });
+                    console.log(`[SUBMIT] Mirror entity updated: ${mirrorSlotName}`);
+                } else {
+                    console.warn(`[SUBMIT] No message-type segment found in mirror session: ${mirrorSlotName}`);
+                }
             } catch (err) {
                 console.warn(`[SUBMIT] Mirror update failed for ${mirrorSlotName}: ${err.message}`);
             }

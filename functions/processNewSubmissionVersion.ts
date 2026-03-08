@@ -280,81 +280,46 @@ ${submission.content.substring(0, 15000)}
             const segmentIdx = parseInt(parts[3]);
             const PLENARIA_TYPES = ['message', 'plenaria', 'predica', 'mensaje'];
 
-            // Entity-first resolution: resolve Segment entity via Session
-            let targetSegmentEntity = null;
-            try {
-                const sessions = await base44.asServiceRole.entities.Session.filter({
-                    service_id: serviceId
+            // Resolve Segment entity via Session
+            const sessions = await base44.asServiceRole.entities.Session.filter({
+                service_id: serviceId
+            });
+            const targetSession = sessions.find(s => s.name === timeSlot);
+            if (!targetSession) {
+                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                    processing_status: 'failed',
+                    processing_error: `Session not found for timeSlot ${timeSlot}`
                 });
-                const targetSession = sessions.find(s => s.name === timeSlot);
-                if (targetSession) {
-                    const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
-                        { session_id: targetSession.id }, 'order'
-                    );
-                    const candidate = sessionSegments[segmentIdx];
-                    if (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase())) {
-                        targetSegmentEntity = candidate;
-                    } else {
-                        // Position mismatch — use first Plenaria
-                        targetSegmentEntity = sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
-                    }
-                }
-            } catch (entityLookupErr) {
-                console.warn("[WEEKLY] Session/Segment entity lookup failed:", entityLookupErr.message);
+                return Response.json({ error: "Session not found" });
             }
 
-            if (targetSegmentEntity) {
-                // Primary path: write processed data to Segment entity
-                const entityUpdate = {
-                    parsed_verse_data: parsedData,
-                    submission_status: 'processed',
-                    scripture_references: scriptureReferences,
-                    presentation_url: submission.presentation_url || "",
-                    notes_url: submission.notes_url || "",
-                    content_is_slides_only: !!submission.content_is_slides_only,
-                    message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
-                };
-                await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
-                console.log(`[WEEKLY] Segment entity ${targetSegmentEntity.id} updated`);
-            } else {
-                // Fallback: pre-entity-lift services still use Service JSON slots
-                console.warn(`[WEEKLY] No Segment entity found, falling back to Service JSON`);
-                const service = await base44.asServiceRole.entities.Service.get(serviceId);
-                if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
-                    await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-                        processing_status: 'failed',
-                        processing_error: 'Service or segment not found'
-                    });
-                    return Response.json({ error: "Service/Segment not found" });
-                }
+            const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+                { session_id: targetSession.id }, 'order'
+            );
+            const candidate = sessionSegments[segmentIdx];
+            const targetSegmentEntity = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+                ? candidate
+                : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
 
-                const currentArray = [...service[timeSlot]];
-                const currentSegment = currentArray[segmentIdx];
-                const type = (currentSegment.type || "").toLowerCase();
-
-                if (!PLENARIA_TYPES.includes(type)) {
-                    await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-                        processing_status: 'failed',
-                        processing_error: 'Target segment is not a message type'
-                    });
-                    return Response.json({ error: "Invalid segment type" });
-                }
-
-                const updatedSegment = {
-                    ...currentSegment,
-                    parsed_verse_data: parsedData,
-                    submission_status: 'processed',
-                    scripture_references: scriptureReferences,
-                };
-                if (submission.title && submission.title.trim() !== "") {
-                    updatedSegment.message_title = submission.title.trim();
-                    updatedSegment.data = { ...updatedSegment.data, message_title: submission.title.trim() };
-                }
-                updatedSegment.data = { ...updatedSegment.data, verse: scriptureReferences, scripture_references: scriptureReferences };
-                currentArray[segmentIdx] = updatedSegment;
-                await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
-                console.log(`[WEEKLY] Service JSON slot updated (legacy fallback)`);
+            if (!targetSegmentEntity) {
+                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                    processing_status: 'failed',
+                    processing_error: 'No message-type Segment found in session'
+                });
+                return Response.json({ error: "Segment not found" });
             }
+
+            const entityUpdate = {
+                parsed_verse_data: parsedData,
+                submission_status: 'processed',
+                scripture_references: scriptureReferences,
+                presentation_url: submission.presentation_url || "",
+                notes_url: submission.notes_url || "",
+                content_is_slides_only: !!submission.content_is_slides_only,
+                message_title: (submission.title && submission.title.trim() !== "") ? submission.title.trim() : targetSegmentEntity.message_title,
+            };
+            await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, entityUpdate);
+            console.log(`[WEEKLY] Segment entity ${targetSegmentEntity.id} updated`);
 
         } else {
             // Event Segment path — primary use case for this automation
