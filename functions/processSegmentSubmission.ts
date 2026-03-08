@@ -172,9 +172,9 @@ Deno.serve(async (req) => {
         // Speaker submission path (public form)
         submission = auditRecords[0];
         content = submission.content || '';
-      } else if (segment.submitted_content) {
+      } else if (liveSegment.submitted_content) {
         // Weekly submission path (submitWeeklyServiceContent)
-        content = segment.submitted_content;
+        content = liveSegment.submitted_content;
       }
 
       if (content) {
