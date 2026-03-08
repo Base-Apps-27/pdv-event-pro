@@ -274,32 +274,49 @@ ${submission.content.substring(0, 15000)}
         // Weekly Service path — primary processing for weekly submissions
         if (segmentId.startsWith('weekly_service|')) {
             console.log(`[WEEKLY] Processing weekly submission ${submissionId}`);
-            const parts = segmentId.split('|');
-            const serviceId = parts[1];
-            const timeSlot = parts[2];
-            const segmentIdx = parseInt(parts[3]);
-            const PLENARIA_TYPES = ['message', 'plenaria', 'predica', 'mensaje'];
 
-            // Resolve Segment entity via Session
-            const sessions = await base44.asServiceRole.entities.Session.filter({
-                service_id: serviceId
-            });
-            const targetSession = sessions.find(s => s.name === timeSlot);
-            if (!targetSession) {
-                await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-                    processing_status: 'failed',
-                    processing_error: `Session not found for timeSlot ${timeSlot}`
-                });
-                return Response.json({ error: "Session not found" });
+            // Use pre-resolved entity ID from submit function when available.
+            // Falls back to composite ID resolution for submissions created before this optimization.
+            let resolvedEntityId = submission.resolved_segment_entity_id;
+            let targetSegmentEntity;
+
+            if (resolvedEntityId) {
+                console.log(`[WEEKLY] Using pre-resolved entity ID: ${resolvedEntityId}`);
+                targetSegmentEntity = await base44.asServiceRole.entities.Segment.get(resolvedEntityId);
+                if (!targetSegmentEntity) {
+                    console.warn(`[WEEKLY] Pre-resolved entity ${resolvedEntityId} not found, falling back to composite resolution`);
+                    resolvedEntityId = null; // trigger fallback below
+                }
             }
 
-            const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
-                { session_id: targetSession.id }, 'order'
-            );
-            const candidate = sessionSegments[segmentIdx];
-            const targetSegmentEntity = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
-                ? candidate
-                : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+            if (!resolvedEntityId) {
+                // Fallback: resolve from composite ID (3 queries)
+                const parts = segmentId.split('|');
+                const serviceId = parts[1];
+                const timeSlot = parts[2];
+                const segmentIdx = parseInt(parts[3]);
+                const PLENARIA_TYPES = ['message', 'plenaria', 'predica', 'mensaje'];
+
+                const sessions = await base44.asServiceRole.entities.Session.filter({
+                    service_id: serviceId
+                });
+                const targetSession = sessions.find(s => s.name === timeSlot);
+                if (!targetSession) {
+                    await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                        processing_status: 'failed',
+                        processing_error: `Session not found for timeSlot ${timeSlot}`
+                    });
+                    return Response.json({ error: "Session not found" });
+                }
+
+                const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+                    { session_id: targetSession.id }, 'order'
+                );
+                const candidate = sessionSegments[segmentIdx];
+                targetSegmentEntity = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+                    ? candidate
+                    : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+            }
 
             if (!targetSegmentEntity) {
                 await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {

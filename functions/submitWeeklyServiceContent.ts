@@ -179,6 +179,9 @@ Deno.serve(async (req) => {
         console.log("[SUBMIT] Segment entity updated");
 
         // ── MIRROR UPDATES ──
+        // Track resolved entity IDs so we can pass them to SpeakerSubmissionVersion
+        // and the processor won't need to re-resolve from composite IDs.
+        const mirrorResolvedIds = new Map(); // mirrorCompositeId → resolved entity ID
         for (const mirrorId of effectiveMirrors) {
             const mirrorParts = mirrorId.split('|');
             if (mirrorParts.length < 5) {
@@ -201,6 +204,7 @@ Deno.serve(async (req) => {
                 const mirrorIdx = parseInt(mirrorIdxStr);
                 const mirrorTarget = mirrorSegs[mirrorIdx] || mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
                 if (mirrorTarget) {
+                    mirrorResolvedIds.set(mirrorId, String(mirrorTarget.id));
                     await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, { ...commonFields, projection_notes: mirrorTarget.projection_notes || "" });
                     console.log(`[SUBMIT] Mirror entity updated: ${mirrorSlotName}`);
                 } else {
@@ -218,6 +222,9 @@ Deno.serve(async (req) => {
         console.log("[SUBMIT] Creating audit trail record (marked pending)...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
             segment_id: segment_id,
+            // Pass already-resolved entity ID so processor skips re-resolution
+            // (saves 3 queries: Session.filter + Segment.filter + find-by-type)
+            resolved_segment_entity_id: String(targetSegmentEntity.id),
             content: content,
             title: title || "",
             presentation_url: presentation_url || "",
@@ -233,9 +240,15 @@ Deno.serve(async (req) => {
 
         // Audit trail — mirrored submissions (dynamic)
         for (const mirrorId of effectiveMirrors) {
-            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId}`);
+            const resolvedMirrorEntityId = mirrorResolvedIds.get(mirrorId);
+            if (!resolvedMirrorEntityId) {
+                console.warn(`[SUBMIT] Skipping audit for unresolved mirror: ${mirrorId}`);
+                continue;
+            }
+            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId} (entity ${resolvedMirrorEntityId})`);
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: mirrorId,
+                resolved_segment_entity_id: resolvedMirrorEntityId,
                 content: content,
                 title: title || "",
                 presentation_url: presentation_url || "",

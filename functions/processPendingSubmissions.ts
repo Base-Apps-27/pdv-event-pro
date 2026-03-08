@@ -213,29 +213,45 @@ ${submission.content.substring(0, 15000)}`;
   };
 
   if (segmentId.startsWith('weekly_service|')) {
-    // Weekly: resolve Segment entity via Session
-    const parts = segmentId.split('|');
-    const serviceId = parts[1];
-    const timeSlot = parts[2];
-    const segmentIdx = parseInt(parts[3]);
+    // Use pre-resolved entity ID when available (set by submit function).
+    // Falls back to composite ID resolution for older submissions.
+    let resolvedEntityId = submission.resolved_segment_entity_id;
+    let targetSegment;
 
-    const sessions = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
-    const targetSession = sessions.find(s => s.name === timeSlot);
-    if (!targetSession) {
-      await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-        processing_status: 'failed',
-        processing_error: `Session not found for timeSlot ${timeSlot}`
-      });
-      return { success: false, id: submission.id, error: 'Session not found' };
+    if (resolvedEntityId) {
+      console.log(`[PROCESS] Using pre-resolved entity ID: ${resolvedEntityId}`);
+      targetSegment = await base44.asServiceRole.entities.Segment.get(resolvedEntityId);
+      if (!targetSegment) {
+        console.warn(`[PROCESS] Pre-resolved entity ${resolvedEntityId} not found, falling back to composite resolution`);
+        resolvedEntityId = null;
+      }
     }
 
-    const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
-      { session_id: targetSession.id }, 'order'
-    );
-    const candidate = sessionSegments[segmentIdx];
-    const targetSegment = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
-      ? candidate
-      : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+    if (!resolvedEntityId) {
+      // Fallback: resolve from composite ID (3 queries)
+      const parts = segmentId.split('|');
+      const serviceId = parts[1];
+      const timeSlot = parts[2];
+      const segmentIdx = parseInt(parts[3]);
+
+      const sessions = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+      const targetSession = sessions.find(s => s.name === timeSlot);
+      if (!targetSession) {
+        await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+          processing_status: 'failed',
+          processing_error: `Session not found for timeSlot ${timeSlot}`
+        });
+        return { success: false, id: submission.id, error: 'Session not found' };
+      }
+
+      const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+        { session_id: targetSession.id }, 'order'
+      );
+      const candidate = sessionSegments[segmentIdx];
+      targetSegment = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+        ? candidate
+        : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+    }
 
     if (!targetSegment) {
       await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
