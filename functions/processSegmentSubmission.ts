@@ -1,10 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// UNIFIED ASYNC SUBMISSION PROCESSOR (Services + Events)
-// Triggered by entity automation on Segment: submission_status='pending'
-// Replaces inline processing from submitWeeklyServiceContent
-// Implements DECISION-007: Unified parity architecture
-// 2026-03-07 v1.0
+// ADMIN REPROCESSING ENDPOINT for speaker submissions.
+// Called on-demand from MessageProcessing.jsx admin UI (NOT by entity automation).
+// Use case: admin manually reprocesses a submission after edits, or retries a failed one.
+// The primary processing automation is processNewSubmissionVersion (on SpeakerSubmissionVersion.create).
+//
+// Accepts two invocation patterns:
+//   1. Direct invoke: { segmentId } — looks up latest SpeakerSubmissionVersion for content
+//   2. Legacy entity automation: { event: { entity_id }, data } — still handled for backward compat
+//
+// BIBLE_BOOKS + parseScriptureReferences: inline copy (Deno Deploy cannot share modules)
+// CANONICAL SOURCE: parseScriptureShared.ts
+// SYNC: If you change the parser, update all 3 copies + parseScriptureShared.
+// Files: processNewSubmissionVersion.ts, processPendingSubmissions.ts, processSegmentSubmission.ts
 
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
@@ -118,37 +126,23 @@ function parseScriptureReferences(rawText) {
   return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
 }
 
-// Unified submission processor for Weekly + Event speakers (DECISION-007)
-// Entity automation triggered on Segment.submission_status → 'pending'
-// Payload: { event: { type, entity_name, entity_id }, data: currentSegment }
-// Both submitWeeklyServiceContent + submitSpeakerContent set status='pending' → triggers this
+// Admin reprocessing endpoint for speaker submissions.
+// Accepts: { segmentId } (direct invoke) or { event: { entity_id } } (legacy automation compat)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const { event, data: segment } = payload;
 
-    if (!event || event.type !== 'update' || event.entity_name !== 'Segment' || !event.entity_id) {
-      return Response.json({ error: 'Invalid automation payload' }, { status: 400 });
+    // Resolve segmentId from either invocation pattern
+    const segmentId = payload.segmentId || payload.event?.entity_id;
+    if (!segmentId) {
+      return Response.json({ error: 'Missing segmentId' }, { status: 400 });
     }
 
-    const segmentId = event.entity_id;
-
-    // RESILIENCE FIX (2026-03-08): If automation payload data is missing/null (payload_too_large
-    // or stale snapshot), fetch the segment directly from the DB to guarantee fresh data.
-    let liveSegment = segment;
-    if (!segment || segment.submission_status === undefined || payload.payload_too_large) {
-      console.log(`[PROCESS_SEGMENT] Payload data missing or stale — fetching segment ${segmentId} from DB`);
-      liveSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
-      if (!liveSegment) {
-        return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
-      }
-    }
-
-    // Only process if status transitioned to 'pending'
-    if (liveSegment.submission_status !== 'pending') {
-      console.log(`[PROCESS_SEGMENT] Skipping non-pending status: ${liveSegment.submission_status}`);
-      return Response.json({ success: true, skipped: true, reason: 'Not pending status' });
+    // Always fetch fresh segment data
+    const liveSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
+    if (!liveSegment) {
+      return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
     }
 
     console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (unified weekly + event speaker pipeline)`);
@@ -158,22 +152,37 @@ Deno.serve(async (req) => {
 
     // Only parse if NOT slides-only mode AND has submitted_content (from SpeakerSubmissionVersion or Segment)
     if (!liveSegment.content_is_slides_only) {
-      // Fetch audit record to get original content (speaker submission path)
-      const auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+      // Fetch audit record to get original content.
+      // Search by direct segment_id first (event submissions use entity ID),
+      // then fall back to resolved_segment_entity_id (weekly submissions use composite IDs
+      // but store the resolved entity ID separately).
+      let auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
         { segment_id: segmentId, processing_status: 'pending' },
         '-submitted_at', 1
       );
 
-      // Determine content source: SpeakerSubmissionVersion (events) OR Segment.submitted_content (weekly)
+      // FIX (2026-03-08): Weekly submissions store composite IDs in segment_id,
+      // so the above filter misses them. Search by resolved_segment_entity_id as fallback.
+      if (auditRecords.length === 0) {
+        auditRecords = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+          { resolved_segment_entity_id: segmentId, processing_status: 'pending' },
+          '-submitted_at', 1
+        );
+        if (auditRecords.length > 0) {
+          console.log(`[PROCESS_SEGMENT] Found version via resolved_segment_entity_id for ${segmentId}`);
+        }
+      }
+
+      // Determine content source: SpeakerSubmissionVersion (events + weekly) OR Segment.submitted_content (legacy fallback)
       let content = '';
       let submission = null;
-      
+
       if (auditRecords.length > 0) {
-        // Speaker submission path (public form)
+        // Speaker submission path (public form — event or weekly)
         submission = auditRecords[0];
         content = submission.content || '';
       } else if (liveSegment.submitted_content) {
-        // Weekly submission path (submitWeeklyServiceContent)
+        // Legacy fallback: content stored directly on Segment
         content = liveSegment.submitted_content;
       }
 
@@ -257,13 +266,20 @@ ${content.substring(0, 15000)}`;
           }
         }
 
-        // Update Segment entity with processed data (FIX: explicit status tracking)
+        // Update Segment entity with processed data
+        // FIX (2026-03-08): Aligned payload with processNewSubmissionVersion unified pipeline.
+        // Includes material URLs and metadata from submission version when available.
+        const segmentUpdateData = {
+          submission_status: 'processed',
+          parsed_verse_data: parsedData,
+          scripture_references: scriptureReferences,
+          ...(submission?.presentation_url ? { presentation_url: submission.presentation_url } : {}),
+          ...(submission?.notes_url ? { notes_url: submission.notes_url } : {}),
+          ...(submission ? { content_is_slides_only: !!submission.content_is_slides_only } : {}),
+          ...(submission?.title?.trim() ? { message_title: submission.title.trim() } : {}),
+        };
         try {
-          await base44.asServiceRole.entities.Segment.update(segmentId, {
-            parsed_verse_data: parsedData,
-            scripture_references: scriptureReferences,
-            submission_status: 'processed'
-          });
+          await base44.asServiceRole.entities.Segment.update(segmentId, segmentUpdateData);
           console.log(`[PROCESS_SEGMENT] Segment ${segmentId} marked as processed`);
         } catch (segmentUpdateErr) {
           console.error(`[PROCESS_SEGMENT] CRITICAL: Failed to update segment status: ${segmentUpdateErr.message}`);
@@ -300,7 +316,8 @@ ${content.substring(0, 15000)}`;
     } else {
       console.log(`[PROCESS_SEGMENT] Slides-only mode — marking processed without parsing`);
       await base44.asServiceRole.entities.Segment.update(segmentId, {
-        submission_status: 'processed'
+        submission_status: 'processed',
+        parsed_verse_data: { type: 'empty', sections: [] }
       });
     }
 

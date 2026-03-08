@@ -141,13 +141,13 @@ Deno.serve(async (req) => {
         }
 
         // 1. Create Version Record (Source of Truth)
-        // This is the ONLY data write in this function to ensure speed and reliability.
-        // Audit trail — DECISION-007 unified architecture.
-        // The Segment update (step 2) will trigger processSegmentSubmission automation.
+        // Audit trail + processing trigger: SpeakerSubmissionVersion.create triggers
+        // processNewSubmissionVersion automation for verse parsing + LLM.
         try {
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: segment_id,
                 content: content,
+                title: title || "",
                 presentation_url: Array.isArray(presentation_url) ? presentation_url : (presentation_url ? [presentation_url] : []),
                 notes_url: Array.isArray(notes_url) ? notes_url : (notes_url ? [notes_url] : []),
                 content_is_slides_only: !!content_is_slides_only,

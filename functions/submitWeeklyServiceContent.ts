@@ -1,146 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// v3.0 - INLINE PROCESSING: Parse verses directly in submit function.
-// Eliminates dependency on unreliable entity automation (82% failure rate).
-// SpeakerSubmissionVersion still created for audit trail, marked 'processed' immediately.
-// Safety net (processPendingSubmissions) remains as defense-in-depth.
+// SUBMIT-ONLY endpoint for weekly service speaker submissions.
+// No parsing or processing happens here. Raw content is stored in SpeakerSubmissionVersion,
+// Segment is marked submission_status='pending' for admin visibility.
+// Processing is handled asynchronously by processNewSubmissionVersion (entity automation
+// on SpeakerSubmissionVersion create). Safety net: processPendingSubmissions (scheduled).
 
 // Rate Limiter
 const rateLimiter = new Map();
-
-// CTO-1 (2026-03-02): Verse parsing centralized in parseScriptureShared.
-// VERSION_HASH: v1.0-2026-03-02 (must match parseScriptureShared)
-// DEPRECATED INLINE COPY BELOW — kept as fallback for this submission handler.
-// Future work: replace inline calls with base44.asServiceRole.functions.invoke('parseScriptureShared').
-// ╔══════════════════════════════════════════════════════════════════════╗
-const BIBLE_BOOKS = {
-  "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
-  "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
-  "lv": { en: "Leviticus", es: "Levítico" }, "lev": { en: "Leviticus", es: "Levítico" }, "leviticus": { en: "Leviticus", es: "Levítico" }, "levítico": { en: "Leviticus", es: "Levítico" },
-  "nm": { en: "Numbers", es: "Números" }, "num": { en: "Numbers", es: "Números" }, "numb": { en: "Numbers", es: "Números" }, "numbers": { en: "Numbers", es: "Números" }, "números": { en: "Numbers", es: "Números" }, "núm": { en: "Numbers", es: "Números" },
-  "dt": { en: "Deuteronomy", es: "Deuteronomio" }, "deut": { en: "Deuteronomy", es: "Deuteronomio" }, "deuteronomy": { en: "Deuteronomy", es: "Deuteronomio" }, "deuteronomio": { en: "Deuteronomy", es: "Deuteronomio" },
-  "js": { en: "Joshua", es: "Josué" }, "jos": { en: "Joshua", es: "Josué" }, "josh": { en: "Joshua", es: "Josué" }, "joshua": { en: "Joshua", es: "Josué" }, "josué": { en: "Joshua", es: "Josué" },
-  "jue": { en: "Judges", es: "Jueces" }, "judg": { en: "Judges", es: "Jueces" }, "judges": { en: "Judges", es: "Jueces" }, "jueces": { en: "Judges", es: "Jueces" },
-  "rt": { en: "Ruth", es: "Rut" }, "rut": { en: "Ruth", es: "Rut" }, "ruth": { en: "Ruth", es: "Rut" },
-  "1 sm": { en: "1 Samuel", es: "1 Samuel" }, "1 sa": { en: "1 Samuel", es: "1 Samuel" }, "1 sam": { en: "1 Samuel", es: "1 Samuel" }, "1 samuel": { en: "1 Samuel", es: "1 Samuel" }, "i sam": { en: "1 Samuel", es: "1 Samuel" }, "1sam": { en: "1 Samuel", es: "1 Samuel" },
-  "2 sm": { en: "2 Samuel", es: "2 Samuel" }, "2 sa": { en: "2 Samuel", es: "2 Samuel" }, "2 sam": { en: "2 Samuel", es: "2 Samuel" }, "2 samuel": { en: "2 Samuel", es: "2 Samuel" }, "ii sam": { en: "2 Samuel", es: "2 Samuel" }, "2sam": { en: "2 Samuel", es: "2 Samuel" },
-  "1 re": { en: "1 Kings", es: "1 Reyes" }, "1 kgs": { en: "1 Kings", es: "1 Reyes" }, "1 ki": { en: "1 Kings", es: "1 Reyes" }, "1 kings": { en: "1 Kings", es: "1 Reyes" }, "1 reyes": { en: "1 Kings", es: "1 Reyes" }, "i rey": { en: "1 Kings", es: "1 Reyes" }, "1rey": { en: "1 Kings", es: "1 Reyes" },
-  "2 re": { en: "2 Kings", es: "2 Reyes" }, "2 kgs": { en: "2 Kings", es: "2 Reyes" }, "2 ki": { en: "2 Kings", es: "2 Reyes" }, "2 kings": { en: "2 Kings", es: "2 Reyes" }, "2 reyes": { en: "2 Kings", es: "2 Reyes" }, "ii rey": { en: "2 Kings", es: "2 Reyes" }, "2rey": { en: "2 Kings", es: "2 Reyes" },
-  "1 cr": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chr": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chron": { en: "1 Chronicles", es: "1 Crónicas" }, "1 chronicles": { en: "1 Chronicles", es: "1 Crónicas" }, "1 crónicas": { en: "1 Chronicles", es: "1 Crónicas" }, "i cron": { en: "1 Chronicles", es: "1 Crónicas" }, "1cron": { en: "1 Chronicles", es: "1 Crónicas" },
-  "2 cr": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chr": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chron": { en: "2 Chronicles", es: "2 Crónicas" }, "2 chronicles": { en: "2 Chronicles", es: "2 Crónicas" }, "2 crónicas": { en: "2 Chronicles", es: "2 Crónicas" }, "ii cron": { en: "2 Chronicles", es: "2 Crónicas" }, "2cron": { en: "2 Chronicles", es: "2 Crónicas" },
-  "esd": { en: "Ezra", es: "Esdras" }, "ezr": { en: "Ezra", es: "Esdras" }, "ezra": { en: "Ezra", es: "Esdras" }, "esdras": { en: "Ezra", es: "Esdras" },
-  "neh": { en: "Nehemiah", es: "Nehemías" }, "nehemiah": { en: "Nehemiah", es: "Nehemías" }, "nehemías": { en: "Nehemiah", es: "Nehemías" },
-  "est": { en: "Esther", es: "Ester" }, "esth": { en: "Esther", es: "Ester" }, "esther": { en: "Esther", es: "Ester" }, "ester": { en: "Esther", es: "Ester" },
-  "job": { en: "Job", es: "Job" },
-  "sal": { en: "Psalms", es: "Salmos" }, "ps": { en: "Psalms", es: "Salmos" }, "psa": { en: "Psalms", es: "Salmos" }, "psalms": { en: "Psalms", es: "Salmos" }, "salmos": { en: "Psalms", es: "Salmos" },
-  "pr": { en: "Proverbs", es: "Proverbios" }, "prov": { en: "Proverbs", es: "Proverbios" }, "pro": { en: "Proverbs", es: "Proverbios" }, "proverbs": { en: "Proverbs", es: "Proverbios" }, "proverbios": { en: "Proverbs", es: "Proverbios" },
-  "ec": { en: "Ecclesiastes", es: "Eclesiastés" }, "eccl": { en: "Ecclesiastes", es: "Eclesiastés" }, "ecclesiastes": { en: "Ecclesiastes", es: "Eclesiastés" }, "eclesiastés": { en: "Ecclesiastes", es: "Eclesiastés" }, "ecl": { en: "Ecclesiastes", es: "Eclesiastés" },
-  "cnt": { en: "Song of Solomon", es: "Cantares" }, "cant": { en: "Song of Solomon", es: "Cantares" }, "song": { en: "Song of Solomon", es: "Cantares" }, "cantares": { en: "Song of Solomon", es: "Cantares" }, "songs": { en: "Song of Solomon", es: "Cantares" }, "sos": { en: "Song of Solomon", es: "Cantares" },
-  "is": { en: "Isaiah", es: "Isaías" }, "isa": { en: "Isaiah", es: "Isaías" }, "isaiah": { en: "Isaiah", es: "Isaías" }, "isaías": { en: "Isaiah", es: "Isaías" },
-  "jer": { en: "Jeremiah", es: "Jeremías" }, "jeremiah": { en: "Jeremiah", es: "Jeremías" }, "jeremías": { en: "Jeremiah", es: "Jeremías" },
-  "lm": { en: "Lamentations", es: "Lamentaciones" }, "lam": { en: "Lamentations", es: "Lamentaciones" }, "lamentations": { en: "Lamentations", es: "Lamentaciones" }, "lamentaciones": { en: "Lamentations", es: "Lamentaciones" },
-  "ez": { en: "Ezekiel", es: "Ezequiel" }, "ezek": { en: "Ezekiel", es: "Ezequiel" }, "ezekiel": { en: "Ezekiel", es: "Ezequiel" }, "ezequiel": { en: "Ezekiel", es: "Ezequiel" },
-  "dn": { en: "Daniel", es: "Daniel" }, "dan": { en: "Daniel", es: "Daniel" }, "daniel": { en: "Daniel", es: "Daniel" },
-  "os": { en: "Hosea", es: "Oseas" }, "hos": { en: "Hosea", es: "Oseas" }, "hosea": { en: "Hosea", es: "Oseas" }, "oseas": { en: "Hosea", es: "Oseas" },
-  "jl": { en: "Joel", es: "Joel" }, "joel": { en: "Joel", es: "Joel" },
-  "am": { en: "Amos", es: "Amós" }, "amos": { en: "Amos", es: "Amós" }, "amós": { en: "Amos", es: "Amós" },
-  "abd": { en: "Obadiah", es: "Abdías" }, "obad": { en: "Obadiah", es: "Abdías" }, "obadiah": { en: "Obadiah", es: "Abdías" }, "abdías": { en: "Obadiah", es: "Abdías" },
-  "jon": { en: "Jonah", es: "Jonás" }, "jona": { en: "Jonah", es: "Jonás" }, "jonah": { en: "Jonah", es: "Jonás" }, "jonás": { en: "Jonah", es: "Jonás" },
-  "miq": { en: "Micah", es: "Miqueas" }, "mic": { en: "Micah", es: "Miqueas" }, "micah": { en: "Micah", es: "Miqueas" }, "miqueas": { en: "Micah", es: "Miqueas" },
-  "nah": { en: "Nahum", es: "Nahúm" }, "nahum": { en: "Nahum", es: "Nahúm" }, "nahúm": { en: "Nahum", es: "Nahúm" },
-  "hab": { en: "Habakkuk", es: "Habacuc" }, "habakkuk": { en: "Habakkuk", es: "Habacuc" }, "habacuc": { en: "Habakkuk", es: "Habacuc" },
-  "sof": { en: "Zephaniah", es: "Sofonías" }, "zeph": { en: "Zephaniah", es: "Sofonías" }, "zephaniah": { en: "Zephaniah", es: "Sofonías" }, "sofonías": { en: "Zephaniah", es: "Sofonías" },
-  "hag": { en: "Haggai", es: "Hageo" }, "hagg": { en: "Haggai", es: "Hageo" }, "haggai": { en: "Haggai", es: "Hageo" }, "hageo": { en: "Haggai", es: "Hageo" },
-  "zac": { en: "Zechariah", es: "Zacarías" }, "zech": { en: "Zechariah", es: "Zacarías" }, "zechariah": { en: "Zechariah", es: "Zacarías" }, "zacarías": { en: "Zechariah", es: "Zacarías" },
-  "mal": { en: "Malachi", es: "Malaquías" }, "malachi": { en: "Malachi", es: "Malaquías" }, "malaquías": { en: "Malachi", es: "Malaquías" },
-  "mt": { en: "Matthew", es: "Mateo" }, "matt": { en: "Matthew", es: "Mateo" }, "matthew": { en: "Matthew", es: "Mateo" }, "mateo": { en: "Matthew", es: "Mateo" }, "mat": { en: "Matthew", es: "Mateo" },
-  "mr": { en: "Mark", es: "Marcos" }, "mk": { en: "Mark", es: "Marcos" }, "mark": { en: "Mark", es: "Marcos" }, "marcos": { en: "Mark", es: "Marcos" }, "mar": { en: "Mark", es: "Marcos" },
-  "lc": { en: "Luke", es: "Lucas" }, "lk": { en: "Luke", es: "Lucas" }, "luke": { en: "Luke", es: "Lucas" }, "lucas": { en: "Luke", es: "Lucas" }, "luc": { en: "Luke", es: "Lucas" }, "luk": { en: "Luke", es: "Lucas" },
-  "jn": { en: "John", es: "Juan" }, "jhn": { en: "John", es: "Juan" }, "john": { en: "John", es: "Juan" }, "juan": { en: "John", es: "Juan" },
-  "hch": { en: "Acts", es: "Hechos" }, "acts": { en: "Acts", es: "Hechos" }, "hechos": { en: "Acts", es: "Hechos" }, "hech": { en: "Acts", es: "Hechos" },
-  "rom": { en: "Romans", es: "Romanos" }, "ro": { en: "Romans", es: "Romanos" }, "romans": { en: "Romans", es: "Romanos" }, "romanos": { en: "Romans", es: "Romanos" }, "rm": { en: "Romans", es: "Romanos" },
-  "1 cor": { en: "1 Corinthians", es: "1 Corintios" }, "1 co": { en: "1 Corinthians", es: "1 Corintios" }, "1 corinthians": { en: "1 Corinthians", es: "1 Corintios" }, "1 corintios": { en: "1 Corinthians", es: "1 Corintios" }, "i cor": { en: "1 Corinthians", es: "1 Corintios" },
-  "2 cor": { en: "2 Corinthians", es: "2 Corintios" }, "2 co": { en: "2 Corinthians", es: "2 Corintios" }, "2 corinthians": { en: "2 Corinthians", es: "2 Corintios" }, "2 corintios": { en: "2 Corinthians", es: "2 Corintios" }, "ii cor": { en: "2 Corinthians", es: "2 Corintios" },
-  "gal": { en: "Galatians", es: "Gálatas" }, "ga": { en: "Galatians", es: "Gálatas" }, "galatians": { en: "Galatians", es: "Gálatas" }, "gálatas": { en: "Galatians", es: "Gálatas" }, "gál": { en: "Galatians", es: "Gálatas" },
-  "ef": { en: "Ephesians", es: "Efesios" }, "eph": { en: "Ephesians", es: "Efesios" }, "ephesians": { en: "Ephesians", es: "Efesios" }, "efesios": { en: "Ephesians", es: "Efesios" },
-  "fil": { en: "Philippians", es: "Filipenses" }, "php": { en: "Philippians", es: "Filipenses" }, "philippians": { en: "Philippians", es: "Filipenses" }, "filipenses": { en: "Philippians", es: "Filipenses" }, "fili": { en: "Philippians", es: "Filipenses" },
-  "col": { en: "Colossians", es: "Colosenses" }, "colossians": { en: "Colossians", es: "Colosenses" }, "colosenses": { en: "Colossians", es: "Colosenses" },
-  "1 tes": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 th": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 thess": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 thessalonians": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1 tesalonicenses": { en: "1 Thessalonians", es: "1 Tesalonicenses" }, "1tes": { en: "1 Thessalonians", es: "1 Tesalonicenses" },
-  "2 tes": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 th": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 thess": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 thessalonians": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2 tesalonicenses": { en: "2 Thessalonians", es: "2 Tesalonicenses" }, "2tes": { en: "2 Thessalonians", es: "2 Tesalonicenses" },
-  "1 tim": { en: "1 Timothy", es: "1 Timoteo" }, "1 ti": { en: "1 Timothy", es: "1 Timoteo" }, "1 timothy": { en: "1 Timothy", es: "1 Timoteo" }, "1 timoteo": { en: "1 Timothy", es: "1 Timoteo" }, "1tim": { en: "1 Timothy", es: "1 Timoteo" },
-  "2 tim": { en: "2 Timothy", es: "2 Timoteo" }, "2 ti": { en: "2 Timothy", es: "2 Timoteo" }, "2 timothy": { en: "2 Timothy", es: "2 Timoteo" }, "2 timoteo": { en: "2 Timothy", es: "2 Timoteo" }, "2tim": { en: "2 Timothy", es: "2 Timoteo" },
-  "tit": { en: "Titus", es: "Tito" }, "titus": { en: "Titus", es: "Tito" }, "tito": { en: "Titus", es: "Tito" },
-  "flm": { en: "Philemon", es: "Filemón" }, "phm": { en: "Philemon", es: "Filemón" }, "philemon": { en: "Philemon", es: "Filemón" }, "filemón": { en: "Philemon", es: "Filemón" }, "filemon": { en: "Philemon", es: "Filemón" },
-  "heb": { en: "Hebrews", es: "Hebreos" }, "hebrews": { en: "Hebrews", es: "Hebreos" }, "hebreos": { en: "Hebrews", es: "Hebreos" },
-  "snt": { en: "James", es: "Santiago" }, "jas": { en: "James", es: "Santiago" }, "james": { en: "James", es: "Santiago" }, "santiago": { en: "James", es: "Santiago" }, "stgo": { en: "James", es: "Santiago" }, "stg": { en: "James", es: "Santiago" }, "san": { en: "James", es: "Santiago" },
-  "1 pe": { en: "1 Peter", es: "1 Pedro" }, "1 pt": { en: "1 Peter", es: "1 Pedro" }, "1 pet": { en: "1 Peter", es: "1 Pedro" }, "1 peter": { en: "1 Peter", es: "1 Pedro" }, "1 pedro": { en: "1 Peter", es: "1 Pedro" }, "1pe": { en: "1 Peter", es: "1 Pedro" },
-  "2 pe": { en: "2 Peter", es: "2 Pedro" }, "2 pt": { en: "2 Peter", es: "2 Pedro" }, "2 pet": { en: "2 Peter", es: "2 Pedro" }, "2 peter": { en: "2 Peter", es: "2 Pedro" }, "2 pedro": { en: "2 Peter", es: "2 Pedro" }, "2pe": { en: "2 Peter", es: "2 Pedro" },
-  "1 jn": { en: "1 John", es: "1 Juan" }, "1 jhn": { en: "1 John", es: "1 Juan" }, "1 john": { en: "1 John", es: "1 Juan" }, "1 juan": { en: "1 John", es: "1 Juan" }, "1jn": { en: "1 John", es: "1 Juan" },
-  "2 jn": { en: "2 John", es: "2 Juan" }, "2 jhn": { en: "2 John", es: "2 Juan" }, "2 john": { en: "2 John", es: "2 Juan" }, "2 juan": { en: "2 John", es: "2 Juan" }, "2jn": { en: "2 John", es: "2 Juan" },
-  "3 jn": { en: "3 John", es: "3 Juan" }, "3 jhn": { en: "3 John", es: "3 Juan" }, "3 john": { en: "3 John", es: "3 Juan" }, "3 juan": { en: "3 John", es: "3 Juan" }, "3jn": { en: "3 John", es: "3 Juan" },
-  "jud": { en: "Jude", es: "Judas" }, "jude": { en: "Jude", es: "Judas" }, "judas": { en: "Jude", es: "Judas" }, "jda": { en: "Jude", es: "Judas" },
-  "ap": { en: "Revelation", es: "Apocalipsis" }, "rev": { en: "Revelation", es: "Apocalipsis" }, "revelation": { en: "Revelation", es: "Apocalipsis" }, "apocalipsis": { en: "Revelation", es: "Apocalipsis" }, "apoc": { en: "Revelation", es: "Apocalipsis" }
-};
-
-function parseScriptureReferences(rawText) {
-  if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
-  
-  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})\s*:\s*(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
-  
-  const verses = [];
-  const seenRefs = new Set();
-  const matches = [...rawText.matchAll(versePattern)];
-  
-  matches.forEach(match => {
-    const fullMatch = match[0].trim();
-    const bookRaw = match[1].trim().replace(/\.$/, '');
-    
-    const numbersPart = fullMatch.substring(match[1].length).trim().replace(/\s*:\s*/g, ':');
-    const chapterVerseMatch = numbersPart.match(/^(\d{1,3}:\d{1,3}(?:[–—-]\d{1,3})?(?::\d{1,3})?)/);
-    if (!chapterVerseMatch) return;
-    
-    const restOfRef = chapterVerseMatch[1].replace(/[–—]/g, '-'); 
-    const bookLower = bookRaw.toLowerCase().replace(/\./g, '');
-    const blacklist = ['y', 'es', 'en', 'el', 'la', 'de', 'a', 'por', 'con', 'sin', 'mi', 'tu', 'su', 'nos', 'os'];
-    if (blacklist.includes(bookLower)) return;
-
-    let formattedContent = fullMatch.replace(/[–—]/g, '-');
-    let foundMatch = false;
-    
-    if (BIBLE_BOOKS[bookLower]) {
-      const { en, es } = BIBLE_BOOKS[bookLower];
-      formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
-      foundMatch = true;
-    } else {
-      if (bookLower.length >= 3) {
-        const matchedKey = Object.keys(BIBLE_BOOKS).find(key => key.startsWith(bookLower) || bookLower.startsWith(key));
-        if (matchedKey) {
-          const { en, es } = BIBLE_BOOKS[matchedKey];
-          formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
-          foundMatch = true;
-        }
-      }
-    }
-    
-    if (!foundMatch) return;
-    
-    const cleanRef = `${bookRaw} ${restOfRef}`;
-    if (!seenRefs.has(cleanRef)) {
-      seenRefs.add(cleanRef);
-      verses.push({
-        type: 'verse',
-        content: formattedContent,
-        original: cleanRef
-      });
-    }
-  });
-  
-  return {
-    type: verses.length > 0 ? 'verse_list' : 'empty',
-    sections: verses
-  };
-}
-// --- BIBLE PARSING LOGIC END ---
 
 Deno.serve(async (req) => {
     const corsHeaders = {
@@ -254,62 +121,42 @@ Deno.serve(async (req) => {
         const [_, serviceId, timeSlot, segmentIdxStr, type] = parts;
         const segmentIdx = parseInt(segmentIdxStr);
 
-        // Fetch Service (needed for fallback path + audit)
-        const service = await base44.asServiceRole.entities.Service.get(serviceId);
-        if (!service) return Response.json({ error: "Service not found" }, { status: 404, headers: corsHeaders });
-
-        // ENTITY-FIRST SEGMENT RESOLUTION (2026-02-21)
-        // Entity-backed services (post-syncWeeklyToSessions) no longer store segment data
-        // in Service JSON slots — extractServiceMetadata strips them before save.
-        // Primary path: resolve Segment entity via Session.
-        // Legacy path: Service JSON slot (pre-entity-lift services only).
+        // Resolve Segment entity via Session
         const PLENARIA_TYPES = ['plenaria', 'message', 'predica', 'mensaje'];
-        let targetSegmentEntity = null;
-        let allSessionsForService = null;
-
-        try {
-            allSessionsForService = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
-            const targetSession = allSessionsForService.find(s => s.name === timeSlot);
-            if (targetSession) {
-                const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: targetSession.id }, 'order');
-                // Try exact position first (composite ID embeds the Plenaria's index in session segments)
-                const candidate = segs[segmentIdx];
-                if (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase())) {
-                    targetSegmentEntity = candidate;
-                } else {
-                    // Position mismatch (segment reorder since form was loaded) — use first Plenaria
-                    targetSegmentEntity = segs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
-                }
-            }
-        } catch (entityLookupErr) {
-            console.warn("[ENTITY_FIRST] Session/Segment lookup failed, falling back to Service JSON:", entityLookupErr.message);
+        const allSessionsForService = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+        const targetSession = allSessionsForService.find(s => s.name === timeSlot);
+        if (!targetSession) {
+            return Response.json({ error: "Session not found for this time slot" }, { status: 404, headers: corsHeaders });
         }
 
-        // Resolve segment for validation (entity path or legacy JSON fallback)
-        const segment = targetSegmentEntity || service[timeSlot]?.[segmentIdx];
-        if (!segment) return Response.json({ error: "Segment not found in service" }, { status: 404, headers: corsHeaders });
-        const segType = (targetSegmentEntity?.segment_type || segment.type || "").toLowerCase();
+        const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: targetSession.id }, 'order');
+        const candidate = segs[segmentIdx];
+        const targetSegmentEntity = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+            ? candidate
+            : segs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+
+        if (!targetSegmentEntity) {
+            return Response.json({ error: "No message-type segment found" }, { status: 404, headers: corsHeaders });
+        }
+
+        const segType = (targetSegmentEntity.segment_type || '').toLowerCase();
         if (!PLENARIA_TYPES.includes(segType)) {
             return Response.json({ error: "Invalid segment type. Only messages accept submissions." }, { status: 400, headers: corsHeaders });
         }
 
-        // 2026-03-07: SUBMISSION ONLY MODE (DECISION-007 — Unified Architecture)
-        // No inline processing. Mark for async automation via Segment update.
-        // Applies to both weekly (submitWeeklyServiceContent) + event speakers (submitSpeakerContent).
-        // Both pipelines: submission_status='pending' → processSegmentSubmission automation
+        // SUBMISSION ONLY — no inline processing.
+        // SpeakerSubmissionVersion create triggers processNewSubmissionVersion automation.
 
         let parsedData = { type: 'empty', sections: [] };
         let scriptureReferences = '';
 
-        // Resolve base projection_notes from entity or JSON fallback
-        let projectionNotes = targetSegmentEntity?.projection_notes || service[timeSlot]?.[segmentIdx]?.projection_notes || "";
+        let projectionNotes = targetSegmentEntity.projection_notes || "";
 
         // Mark for pending processing, no inline LLM
         console.log("[SUBMIT] Marking submission as pending — async processing will follow");
 
-        // Shared update payload for both entity and JSON paths
         const commonFields = {
-            // Mark as pending — will be processed asynchronously by entity automation
+            // Mark as pending — processNewSubmissionVersion will process asynchronously
             parsed_verse_data: parsedData,
             submission_status: 'pending',
             scripture_references: scriptureReferences,
@@ -326,21 +173,15 @@ Deno.serve(async (req) => {
             effectiveMirrors.push(segment_id.replace('|9:30am|', '|11:30am|'));
         }
 
-        // ── PRIMARY PATH: Entity-backed OR JSON fallback (DECISION-007 compliant migration) ──
-        if (targetSegmentEntity) {
-            console.log(`[SUBMIT] Writing to Segment entity (${targetSegmentEntity.id})`);
-            await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
-            console.log("[SUBMIT] Segment entity updated");
-        } else {
-            // Legacy: pre-entity services still use Service JSON slots
-            console.log("[SUBMIT] Writing to Service JSON slot (legacy path)");
-            const currentArray = [...(service[timeSlot] || [])];
-            currentArray[segmentIdx] = { ...currentArray[segmentIdx], ...commonFields };
-            await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
-            console.log("[SUBMIT] Service JSON updated");
-        }
+        // Write pending status to Segment entity
+        console.log(`[SUBMIT] Writing to Segment entity (${targetSegmentEntity.id})`);
+        await base44.asServiceRole.entities.Segment.update(targetSegmentEntity.id, commonFields);
+        console.log("[SUBMIT] Segment entity updated");
 
         // ── MIRROR UPDATES ──
+        // Track resolved entity IDs so we can pass them to SpeakerSubmissionVersion
+        // and the processor won't need to re-resolve from composite IDs.
+        const mirrorResolvedIds = new Map(); // mirrorCompositeId → resolved entity ID
         for (const mirrorId of effectiveMirrors) {
             const mirrorParts = mirrorId.split('|');
             if (mirrorParts.length < 5) {
@@ -349,42 +190,41 @@ Deno.serve(async (req) => {
             }
             const [, mirrorSvcId, mirrorSlotName, mirrorIdxStr] = mirrorParts;
             if (mirrorSvcId !== serviceId) {
-                console.warn(`[SUBMIT] Cross-service mirror: ${mirrorSlotName}`);
+                console.warn(`[SUBMIT] Cross-service mirror not supported: ${mirrorSlotName}`);
                 continue;
             }
 
             try {
-                if (allSessionsForService) {
-                    // Try entity path first
-                    const mirrorSession = allSessionsForService.find(s => s.name === mirrorSlotName);
-                    if (mirrorSession) {
-                        const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
-                        const mirrorIdx = parseInt(mirrorIdxStr);
-                        let mirrorTarget = mirrorSegs[mirrorIdx] || mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
-                        if (mirrorTarget) {
-                            await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, { ...commonFields, projection_notes: mirrorTarget.projection_notes || "" });
-                            console.log(`[SUBMIT] Mirror entity updated: ${mirrorSlotName}`);
-                            continue;
-                        }
-                    }
+                const mirrorSession = allSessionsForService.find(s => s.name === mirrorSlotName);
+                if (!mirrorSession) {
+                    console.warn(`[SUBMIT] Mirror session not found: ${mirrorSlotName}`);
+                    continue;
                 }
-                // Fallback: JSON path
-                const otherArray = [...(service[mirrorSlotName] || [])];
-                otherArray[parseInt(mirrorIdxStr)] = { ...otherArray[parseInt(mirrorIdxStr)], ...commonFields };
-                await base44.asServiceRole.entities.Service.update(serviceId, { [mirrorSlotName]: otherArray });
-                console.log(`[SUBMIT] Mirror JSON updated: ${mirrorSlotName}`);
+                const mirrorSegs = await base44.asServiceRole.entities.Segment.filter({ session_id: mirrorSession.id }, 'order');
+                const mirrorIdx = parseInt(mirrorIdxStr);
+                const mirrorTarget = mirrorSegs[mirrorIdx] || mirrorSegs.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase()));
+                if (mirrorTarget) {
+                    mirrorResolvedIds.set(mirrorId, String(mirrorTarget.id));
+                    await base44.asServiceRole.entities.Segment.update(mirrorTarget.id, { ...commonFields, projection_notes: mirrorTarget.projection_notes || "" });
+                    console.log(`[SUBMIT] Mirror entity updated: ${mirrorSlotName}`);
+                } else {
+                    console.warn(`[SUBMIT] No message-type segment found in mirror session: ${mirrorSlotName}`);
+                }
             } catch (err) {
                 console.warn(`[SUBMIT] Mirror update failed for ${mirrorSlotName}: ${err.message}`);
             }
         }
 
-        // Create Version Record for audit trail — marked as pending
-        // Entity automation on Segment will trigger → processSegmentSubmission function
-        // that performs verse parsing + LLM, then marks as 'processed'
+        // Create Version Record for audit trail — marked as pending.
+        // Entity automation on SpeakerSubmissionVersion.create triggers
+        // processNewSubmissionVersion for verse parsing + LLM, then marks as 'processed'.
         // Audit trail — primary submission
         console.log("[SUBMIT] Creating audit trail record (marked pending)...");
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
             segment_id: segment_id,
+            // Pass already-resolved entity ID so processor skips re-resolution
+            // (saves 3 queries: Session.filter + Segment.filter + find-by-type)
+            resolved_segment_entity_id: String(targetSegmentEntity.id),
             content: content,
             title: title || "",
             presentation_url: presentation_url || "",
@@ -400,9 +240,15 @@ Deno.serve(async (req) => {
 
         // Audit trail — mirrored submissions (dynamic)
         for (const mirrorId of effectiveMirrors) {
-            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId}`);
+            const resolvedMirrorEntityId = mirrorResolvedIds.get(mirrorId);
+            if (!resolvedMirrorEntityId) {
+                console.warn(`[SUBMIT] Skipping audit for unresolved mirror: ${mirrorId}`);
+                continue;
+            }
+            console.log(`[SUBMIT] Creating audit trail for mirrored submission: ${mirrorId} (entity ${resolvedMirrorEntityId})`);
             await base44.asServiceRole.entities.SpeakerSubmissionVersion.create({
                 segment_id: mirrorId,
+                resolved_segment_entity_id: resolvedMirrorEntityId,
                 content: content,
                 title: title || "",
                 presentation_url: presentation_url || "",
@@ -419,7 +265,7 @@ Deno.serve(async (req) => {
         console.log("[SUBMIT] Audit record(s) created (pending async processing)");
 
         // Cache refresh happens after async processing completes
-        // (via entity automation trigger in processSegmentSubmission)
+        // (via processNewSubmissionVersion entity automation)
 
         // Success
         const responsePayload = { success: true };

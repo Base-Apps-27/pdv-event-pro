@@ -1,13 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Scheduled cleanup job: processes any SpeakerSubmissionVersion records stuck in 'pending' status.
-// This is a safety net for when the entity automation fails to trigger properly.
-// v1.0 - Initial implementation
-
-// CTO-1 (2026-03-02): Verse parsing centralized in parseScriptureShared.
-// VERSION_HASH: v1.0-2026-03-02 (must match parseScriptureShared)
-// DEPRECATED INLINE COPY BELOW — kept for the safety net scheduler.
-// ╔══════════════════════════════════════════════════════════════════════╗
+// SAFETY NET: Scheduled job that processes any SpeakerSubmissionVersion records stuck in 'pending'.
+// Catches submissions where the primary automation (processNewSubmissionVersion) failed to trigger.
+// Handles both Event (numeric Segment ID) and Weekly (composite ID) paths.
+//
+// BIBLE_BOOKS + parseScriptureReferences: inline copy (Deno Deploy cannot share modules)
+// CANONICAL SOURCE: parseScriptureShared.ts
+// SYNC: If you change the parser, update all 3 copies + parseScriptureShared.
+// Files: processNewSubmissionVersion.ts, processPendingSubmissions.ts, processSegmentSubmission.ts
 const BIBLE_BOOKS = {
   "gn": { en: "Genesis", es: "Génesis" }, "gen": { en: "Genesis", es: "Génesis" }, "genesis": { en: "Genesis", es: "Génesis" }, "génesis": { en: "Genesis", es: "Génesis" }, "gén": { en: "Genesis", es: "Génesis" },
   "ex": { en: "Exodus", es: "Éxodo" }, "exo": { en: "Exodus", es: "Éxodo" }, "exod": { en: "Exodus", es: "Éxodo" }, "exodus": { en: "Exodus", es: "Éxodo" }, "éxodo": { en: "Exodus", es: "Éxodo" }, "éx": { en: "Exodus", es: "Éxodo" },
@@ -201,89 +201,77 @@ ${submission.content.substring(0, 15000)}`;
 
   const segmentId = submission.segment_id;
 
+  const PLENARIA_TYPES = ['message', 'plenaria', 'predica', 'mensaje'];
+  const updateData = {
+    submission_status: 'processed',
+    parsed_verse_data: parsedData,
+    scripture_references: scriptureReferences,
+    presentation_url: submission.presentation_url || "",
+    notes_url: submission.notes_url || "",
+    content_is_slides_only: isSlidesOnly,
+    ...(submission.title && submission.title.trim() !== "" ? { message_title: submission.title.trim() } : {}),
+  };
+
   if (segmentId.startsWith('weekly_service|')) {
-    const parts = segmentId.split('|');
-    const serviceId = parts[1];
-    const timeSlot = parts[2];
-    const segmentIdx = parseInt(parts[3]);
+    // Use pre-resolved entity ID when available (set by submit function).
+    // Falls back to composite ID resolution for older submissions.
+    let resolvedEntityId = submission.resolved_segment_entity_id;
+    let targetSegment;
 
-    const service = await base44.asServiceRole.entities.Service.get(serviceId);
-    if (!service || !service[timeSlot] || !service[timeSlot][segmentIdx]) {
-      console.log(`[PROCESS] Service/segment not found for ${submission.id}`);
+    if (resolvedEntityId) {
+      console.log(`[PROCESS] Using pre-resolved entity ID: ${resolvedEntityId}`);
+      targetSegment = await base44.asServiceRole.entities.Segment.get(resolvedEntityId);
+      if (!targetSegment) {
+        console.warn(`[PROCESS] Pre-resolved entity ${resolvedEntityId} not found, falling back to composite resolution`);
+        resolvedEntityId = null;
+      }
+    }
+
+    if (!resolvedEntityId) {
+      // Fallback: resolve from composite ID (3 queries)
+      const parts = segmentId.split('|');
+      const serviceId = parts[1];
+      const timeSlot = parts[2];
+      const segmentIdx = parseInt(parts[3]);
+
+      const sessions = await base44.asServiceRole.entities.Session.filter({ service_id: serviceId });
+      const targetSession = sessions.find(s => s.name === timeSlot);
+      if (!targetSession) {
+        await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+          processing_status: 'failed',
+          processing_error: `Session not found for timeSlot ${timeSlot}`
+        });
+        return { success: false, id: submission.id, error: 'Session not found' };
+      }
+
+      const sessionSegments = await base44.asServiceRole.entities.Segment.filter(
+        { session_id: targetSession.id }, 'order'
+      );
+      const candidate = sessionSegments[segmentIdx];
+      targetSegment = (candidate && PLENARIA_TYPES.includes((candidate.segment_type || '').toLowerCase()))
+        ? candidate
+        : sessionSegments.find(s => PLENARIA_TYPES.includes((s.segment_type || '').toLowerCase())) || null;
+    }
+
+    if (!targetSegment) {
       await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
         processing_status: 'failed',
-        processing_error: 'Service or segment not found'
+        processing_error: 'No message-type Segment found in session'
       });
-      return { success: false, id: submission.id, error: 'Service not found' };
+      return { success: false, id: submission.id, error: 'Segment not found' };
     }
 
-    const currentArray = [...service[timeSlot]];
-    const currentSegment = currentArray[segmentIdx];
-    const type = (currentSegment.type || "").toLowerCase();
-    
-    if (!['message', 'plenaria', 'predica', 'mensaje'].includes(type)) {
-      console.log(`[PROCESS] Invalid segment type for ${submission.id}`);
-      await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
-        processing_status: 'failed',
-        processing_error: 'Target segment is not a message type'
-      });
-      return { success: false, id: submission.id, error: 'Invalid segment type' };
-    }
+    await base44.asServiceRole.entities.Segment.update(targetSegment.id, updateData);
+    console.log(`[PROCESS] Updated Segment entity ${targetSegment.id} for weekly submission ${submission.id}`);
 
-    // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES OR SUBMITTED_CONTENT
-    
-    const updatedSegment = {
-      ...currentSegment,
-      // submitted_content removed
-      parsed_verse_data: parsedData,
-      submission_status: 'processed',
-      presentation_url: submission.presentation_url || "",
-      notes_url: submission.notes_url || "",
-      content_is_slides_only: isSlidesOnly,
-      // projection_notes removed from update (preserve existing)
-    };
-
-    if (submission.title && submission.title.trim() !== "") {
-      updatedSegment.message_title = submission.title.trim();
-      updatedSegment.data = {
-        ...updatedSegment.data,
-        message_title: submission.title.trim()
-      };
-    }
-
-    updatedSegment.scripture_references = scriptureReferences;
-    updatedSegment.data = {
-      ...updatedSegment.data,
-      verse: scriptureReferences,
-      scripture_references: scriptureReferences,
-      presentation_url: submission.presentation_url || "",
-      notes_url: submission.notes_url || "",
-      content_is_slides_only: isSlidesOnly
-    };
-
-    currentArray[segmentIdx] = updatedSegment;
-    await base44.asServiceRole.entities.Service.update(serviceId, { [timeSlot]: currentArray });
-    console.log(`[PROCESS] Updated Service ${serviceId} for submission ${submission.id}`);
-
-    } else {
-    // Event segment
+  } else {
+    // Event: direct Segment entity update
     const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
     if (currentSegment) {
-      const updateData = {
-        submission_status: 'processed',
-        parsed_verse_data: parsedData,
-        scripture_references: scriptureReferences,
-        presentation_url: submission.presentation_url || "",
-        notes_url: submission.notes_url || "",
-        content_is_slides_only: isSlidesOnly
-      };
-
-      // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES
-
       await base44.asServiceRole.entities.Segment.update(segmentId, updateData);
       console.log(`[PROCESS] Updated Segment ${segmentId} for submission ${submission.id}`);
     }
-    }
+  }
 
   // Update the submission record
   await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
