@@ -187,18 +187,25 @@ Deno.serve(async (req) => {
         }
 
         // STEP 2: LLM extraction (bilingual takeaways + fallback verses)
-        if (content.length > 100) {
+        // Threshold: only call LLM if content is substantial enough to have real takeaways.
+        // A bare Bible reference (~10-50 chars) should never produce takeaways.
+        // 300 chars ≈ 2+ meaningful sentences — minimum viable sermon content.
+        if (content.length > 300) {
           try {
             console.log(`[PROCESS_SEGMENT] Starting bilingual LLM extraction...`);
             const prompt = `
 You are an expert bilingual (English/Spanish) sermon analysis assistant.
+Your job is to extract information that is EXPLICITLY PRESENT in the text. Do NOT infer, interpret, or generate content that isn't clearly stated.
 
 STEP 1: Detect the primary language of the speaker notes below. It will be either English ("en") or Spanish ("es").
 
-STEP 2: Extract the main key takeaways (3-5 bullet points) in BOTH English AND Spanish.
-  - If the notes are in English, write the English takeaways first, then translate them to Spanish.
-  - If the notes are in Spanish, write the Spanish takeaways first, then translate them to English.
-  - Each takeaway should be a concise, complete sentence.
+STEP 2: Extract key takeaways from the text in BOTH English AND Spanish.
+  CRITICAL RULES:
+  - Only extract takeaways if the text contains actual sermon content (explanations, teachings, points, arguments).
+  - If the text contains ONLY a Bible reference, a title, or a single short phrase with no explanatory content, return EMPTY arrays for both languages.
+  - If there is enough content, extract 2-5 takeaways. If there are only 1-2 clear points, return only those — do not pad to reach a minimum count.
+  - Do NOT create, infer, or synthesize points that are not explicitly in the text.
+  - Each takeaway must be directly supported by the submitted text.
 
 STEP 3: Identify all actual biblical scripture references mentioned.
    IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
