@@ -133,10 +133,21 @@ Deno.serve(async (req) => {
     }
 
     const segmentId = event.entity_id;
-    
+
+    // RESILIENCE FIX (2026-03-08): If automation payload data is missing/null (payload_too_large
+    // or stale snapshot), fetch the segment directly from the DB to guarantee fresh data.
+    let liveSegment = segment;
+    if (!segment || segment.submission_status === undefined || payload.payload_too_large) {
+      console.log(`[PROCESS_SEGMENT] Payload data missing or stale — fetching segment ${segmentId} from DB`);
+      liveSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
+      if (!liveSegment) {
+        return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
+      }
+    }
+
     // Only process if status transitioned to 'pending'
-    if (segment.submission_status !== 'pending') {
-      console.log(`[PROCESS_SEGMENT] Skipping non-pending status: ${segment.submission_status}`);
+    if (liveSegment.submission_status !== 'pending') {
+      console.log(`[PROCESS_SEGMENT] Skipping non-pending status: ${liveSegment.submission_status}`);
       return Response.json({ success: true, skipped: true, reason: 'Not pending status' });
     }
 
