@@ -5,7 +5,7 @@
  * a rich, clean document — not a form UI.
  * Used by pages/ArtsReport.jsx.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
 
 const TYPE_LABELS = {

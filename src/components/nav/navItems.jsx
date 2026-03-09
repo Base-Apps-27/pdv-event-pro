@@ -1,4 +1,3 @@
-
 // Shared navigation structure — single source of truth for desktop + mobile
 // Each section has a label key, icon, and items. Permission gating happens at render time.
 // 2026-02-14: consolidated into primary rail + secondary "More" tray.
@@ -146,5 +145,13 @@ export const adminNav = [
     page: 'ArtsSubmissions',
     permission: 'manage_users',
     matchPages: ['ArtsSubmissions'],
+  },
+  {
+    id: 'arts-report',
+    labelKey: 'nav.artsReport',
+    icon: Palette,
+    page: 'ArtsReport',
+    permission: 'manage_users',
+    matchPages: ['ArtsReport'],
   },
 ];

@@ -23,6 +23,7 @@ export const en = {
   'nav.dependencies': 'Dependencies',
   'nav.activityLog': 'Activity Log',
   'nav.artsSubmissions': 'Arts Submissions',
+  'nav.artsReport': 'Arts Report',
   'nav.devTools': 'Developer Tools',
   'nav.specialServices': 'Special Services',
 
