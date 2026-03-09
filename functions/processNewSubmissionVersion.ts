@@ -359,25 +359,38 @@ ${submission.content.substring(0, 15000)}
         };
 
         // ── PHASE 3: Staleness guard + Write to Segment ──
-        // Before writing, check if a newer submission for this same segment was already
-        // processed (race condition: two submissions created close together, second finishes first).
+        // CRITICAL (2026-03-09): Check if admin has manually edited this segment AFTER this submission was created.
+        // If admin's edit is more recent, DO NOT overwrite with old submission data.
+        // Also check if a newer submission for this same segment was already processed (race condition).
         let isSuperseded = false;
         try {
-            // Check by resolved_segment_entity_id (covers weekly) and segment_id (covers event)
-            const newerByResolved = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-                { resolved_segment_entity_id: targetEntityId, processing_status: 'processed' },
-                '-submitted_at', 1
-            );
-            const newerBySegmentId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-                { segment_id: segmentId, processing_status: 'processed' },
-                '-submitted_at', 1
-            );
-            // Pick the most recent processed version from either query
-            const candidates = [...newerByResolved, ...newerBySegmentId]
-                .filter(r => r.id !== submission.id && r.submitted_at && submission.submitted_at && r.submitted_at > submission.submitted_at);
-            if (candidates.length > 0) {
-                isSuperseded = true;
-                console.log(`[SUPERSEDED] Submission ${submissionId} (${submission.submitted_at}) is older than already-processed ${candidates[0].id} (${candidates[0].submitted_at}) — skipping Segment write`);
+            // 2026-03-09 FIX: If Segment was updated AFTER this submission arrived, admin took over.
+            // Skip the write to preserve admin's edit.
+            if (targetSegmentEntity.updated_date && submission.submitted_at) {
+                const segmentUpdateTime = new Date(targetSegmentEntity.updated_date);
+                const submissionTime = new Date(submission.submitted_at);
+                if (segmentUpdateTime > submissionTime) {
+                    isSuperseded = true;
+                    console.log(`[ADMIN_OVERRIDE] Segment ${targetEntityId} was edited by admin at ${segmentUpdateTime} (after submission ${submissionTime}) — skipping automation write to preserve admin changes`);
+                }
+            }
+
+            // Original guard: check if a newer submission was already processed
+            if (!isSuperseded) {
+                const newerByResolved = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+                    { resolved_segment_entity_id: targetEntityId, processing_status: 'processed' },
+                    '-submitted_at', 1
+                );
+                const newerBySegmentId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+                    { segment_id: segmentId, processing_status: 'processed' },
+                    '-submitted_at', 1
+                );
+                const candidates = [...newerByResolved, ...newerBySegmentId]
+                    .filter(r => r.id !== submission.id && r.submitted_at && submission.submitted_at && r.submitted_at > submission.submitted_at);
+                if (candidates.length > 0) {
+                    isSuperseded = true;
+                    console.log(`[SUPERSEDED] Submission ${submissionId} (${submission.submitted_at}) is older than already-processed ${candidates[0].id} (${candidates[0].submitted_at}) — skipping Segment write`);
+                }
             }
         } catch (guardErr) {
             // Non-blocking: if the guard query fails, proceed with the write (safe default)
