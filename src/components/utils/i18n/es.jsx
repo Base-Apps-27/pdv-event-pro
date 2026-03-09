@@ -22,6 +22,7 @@ export const es = {
   'nav.expandMenu': 'Expandir',
   'nav.dependencies': 'Dependencias',
   'nav.artsSubmissions': 'Envíos de Artes',
+  'nav.artsReport': 'Reporte de Artes',
   'nav.devTools': 'Herramientas Dev',
   'nav.specialServices': 'Servicios Especiales',
 
