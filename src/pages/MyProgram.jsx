@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDateET } from '@/components/utils/timeFormat';
 
 import useActiveProgramCache from '@/components/myprogram/useActiveProgramCache';
+import CacheStalenessIndicator from '@/components/liveview/CacheStalenessIndicator';
 import { getSessionLabels } from '@/components/myprogram/normalizeSession';
 import { normalizeProgramData } from '@/components/utils/normalizeProgram';
 import DepartmentPicker, { useDepartment } from '@/components/myprogram/DepartmentPicker';
