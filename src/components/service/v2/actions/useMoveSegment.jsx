@@ -1,16 +1,15 @@
 /**
  * useMoveSegment.js — V2 reorder segments via entity order field swap.
- * HARDENING (Phase 8):
- *   - Validates index bounds before swap
- *   - Full re-index after swap to prevent cumulative order drift
- *   - Logs reorder actions for traceability
+ * BUGFIX (2026-03-09): Now uses writeSegment from useEntityWrite for reliable coalesced writes + error handling.
+ * Previously fire-and-forget Promise.all() could fail silently, leaving UI inconsistent with database.
+ * 
+ * Validates index bounds, re-indexes all affected segments, and surfaces write errors via callback.
  */
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 
-export function useMoveSegment(queryKey) {
+export function useMoveSegment(queryKey, writeSegment, onError) {
   const queryClient = useQueryClient();
 
   const move = useCallback((sessionId, index, direction) => {
@@ -33,22 +32,25 @@ export function useMoveSegment(queryKey) {
       const reindexed = arr.map((seg, i) => ({ ...seg, order: i + 1 }));
       newSBS[sessionId] = reindexed;
 
-      // Entity writes — update ALL orders to match new positions
-      const writes = reindexed
-        .filter((seg, i) => seg.id && seg.order !== (old.segmentsBySession[sessionId]?.[i]?.order))
-        .map(seg => base44.entities.Segment.update(seg.id, { order: seg.order }));
+      // Queue entity writes via useEntityWrite (coalesced + retry-safe)
+      const changedSegs = reindexed.filter(
+        (seg, i) => seg.id && seg.order !== (old.segmentsBySession[sessionId]?.[i]?.order)
+      );
 
-      if (writes.length > 0) {
-        Promise.all(writes).catch(err =>
-          console.error('[V2 Move] Re-index failed:', err.message)
-        );
+      for (const seg of changedSegs) {
+        try {
+          writeSegment(seg.id, 'order', seg.order);
+        } catch (err) {
+          console.error('[V2 Move] Write failed for segment', seg.id, err.message);
+          if (onError) onError(err);
+        }
       }
 
-      console.log(`[V2 Move] Session ${sessionId}: moved idx ${index} ${direction} → re-indexed ${writes.length} segments`);
+      console.log(`[V2 Move] Session ${sessionId}: moved idx ${index} ${direction} → queued ${changedSegs.length} segment updates`);
 
       return { ...old, segmentsBySession: newSBS };
     });
-  }, [queryClient, queryKey]);
+  }, [queryClient, queryKey, writeSegment, onError]);
 
   return { move };
 }
