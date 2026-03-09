@@ -19,6 +19,19 @@ export default function ArtsReportView({ eventSessions, getSessionSegments, even
     })).filter(g => g.artsSegments.length > 0);
   }, [eventSessions, getSessionSegments]);
 
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!allSegments) return;
+    setExporting(true);
+    try {
+      const bytes = await generateArtsReportPDF({ event, sessions: eventSessions, segments: allSegments });
+      downloadArtsPdf(bytes, event?.name);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (grouped.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
