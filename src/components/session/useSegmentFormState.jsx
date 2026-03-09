@@ -141,7 +141,6 @@ function buildFormData(segment, suggestedStartTime) {
     livestream_notes: segment?.livestream_notes || "",
     coordinator_notes: segment?.coordinator_notes || "",
     microphone_assignments: segment?.microphone_assignments || "",
-    show_in_livestream: segment?.show_in_livestream ?? true,
     song_1_key: segment?.song_1_key || "",
     song_2_key: segment?.song_2_key || "",
     song_3_key: segment?.song_3_key || "",
