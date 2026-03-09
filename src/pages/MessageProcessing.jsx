@@ -286,6 +286,7 @@ export default function MessageProcessingPage() {
                         onAdminSubmit={(seg) => { setAdminSubmitSegment(seg); setIsAdminFormOpen(true); }}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
+                        onEditVerses={(seg) => { setVerseEditorSegment(seg); setIsVerseEditorOpen(true); }}
                         onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
                         emptyMessage="No hay mensajes pendientes de revisión."
                     />
@@ -298,6 +299,7 @@ export default function MessageProcessingPage() {
                         onAdminSubmit={(seg) => { setAdminSubmitSegment(seg); setIsAdminFormOpen(true); }}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
+                        onEditVerses={(seg) => { setVerseEditorSegment(seg); setIsVerseEditorOpen(true); }}
                         onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
                         emptyMessage="No hay historial de mensajes procesados."
                     />
