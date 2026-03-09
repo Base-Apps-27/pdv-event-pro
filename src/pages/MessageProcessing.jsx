@@ -112,10 +112,9 @@ export default function MessageProcessingPage() {
     // Gate State
     const [isGateOpen, setIsGateOpen] = useState(false);
 
-    // Parser State (for manual submission + processing)
-    const [selectedSegment, setSelectedSegment] = useState(null);
-    const [isParserOpen, setIsParserOpen] = useState(false);
-    const [restoreContent, setRestoreContent] = useState(null);
+    // Admin submission state
+    const [adminSubmitSegment, setAdminSubmitSegment] = useState(null);
+    const [isAdminFormOpen, setIsAdminFormOpen] = useState(false);
 
     // Fetch ONLY pending and processed (Inbox model)
     // 2026-03-01: Also fetch SpeakerSubmissionVersion records to get submission counts
