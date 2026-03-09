@@ -347,6 +347,16 @@ export default function MessageProcessingPage() {
                 onSegmentSelected={handleGateSelection}
             />
 
+            {selectedSegment && (
+                <VerseParserDialog
+                    open={isParserOpen}
+                    onOpenChange={setIsParserOpen}
+                    initialText={restoreContent || selectedSegment.submitted_content || ""}
+                    onSave={handleSaveParsed}
+                    language="es"
+                />
+            )}
+
             <SubmissionHistoryDialog 
                 open={isHistoryOpen}
                 onOpenChange={setIsHistoryOpen}
