@@ -264,12 +264,20 @@ ${submission.content.substring(0, 15000)}`;
     // STALENESS GUARD: Before writing to Segment, check if a newer submission
     // for this same segment was already processed. Prevents an older pending record
     // from overwriting content written by a newer submission (race condition fix).
-    const newerProcessed = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+    // Check both resolved_segment_entity_id AND segment_id to catch legacy rows
+    // and mirror records where resolved_segment_entity_id may be unset.
+    const newerByResolved = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
       { resolved_segment_entity_id: targetSegment.id, processing_status: 'processed' },
       '-submitted_at', 1
     );
-    if (newerProcessed.length > 0 && submission.submitted_at && newerProcessed[0].submitted_at > submission.submitted_at) {
-      console.log(`[PROCESS] SUPERSEDED: submission ${submission.id} (${submission.submitted_at}) is older than already-processed ${newerProcessed[0].id} (${newerProcessed[0].submitted_at}) — skipping Segment write`);
+    const newerBySegmentId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+      { segment_id: targetSegment.id, processing_status: 'processed' },
+      '-submitted_at', 1
+    );
+    const newerCandidates = [...newerByResolved, ...newerBySegmentId]
+      .filter(r => r.id !== submission.id && r.submitted_at && submission.submitted_at && r.submitted_at > submission.submitted_at);
+    if (newerCandidates.length > 0) {
+      console.log(`[PROCESS] SUPERSEDED: submission ${submission.id} (${submission.submitted_at}) is older than already-processed ${newerCandidates[0].id} (${newerCandidates[0].submitted_at}) — skipping Segment write`);
       await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
         parsed_data_snapshot: parsedData,
         processing_status: 'superseded'
@@ -284,13 +292,19 @@ ${submission.content.substring(0, 15000)}`;
     // Event: direct Segment entity update
     const currentSegment = await base44.asServiceRole.entities.Segment.get(segmentId);
     if (currentSegment) {
-      // STALENESS GUARD: same check for event submissions
-      const newerProcessed = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+      // STALENESS GUARD: check both segment_id and resolved_segment_entity_id
+      const newerBySegId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
         { segment_id: segmentId, processing_status: 'processed' },
         '-submitted_at', 1
       );
-      if (newerProcessed.length > 0 && submission.submitted_at && newerProcessed[0].submitted_at > submission.submitted_at) {
-        console.log(`[PROCESS] SUPERSEDED: submission ${submission.id} (${submission.submitted_at}) is older than already-processed ${newerProcessed[0].id} (${newerProcessed[0].submitted_at}) — skipping Segment write`);
+      const newerByResId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+        { resolved_segment_entity_id: segmentId, processing_status: 'processed' },
+        '-submitted_at', 1
+      );
+      const newerEventCandidates = [...newerBySegId, ...newerByResId]
+        .filter(r => r.id !== submission.id && r.submitted_at && submission.submitted_at && r.submitted_at > submission.submitted_at);
+      if (newerEventCandidates.length > 0) {
+        console.log(`[PROCESS] SUPERSEDED: submission ${submission.id} (${submission.submitted_at}) is older than already-processed ${newerEventCandidates[0].id} (${newerEventCandidates[0].submitted_at}) — skipping Segment write`);
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
           parsed_data_snapshot: parsedData,
           processing_status: 'superseded'
