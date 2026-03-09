@@ -580,6 +580,7 @@ export const es = {
   'weekly.toast.noAnnouncements': 'No hay anuncios',
   'weekly.toast.repairSuccess': 'Estructura reparada con éxito',
   'weekly.toast.repairError': 'Error al reparar: ',
+  'weekly.toast.reorderFailed': 'Error al reordenar segmentos: ',
   'weekly.noSessions': 'No se encontraron sesiones para este servicio.',
   'weekly.serviceExistsNoSessions': 'El servicio existe (ID: {id}) pero no tiene sesiones. Restablezca desde el blueprint para recrear la estructura.',
   'weekly.repairing': 'Reparando...',
