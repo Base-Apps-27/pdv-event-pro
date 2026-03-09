@@ -95,14 +95,13 @@ Deno.serve(async (req) => {
 
         let artsSegments = [];
         if (sessions.length > 0) {
-            const segPromises = sessions.map(sess =>
-                base44.asServiceRole.entities.Segment.filter({
-                    session_id: sess.id,
-                    segment_type: 'Artes'
-                })
+            // PERF-FIX (2026-03-09): Replaced N parallel per-session queries with a single
+            // global Artes query filtered client-side. Previous approach (Promise.all of N filters)
+            // exceeded Deno CPU time limit on events with many sessions. Single query is O(1) RPC.
+            const allArtes = await base44.asServiceRole.entities.Segment.filter(
+                { segment_type: 'Artes' }, '-created_date', 500
             );
-            const results = await Promise.all(segPromises);
-            artsSegments = results.flat();
+            artsSegments = allArtes.filter(seg => sessionsMap[seg.session_id]);
 
             // Sort by session date then start_time
             artsSegments.sort((a, b) => {
