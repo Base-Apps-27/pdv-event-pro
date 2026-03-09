@@ -210,54 +210,13 @@ export default function MessageProcessingPage() {
     const pendingSegments = segmentItems.filter(s => s.submission_status === 'pending');
     const processedSegments = segmentItems.filter(s => s.submission_status === 'processed');
 
-    // 2026-03-09: Mutation for manual admin submission + immediate parsing
-    const updateSegmentMutation = useMutation({
-        mutationFn: async ({ segment, data }) => {
-            await base44.entities.Segment.update(segment.id, data);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['messagesToProcessInbox']);
-            setIsParserOpen(false);
-            setSelectedSegment(null);
-            setRestoreContent(null);
-            toast.success("Mensaje procesado y guardado");
-        }
-    });
-
-    // Open parser with segment content
-    const handleProcess = (segment, contentOverride = null) => {
-        let effectiveContent = contentOverride;
-        if (!effectiveContent && !segment.submitted_content && segment._versions?.length > 0) {
-            const sorted = [...segment._versions].sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
-            effectiveContent = sorted[0]?.content || null;
-        }
-        setSelectedSegment(segment);
-        setRestoreContent(effectiveContent);
-        setIsParserOpen(true);
-    };
-
-    // Save parsed results from manual submission
-    const handleSaveParsed = (data) => {
-        if (!selectedSegment) return;
-        
-        updateSegmentMutation.mutate({
-            segment: selectedSegment,
-            data: {
-                submitted_content: restoreContent || selectedSegment.submitted_content || "",
-                scripture_references: data.verse, 
-                parsed_verse_data: data.parsed_data,
-                submission_status: 'processed'
-            }
-        });
-        base44.analytics.track({ eventName: 'message_processed', properties: { segment_id: selectedSegment.id, segment_type: selectedSegment.segment_type || 'unknown' } });
-    };
-
     const handleRestore = (version) => {
         setIsHistoryOpen(false);
-        // 2026-03-09: Re-open parser with restored content for admin re-processing
+        // 2026-03-09: Restored version opens admin form for re-submission
         const histSeg = historySegment;
         setHistorySegment(null);
-        handleProcess(histSeg, version.content);
+        setAdminSubmitSegment(histSeg);
+        setIsAdminFormOpen(true);
     };
 
     const handleGateSelection = async (segmentId) => {
