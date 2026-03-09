@@ -224,7 +224,8 @@ export default function MessageProcessingPage() {
         try {
             const seg = await base44.entities.Segment.get(segmentId);
             if (seg) {
-                handleProcess(seg);
+                setAdminSubmitSegment(seg);
+                setIsAdminFormOpen(true);
             }
         } catch (err) {
             console.error("Error fetching segment from gate:", err);
