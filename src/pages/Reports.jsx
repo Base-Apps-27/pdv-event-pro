@@ -244,6 +244,12 @@ export default function Reports() {
     }
   };
 
+  const handleExportArtsPdf = async () => {
+    if (!selectedEventId) return;
+    const bytes = await generateArtsReportPDF({ event: selectedEvent, sessions: eventSessions, segments: allSegments });
+    downloadArtsPdf(bytes, selectedEvent?.name);
+  };
+
   // Shared props for all view components
   const viewProps = { eventSessions, getSessionSegments, selectedEvent, allPreSessionDetails, rooms };
 
