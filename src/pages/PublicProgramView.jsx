@@ -108,7 +108,7 @@ export default function PublicProgramView() {
     return 'current_display';
   }, [viewType, selectedEventId, selectedServiceId]);
 
-  const { contextType: cacheContextType, contextId: cacheContextId, programData: defaultCacheProgramData, selectorOptions: cacheSelectorOptions, isLoading: isCacheLoading, _isOverride } = useActiveProgramCache({ overrideServiceId, overrideEventId });
+  const { contextType: cacheContextType, contextId: cacheContextId, programData: defaultCacheProgramData, selectorOptions: cacheSelectorOptions, isLoading: isCacheLoading, _isOverride, cacheRecord } = useActiveProgramCache({ overrideServiceId, overrideEventId });
   const { programData: warmCacheProgramData, isLoading: isWarmCacheLoading } = useActiveProgramCache({ programCacheKey: programCacheKey !== 'current_display' ? programCacheKey : undefined });
   const cacheProgramData = warmCacheProgramData || defaultCacheProgramData;
   const publicEvents = cacheSelectorOptions?.events || [];

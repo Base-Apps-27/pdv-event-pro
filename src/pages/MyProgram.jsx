@@ -59,7 +59,7 @@ export default function MyProgram() {
   // Ref map for scrolling to specific segments
   const segmentRefs = React.useRef({});
 
-  const { contextType, contextId, event, service, programData, isLoading, _isOverride } = useActiveProgramCache({
+  const { contextType, contextId, event, service, programData, isLoading, _isOverride, cacheRecord } = useActiveProgramCache({
     overrideServiceId,
     overrideEventId,
   });
