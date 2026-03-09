@@ -358,7 +358,40 @@ ${submission.content.substring(0, 15000)}
             ...(submission.title?.trim() ? { message_title: submission.title.trim() } : {}),
         };
 
-        // ── PHASE 3: Write to Segment ──
+        // ── PHASE 3: Staleness guard + Write to Segment ──
+        // Before writing, check if a newer submission for this same segment was already
+        // processed (race condition: two submissions created close together, second finishes first).
+        let isSuperseded = false;
+        try {
+            // Check by resolved_segment_entity_id (covers weekly) and segment_id (covers event)
+            const newerByResolved = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+                { resolved_segment_entity_id: targetEntityId, processing_status: 'processed' },
+                '-submitted_at', 1
+            );
+            const newerBySegmentId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+                { segment_id: segmentId, processing_status: 'processed' },
+                '-submitted_at', 1
+            );
+            // Pick the most recent processed version from either query
+            const candidates = [...newerByResolved, ...newerBySegmentId]
+                .filter(r => r.id !== submission.id && r.submitted_at && submission.submitted_at && r.submitted_at > submission.submitted_at);
+            if (candidates.length > 0) {
+                isSuperseded = true;
+                console.log(`[SUPERSEDED] Submission ${submissionId} (${submission.submitted_at}) is older than already-processed ${candidates[0].id} (${candidates[0].submitted_at}) — skipping Segment write`);
+            }
+        } catch (guardErr) {
+            // Non-blocking: if the guard query fails, proceed with the write (safe default)
+            console.error(`[STALENESS_GUARD] Query failed, proceeding with write: ${guardErr.message}`);
+        }
+
+        if (isSuperseded) {
+            await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
+                parsed_data_snapshot: parsedData,
+                processing_status: 'superseded'
+            });
+            return Response.json({ success: true, superseded: true });
+        }
+
         await base44.asServiceRole.entities.Segment.update(targetEntityId, updateData);
         console.log(`[PROCESSED] Segment ${targetEntityId} updated for submission ${submissionId}`);
 
