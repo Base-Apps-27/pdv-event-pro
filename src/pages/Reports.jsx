@@ -147,17 +147,23 @@ export default function Reports() {
   }, [selectedEventId]);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
-  // Keep Reports in sync with Session Editor: primary sort by explicit 'order' if set, otherwise chronological
+  // DECISION-004: Canonical session sort — chronological primary (date+time), order as tiebreaker only.
+  // Aligns Reports with EventDetail (lines 113-123) which uses same canonical sort.
   const eventSessions = sessions
     .filter(s => s.event_id === selectedEventId)
     .sort((a, b) => {
+      // Primary: date (chronological)
+      const aDate = a.date || '';
+      const bDate = b.date || '';
+      if (aDate !== bDate) return aDate.localeCompare(bDate);
+      // Secondary: planned_start_time
+      const aTime = a.planned_start_time || '';
+      const bTime = b.planned_start_time || '';
+      if (aTime !== bTime) return aTime.localeCompare(bTime);
+      // Tertiary: order (tiebreaker only)
       const ao = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
       const bo = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
-      if (ao !== bo) return ao - bo;
-      if ((a.date || '') !== (b.date || '')) return (a.date || '').localeCompare(b.date || '');
-      const at = a.planned_start_time || '';
-      const bt = b.planned_start_time || '';
-      return at.localeCompare(bt);
+      return ao - bo;
     });
   
   const getSessionSegments = (sessionId, filterKey) => {
