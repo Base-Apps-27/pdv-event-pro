@@ -10,7 +10,7 @@ import { CheckCircle2, History, RotateCcw, Bug, Plus, Sparkles } from "lucide-re
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
 import AdminSubmissionGate from "@/components/message-processing/AdminSubmissionGate";
-import AdminSubmissionDialog from "@/components/message-processing/AdminSubmissionDialog";
+import AdminSubmissionDialog from "@/components/message-processing/AdminSubmissionDialog.jsx";
 import MessageMaterialSection from "@/components/message-processing/MessageMaterialSection";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
 import { normalizeName } from "@/components/utils/textNormalization";
