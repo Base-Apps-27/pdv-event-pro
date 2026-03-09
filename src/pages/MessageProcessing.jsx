@@ -433,29 +433,23 @@ function MessageGrid({ segments, isLoading, onProcess, onDiagnostic, onHistory, 
                             <MessageMaterialSection segment={segment} onUpdated={onMaterialUpdated} />
 
                             <div className="flex gap-2 mt-auto">
-                                <Button 
-                                    onClick={() => onProcess(segment)} 
-                                    className={`flex-1 ${isProcessed ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
-                                    variant={isProcessed ? "outline" : "default"}
-                                >
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    {isProcessed ? 'Revisar' : 'Procesar'}
-                                </Button>
+                                {/* 2026-03-09: Manual parsing removed. Automation handles all processing. */}
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
                                     onClick={() => onDiagnostic(segment.id)}
-                                    className="text-gray-400 hover:text-purple-600"
-                                    title="Diagnóstico"
+                                    className="flex-1 text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+                                    title="Ver diagnóstico"
                                 >
-                                    <Bug className="w-4 h-4" />
+                                    <Bug className="w-4 h-4 mr-2" />
+                                    <span>Diagnóstico</span>
                                 </Button>
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
                                     onClick={() => onHistory(segment)}
                                     className="text-gray-400 hover:text-blue-600"
-                                    title="Historial"
+                                    title="Historial de envíos"
                                 >
                                     <History className="w-4 h-4" />
                                 </Button>
