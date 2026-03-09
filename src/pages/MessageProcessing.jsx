@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, History, RotateCcw, Bug, Plus } from "lucide-react";
+import { CheckCircle2, History, RotateCcw, Bug, Plus, Sparkles } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
 import AdminSubmissionGate from "@/components/message-processing/AdminSubmissionGate";
