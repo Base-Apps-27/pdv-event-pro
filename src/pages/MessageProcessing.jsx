@@ -471,6 +471,17 @@ function MessageGrid({ segments, isLoading, onAdminSubmit, onDiagnostic, onHisto
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     {isProcessed ? 'Revisar' : 'Enviar'}
                                 </Button>
+                                {isProcessed && hasVerses && (
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => onEditVerses(segment)}
+                                        className="text-gray-600 hover:text-teal-700"
+                                        title="Editar versículos"
+                                    >
+                                        Editar
+                                    </Button>
+                                )}
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
