@@ -64,7 +64,7 @@ export default function TimePicker({
   };
 
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1));
-  const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
   const formatDisplay = (val) => {
     if (!val) return placeholder;
