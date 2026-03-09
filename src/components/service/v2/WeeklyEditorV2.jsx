@@ -97,7 +97,9 @@ export default function WeeklyEditorV2({
 
   // ── Action hooks ──
   const { execute: executeReset } = useResetToBlueprint(queryKey);
-  const { move: moveSegment } = useMoveSegment(queryKey);
+  const { move: moveSegment } = useMoveSegment(queryKey, writeSegment, (err) => {
+    toast.error(t('weekly.toast.reorderFailed') + (err?.message || ''));
+  });
   const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey);
   const { copySegmentContent, copyAllToSlot } = useCopyBetweenSlots(
     segmentsBySession, sessions, psdBySession,
