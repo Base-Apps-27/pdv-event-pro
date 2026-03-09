@@ -92,7 +92,22 @@ export default function PublicArtsForm() {
             /* User passed gate but data still loading — brief spinner */
             <LoadingSpinner size="fullPage" label="Cargando segmentos..." />
           ) : (
-            <ArtsFormContent segments={segments} gateUser={gateUser} isUnica={isUnica} eventId={event?.id} />
+            <>
+              <ArtsFormContent segments={segments} gateUser={gateUser} isUnica={isUnica} eventId={event?.id} />
+
+              {/* Print-only report: hidden on screen, shown when printing.
+                  Uses ArtsReportSegmentCard (read-only, dense, print-optimized).
+                  All segments expand fully — no accordion state needed. */}
+              <div className="hidden print:block">
+                <div className="text-center mb-4 border-b border-gray-400 pb-2">
+                  <div className="text-2xl font-bold uppercase tracking-widest">{event?.name}</div>
+                  <div className="text-sm text-gray-500">Artes — Reporte de Producción</div>
+                </div>
+                {segments.map(seg => (
+                  <ArtsReportSegmentCard key={seg.id} seg={seg} sessionName={seg.session_name} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
