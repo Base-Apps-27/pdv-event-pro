@@ -167,26 +167,24 @@ export default function TimePicker({
               >
                 Min
               </label>
-              <select
+              <input
+                type="number"
+                min="0"
+                max="59"
                 value={minute}
-                onChange={(e) => setMinute(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 59)) {
+                    setMinute(val === '' ? '00' : String(parseInt(val, 10)).padStart(2, '0'));
+                  }
+                }}
                 className="w-full rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2"
                 style={{ 
                   backgroundColor: '#ffffff',
                   color: '#111827',
                   border: '1px solid #d1d5db'
                 }}
-              >
-                {minutes.map((m) => (
-                  <option 
-                    key={m} 
-                    value={m}
-                    style={{ backgroundColor: '#ffffff', color: '#111827' }}
-                  >
-                    {m}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <div className="flex-1">
               <label 
