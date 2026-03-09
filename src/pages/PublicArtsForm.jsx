@@ -79,7 +79,19 @@ export default function PublicArtsForm() {
     <PublicFormLangProvider>
       <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
         <div className="w-full max-w-[720px] mx-auto">
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-between items-center mb-2">
+            {/* Print button — only useful after gate is passed and segments are loaded */}
+            {gateUser && !loading && segments.length > 0 ? (
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors print:hidden"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimir reporte
+              </button>
+            ) : (
+              <span />
+            )}
             <PublicFormLangToggle />
           </div>
           {/* Show header with event info once loaded, or placeholder header while loading */}
