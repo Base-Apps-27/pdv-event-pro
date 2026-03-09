@@ -45,6 +45,7 @@ import HospitalityReportView from "@/components/report/HospitalityReportView";
 import UshersReportView from "@/components/report/UshersReportView";
 import LivestreamReportView from "@/components/report/LivestreamReportView";
 import ArtsReportView from "@/components/report/ArtsReportView";
+import { generateArtsReportPDF, downloadArtsPdf } from "@/components/arts/generateArtsReportPDF";
 import { Radio } from "lucide-react";
 
 export default function Reports() {
