@@ -277,7 +277,7 @@ export default function MessageProcessingPage() {
                     <MessageGrid 
                         segments={pendingSegments} 
                         isLoading={isLoading} 
-                        onProcess={handleProcess}
+                        onAdminSubmit={(seg) => { setAdminSubmitSegment(seg); setIsAdminFormOpen(true); }}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
                         onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
@@ -289,7 +289,7 @@ export default function MessageProcessingPage() {
                     <MessageGrid 
                         segments={processedSegments} 
                         isLoading={isLoading} 
-                        onProcess={handleProcess}
+                        onAdminSubmit={(seg) => { setAdminSubmitSegment(seg); setIsAdminFormOpen(true); }}
                         onDiagnostic={(id) => { setDiagnosticSegmentId(id); setIsDiagnosticOpen(true); }}
                         onHistory={(seg) => { setHistorySegment(seg); setIsHistoryOpen(true); }}
                         onMaterialUpdated={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
