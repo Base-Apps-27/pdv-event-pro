@@ -442,12 +442,12 @@ function MessageGrid({ segments, isLoading, onAdminSubmit, onDiagnostic, onHisto
 
                             <div className="flex gap-2 mt-auto">
                                 <Button 
-                                    onClick={() => onProcess(segment)} 
+                                    onClick={() => onAdminSubmit(segment)} 
                                     className={`flex-1 ${isProcessed ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
                                     variant={isProcessed ? "outline" : "default"}
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
-                                    {isProcessed ? 'Revisar' : 'Procesar'}
+                                    {isProcessed ? 'Revisar' : 'Enviar'}
                                 </Button>
                                 <Button 
                                     variant="ghost" 
