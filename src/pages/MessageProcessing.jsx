@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CheckCircle2, History, RotateCcw, Bug, Plus, Sparkles } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import SubmissionDiagnosticModal from "@/components/service/SubmissionDiagnosticModal";
+import VerseParserDialog from "@/components/service/VerseParserDialog";
 import AdminSubmissionGate from "@/components/message-processing/AdminSubmissionGate";
 import MessageMaterialSection from "@/components/message-processing/MessageMaterialSection";
 import { formatDateTimeET } from "@/components/utils/timeFormat";
