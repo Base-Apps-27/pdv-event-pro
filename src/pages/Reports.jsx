@@ -21,7 +21,7 @@ import { generateEventReportPDFClient } from "@/components/service/generateEvent
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Utensils, ExternalLink, Share2, Copy, Check } from "lucide-react";
+import { FileText, Printer, Filter, Projector, Volume2, Users as UsersIcon, List, Utensils, ExternalLink, Share2, Copy, Check, Palette } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,6 +44,7 @@ import SoundReportView from "@/components/report/SoundReportView";
 import HospitalityReportView from "@/components/report/HospitalityReportView";
 import UshersReportView from "@/components/report/UshersReportView";
 import LivestreamReportView from "@/components/report/LivestreamReportView";
+import ArtsReportView from "@/components/report/ArtsReportView";
 import { Radio } from "lucide-react";
 
 export default function Reports() {
@@ -346,7 +347,7 @@ export default function Reports() {
             </div>
 
             <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
-              <TabsList className="grid w-full grid-cols-7 mb-6 no-print">
+              <TabsList className="grid w-full grid-cols-8 mb-6 no-print">
                 <TabsTrigger value="detailed" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   {t('reports.tabs.detailed')}
@@ -375,6 +376,10 @@ export default function Reports() {
                   <Radio className="w-4 h-4" />
                   {t('myprogram.dept.livestream')}
                 </TabsTrigger>
+                <TabsTrigger value="arts" className="flex items-center gap-2">
+                  <Palette className="w-4 h-4" />
+                  Artes
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="detailed">
@@ -397,6 +402,9 @@ export default function Reports() {
               </TabsContent>
               <TabsContent value="livestream">
                 <LivestreamReportView {...viewProps} />
+              </TabsContent>
+              <TabsContent value="arts">
+                <ArtsReportView eventSessions={eventSessions} getSessionSegments={getSessionSegments} />
               </TabsContent>
             </Tabs>
 

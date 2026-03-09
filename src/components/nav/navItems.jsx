@@ -146,12 +146,4 @@ export const adminNav = [
     permission: 'manage_users',
     matchPages: ['ArtsSubmissions'],
   },
-  {
-    id: 'arts-report',
-    labelKey: 'nav.artsReport',
-    icon: Palette,
-    page: 'ArtsReport',
-    permission: 'manage_users',
-    matchPages: ['ArtsReport'],
-  },
 ];
