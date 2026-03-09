@@ -17,7 +17,7 @@ export default function AdminSubmissionDialog({ open, onOpenChange, segment, onS
     const [content, setContent] = useState("");
 
     // Reset content when dialog opens/closes
-    React.useEffect(() => {
+    useEffect(() => {
         if (open && segment) {
             setContent(segment.submitted_content || "");
         } else if (!open) {
