@@ -46,6 +46,21 @@ export default function ArtsReportView({ eventSessions, getSessionSegments, even
 
   return (
     <div>
+      {/* Export button — only shown when there's data and allSegments were passed in */}
+      {allSegments && (
+        <div className="flex justify-end mb-4 no-print">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            {exporting
+              ? <><Loader2 className="w-4 h-4 animate-spin" />Generando PDF...</>
+              : <><FileText className="w-4 h-4" />Exportar PDF — Artes</>
+            }
+          </button>
+        </div>
+      )}
       {grouped.map(({ session, artsSegments }) => (
         <div key={session.id} className="mb-8">
           <div className="flex items-center gap-3 mb-4">
