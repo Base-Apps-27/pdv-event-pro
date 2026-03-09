@@ -238,6 +238,9 @@ export default function MyProgram() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-white/80 text-xs whitespace-nowrap">{contextDate ? formatDateET(contextDate) : ''}</span>
+            {/* Compact staleness indicator (2026-03-09): subtle freshness badge in header.
+                Gives coordinators visibility into cache age without cluttering the timeline. */}
+            <CacheStalenessIndicator cacheRecord={cacheRecord} currentUser={user} language={language} compact={true} />
             <Link
               to={createPageUrl('Profile')}
               className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors no-select"
