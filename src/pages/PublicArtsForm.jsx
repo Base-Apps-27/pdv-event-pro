@@ -20,6 +20,8 @@ import ArtsStickyBar from '@/components/publicforms/ArtsStickyBar';
 import ArtsChangeHistory from '@/components/publicforms/ArtsChangeHistory';
 import { PublicFormLangProvider, usePublicLang } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
+import ArtsReportSegmentCard from '@/components/arts/ArtsReportSegmentCard';
+import { Printer } from 'lucide-react';
 
 /**
  * PERF-FIX (2026-03-03): Show gate form immediately while data loads in background.
