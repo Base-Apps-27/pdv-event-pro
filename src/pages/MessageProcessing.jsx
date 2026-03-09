@@ -218,40 +218,12 @@ export default function MessageProcessingPage() {
         }
     });
 
-    const handleProcess = (segment, contentOverride = null) => {
-        // 2026-03-01: When submitted_content is null on the Segment entity (common for
-        // weekly service submissions stored via composite IDs), fall back to the most
-        // recent SpeakerSubmissionVersion.content so the parser dialog isn't empty.
-        let effectiveContent = contentOverride;
-        if (!effectiveContent && !segment.submitted_content && segment._versions?.length > 0) {
-            const sorted = [...segment._versions].sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
-            effectiveContent = sorted[0]?.content || null;
-        }
-        setSelectedSegment(segment);
-        setRestoreContent(effectiveContent);
-        setIsParserOpen(true);
-    };
-
     const handleRestore = (version) => {
         setIsHistoryOpen(false);
-        handleProcess(historySegment, version.content);
         setHistorySegment(null);
-    };
-
-    const handleSaveParsed = (data) => {
-        if (!selectedSegment) return;
-        
-        updateSegmentMutation.mutate({
-            segment: selectedSegment,
-            data: {
-                submitted_content: restoreContent || selectedSegment.submitted_content || "",
-                scripture_references: data.verse, 
-                parsed_verse_data: data.parsed_data,
-                submission_status: 'processed'
-            }
-        });
-        // GRO-1 (2026-03-02): Track message processing
-        base44.analytics.track({ eventName: 'message_processed', properties: { segment_id: selectedSegment.id, segment_type: selectedSegment.segment_type || 'unknown' } });
+        // 2026-03-09: Restoration moved to history view only—auto-processing handles parsing.
+        // Admin views version history for diagnostic/audit purposes, not for re-parsing.
+        toast.info("Versión guardada en historial. La próxima entrega será procesada automáticamente.");
     };
 
     const handleGateSelection = async (segmentId) => {
