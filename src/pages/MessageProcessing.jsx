@@ -205,18 +205,7 @@ export default function MessageProcessingPage() {
     const pendingSegments = segmentItems.filter(s => s.submission_status === 'pending');
     const processedSegments = segmentItems.filter(s => s.submission_status === 'processed');
 
-    const updateSegmentMutation = useMutation({
-        mutationFn: async ({ segment, data }) => {
-            await base44.entities.Segment.update(segment.id, data);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(['messagesToProcessInbox']);
-            setIsParserOpen(false);
-            setSelectedSegment(null);
-            setRestoreContent(null);
-            toast.success("Mensaje procesado y guardado");
-        }
-    });
+
 
     const handleRestore = (version) => {
         setIsHistoryOpen(false);
