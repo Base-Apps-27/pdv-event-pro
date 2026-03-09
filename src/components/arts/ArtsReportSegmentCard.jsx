@@ -1,102 +1,155 @@
 /**
  * ArtsReportSegmentCard.jsx
  * 2026-03-09: Print-optimized read-only card for a single arts segment.
- * Mirrors the public arts form structure (all sections expanded) but is
- * a rich, clean document — not a form UI.
- * Used by pages/ArtsReport.jsx.
+ * Design goal: dense reference document, not a form UI.
+ * 
+ * Key decisions:
+ * - Skip ALL empty fields (no blank song boxes, no empty labels)
+ * - URLs rendered as short "↗ Link" anchors — no URL wrapping
+ * - Bilingual labels condensed to single line (ES / EN)
+ * - Tight spacing throughout for print density
  */
 import React, { useMemo } from 'react';
 import { formatTimeToEST } from '@/components/utils/timeFormat';
 
 const TYPE_LABELS = {
-  DANCE: '🩰 Danza',
-  DRAMA: '🎭 Drama',
-  VIDEO: '🎬 Video',
-  SPOKEN_WORD: '🎤 Spoken Word',
-  PAINTING: '🎨 Pintura',
-  OTHER: '✨ Otro',
+  DANCE: 'Danza',
+  DRAMA: 'Drama',
+  VIDEO: 'Video',
+  SPOKEN_WORD: 'Spoken Word',
+  PAINTING: 'Pintura',
+  OTHER: 'Otro',
 };
 
 const TYPE_ACCENT = {
-  DANCE: 'border-purple-400',
-  DRAMA: 'border-red-400',
-  VIDEO: 'border-blue-400',
-  SPOKEN_WORD: 'border-amber-400',
-  PAINTING: 'border-pink-400',
-  OTHER: 'border-gray-400',
+  DANCE: 'border-purple-500 bg-purple-50',
+  DRAMA: 'border-red-500 bg-red-50',
+  VIDEO: 'border-blue-500 bg-blue-50',
+  SPOKEN_WORD: 'border-amber-500 bg-amber-50',
+  PAINTING: 'border-pink-500 bg-pink-50',
+  OTHER: 'border-gray-400 bg-gray-50',
 };
 
-const TYPE_HEADER_BG = {
-  DANCE: 'bg-purple-50 text-purple-900 print:bg-white',
-  DRAMA: 'bg-red-50 text-red-900 print:bg-white',
-  VIDEO: 'bg-blue-50 text-blue-900 print:bg-white',
-  SPOKEN_WORD: 'bg-amber-50 text-amber-900 print:bg-white',
-  PAINTING: 'bg-pink-50 text-pink-900 print:bg-white',
-  OTHER: 'bg-gray-50 text-gray-900 print:bg-white',
+const TYPE_LABEL_COLOR = {
+  DANCE: 'text-purple-800',
+  DRAMA: 'text-red-800',
+  VIDEO: 'text-blue-800',
+  SPOKEN_WORD: 'text-amber-800',
+  PAINTING: 'text-pink-800',
+  OTHER: 'text-gray-700',
 };
 
-// ── Primitives ──────────────────────────────────────────────────────────────
+// ── Primitive helpers ────────────────────────────────────────────────────────
 
-function Field({ label, value }) {
-  if (value === undefined || value === null || value === '') return null;
+/** Renders nothing if value is empty */
+function Row({ label, value }) {
+  if (!value && value !== 0) return null;
   return (
-    <div className="mb-2">
-      <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</div>
-      <div className="text-sm text-gray-900 whitespace-pre-wrap leading-snug">{value}</div>
+    <div className="flex gap-2 text-sm leading-snug mb-1">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide shrink-0 pt-px w-28">{label}</span>
+      <span className="text-gray-900 flex-1">{value}</span>
     </div>
   );
 }
 
-function LinkField({ label, url }) {
+/** Compact URL link — shows a short label, hides the raw URL */
+function LinkRow({ label, url }) {
   const urlStr = Array.isArray(url) ? url[0] : url;
   if (!urlStr) return null;
+  // Derive a short display name from the URL
+  let display = '↗ Ver archivo';
+  try {
+    const u = new URL(urlStr);
+    const filename = u.pathname.split('/').pop();
+    if (filename && filename.length > 0 && filename.length < 60) {
+      // Strip long hash prefixes (e.g. "263d4e2b5_StagePositions...")
+      display = '↗ ' + filename.replace(/^[a-f0-9]{6,}_/, '');
+    }
+  } catch {}
   return (
-    <div className="mb-2">
-      <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</div>
+    <div className="flex gap-2 text-sm leading-snug mb-1">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide shrink-0 pt-px w-28">{label}</span>
       <a href={urlStr} target="_blank" rel="noopener noreferrer"
-        className="text-sm text-[#1F8A70] underline break-all print:text-gray-700 print:no-underline">
-        {urlStr}
+        className="text-[#1F8A70] underline truncate max-w-xs print:text-gray-700 print:no-underline">
+        {display}
       </a>
-      {/* Print URL as text so it's readable when printed */}
-      <span className="hidden print:inline text-[10px] text-gray-500 ml-1">↗</span>
     </div>
   );
 }
 
-function MicRow({ handheld, headset }) {
+function CuePair({ startCue, endCue }) {
+  if (!startCue && !endCue) return null;
+  return (
+    <div className="grid grid-cols-2 gap-3 mb-1">
+      {startCue && (
+        <div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Cue inicio</div>
+          <div className="text-sm text-gray-900 leading-snug">{startCue}</div>
+        </div>
+      )}
+      {endCue && (
+        <div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Cue fin</div>
+          <div className="text-sm text-gray-900 leading-snug">{endCue}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MicBadges({ handheld, headset }) {
   if (!handheld && !headset) return null;
   return (
-    <div className="flex gap-2 mb-2">
+    <div className="flex gap-1.5 mb-1.5 flex-wrap">
       {handheld > 0 && (
-        <span className="text-xs font-semibold bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full print:border-gray-400">
-          {handheld} Handheld
+        <span className="text-xs font-semibold bg-white border border-gray-300 px-2 py-0.5 rounded-full">
+          🎤 {handheld} handheld
         </span>
       )}
       {headset > 0 && (
-        <span className="text-xs font-semibold bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full print:border-gray-400">
-          {headset} Headset
+        <span className="text-xs font-semibold bg-white border border-gray-300 px-2 py-0.5 rounded-full">
+          🎧 {headset} headset
         </span>
       )}
     </div>
   );
 }
 
-function SongBlock({ num, title, url, owner }) {
-  if (!title && !url && !owner) return null;
+/** Only renders if the song has at least a title or URL */
+function SongLine({ num, title, url, owner }) {
   const urlStr = Array.isArray(url) ? url[0] : url;
+  if (!title && !urlStr && !owner) return null;
   return (
-    <div className="border border-gray-200 rounded-lg p-3 mb-2 print:border-gray-400">
-      <div className="text-[9px] font-bold text-[#1F8A70] uppercase tracking-widest mb-1.5">
-        Canción / Song {num}
-      </div>
-      {title && <div className="text-sm font-semibold text-gray-900 mb-0.5">{title}</div>}
-      {owner && <div className="text-xs text-gray-500">Responsable: {owner}</div>}
+    <div className="flex items-baseline gap-2 text-sm mb-0.5">
+      <span className="text-[10px] font-bold text-gray-400 uppercase w-12 shrink-0">#{num}</span>
+      {title && <span className="font-medium text-gray-900">{title}</span>}
+      {owner && <span className="text-gray-500 text-xs">· {owner}</span>}
       {urlStr && (
         <a href={urlStr} target="_blank" rel="noopener noreferrer"
-          className="text-xs text-[#1F8A70] underline break-all mt-1 block print:text-gray-600">
-          {urlStr}
-        </a>
+          className="text-[#1F8A70] text-xs underline ml-auto print:text-gray-600">↗</a>
       )}
+    </div>
+  );
+}
+
+function SongsBlock({ prefix, seg }) {
+  const s1 = seg[`${prefix}_song_title`];
+  const s1url = seg[`${prefix}_song_source`];
+  const s1own = seg[`${prefix}_song_owner`];
+  const s2 = seg[`${prefix}_song_2_title`];
+  const s2url = seg[`${prefix}_song_2_url`];
+  const s2own = seg[`${prefix}_song_2_owner`];
+  const s3 = seg[`${prefix}_song_3_title`];
+  const s3url = seg[`${prefix}_song_3_url`];
+  const s3own = seg[`${prefix}_song_3_owner`];
+  const hasAny = s1 || s1url || s2 || s2url || s3 || s3url;
+  if (!hasAny) return null;
+  return (
+    <div className="mt-1.5">
+      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Canciones</div>
+      <SongLine num={1} title={s1} url={s1url} owner={s1own} />
+      <SongLine num={2} title={s2} url={s2url} owner={s2own} />
+      <SongLine num={3} title={s3} url={s3url} owner={s3own} />
     </div>
   );
 }
@@ -104,56 +157,31 @@ function SongBlock({ num, title, url, owner }) {
 // ── Per-type sections ────────────────────────────────────────────────────────
 
 function DanceSection({ seg }) {
-  const hasSongs = seg.dance_has_song !== false;
   return (
-    <div className="space-y-1.5">
-      <MicRow handheld={seg.dance_handheld_mics} headset={seg.dance_headset_mics} />
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Cue de Inicio / Start Cue" value={seg.dance_start_cue} />
-        <Field label="Cue de Fin / End Cue" value={seg.dance_end_cue} />
-      </div>
-      <Field label="Vestuario / Outfit Colors" value={seg.dance_outfit_colors} />
-      <Field label="Artículos Especiales / Special Items" value={seg.dance_special_items} />
-      {hasSongs && (
-        <>
-          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest pt-1">
-            Canciones / Songs
-          </div>
-          <SongBlock num={1} title={seg.dance_song_title} url={seg.dance_song_source} owner={seg.dance_song_owner} />
-          <SongBlock num={2} title={seg.dance_song_2_title} url={seg.dance_song_2_url} owner={seg.dance_song_2_owner} />
-          <SongBlock num={3} title={seg.dance_song_3_title} url={seg.dance_song_3_url} owner={seg.dance_song_3_owner} />
-        </>
-      )}
-    </div>
+    <>
+      <MicBadges handheld={seg.dance_handheld_mics} headset={seg.dance_headset_mics} />
+      <CuePair startCue={seg.dance_start_cue} endCue={seg.dance_end_cue} />
+      <Row label="Vestuario" value={seg.dance_outfit_colors} />
+      <Row label="Artículos esp." value={seg.dance_special_items} />
+      {seg.dance_has_song !== false && <SongsBlock prefix="dance" seg={seg} />}
+    </>
   );
 }
 
 function DramaSection({ seg }) {
   return (
-    <div className="space-y-1.5">
-      <MicRow handheld={seg.drama_handheld_mics} headset={seg.drama_headset_mics} />
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Cue de Inicio / Start Cue" value={seg.drama_start_cue} />
-        <Field label="Cue de Fin / End Cue" value={seg.drama_end_cue} />
-      </div>
-      <Field label="Vestuario / Outfit Colors" value={seg.drama_outfit_colors} />
-      <Field label="Artículos Especiales / Special Items" value={seg.drama_special_items} />
-      {seg.drama_has_song && (
-        <>
-          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest pt-1">
-            Canciones / Songs
-          </div>
-          <SongBlock num={1} title={seg.drama_song_title} url={seg.drama_song_source} owner={seg.drama_song_owner} />
-          <SongBlock num={2} title={seg.drama_song_2_title} url={seg.drama_song_2_url} owner={seg.drama_song_2_owner} />
-          <SongBlock num={3} title={seg.drama_song_3_title} url={seg.drama_song_3_url} owner={seg.drama_song_3_owner} />
-        </>
-      )}
-    </div>
+    <>
+      <MicBadges handheld={seg.drama_handheld_mics} headset={seg.drama_headset_mics} />
+      <CuePair startCue={seg.drama_start_cue} endCue={seg.drama_end_cue} />
+      <Row label="Vestuario" value={seg.drama_outfit_colors} />
+      <Row label="Artículos esp." value={seg.drama_special_items} />
+      {seg.drama_has_song && <SongsBlock prefix="drama" seg={seg} />}
+    </>
   );
 }
 
 function formatDuration(secs) {
-  if (!secs) return '';
+  if (!secs) return null;
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
@@ -161,83 +189,74 @@ function formatDuration(secs) {
 
 function VideoSection({ seg }) {
   return (
-    <div className="space-y-1.5">
-      <Field label="Nombre del Video / Video Name" value={seg.video_name} />
-      <LinkField label="Archivo / Video File" url={seg.video_url} />
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Duración / Duration" value={formatDuration(seg.video_length_sec)} />
-        <Field label="Responsable / Owner" value={seg.video_owner} />
+    <>
+      <Row label="Nombre" value={seg.video_name} />
+      <LinkRow label="Archivo" url={seg.video_url} />
+      <div className="flex gap-4">
+        {formatDuration(seg.video_length_sec) && <Row label="Duración" value={formatDuration(seg.video_length_sec)} />}
+        {seg.video_owner && <Row label="Responsable" value={seg.video_owner} />}
       </div>
-      <Field label="Ubicación / Location" value={seg.video_location} />
-    </div>
+      <Row label="Ubicación" value={seg.video_location} />
+    </>
   );
 }
 
 const MIC_LABELS = {
   headset: 'Headset',
   handheld: 'Handheld',
-  stand: 'Atril / On a Stand',
-  off_stage: 'Fuera del Escenario / Off Stage',
+  stand: 'Atril',
+  off_stage: 'Fuera del escenario',
   lapel: 'Lapel',
-  podium: 'Podio / Podium',
+  podium: 'Podio',
 };
 
 function SpokenWordSection({ seg }) {
   return (
-    <div className="space-y-1.5">
-      <Field label="Orador / Speaker" value={seg.spoken_word_speaker} />
-      <Field label="Descripción / Piece Title" value={seg.spoken_word_description} />
-      <Field label="Posición del Micrófono / Mic" value={MIC_LABELS[seg.spoken_word_mic_position] || seg.spoken_word_mic_position} />
-      <Field label="Vestuario / Outfit Colors" value={seg.spoken_word_outfit_colors} />
-      <Field label="Artículos Especiales / Special Items" value={seg.spoken_word_special_items} />
-      <LinkField label="Guión / Script" url={seg.spoken_word_script_url} />
-      <LinkField label="Audio" url={seg.spoken_word_audio_url} />
+    <>
+      <Row label="Orador" value={seg.spoken_word_speaker} />
+      <Row label="Pieza" value={seg.spoken_word_description} />
+      <Row label="Micrófono" value={MIC_LABELS[seg.spoken_word_mic_position] || seg.spoken_word_mic_position} />
+      <Row label="Vestuario" value={seg.spoken_word_outfit_colors} />
+      <Row label="Artículos esp." value={seg.spoken_word_special_items} />
+      <LinkRow label="Guión" url={seg.spoken_word_script_url} />
+      <LinkRow label="Audio" url={seg.spoken_word_audio_url} />
       {seg.spoken_word_has_music && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 print:bg-white print:border-amber-400">
-          <div className="text-[9px] font-bold text-amber-700 uppercase tracking-widest mb-1.5">
-            Música de Fondo / Background Music
-          </div>
-          <Field label="Track" value={seg.spoken_word_music_title} />
-          <Field label="Responsable" value={seg.spoken_word_music_owner} />
-          <LinkField label="Archivo" url={seg.spoken_word_music_url} />
+        <div className="mt-1.5 pl-2 border-l-2 border-amber-300">
+          <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wide mb-1">Música de fondo</div>
+          <Row label="Track" value={seg.spoken_word_music_title} />
+          <Row label="Responsable" value={seg.spoken_word_music_owner} />
+          <LinkRow label="Archivo" url={seg.spoken_word_music_url} />
         </div>
       )}
-      <Field label="Notas / Notes" value={seg.spoken_word_notes} />
-    </div>
+      <Row label="Notas" value={seg.spoken_word_notes} />
+    </>
   );
 }
 
 function PaintingSection({ seg }) {
   const needs = [
-    seg.painting_needs_easel && 'Caballete / Easel',
-    seg.painting_needs_drop_cloth && 'Protección de piso / Drop Cloth',
-    seg.painting_needs_lighting && 'Iluminación especial / Special Lighting',
+    seg.painting_needs_easel && 'Caballete',
+    seg.painting_needs_drop_cloth && 'Protección de piso',
+    seg.painting_needs_lighting && 'Iluminación especial',
   ].filter(Boolean);
   return (
-    <div className="space-y-1.5">
+    <>
       {needs.length > 0 && (
-        <div className="mb-2">
-          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-            Necesidades / Needs
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {needs.map(n => (
-              <span key={n} className="text-xs bg-pink-50 border border-pink-300 px-2.5 py-0.5 rounded-full print:bg-white">
-                ✓ {n}
-              </span>
-            ))}
-          </div>
+        <div className="flex gap-1.5 flex-wrap mb-1.5">
+          {needs.map(n => (
+            <span key={n} className="text-xs bg-white border border-pink-300 px-2 py-0.5 rounded-full">✓ {n}</span>
+          ))}
         </div>
       )}
-      <Field label="Tamaño del Lienzo / Canvas Size" value={seg.painting_canvas_size} />
-      <Field label="Otros Requisitos / Other Setup" value={seg.painting_other_setup} />
-      <Field label="Notas / Notes" value={seg.painting_notes} />
-    </div>
+      <Row label="Lienzo" value={seg.painting_canvas_size} />
+      <Row label="Montaje" value={seg.painting_other_setup} />
+      <Row label="Notas" value={seg.painting_notes} />
+    </>
   );
 }
 
 function OtherSection({ seg }) {
-  return <Field label="Descripción / Description" value={seg.art_other_description} />;
+  return <Row label="Descripción" value={seg.art_other_description} />;
 }
 
 const TYPE_RENDERERS = {
@@ -255,8 +274,7 @@ export default function ArtsReportSegmentCard({ seg, sessionName }) {
   const types = seg.art_types || [];
   if (types.length === 0) return null;
 
-  // Respect the arts_type_order for sequencing
-  const orderedTypes = React.useMemo(() => {
+  const orderedTypes = useMemo(() => {
     if (!seg.arts_type_order || seg.arts_type_order.length === 0) return types;
     const orderMap = {};
     seg.arts_type_order.forEach(o => { orderMap[o.type] = o.order ?? 99; });
@@ -264,71 +282,81 @@ export default function ArtsReportSegmentCard({ seg, sessionName }) {
   }, [types, seg.arts_type_order]);
 
   const submittedAt = seg.arts_last_submitted_at
-    ? new Date(seg.arts_last_submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+    ? new Date(seg.arts_last_submitted_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      })
     : null;
 
+  const runOfShowUrl = Array.isArray(seg.arts_run_of_show_url)
+    ? seg.arts_run_of_show_url[0]
+    : seg.arts_run_of_show_url;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6 print:mb-5 print:border-gray-500 print:rounded-none print:shadow-none">
-      {/* ── Header ── */}
-      <div className="brand-gradient p-4 print:bg-gray-800">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-white font-bold text-lg leading-tight print:text-white">{seg.title}</h3>
-            <div className="text-white/75 text-xs mt-0.5 flex flex-wrap gap-2">
-              {sessionName && <span>{sessionName}</span>}
-              {seg.start_time && <span>· {formatTimeToEST(seg.start_time)}</span>}
-              {seg.presenter && <span>· {seg.presenter}</span>}
-            </div>
+    <div className="bg-white border border-gray-300 rounded-lg overflow-hidden mb-4 print:mb-3 print:rounded-none print:border-gray-600 page-break-inside-avoid">
+
+      {/* ── Compact header ── */}
+      <div className="brand-gradient px-4 py-2.5 print:bg-gray-800">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <span className="text-white font-bold text-base leading-tight">{seg.title}</span>
+            <span className="text-white/70 text-xs ml-2">
+              {sessionName && <>{sessionName}</>}
+              {seg.start_time && <> · {formatTimeToEST(seg.start_time)}</>}
+              {seg.presenter && <> · {seg.presenter}</>}
+            </span>
+          </div>
+          {/* Art type sequence — compact pills */}
+          <div className="flex gap-1 flex-wrap">
+            {orderedTypes.map((tp, idx) => (
+              <span key={tp} className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">
+                {idx + 1}. {TYPE_LABELS[tp] || tp}
+              </span>
+            ))}
           </div>
         </div>
-        {/* Art type badges in performance order */}
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          {orderedTypes.map((tp, idx) => (
-            <span key={tp} className="text-xs bg-white/20 text-white px-2.5 py-1 rounded-full font-semibold print:bg-transparent print:border print:border-white print:text-white">
-              {idx + 1}. {TYPE_LABELS[tp] || tp}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Submission meta ── */}
-      {(seg.arts_last_submitted_by || submittedAt) && (
-        <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 flex flex-wrap gap-4 text-xs text-gray-500 print:bg-white print:border-gray-300">
-          {seg.arts_last_submitted_by && (
-            <span>Enviado por / Submitted by: <strong className="text-gray-700">{seg.arts_last_submitted_by}</strong></span>
-          )}
-          {submittedAt && <span>{submittedAt}</span>}
-        </div>
-      )}
-
-      {/* ── Per-type sections ── */}
-      <div className="p-4 space-y-4">
-        {orderedTypes.map(tp => {
-          const Renderer = TYPE_RENDERERS[tp];
-          if (!Renderer) return null;
-          return (
-            <div key={tp} className={`border-l-4 ${TYPE_ACCENT[tp] || 'border-gray-300'} rounded-r-lg overflow-hidden`}>
-              <div className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${TYPE_HEADER_BG[tp] || 'bg-gray-50 text-gray-900'}`}>
-                {TYPE_LABELS[tp] || tp}
-              </div>
-              <div className="px-3 pt-2 pb-3">
-                <Renderer seg={seg} />
-              </div>
-            </div>
-          );
-        })}
-
-        {/* ── Common: Run of Show + Notes ── */}
-        {(seg.arts_run_of_show_url || seg.description_details) && (
-          <div className="border-t border-gray-100 pt-3">
-            <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              📋 Guía General & Notas / Run of Show & Notes
-            </div>
-            <LinkField label="Guía Final / Run of Show" url={seg.arts_run_of_show_url} />
-            <Field label="Notas Adicionales / Additional Notes" value={seg.description_details} />
+        {/* Submission meta — compact, single line */}
+        {(seg.arts_last_submitted_by || submittedAt) && (
+          <div className="text-white/60 text-[10px] mt-1">
+            {seg.arts_last_submitted_by && <>Enviado por: {seg.arts_last_submitted_by}</>}
+            {submittedAt && <> · {submittedAt}</>}
           </div>
         )}
       </div>
+
+      {/* ── Per-type sections (side by side when 2 types, stacked otherwise) ── */}
+      <div className={`p-3 ${orderedTypes.length >= 2 ? 'grid grid-cols-2 gap-3' : ''}`}>
+        {orderedTypes.map(tp => {
+          const Renderer = TYPE_RENDERERS[tp];
+          if (!Renderer) return null;
+          const accent = TYPE_ACCENT[tp] || 'border-gray-400 bg-gray-50';
+          const labelColor = TYPE_LABEL_COLOR[tp] || 'text-gray-700';
+          return (
+            <div key={tp} className={`border-l-4 rounded-r-md ${accent} px-2.5 py-2`}>
+              <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${labelColor}`}>
+                {TYPE_LABELS[tp] || tp}
+              </div>
+              <Renderer seg={seg} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Common footer: run of show link + description notes ── */}
+      {(runOfShowUrl || seg.description_details) && (
+        <div className="border-t border-gray-100 px-3 py-2 bg-gray-50 print:bg-white">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Notas generales</div>
+          {runOfShowUrl && (
+            <a href={runOfShowUrl} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-[#1F8A70] underline mr-4 print:text-gray-600">
+              ↗ Run of Show
+            </a>
+          )}
+          {seg.description_details && (
+            <p className="text-sm text-gray-800 whitespace-pre-wrap leading-snug mt-1">{seg.description_details}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
