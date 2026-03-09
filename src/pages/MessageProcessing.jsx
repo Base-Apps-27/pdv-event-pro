@@ -312,7 +312,14 @@ export default function MessageProcessingPage() {
                     onOpenChange={setIsAdminFormOpen}
                     segment={adminSubmitSegment}
                     onSubmitSuccess={() => {
-                        queryClient.invalidateQueries(['messagesToProcessInbox']);
+                        toast.promise(
+                            queryClient.invalidateQueries(['messagesToProcessInbox']),
+                            {
+                                loading: 'Actualizando bandeja de entrada...',
+                                success: 'Contenido agregado a la bandeja de entrada',
+                                error: 'Error al actualizar'
+                            }
+                        );
                         setAdminSubmitSegment(null);
                     }}
                 />
