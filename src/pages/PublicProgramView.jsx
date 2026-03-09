@@ -277,6 +277,15 @@ export default function PublicProgramView() {
             {/* DEV-1: Extracted info banner */}
             <ProgramInfoBanner viewType={viewType} selectedEvent={selectedEvent} selectedService={selectedService} isOverride={_isOverride} />
 
+            {/* Cache staleness indicator (2026-03-09): shows data freshness + admin force-refresh.
+                Surfaces the last_refresh_at from ActiveProgramCache so coordinators are never
+                silently operating on stale data. Admin-only refresh button mirrors server guard. */}
+            <CacheStalenessIndicator
+              cacheRecord={cacheRecord}
+              currentUser={currentUser}
+              language={language}
+            />
+
             {/* DEV-1: Extracted adjustment controls (service only) */}
             {viewType === "service" && (
               <LiveAdjustmentControls
