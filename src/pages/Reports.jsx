@@ -415,7 +415,7 @@ export default function Reports() {
                 <LivestreamReportView {...viewProps} />
               </TabsContent>
               <TabsContent value="arts">
-                <ArtsReportView eventSessions={eventSessions} getSessionSegments={getSessionSegments} />
+                <ArtsReportView eventSessions={eventSessions} getSessionSegments={getSessionSegments} event={selectedEvent} allSegments={allSegments} />
               </TabsContent>
             </Tabs>
 
