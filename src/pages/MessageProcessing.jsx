@@ -100,14 +100,9 @@ function SubmissionHistoryDialog({ open, onOpenChange, segment, onRestore }) {
 
 export default function MessageProcessingPage() {
     const queryClient = useQueryClient();
-    const [selectedSegment, setSelectedSegment] = useState(null);
-    const [isParserOpen, setIsParserOpen] = useState(false);
-    
     // History State
     const [historySegment, setHistorySegment] = useState(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    // Custom content for restoration flow
-    const [restoreContent, setRestoreContent] = useState(null);
     
     // Diagnostic State
     const [diagnosticSegmentId, setDiagnosticSegmentId] = useState(null);
