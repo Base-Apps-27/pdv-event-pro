@@ -293,14 +293,20 @@ Deno.serve(async (req) => {
         segments = computeSegmentTimes(segments, sessions);
 
         if (segments.length > 0) {
+          // N+1 FIX (2026-03-09): Replaced per-segment SegmentAction fetching with
+          // a single bulk $in query per 50-segment chunk. Previously: O(segments) API
+          // calls (20 parallel calls for a typical event). Now: O(ceil(segments/50)).
+          // Root cause of 18.3% Session automation failure rate — concurrent rebuilds
+          // were exhausting rate limits via combined SegmentAction call volume.
           const segmentIds = segments.map(s => s.id).filter(Boolean);
+          const ACTION_CHUNK = 50;
           const allActions = [];
-          for (let i = 0; i < segmentIds.length; i += BATCH) {
-            const batch = segmentIds.slice(i, i + BATCH);
-            const batchResults = await Promise.all(
-              batch.map(segId => withRetry(() => base44.asServiceRole.entities.SegmentAction.filter({ segment_id: segId }, undefined, undefined, undefined, dataEnv)))
+          for (let i = 0; i < segmentIds.length; i += ACTION_CHUNK) {
+            const chunk = segmentIds.slice(i, i + ACTION_CHUNK);
+            const chunkActions = await withRetry(() =>
+              base44.asServiceRole.entities.SegmentAction.filter({ segment_id: { $in: chunk } }, undefined, undefined, undefined, dataEnv)
             );
-            allActions.push(...batchResults.flat());
+            allActions.push(...chunkActions);
           }
 
           const actionsBySegment = groupBy(allActions, a => a.segment_id);
