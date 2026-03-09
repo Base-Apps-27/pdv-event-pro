@@ -293,7 +293,8 @@ export default function ArtsReportSegmentCard({ seg, sessionName }) {
     : seg.arts_run_of_show_url;
 
   return (
-    <div className="bg-white border border-gray-300 rounded-lg overflow-hidden mb-4 print:mb-3 print:rounded-none print:border-gray-600 page-break-inside-avoid">
+    <div className="bg-white border border-gray-300 rounded-lg overflow-hidden mb-4 print:mb-3 print:rounded-none print:border-gray-600"
+      style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
 
       {/* ── Compact header ── */}
       <div className="brand-gradient px-4 py-2.5 print:bg-gray-800">
