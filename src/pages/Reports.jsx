@@ -315,6 +315,10 @@ export default function Reports() {
                   <FileText className="w-4 h-4 mr-2" />
                   {t('reports.exportAllPdfs')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportArtsPdf}>
+                  <Palette className="w-4 h-4 mr-2" />
+                  Exportar PDF — Artes
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
