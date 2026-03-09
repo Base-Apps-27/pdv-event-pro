@@ -270,8 +270,10 @@ ${submission.content.substring(0, 15000)}`;
       { resolved_segment_entity_id: targetSegment.id, processing_status: 'processed' },
       '-submitted_at', 1
     );
+    // Use the original composite segment_id (e.g. "weekly_service|..."), NOT the
+    // resolved entity ID — weekly SpeakerSubmissionVersion rows store the composite key.
     const newerBySegmentId = await base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-      { segment_id: targetSegment.id, processing_status: 'processed' },
+      { segment_id: segmentId, processing_status: 'processed' },
       '-submitted_at', 1
     );
     const newerCandidates = [...newerByResolved, ...newerBySegmentId]
