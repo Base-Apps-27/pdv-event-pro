@@ -343,6 +343,13 @@ export default function MessageProcessingPage() {
                 segmentId={diagnosticSegmentId}
             />
 
+            {verseEditorSegment && (
+                <ParsedVerseEditor
+                    open={isVerseEditorOpen}
+                    onOpenChange={setIsVerseEditorOpen}
+                    segment={verseEditorSegment}
+                />
+            )}
 
         </div>
     );
