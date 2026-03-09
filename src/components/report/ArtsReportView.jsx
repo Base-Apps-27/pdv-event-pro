@@ -4,11 +4,12 @@
  * Uses already-loaded allSegments data (no extra fetches).
  * Filters to segments with art_types, groups by session.
  */
-import React, { useMemo } from 'react';
-import { Palette } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Palette, FileText, Loader2 } from 'lucide-react';
 import ArtsReportSegmentCard from '@/components/arts/ArtsReportSegmentCard';
+import { generateArtsReportPDF, downloadArtsPdf } from '@/components/arts/generateArtsReportPDF';
 
-export default function ArtsReportView({ eventSessions, getSessionSegments }) {
+export default function ArtsReportView({ eventSessions, getSessionSegments, event, allSegments }) {
   const grouped = useMemo(() => {
     return eventSessions.map(session => ({
       session,
