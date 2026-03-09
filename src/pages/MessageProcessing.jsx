@@ -314,15 +314,7 @@ export default function MessageProcessingPage() {
                 segmentId={diagnosticSegmentId}
             />
 
-            {selectedSegment && (
-                <VerseParserDialog
-                    open={isParserOpen}
-                    onOpenChange={setIsParserOpen}
-                    initialText={restoreContent || selectedSegment.submitted_content || ""}
-                    onSave={handleSaveParsed}
-                    language="es"
-                />
-            )}
+
         </div>
     );
 }
