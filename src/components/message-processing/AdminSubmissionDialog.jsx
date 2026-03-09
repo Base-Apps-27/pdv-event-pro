@@ -49,13 +49,20 @@ export default function AdminSubmissionDialog({ open, onOpenChange, segment, onS
             return version;
         },
         onSuccess: () => {
-            toast.success("Contenido enviado. La automatización lo procesará en breve.");
+            // Optimistic toast during submission
+            toast.loading("Procesando contenido...", { id: 'admin-submit' });
+            
+            // Log analytics
             base44.analytics.track({
                 eventName: 'admin_submitted_content',
                 properties: { segment_id: segment?.id }
             });
+            
             onOpenChange(false);
             onSubmitSuccess?.();
+            
+            // Dismiss loading toast after modal closes
+            setTimeout(() => toast.dismiss('admin-submit'), 500);
         },
         onError: (error) => {
             toast.error(error.message || "Error al enviar contenido");
