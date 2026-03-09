@@ -357,7 +357,7 @@ export default function MessageProcessingPage() {
     );
 }
 
-function MessageGrid({ segments, isLoading, onAdminSubmit, onDiagnostic, onHistory, emptyMessage, onMaterialUpdated }) {
+function MessageGrid({ segments, isLoading, onAdminSubmit, onDiagnostic, onHistory, onEditVerses, emptyMessage, onMaterialUpdated }) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
