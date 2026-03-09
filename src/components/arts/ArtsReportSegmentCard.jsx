@@ -333,7 +333,8 @@ export default function ArtsReportSegmentCard({ seg, sessionName }) {
           const accent = TYPE_ACCENT[tp] || 'border-gray-400 bg-gray-50';
           const labelColor = TYPE_LABEL_COLOR[tp] || 'text-gray-700';
           return (
-            <div key={tp} className={`border-l-4 rounded-r-md ${accent} px-2.5 py-2`}>
+            <div key={tp} className={`border-l-4 rounded-r-md ${accent} px-2.5 py-2`}
+              style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${labelColor}`}>
                 {TYPE_LABELS[tp] || tp}
               </div>
