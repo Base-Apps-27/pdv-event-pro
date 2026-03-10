@@ -24,13 +24,13 @@ export default function MobileNav({ user }) {
   const isPageActive = (matchPages) =>
     matchPages.some(p => location.pathname === createPageUrl(p));
 
-  // Apple HIG: Tapping active tab pops to root (2026-03-07)
+  // Apple HIG: Tapping active tab pops to root; tapping inactive tab navigates to it (2026-03-07)
   const handleTabClick = (item) => {
     const isActive = isPageActive(item.matchPages);
     if (isActive) {
-      // Pop to root by navigating to the tab's main page
       navigate(createPageUrl(item.page), { replace: true });
-      // Scroll to top (let parent page handle scroll reset if needed)
+    } else {
+      navigate(createPageUrl(item.page));
     }
   };
 
