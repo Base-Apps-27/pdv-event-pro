@@ -28,24 +28,36 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Handle notification clicks
+// Handle notification clicks — route to PublicProgramView with context
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const { sessionId, segmentId } = event.notification.data || {};
 
-  const urlToOpen = event.notification.data?.url || '/';
+  let targetUrl = '/PublicProgramView';
+  if (sessionId) {
+    targetUrl += `?session=${sessionId}`;
+  }
+  if (segmentId) {
+    targetUrl += `${sessionId ? '&' : '?'}segment=${segmentId}`;
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes(urlToOpen) && 'focus' in client) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
           return client.focus();
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
+        return clients.openWindow(targetUrl);
       }
     })
   );
+});
+
+// Skip waiting on install to activate immediately
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 // Claim clients immediately on activation
