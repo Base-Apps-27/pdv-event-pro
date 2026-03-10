@@ -202,13 +202,13 @@ export default function Layout({ children }) {
         console.log('[SW] Registered:', registration.scope);
 
         // Request notification permission (one-time user prompt)
-        if (Notification.permission === 'default') {
+        if ('Notification' in window && Notification.permission === 'default') {
           const permission = await Notification.requestPermission();
           console.log('[NOTIF] Permission:', permission);
         }
 
         // Subscribe to push notifications if permission granted
-        if (Notification.permission === 'granted') {
+        if ('Notification' in window && Notification.permission === 'granted') {
           await subscribeToPush(registration);
         }
       } catch (error) {
