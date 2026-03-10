@@ -125,11 +125,13 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
-            <Sparkles className="w-4 h-4 mr-1" /> IA Stream
+          <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50" title="IA Stream">
+            <Sparkles className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">IA Stream</span>
           </Button>
-          <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-1" /> Add Block
+          <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700" title="Add Block">
+            <Plus className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Add Block</span>
           </Button>
         </div>
       </div>
