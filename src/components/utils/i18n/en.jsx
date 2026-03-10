@@ -779,6 +779,10 @@ export const en = {
   'director.accessDenied': 'Access Denied',
   'director.accessDeniedDesc': 'You do not have permission to access the Director Console.',
   'director.backToProgram': 'Back to Program',
+  'director.flexibility.none': 'No flexibility',
+  'director.flexibility.some': 'Some flexibility',
+  'director.flexibility.high': 'Very flexible',
+  'director.teamMore': '+{count} teams',
 
   // Account Deletion (2026-03-07 — iOS App Store compliance)
   'account.deleteTitle': 'Delete Account',
