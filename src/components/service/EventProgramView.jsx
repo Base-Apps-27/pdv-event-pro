@@ -581,7 +581,7 @@ export default function EventProgramView({
                               onClick={() => setExpandedTeams(prev => ({ ...prev, [session.id]: !prev[session.id] }))}
                               className="text-[10px] text-blue-600 hover:text-blue-800 font-medium cursor-pointer mt-1 sm:hidden"
                             >
-                              {expandedTeams[session.id] ? '−' : '+'}{secondaryItems.length} equipos
+                              {expandedTeams[session.id] ? '−' : '+'}{t('director.teamMore', { count: secondaryItems.length })}
                             </button>
                           </>
                         )}
