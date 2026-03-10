@@ -538,9 +538,10 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                         variant="outline" 
                         size="sm"
                         onClick={() => openDialog(session)}
+                        title="Editar sesión"
                       >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Editar
+                        <Edit className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Editar</span>
                       </Button>
                       <Button
                         variant="outline"
