@@ -34,9 +34,14 @@ export default function AdminSubmissionDialog({ open, onOpenChange, segment, onS
             
             // Create a new SpeakerSubmissionVersion record
             // Background automation will pick it up and process it
+            // FIX (2026-03-10): Include resolved_segment_entity_id for consistency
+            // with the speaker submission paths. Admin submissions always use the
+            // actual entity ID (not composite), so both fields are the same.
             const version = await base44.entities.SpeakerSubmissionVersion.create({
-                segment_id: segment.id,
+                segment_id: String(segment.id),
+                resolved_segment_entity_id: String(segment.id),
                 content: content,
+                processing_status: "pending",
                 source: "admin_submission",
                 submitted_at: new Date().toISOString(),
                 device_info: {

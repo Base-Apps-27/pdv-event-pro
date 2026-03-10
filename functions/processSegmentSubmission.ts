@@ -126,17 +126,30 @@ function parseScriptureReferences(rawText) {
   return { type: verses.length > 0 ? 'verse_list' : 'empty', sections: verses };
 }
 
-// Admin reprocessing endpoint for speaker submissions.
-// Accepts: { segmentId } (direct invoke) or { event: { entity_id } } (legacy automation compat)
+// Admin/watchdog reprocessing endpoint for speaker submissions.
+// Accepts ONLY: { segmentId } (direct invoke from admin UI or watchdog).
+// DOES NOT accept entity automation events — that automation must be DISABLED.
+// FIX (2026-03-10): Reject entity automation payloads to break the infinite loop.
+// The loop was: Segment.update → entity automation fires processSegmentSubmission →
+// processSegmentSubmission writes Segment → triggers itself again → infinite loop.
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    // Resolve segmentId from either invocation pattern
-    const segmentId = payload.segmentId || payload.event?.entity_id;
+    // FIX (2026-03-10): REJECT entity automation events.
+    // If this function receives an event payload from an entity automation trigger,
+    // it means the automation hasn't been disabled in the Base44 backend yet.
+    // Return immediately to prevent the infinite loop.
+    if (payload.event?.entity_name === 'Segment' || payload.event?.type === 'update' || payload.event?.type === 'create') {
+      console.warn(`[PROCESS_SEGMENT] REJECTED entity automation event (entity_name=${payload.event?.entity_name}, type=${payload.event?.type}). This automation must be DISABLED in Base44 backend config.`);
+      return Response.json({ success: true, skipped: true, reason: 'entity_automation_rejected' });
+    }
+
+    // Only accept direct invocations with { segmentId }
+    const segmentId = payload.segmentId;
     if (!segmentId) {
-      return Response.json({ error: 'Missing segmentId' }, { status: 400 });
+      return Response.json({ error: 'Missing segmentId — this endpoint only accepts { segmentId } payloads' }, { status: 400 });
     }
 
     // Always fetch fresh segment data
@@ -145,27 +158,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: `Segment ${segmentId} not found` }, { status: 404 });
     }
 
-    console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (unified weekly + event speaker pipeline)`);
-
-    // LOOP GUARD (2026-03-10): This function is triggered by entity automation on EVERY Segment update.
-    // That includes our own writes. Without this guard, every processing run triggers another run → infinite loop.
-    // Exit early if already processed AND no pending SpeakerSubmissionVersion records exist for this segment.
-    if (liveSegment.submission_status === 'processed') {
-      const [pendingBySegId, pendingByResolved] = await Promise.all([
-        base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-          { segment_id: segmentId, processing_status: 'pending' }, '-submitted_at', 1
-        ),
-        base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
-          { resolved_segment_entity_id: segmentId, processing_status: 'pending' }, '-submitted_at', 1
-        )
-      ]);
-      const hasPendingWork = pendingBySegId.length > 0 || pendingByResolved.length > 0;
-      if (!hasPendingWork) {
-        console.log(`[PROCESS_SEGMENT] Segment ${segmentId} already processed and no pending submissions — skipping to prevent loop`);
-        return Response.json({ success: true, skipped: true, reason: 'already_processed_no_pending' });
-      }
-      console.log(`[PROCESS_SEGMENT] Segment ${segmentId} is processed but has pending submission — reprocessing`);
-    }
+    console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (admin/watchdog reprocessing)`);
 
     let parsedData = { type: 'empty', sections: [] };
     let scriptureReferences = '';

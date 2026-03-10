@@ -48,14 +48,11 @@ Deno.serve(async (req) => {
     for (const seg of stalePending) {
       try {
         console.log(`[WATCHDOG] Re-queuing segment ${seg.id} (stuck since ${seg.updated_date})`);
+        // FIX (2026-03-10): Use direct { segmentId } invocation pattern.
+        // The old { event: { entity_name: 'Segment', ... } } pattern is now rejected
+        // by processSegmentSubmission to prevent the entity automation infinite loop.
         await base44.asServiceRole.functions.invoke('processSegmentSubmission', {
-          event: {
-            type: 'update',
-            entity_name: 'Segment',
-            entity_id: seg.id
-          },
-          data: null,
-          payload_too_large: true // Force resilience fetch — guarantees fresh data
+          segmentId: seg.id
         });
         results.push({ id: seg.id, status: 'requeued' });
       } catch (err) {
