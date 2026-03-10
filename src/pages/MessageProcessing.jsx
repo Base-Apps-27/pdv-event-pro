@@ -208,7 +208,8 @@ export default function MessageProcessingPage() {
             // updated_date changes every time the LLM pipeline writes parsed_verse_data.
             return { items: all.sort((a, b) => new Date(b.created_date || b.updated_date || 0) - new Date(a.created_date || a.updated_date || 0)), hitVersionLimit };
         },
-        refetchInterval: 15000 // 15s is enough, 5s was wasteful
+        refetchInterval: 60000, // 60s — reduced from 15s now that background loop is fixed (2026-03-10)
+        refetchOnWindowFocus: false
     });
 
     // DEV-3 (2026-03-02): Warning if the SpeakerSubmissionVersion query hit its limit
