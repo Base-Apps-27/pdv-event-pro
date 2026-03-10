@@ -513,60 +513,60 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0 space-y-3">
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => toggleSession(session.id)}
-                      className="flex-1"
-                    >
-                      <List className="w-4 h-4 mr-2" />
-                      {isStreamOnly ? 'Stream Blocks' : 'Ver Segmentos'}
-                      {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-                    </Button>
-                    {canEditSessions && (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => recalculateTimesMutation.mutate(session.id)}
-                          disabled={recalculateTimesMutation.isPending}
-                          title="Recalcular horarios"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setHospitalityModalSessionId(session.id)}
-                          title="Tareas de Hospitalidad"
-                        >
-                          <Utensils className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => openDialog(session)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => {
-                            if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
-                              deleteMutation.mutate(session);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                <CardContent className="pt-0 space-y-2">
+                  {/* Actions row — shown above Ver Segmentos on mobile */}
+                  {canEditSessions && (
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => recalculateTimesMutation.mutate(session.id)}
+                        disabled={recalculateTimesMutation.isPending}
+                        title="Recalcular horarios"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setHospitalityModalSessionId(session.id)}
+                        title="Tareas de Hospitalidad"
+                      >
+                        <Utensils className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openDialog(session)}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => {
+                          if (confirm('¿Eliminar esta sesión y todos sus segmentos?')) {
+                            deleteMutation.mutate(session);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  )}
+                  {/* Ver Segmentos — full width below actions */}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toggleSession(session.id)}
+                    className="w-full"
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    {isStreamOnly ? 'Stream Blocks' : 'Ver Segmentos'}
+                    {isExpanded ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+                  </Button>
 
                   {isExpanded && (
                     <div className="border-t pt-3">
