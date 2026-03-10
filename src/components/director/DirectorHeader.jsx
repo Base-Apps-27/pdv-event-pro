@@ -39,7 +39,8 @@ export default function DirectorHeader({
   isLocked,
   heldSegment,
   onRefetch,
-  language
+  language,
+  backPath
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showEnableDialog, setShowEnableDialog] = useState(false);
@@ -126,7 +127,7 @@ export default function DirectorHeader({
                 size="icon"
                 className="text-slate-400 hover:text-white hover:bg-slate-800"
               >
-                <Link to={createPageUrl('EventDetail') + `?id=${session.event_id}`}>
+                <Link to={backPath || createPageUrl('PublicProgramView')}>
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
               </Button>
