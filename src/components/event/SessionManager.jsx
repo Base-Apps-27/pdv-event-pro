@@ -438,7 +438,7 @@ export default function SessionManager({ eventId, serviceId, sessions, segments,
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
                         {session.admin_team && (
                           <div className="bg-orange-50 px-2 py-1 rounded border border-orange-200">
                             <span className="font-bold text-orange-700">ADMIN:</span>
