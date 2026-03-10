@@ -180,6 +180,7 @@ export default function MessageProcessingPage() {
                     submitted_content: seg.submitted_content,
                     parsed_verse_data: seg.parsed_verse_data,
                     submission_status: seg.submission_status,
+                    created_date: seg.created_date,
                     updated_date: seg.updated_date,
                     presentation_url: seg.presentation_url,
                     notes_url: seg.notes_url,
