@@ -196,7 +196,17 @@ export default function Layout({ children }) {
           return;
         }
 
-        const registration = await navigator.serviceWorker.register('/service-worker.js', {
+        // Fetch SW code from backend function and register as blob
+        const swResponse = await fetch('/api/functions/serveServiceWorker');
+        if (!swResponse.ok) {
+          console.error('[SW] Failed to fetch SW script:', swResponse.status);
+          return;
+        }
+        const swCode = await swResponse.text();
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+
+        const registration = await navigator.serviceWorker.register(swUrl, {
           scope: '/',
         });
         console.log('[SW] Registered:', registration.scope);
