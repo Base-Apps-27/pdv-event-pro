@@ -113,8 +113,8 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
 
   return (
     <div className="space-y-4">
-      {/* Header / Actions */}
-      <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+      {/* Header / Actions — stacked on mobile to prevent overflow */}
+      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
         <div className="flex items-center gap-2">
           <div className="bg-white p-1.5 rounded-md border shadow-sm">
             <span className="font-bold text-lg text-blue-600 font-mono">{blocks.length}</span>
@@ -125,10 +125,10 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+          <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-1">
             <Sparkles className="w-4 h-4 mr-1" /> IA Stream
           </Button>
-          <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={openNew} size="sm" className="bg-blue-600 hover:bg-blue-700 flex-1">
             <Plus className="w-4 h-4 mr-1" /> Add Block
           </Button>
         </div>
