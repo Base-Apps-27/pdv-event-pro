@@ -187,6 +187,33 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
+  // 2026-03-10: Register service worker for notifications on desktop
+  useEffect(() => {
+    const registerServiceWorker = async () => {
+      try {
+        if (!navigator.serviceWorker) {
+          console.log('[SW] Service Worker not supported');
+          return;
+        }
+
+        const registration = await navigator.serviceWorker.register('/service-worker.js', {
+          scope: '/',
+        });
+        console.log('[SW] Registered:', registration.scope);
+
+        // Request notification permission (one-time user prompt)
+        if (Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          console.log('[NOTIF] Permission:', permission);
+        }
+      } catch (error) {
+        console.error('[SW_ERROR]', error);
+      }
+    };
+
+    registerServiceWorker();
+  }, []);
+
   return (
     <LanguageProvider>
       <TooltipProvider delayDuration={200}>
