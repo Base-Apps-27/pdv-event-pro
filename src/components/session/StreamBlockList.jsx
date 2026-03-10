@@ -169,7 +169,7 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
 
       {/* Editor Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogContent className="max-w-2xl max-h-[90dvh] p-0 flex flex-col overflow-hidden w-[calc(100vw-2rem)] sm:w-full">
           <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
             <DialogTitle className="text-xl font-bold uppercase tracking-wide">
               {editingBlock ? 'Edit Stream Block' : 'New Stream Block'}

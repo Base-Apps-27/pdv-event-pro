@@ -109,8 +109,8 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white">
+      <div className="flex-1 overflow-y-scroll overscroll-contain p-4 sm:p-6 space-y-4 sm:space-y-6">
         
         {/* Block Type Selector */}
         <div className="flex items-center gap-2 mb-1">
