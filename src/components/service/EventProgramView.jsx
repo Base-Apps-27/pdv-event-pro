@@ -353,14 +353,14 @@ export default function EventProgramView({
              </div>
            )}
 
-           {/* Director Console Entry - Permission Gated */}
+           {/* Director Console Entry - Permission Gated (subtle button in lower right) */}
            {hasPermission(currentUser, 'manage_live_director') && eventSessions.length > 0 && (
              <Link
                to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId !== "all" ? selectedSessionId : eventSessions[0]?.id}`}
-               className="flex items-center justify-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-red-600 hover:bg-red-700 text-white transition-all w-full sm:w-auto"
-             >
-               <Radio className="w-3.5 h-3.5" />
-               Director
+               className="flex items-center justify-center gap-1 px-2 py-1 text-xs rounded-md font-medium bg-slate-300/20 hover:bg-red-500/30 text-slate-600 hover:text-red-600 transition-all shrink-0"
+               title="Director Console"
+            >
+               <Radio className="w-3 h-3" />
              </Link>
            )}
          </div>
@@ -593,7 +593,7 @@ export default function EventProgramView({
 
                   {/* Expanded Session Details */}
                   {expandedSessions[session.id] && (
-                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-2 text-sm">
+                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-3 text-sm">
                       {session.notes && (
                         <p><strong>Notas:</strong> {session.notes}</p>
                       )}
@@ -604,6 +604,35 @@ export default function EventProgramView({
                           'Por definir'}
                         </p>
                       </div>
+
+                      {/* Full team roster when expanded */}
+                      {(() => {
+                        const allTeamRoles = [
+                          { label: '👤 Coordinador', value: session.coordinators },
+                          { label: '🔊 Sonido', value: session.sound_team },
+                          { label: '🚪 Ujieres', value: session.ushers_team },
+                          { label: '💡 Luces', value: session.lights_team },
+                          { label: '🎥 Video', value: session.video_team },
+                          { label: '🔧 Tech', value: session.tech_team },
+                          { label: '👥 Administración', value: session.admin_team },
+                          { label: '🗣️ Traducción', value: session.translation_team },
+                          { label: '📷 Fotografía', value: session.photography_team },
+                          { label: '🎵 Alabanza', value: session.worship_leader },
+                          { label: '🍽️ Hospitalidad', value: session.hospitality_team },
+                        ];
+                        const activeTeamRoles = allTeamRoles.filter(r => r.value);
+                        if (activeTeamRoles.length === 0) return null;
+                        return (
+                          <div className="bg-slate-100 rounded p-3 space-y-1.5 border-l-4 border-blue-500">
+                            <p className="font-semibold text-blue-900 text-xs uppercase">Equipo</p>
+                            {activeTeamRoles.map((role, i) => (
+                              <p key={i} className="text-xs text-slate-700">
+                                <strong>{role.label}:</strong> {normalizeName(role.value)}
+                              </p>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
