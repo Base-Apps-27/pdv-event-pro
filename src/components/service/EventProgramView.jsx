@@ -69,7 +69,7 @@ export default function EventProgramView({
   chatOpen = false,
   isStreamMode = false
 }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
