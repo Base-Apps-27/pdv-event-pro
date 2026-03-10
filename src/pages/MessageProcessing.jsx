@@ -202,8 +202,10 @@ export default function MessageProcessingPage() {
             // DEV-3 (2026-03-02): Track if version query hit the limit
             const hitVersionLimit = allVersions.length >= 200;
 
-            // Sort by most recently updated
-            return { items: all.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0)), hitVersionLimit };
+            // Sort by created_date (not updated_date) so background processing
+            // doesn't reorder cards while the admin is actively reviewing.
+            // updated_date changes every time the LLM pipeline writes parsed_verse_data.
+            return { items: all.sort((a, b) => new Date(b.created_date || b.updated_date || 0) - new Date(a.created_date || a.updated_date || 0)), hitVersionLimit };
         },
         refetchInterval: 15000 // 15s is enough, 5s was wasteful
     });
