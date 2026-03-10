@@ -147,6 +147,26 @@ Deno.serve(async (req) => {
 
     console.log(`[PROCESS_SEGMENT] Processing segment ${segmentId} (unified weekly + event speaker pipeline)`);
 
+    // LOOP GUARD (2026-03-10): This function is triggered by entity automation on EVERY Segment update.
+    // That includes our own writes. Without this guard, every processing run triggers another run → infinite loop.
+    // Exit early if already processed AND no pending SpeakerSubmissionVersion records exist for this segment.
+    if (liveSegment.submission_status === 'processed') {
+      const [pendingBySegId, pendingByResolved] = await Promise.all([
+        base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+          { segment_id: segmentId, processing_status: 'pending' }, '-submitted_at', 1
+        ),
+        base44.asServiceRole.entities.SpeakerSubmissionVersion.filter(
+          { resolved_segment_entity_id: segmentId, processing_status: 'pending' }, '-submitted_at', 1
+        )
+      ]);
+      const hasPendingWork = pendingBySegId.length > 0 || pendingByResolved.length > 0;
+      if (!hasPendingWork) {
+        console.log(`[PROCESS_SEGMENT] Segment ${segmentId} already processed and no pending submissions — skipping to prevent loop`);
+        return Response.json({ success: true, skipped: true, reason: 'already_processed_no_pending' });
+      }
+      console.log(`[PROCESS_SEGMENT] Segment ${segmentId} is processed but has pending submission — reprocessing`);
+    }
+
     let parsedData = { type: 'empty', sections: [] };
     let scriptureReferences = '';
 
