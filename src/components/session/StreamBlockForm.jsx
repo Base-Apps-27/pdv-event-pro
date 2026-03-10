@@ -148,7 +148,7 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
             <HelpTooltip helpKey="stream.anchoring" mode="modal" />
           </h4>
           
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Anchor Point</Label>
               <Select value={formData.anchor_point} onValueChange={(v) => updateField('anchor_point', v)}>
@@ -217,7 +217,7 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Presenter / Host</Label>
               <Input 
