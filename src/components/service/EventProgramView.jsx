@@ -76,6 +76,7 @@ export default function EventProgramView({
   const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
+  const [expandedTeams, setExpandedTeams] = useState({});
   const [hospitalityModalSessionId, setHospitalityModalSessionId] = useState(null);
   // Stream toggle — initialize from URL param or default to room view
   const [showStream, setShowStream] = useState(isStreamMode);
@@ -564,10 +565,10 @@ export default function EventProgramView({
                             ))}
                           </div>
                         )}
-                        {/* Secondary roles — hidden on mobile, visible on sm+ */}
+                        {/* Secondary roles — toggle on all sizes */}
                         {secondaryItems.length > 0 && (
                           <>
-                            <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                            <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 ${!expandedTeams[session.id] ? 'hidden sm:flex' : 'flex'}`}>
                               {secondaryItems.map((item, i) => (
                                 <React.Fragment key={i}>
                                   {i > 0 && <span className="text-gray-400">|</span>}
@@ -575,16 +576,18 @@ export default function EventProgramView({
                                 </React.Fragment>
                               ))}
                             </div>
-                            {/* Mobile: collapsible toggle */}
-                            <details className="sm:hidden mt-1">
-                              <summary className="text-[10px] text-gray-500 font-medium cursor-pointer flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                +{secondaryItems.length} equipos más
-                              </summary>
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-1">
+                            {/* Inline toggle button */}
+                            <button
+                              onClick={() => setExpandedTeams(prev => ({ ...prev, [session.id]: !prev[session.id] }))}
+                              className="text-[10px] text-blue-600 hover:text-blue-800 font-medium cursor-pointer mt-1 sm:hidden"
+                            >
+                              {expandedTeams[session.id] ? '−' : '+'}{secondaryItems.length} equipos
+                            </button>
+                            {expandedTeams[session.id] && (
+                              <div className="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-1">
                                 {secondaryItems}
                               </div>
-                            </details>
+                            )}
                           </>
                         )}
                       </div>
