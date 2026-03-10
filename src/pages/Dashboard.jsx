@@ -108,6 +108,24 @@ export default function Dashboard() {
     archived: "border-l-slate-400"
   };
 
+  // Test notification helpers
+  const sendTestNotification = async (type) => {
+    setTestLoading(true);
+    try {
+      const response = await base44.functions.invoke('sendNotification', {
+        type,
+        actionLabel: type === 'action' ? 'Test Action' : undefined,
+        segmentTitle: 'Test Segment',
+        language,
+      });
+      console.log('[TEST_NOTIF] Response:', response.data);
+    } catch (error) {
+      console.error('[TEST_NOTIF_ERROR]', error);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
