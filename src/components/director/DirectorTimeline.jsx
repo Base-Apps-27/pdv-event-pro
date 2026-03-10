@@ -231,7 +231,7 @@ export default function DirectorTimeline({
                     {/* Segment info with order position */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-slate-700 text-white text-xs font-semibold" title="Segment order in timeline">{index + 1}/{segments.length}</Badge>
+                        <Badge className="bg-slate-700 text-white text-xs font-semibold">{index + 1}/{segments.length}</Badge>
                         <span className="text-white font-medium">{segment.title}</span>
                         {segment.segment_type && (
                           <Badge variant="outline" className="text-xs border-slate-700 text-slate-400">
@@ -327,13 +327,13 @@ export default function DirectorTimeline({
                       )}
                     </td>
                     
-                    {/* Flexibility score */}
+                    {/* Flexibility label */}
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <span className={`text-xs font-mono ${rigid ? 'text-red-400' : flex.score >= 8 ? 'text-green-400' : 'text-slate-400'}`}>
-                          {flex.score}/10
+                        <span className={`text-xs font-semibold ${rigid ? 'text-red-500' : flex.score >= 8 ? 'text-green-600' : 'text-slate-500'}`}>
+                          {rigid ? 'Sin flexibilidad' : flex.score >= 8 ? 'Muy flexible' : 'Algo flexible'}
                         </span>
-                        {rigid && <AlertTriangle className="w-3 h-3 text-red-400" />}
+                        {rigid && <AlertTriangle className="w-3 h-3 text-red-500" />}
                       </div>
                     </td>
                     
@@ -413,11 +413,11 @@ export default function DirectorTimeline({
                     {status === 'active' && <Radio className="w-4 h-4 text-amber-500 animate-pulse" />}
                     {status === 'held' && <Hand className="w-4 h-4 text-teal-500" />}
                     {status === 'pending' && <Clock className="w-4 h-4 text-slate-500" />}
-                    <Badge className="bg-slate-600 text-white text-[10px] font-semibold" title="Segment order in timeline">{index + 1}/{segments.length}</Badge>
+                    <Badge className="bg-slate-600 text-white text-[10px] font-semibold">{index + 1}/{segments.length}</Badge>
                     <span className="text-sm font-medium text-white">{segment.title}</span>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] ${rigid ? 'border-red-600 text-red-400' : 'border-slate-600 text-slate-400'}`}>
-                    {flex.score}/10
+                  <Badge variant="outline" className={`text-[10px] ${rigid ? 'border-red-600 text-red-500' : 'border-slate-600 text-slate-500'}`}>
+                   {rigid ? 'Sin flexibilidad' : flex.score >= 8 ? 'Muy flexible' : 'Algo flexible'}
                   </Badge>
                 </div>
                 

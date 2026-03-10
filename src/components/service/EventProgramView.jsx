@@ -565,10 +565,10 @@ export default function EventProgramView({
                             ))}
                           </div>
                         )}
-                        {/* Secondary roles — toggle on all sizes */}
+                        {/* Secondary roles — toggle on mobile only */}
                         {secondaryItems.length > 0 && (
                           <>
-                            <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 ${!expandedTeams[session.id] ? 'hidden sm:flex' : 'flex'}`}>
+                            <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 ${expandedTeams[session.id] ? 'flex' : 'hidden'}`}>
                               {secondaryItems.map((item, i) => (
                                 <React.Fragment key={i}>
                                   {i > 0 && <span className="text-gray-400">|</span>}
@@ -576,18 +576,13 @@ export default function EventProgramView({
                                 </React.Fragment>
                               ))}
                             </div>
-                            {/* Inline toggle button */}
+                            {/* Inline toggle button for mobile */}
                             <button
                               onClick={() => setExpandedTeams(prev => ({ ...prev, [session.id]: !prev[session.id] }))}
                               className="text-[10px] text-blue-600 hover:text-blue-800 font-medium cursor-pointer mt-1 sm:hidden"
                             >
                               {expandedTeams[session.id] ? '−' : '+'}{secondaryItems.length} equipos
                             </button>
-                            {expandedTeams[session.id] && (
-                              <div className="sm:hidden flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-1">
-                                {secondaryItems}
-                              </div>
-                            )}
                           </>
                         )}
                       </div>
