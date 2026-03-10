@@ -49,7 +49,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'VAPID keys not configured' }, { status: 500 });
     }
 
-    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    try {
+      webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    } catch (vapidError) {
+      console.error('[NOTIFICATION] VAPID validation failed:', vapidError.message);
+      console.error('[NOTIFICATION] Public key length:', vapidPublicKey?.length);
+      console.error('[NOTIFICATION] Private key length:', vapidPrivateKey?.length);
+      return Response.json(
+        { error: 'VAPID configuration invalid: ' + vapidError.message },
+        { status: 500 }
+      );
+    }
 
     // Build notification message (bilingual)
     const title = NOTIFICATION_TITLES[language]?.[type] || NOTIFICATION_TITLES.es[type] || 'Notification';
