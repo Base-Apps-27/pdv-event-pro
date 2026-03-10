@@ -298,6 +298,7 @@ export default function DirectorConsole() {
         heldSegment={heldSegment}
         onRefetch={refetchData}
         language={language}
+        backPath={createPageUrl('PublicProgramView')}
       />
       
       {/* Director Ping Feed - Shows incoming @Director pings */}
