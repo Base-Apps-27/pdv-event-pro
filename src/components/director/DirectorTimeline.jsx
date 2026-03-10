@@ -36,6 +36,7 @@ export default function DirectorTimeline({
   onRefetch,
   language
 }) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState(null);
   const [editingField, setEditingField] = useState(null);
