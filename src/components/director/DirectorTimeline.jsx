@@ -21,6 +21,15 @@ import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { getSegmentFlexibility, isRigidSegment } from '@/components/utils/segmentFlexibility';
 
+// Convert HH:MM (24-hour) to 12-hour AM/PM format
+const formatTime12Hour = (timeStr) => {
+  if (!timeStr) return '—';
+  const [h, m] = timeStr.split(':').map(Number);
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 /**
  * DirectorTimeline - Main segment list for Director Console
  * Shows all segments with planned/actual times and action buttons
@@ -250,12 +259,12 @@ export default function DirectorTimeline({
                     </td>
                     
                     {/* Planned times */}
-                    <td className="px-4 py-3 text-center font-mono text-slate-400">
-                      {segment.start_time || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-center font-mono text-slate-400">
-                      {segment.end_time || '—'}
-                    </td>
+                     <td className="px-4 py-3 text-center font-mono text-slate-400">
+                       {formatTime12Hour(segment.start_time)}
+                     </td>
+                     <td className="px-4 py-3 text-center font-mono text-slate-400">
+                       {formatTime12Hour(segment.end_time)}
+                     </td>
                     
                     {/* Actual start - editable */}
                     <td className="px-4 py-3 text-center">
@@ -281,7 +290,7 @@ export default function DirectorTimeline({
                           onClick={() => isCurrentDirector && !isLocked && startEdit(segment.id, 'actual_start_time', segment.actual_start_time)}
                         >
                           <span className={`font-mono ${segment.actual_start_time ? 'text-white' : 'text-slate-600'}`}>
-                            {segment.actual_start_time || '—'}
+                            {formatTime12Hour(segment.actual_start_time)}
                           </span>
                           {isCurrentDirector && !isLocked && <Edit2 className="w-3 h-3 text-slate-600 opacity-0 group-hover:opacity-100" />}
                           {startDiff !== null && (
@@ -317,7 +326,7 @@ export default function DirectorTimeline({
                           onClick={() => isCurrentDirector && !isLocked && startEdit(segment.id, 'actual_end_time', segment.actual_end_time)}
                         >
                           <span className={`font-mono ${segment.actual_end_time ? 'text-white' : 'text-slate-600'}`}>
-                            {segment.actual_end_time || '—'}
+                            {formatTime12Hour(segment.actual_end_time)}
                           </span>
                           {isCurrentDirector && !isLocked && <Edit2 className="w-3 h-3 text-slate-600 opacity-0 group-hover:opacity-100" />}
                           {endDiff !== null && (
@@ -424,16 +433,16 @@ export default function DirectorTimeline({
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                  <div className="bg-slate-900/50 rounded p-2">
-                    <div className="text-slate-500 mb-1">{language === 'es' ? 'Plan' : 'Plan'}</div>
-                    <div className="font-mono text-slate-400">{segment.start_time || '—'} - {segment.end_time || '—'}</div>
-                  </div>
-                  <div className="bg-slate-900/50 rounded p-2">
-                    <div className="text-slate-500 mb-1">{language === 'es' ? 'Actual' : 'Actual'}</div>
-                    <div className="font-mono text-white">
-                      {segment.actual_start_time || '—'} - {segment.actual_end_time || '—'}
-                    </div>
-                  </div>
+                 <div className="bg-slate-900/50 rounded p-2">
+                   <div className="text-slate-500 mb-1">{language === 'es' ? 'Plan' : 'Plan'}</div>
+                   <div className="font-mono text-slate-400">{formatTime12Hour(segment.start_time)} - {formatTime12Hour(segment.end_time)}</div>
+                 </div>
+                 <div className="bg-slate-900/50 rounded p-2">
+                   <div className="text-slate-500 mb-1">{language === 'es' ? 'Actual' : 'Actual'}</div>
+                   <div className="font-mono text-white">
+                     {formatTime12Hour(segment.actual_start_time)} - {formatTime12Hour(segment.actual_end_time)}
+                   </div>
+                 </div>
                 </div>
                 
                 {/* Mobile actions */}
