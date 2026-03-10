@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n.jsx";
-import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Send } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
+  const [testLoading, setTestLoading] = useState(false);
   
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
