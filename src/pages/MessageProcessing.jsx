@@ -354,6 +354,7 @@ export default function MessageProcessingPage() {
                     open={isVerseEditorOpen}
                     onOpenChange={setIsVerseEditorOpen}
                     segment={verseEditorSegment}
+                    onSaved={() => queryClient.invalidateQueries(['messagesToProcessInbox'])}
                 />
             )}
 

@@ -13,7 +13,7 @@ import { toast } from "sonner";
  * Direct editor for fixing LLM-extracted verses and takeaways on processed segments.
  * Admins can delete false positives, edit text, add new entries.
  */
-export default function ParsedVerseEditor({ open, onOpenChange, segment }) {
+export default function ParsedVerseEditor({ open, onOpenChange, segment, onSaved }) {
     const [verses, setVerses] = useState([]);
     const [takeaways, setTakeaways] = useState([]);
     const [editingVerseId, setEditingVerseId] = useState(null);
@@ -53,6 +53,7 @@ export default function ParsedVerseEditor({ open, onOpenChange, segment }) {
         onSuccess: () => {
             toast.success("Contenido actualizado correctamente");
             onOpenChange(false);
+            onSaved?.(); // Trigger parent query invalidation
         },
         onError: (error) => {
             toast.error(error.message || "Error al guardar");
