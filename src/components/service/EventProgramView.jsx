@@ -314,54 +314,56 @@ export default function EventProgramView({
           />
         )}
 
-        <div className="flex flex-row gap-3 items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
-        <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0 w-full sm:w-auto">
-          <button
-            onClick={() => setViewMode("simple")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            <List className="w-3.5 h-3.5" />
-            Simple
-          </button>
-          <button
-            onClick={() => setViewMode("full")}
-            className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            <ListChecks className="w-3.5 h-3.5" />
-            Run of Show
-          </button>
-        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
+        <div className="flex bg-gray-200/50 p-1 rounded-lg w-full sm:w-auto">
+           <button
+             onClick={() => setViewMode("simple")}
+             className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+           >
+             <List className="w-3.5 h-3.5" />
+             Simple
+           </button>
+           <button
+             onClick={() => setViewMode("full")}
+             className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+           >
+             <ListChecks className="w-3.5 h-3.5" />
+             Run of Show
+           </button>
+         </div>
 
-        {/* Room / Stream Toggle — only when livestream exists */}
-        {hasAnyLivestream && (
-          <div className="flex bg-gray-200/50 p-1 rounded-lg shrink-0">
-            <button
-              onClick={() => setShowStream(false)}
-              className={`px-3 py-1.5 text-xs rounded-md font-semibold flex items-center gap-1.5 transition-all ${!showStream ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Room
-            </button>
-            <button
-              onClick={() => setShowStream(true)}
-              className={`px-3 py-1.5 text-xs rounded-md font-semibold flex items-center gap-1.5 transition-all ${showStream ? "bg-white shadow text-red-600" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              <Radio className="w-3.5 h-3.5" />
-              Stream
-            </button>
-          </div>
-        )}
+         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+           {/* Room / Stream Toggle — only when livestream exists */}
+           {hasAnyLivestream && (
+             <div className="flex bg-gray-200/50 p-1 rounded-lg w-full sm:w-auto">
+               <button
+                 onClick={() => setShowStream(false)}
+                 className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-1.5 transition-all ${!showStream ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+               >
+                 <LayoutGrid className="w-3.5 h-3.5" />
+                 Room
+               </button>
+               <button
+                 onClick={() => setShowStream(true)}
+                 className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-1.5 transition-all ${showStream ? "bg-white shadow text-red-600" : "text-gray-500 hover:text-gray-700"}`}
+               >
+                 <Radio className="w-3.5 h-3.5" />
+                 Stream
+               </button>
+             </div>
+           )}
 
-        {/* Director Console Entry - Permission Gated */}
-        {hasPermission(currentUser, 'manage_live_director') && eventSessions.length > 0 && (
-          <Link
-            to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId !== "all" ? selectedSessionId : eventSessions[0]?.id}`}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-red-600 hover:bg-red-700 text-white transition-all shrink-0"
-          >
-            <Radio className="w-3.5 h-3.5" />
-            Director
-          </Link>
-        )}
+           {/* Director Console Entry - Permission Gated */}
+           {hasPermission(currentUser, 'manage_live_director') && eventSessions.length > 0 && (
+             <Link
+               to={createPageUrl('DirectorConsole') + `?sessionId=${selectedSessionId !== "all" ? selectedSessionId : eventSessions[0]?.id}`}
+               className="flex items-center justify-center gap-2 px-3 py-1.5 text-xs rounded-md font-semibold bg-red-600 hover:bg-red-700 text-white transition-all w-full sm:w-auto"
+             >
+               <Radio className="w-3.5 h-3.5" />
+               Director
+             </Link>
+           )}
+         </div>
       </div>
       </div>
       )}
