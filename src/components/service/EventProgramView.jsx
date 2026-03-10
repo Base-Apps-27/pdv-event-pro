@@ -593,7 +593,7 @@ export default function EventProgramView({
 
                   {/* Expanded Session Details */}
                   {expandedSessions[session.id] && (
-                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-3 text-sm">
+                    <div className="mt-3 pt-3 border-t border-gray-300 space-y-2 text-sm">
                       {session.notes && (
                         <p><strong>Notas:</strong> {session.notes}</p>
                       )}
@@ -604,35 +604,6 @@ export default function EventProgramView({
                           'Por definir'}
                         </p>
                       </div>
-
-                      {/* Full team roster when expanded */}
-                      {(() => {
-                        const allTeamRoles = [
-                          { label: '👤 Coordinador', value: session.coordinators },
-                          { label: '🔊 Sonido', value: session.sound_team },
-                          { label: '🚪 Ujieres', value: session.ushers_team },
-                          { label: '💡 Luces', value: session.lights_team },
-                          { label: '🎥 Video', value: session.video_team },
-                          { label: '🔧 Tech', value: session.tech_team },
-                          { label: '👥 Administración', value: session.admin_team },
-                          { label: '🗣️ Traducción', value: session.translation_team },
-                          { label: '📷 Fotografía', value: session.photography_team },
-                          { label: '🎵 Alabanza', value: session.worship_leader },
-                          { label: '🍽️ Hospitalidad', value: session.hospitality_team },
-                        ];
-                        const activeTeamRoles = allTeamRoles.filter(r => r.value);
-                        if (activeTeamRoles.length === 0) return null;
-                        return (
-                          <div className="bg-slate-100 rounded p-3 space-y-1.5 border-l-4 border-blue-500">
-                            <p className="font-semibold text-blue-900 text-xs uppercase">Equipo</p>
-                            {activeTeamRoles.map((role, i) => (
-                              <p key={i} className="text-xs text-slate-700">
-                                <strong>{role.label}:</strong> {normalizeName(role.value)}
-                              </p>
-                            ))}
-                          </div>
-                        );
-                      })()}
                     </div>
                   )}
                 </div>
