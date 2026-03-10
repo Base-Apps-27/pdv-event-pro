@@ -405,14 +405,21 @@ ${submission.content.substring(0, 15000)}
             return Response.json({ success: true, superseded: true });
         }
 
-        await base44.asServiceRole.entities.Segment.update(targetEntityId, updateData);
-        console.log(`[PROCESSED] Segment ${targetEntityId} updated for submission ${submissionId}`);
-
-        // Update submission version record
+        // FIX (2026-03-10): Mark submission as 'processed' BEFORE writing to Segment.
+        // Previously the order was reversed (Segment update first, then submission update).
+        // This created a race window: the Segment update triggered processSegmentSubmission
+        // via entity automation, which found the SpeakerSubmissionVersion still 'pending'
+        // and re-processed → infinite loop with repeated LLM calls.
+        // By marking the submission 'processed' first, even if an entity automation fires,
+        // processSegmentSubmission's loop guard won't find pending work.
         await base44.asServiceRole.entities.SpeakerSubmissionVersion.update(submission.id, {
             parsed_data_snapshot: parsedData,
             processing_status: 'processed'
         });
+        console.log(`[PROCESSED] Submission ${submissionId} marked processed (before Segment write)`);
+
+        await base44.asServiceRole.entities.Segment.update(targetEntityId, updateData);
+        console.log(`[PROCESSED] Segment ${targetEntityId} updated for submission ${submissionId}`);
 
         // FIX (2026-03-08): Trigger cache refresh so coordinators see updates immediately.
         // Without this, getPublicProgramData serves stale cached snapshots for up to 5 minutes.
