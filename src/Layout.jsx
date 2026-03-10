@@ -187,29 +187,21 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
-  // 2026-03-10: Register service worker and subscribe to push notifications
+  // Register service worker and subscribe to push notifications
   useEffect(() => {
     const registerServiceWorker = async () => {
       try {
-        if (!navigator.serviceWorker) {
+        if (!('serviceWorker' in navigator)) {
           console.log('[SW] Service Worker not supported');
           return;
         }
 
-        // Fetch SW code from backend function and register as blob
-        const swResponse = await fetch('/api/functions/serveServiceWorker');
-        if (!swResponse.ok) {
-          console.error('[SW] Failed to fetch SW script:', swResponse.status);
-          return;
-        }
-        const swCode = await swResponse.text();
-        const swBlob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(swBlob);
-
-        const registration = await navigator.serviceWorker.register(swUrl, {
-          scope: '/',
-        });
+        // Register static SW file (served by Vite from public/)
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
         console.log('[SW] Registered:', registration.scope);
+
+        // Wait for the SW to be ready
+        await navigator.serviceWorker.ready;
 
         // Request notification permission (one-time user prompt)
         if ('Notification' in window && Notification.permission === 'default') {
@@ -229,6 +221,16 @@ export default function Layout({ children }) {
     registerServiceWorker();
   }, []);
 
+  // Helper: Convert ArrayBuffer to base64url string
+  const arrayBufferToBase64Url = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
   // Helper: Subscribe to Web Push and store subscription on backend
   const subscribeToPush = async (registration) => {
     try {
@@ -237,32 +239,40 @@ export default function Layout({ children }) {
         return;
       }
 
-      // Get VAPID public key from backend
+      // VAPID public key — must match VAPID_PUBLIC_KEY env var on backend.
+      // If you regenerate keys via generateVAPIDKeys, update this value.
       const publicKeyB64 = 'BI-Xgtid17jQuLOdHLEKTj9CEJgHVeKRLdCxPEoBsaaDgGpuBLmGLq1IEFcYfOa2L8g_JGP84KW7bUAmrUm53oo';
 
-      // Convert base64url to Uint8Array
-      const base64url = (str) => str.replace(/-/g, '+').replace(/_/g, '/');
-      const binaryString = atob(base64url(publicKeyB64));
+      // Convert base64url to Uint8Array for applicationServerKey
+      const padding = '='.repeat((4 - publicKeyB64.length % 4) % 4);
+      const base64 = (publicKeyB64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const binaryString = atob(base64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Subscribe to push with VAPID public key
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: bytes,
-      });
+      // Check for existing subscription first
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: bytes,
+        });
+      }
 
       console.log('[PUSH] Subscribed:', subscription.endpoint);
 
-      // Store subscription on backend (only once per device)
-      const deviceId = `${navigator.userAgent}`;
+      // Convert ArrayBuffer keys to base64url strings for JSON serialization
+      const authKey = arrayBufferToBase64Url(subscription.getKey('auth'));
+      const p256dhKey = arrayBufferToBase64Url(subscription.getKey('p256dh'));
+
+      // Store subscription on backend
       await base44.functions.invoke('storePushSubscription', {
         endpoint: subscription.endpoint,
-        auth_key: subscription.getKey('auth'),
-        p256dh_key: subscription.getKey('p256dh'),
-        user_agent: deviceId,
+        auth_key: authKey,
+        p256dh_key: p256dhKey,
+        user_agent: navigator.userAgent,
       });
 
       console.log('[PUSH] Stored on backend');
