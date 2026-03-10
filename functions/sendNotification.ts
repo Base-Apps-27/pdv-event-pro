@@ -40,16 +40,23 @@ Deno.serve(async (req) => {
     }
 
     // Validate VAPID config
-    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    const vapidPublicKeyB64 = Deno.env.get('VAPID_PUBLIC_KEY');
+    const vapidPrivateKeyB64 = Deno.env.get('VAPID_PRIVATE_KEY');
     const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@pdvevent.local';
 
-    if (!vapidPublicKey || !vapidPrivateKey) {
+    if (!vapidPublicKeyB64 || !vapidPrivateKeyB64) {
       console.error('[NOTIFICATION] VAPID keys not configured');
       return Response.json({ error: 'VAPID keys not configured' }, { status: 500 });
     }
 
-    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    // Decode base64url keys to raw format for web-push library
+    const decodeBase64Url = (str) => {
+      const padding = '='.repeat((4 - str.length % 4) % 4);
+      const base64 = (str + padding).replace(/-/g, '+').replace(/_/g, '/');
+      return base64;
+    };
+
+    webpush.setVapidDetails(vapidSubject, vapidPublicKeyB64, decodeBase64Url(vapidPrivateKeyB64));
 
     // Build notification message (bilingual)
     const title = NOTIFICATION_TITLES[language]?.[type] || NOTIFICATION_TITLES.es[type] || 'Notification';
