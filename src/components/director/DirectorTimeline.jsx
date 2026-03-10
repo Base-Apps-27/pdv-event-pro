@@ -331,7 +331,7 @@ export default function DirectorTimeline({
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <span className={`text-xs font-semibold ${rigid ? 'text-red-500' : flex.score >= 8 ? 'text-green-600' : 'text-slate-500'}`}>
-                          {rigid ? 'Sin flexibilidad' : flex.score >= 8 ? 'Muy flexible' : 'Algo flexible'}
+                          {rigid ? t('director.flexibility.none') : flex.score >= 8 ? t('director.flexibility.high') : t('director.flexibility.some')}
                         </span>
                         {rigid && <AlertTriangle className="w-3 h-3 text-red-500" />}
                       </div>
@@ -417,7 +417,7 @@ export default function DirectorTimeline({
                     <span className="text-sm font-medium text-white">{segment.title}</span>
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${rigid ? 'border-red-600 text-red-500' : 'border-slate-600 text-slate-500'}`}>
-                   {rigid ? 'Sin flexibilidad' : flex.score >= 8 ? 'Muy flexible' : 'Algo flexible'}
+                   {rigid ? t('director.flexibility.none') : flex.score >= 8 ? t('director.flexibility.high') : t('director.flexibility.some')}
                   </Badge>
                 </div>
                 
