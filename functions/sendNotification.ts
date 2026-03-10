@@ -137,14 +137,14 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { type, actionLabel, segmentTitle, segmentId, sessionId, actionTime, language = 'en' } = payload;
+    const { type, actionLabel, segmentTitle, segmentId, sessionId, actionTime, language = user.ui_language || 'es' } = payload;
 
     if (!type || !segmentTitle) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Build notification message (bilingual)
-    const title = NOTIFICATION_TITLES[language]?.[type] || NOTIFICATION_TITLES.en[type] || 'Notification';
+    const title = NOTIFICATION_TITLES[language]?.[type] || NOTIFICATION_TITLES.es[type] || 'Notification';
     let body = '';
 
     if (type === 'action' && actionLabel) {
@@ -160,23 +160,59 @@ Deno.serve(async (req) => {
         : `${segmentTitle} is starting`;
     }
 
-    // Log the notification attempt (audit trail)
-    console.log(`[NOTIFICATION] User: ${user.email}, Type: ${type}, Title: ${title}, Body: ${body}`);
+    console.log(`[NOTIFICATION] User: ${user.email}, Type: ${type}, Subs: lookup...`);
 
-    // Note: Actual Web Push would require:
-    // 1. Service Worker with push event handler (frontend)
-    // 2. VAPID key pair (server)
-    // 3. User permission + subscription endpoint
-    // 
-    // For now, this function serves as:
-    // - Billing/audit record of notification triggers
-    // - Ready for future Web Push integration
-    // - Testing endpoint for translation verification
+    // Retrieve user's push subscriptions
+    const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter(
+      { user_email: user.email, is_active: true }
+    );
+
+    if (subscriptions.length === 0) {
+      console.log(`[NOTIFICATION] No active subscriptions for ${user.email}`);
+      return Response.json({ success: true, message: 'No subscriptions' });
+    }
+
+    // Build payload for Web Push (encrypted by browser)
+    const notificationPayload = {
+      title,
+      body,
+      tag: `${type}-${segmentId || 'general'}`, // Group similar notifications
+      data: {
+        sessionId,
+        segmentId,
+        type,
+      },
+    };
+
+    // Create VAPID authorization header
+    const vapidAuth = await createVAPIDAuthHeader(notificationPayload);
+
+    // Send to all subscriptions
+    let sent = 0;
+    let failed = 0;
+    let expired = 0;
+
+    for (const sub of subscriptions) {
+      const result = await sendWebPush(sub, notificationPayload, vapidAuth);
+      if (result === true) {
+        sent++;
+      } else if (result === 'expired') {
+        expired++;
+        // Mark subscription inactive
+        await base44.asServiceRole.entities.PushSubscription.update(sub.id, { is_active: false });
+      } else {
+        failed++;
+      }
+    }
+
+    console.log(`[NOTIFICATION] Sent: ${sent}, Failed: ${failed}, Expired: ${expired}`);
 
     return Response.json({ 
-      success: true, 
+      success: true,
+      sent,
+      failed,
+      expired,
       notification: { title, body },
-      message: 'Notification prepared (Web Push delivery ready for frontend service worker)'
     });
 
   } catch (error) {
