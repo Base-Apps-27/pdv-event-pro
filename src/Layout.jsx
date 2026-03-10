@@ -187,7 +187,7 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
-  // 2026-03-10: Register service worker for notifications on desktop
+  // 2026-03-10: Register service worker and subscribe to push notifications
   useEffect(() => {
     const registerServiceWorker = async () => {
       try {
@@ -206,6 +206,11 @@ export default function Layout({ children }) {
           const permission = await Notification.requestPermission();
           console.log('[NOTIF] Permission:', permission);
         }
+
+        // Subscribe to push notifications if permission granted
+        if (Notification.permission === 'granted') {
+          await subscribeToPush(registration);
+        }
       } catch (error) {
         console.error('[SW_ERROR]', error);
       }
@@ -213,6 +218,48 @@ export default function Layout({ children }) {
 
     registerServiceWorker();
   }, []);
+
+  // Helper: Subscribe to Web Push and store subscription on backend
+  const subscribeToPush = async (registration) => {
+    try {
+      if (!registration.pushManager) {
+        console.log('[PUSH] pushManager not available');
+        return;
+      }
+
+      // Get VAPID public key from backend
+      const publicKeyB64 = 'BI-Xgtid17jQuLOdHLEKTj9CEJgHVeKRLdCxPEoBsaaDgGpuBLmGLq1IEFcYfOa2L8g_JGP84KW7bUAmrUm53oo';
+
+      // Convert base64url to Uint8Array
+      const base64url = (str) => str.replace(/-/g, '+').replace(/_/g, '/');
+      const binaryString = atob(base64url(publicKeyB64));
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Subscribe to push with VAPID public key
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: bytes,
+      });
+
+      console.log('[PUSH] Subscribed:', subscription.endpoint);
+
+      // Store subscription on backend (only once per device)
+      const deviceId = `${navigator.userAgent}`;
+      await base44.functions.invoke('storePushSubscription', {
+        endpoint: subscription.endpoint,
+        auth_key: subscription.getKey('auth'),
+        p256dh_key: subscription.getKey('p256dh'),
+        user_agent: deviceId,
+      });
+
+      console.log('[PUSH] Stored on backend');
+    } catch (error) {
+      console.error('[PUSH_ERROR]', error);
+    }
+  };
 
   return (
     <LanguageProvider>
