@@ -101,20 +101,11 @@ export default function StreamBlockItem({ block, index, total, segments, session
 
       {/* Main Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <Badge variant="outline" className={`${config.color} gap-1 px-1.5 py-0`}>
             <Icon className="w-3 h-3" />
             <span className="uppercase text-[10px] font-bold">{config.label}</span>
           </Badge>
-          
-          {/* Anchor Indicator */}
-          {anchorSegment && (
-            <div className="flex items-center text-[10px] text-slate-400 bg-slate-50 px-1.5 rounded border border-slate-100">
-              <span className="mr-1">Anchor:</span>
-              <span className="font-medium text-slate-600 truncate max-w-[100px]">{anchorSegment.title}</span>
-              <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px]">{block.offset_min > 0 ? `+${block.offset_min}` : block.offset_min}m</Badge>
-            </div>
-          )}
           
           {isOrphaned && (
             <Badge variant="destructive" className="gap-1">
@@ -124,6 +115,15 @@ export default function StreamBlockItem({ block, index, total, segments, session
         </div>
 
         <h4 className="font-semibold text-slate-900 text-sm truncate">{block.title}</h4>
+        
+        {/* Anchor Indicator — own row to prevent overflow */}
+        {anchorSegment && (
+          <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 mt-1 min-w-0">
+            <span className="shrink-0">Anchor:</span>
+            <span className="font-medium text-slate-600 truncate">{anchorSegment.title}</span>
+            <Badge variant="secondary" className="shrink-0 ml-1 h-4 px-1 text-[9px]">{block.offset_min > 0 ? `+${block.offset_min}` : block.offset_min}m</Badge>
+          </div>
+        )}
         
         <div className="flex items-center gap-3 mt-1">
           {block.presenter && (
