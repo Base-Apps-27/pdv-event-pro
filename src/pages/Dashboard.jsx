@@ -146,6 +146,35 @@ export default function Dashboard() {
             <LoadingSpinner size="md" />
           </div>
         )}
+
+        {/* Test Notification Buttons (Dev only) */}
+        <Card className="bg-amber-50 border-2 border-amber-200">
+          <CardContent className="p-6">
+            <h3 className="text-sm font-semibold text-amber-900 mb-3">📢 Test Web Push Notifications</h3>
+            <div className="grid md:grid-cols-2 gap-3">
+              <Button
+                onClick={() => sendTestNotification('action')}
+                disabled={testLoading}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send Action Alert
+              </Button>
+              <Button
+                onClick={() => sendTestNotification('segment_starting')}
+                disabled={testLoading}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send Segment Start Alert
+              </Button>
+            </div>
+            <p className="text-xs text-amber-700 mt-3">
+              ℹ️ Sends a test notification to all active subscriptions. Check browser notification center.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Live Program — compact secondary link. Red when a program is active. (2026-03-02) */}
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
