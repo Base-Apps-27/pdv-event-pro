@@ -133,10 +133,7 @@ export default function StreamBlockForm({ session, block, segments, onClose, onS
                 {type === 'replace' && <Radio className="w-5 h-5 text-orange-600" />}
                 {type === 'offline' && <PowerOff className="w-5 h-5 text-gray-600" />}
               </div>
-              <div className="flex items-center justify-center gap-1">
-                <div className="text-xs font-bold uppercase text-slate-700">{type}</div>
-                <HelpTooltip helpKey={`stream.blockType.${type}`} side="bottom" />
-              </div>
+              <div className="text-xs font-bold uppercase text-slate-700">{type}</div>
             </div>
           ))}
         </div>
