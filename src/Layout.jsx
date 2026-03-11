@@ -187,6 +187,23 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
+  // Inject PushEngage Web Push SDK into <head> on first mount.
+  // This is equivalent to the "copy to head" snippet provided by PushEngage.
+  // appId: 968eaa2b-cba4-4999-b736-393668e20d9b
+  useEffect(() => {
+    if (!window.PushEngage) {
+      window.PushEngage = [];
+      window._peq = window._peq || [];
+      window.PushEngage.push(['init', { appId: '968eaa2b-cba4-4999-b736-393668e20d9b' }]);
+
+      const script = document.createElement('script');
+      script.src = 'https://clientcdn.pushengage.com/sdks/pushengage-web-sdk.js';
+      script.async = true;
+      script.type = 'text/javascript';
+      document.head.appendChild(script);
+    }
+  }, []);
+
   // Register service worker and subscribe to push notifications
   useEffect(() => {
     const registerServiceWorker = async () => {
