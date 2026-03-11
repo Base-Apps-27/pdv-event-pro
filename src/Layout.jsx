@@ -204,13 +204,14 @@ export default function Layout({ children }) {
         await navigator.serviceWorker.ready;
 
         // Request notification permission (one-time user prompt)
-        if ('Notification' in window && Notification.permission === 'default') {
-          const permission = await Notification.requestPermission();
+        // Use window.Notification to avoid ReferenceError in WebKit/iOS environments
+        if ('Notification' in window && window.Notification.permission === 'default') {
+          const permission = await window.Notification.requestPermission();
           console.log('[NOTIF] Permission:', permission);
         }
 
         // Subscribe to push notifications if permission granted
-        if ('Notification' in window && Notification.permission === 'granted') {
+        if ('Notification' in window && window.Notification.permission === 'granted') {
           await subscribeToPush(registration);
         }
       } catch (error) {
