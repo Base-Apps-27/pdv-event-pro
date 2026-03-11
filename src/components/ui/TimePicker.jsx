@@ -44,7 +44,7 @@ export default function TimePicker({
     }
   }, [value]);
 
-  const handleApply = () => {
+  const handleApply = useCallback(() => {
     // Convert 12-hour to 24-hour format
     let hour24 = parseInt(hour, 10);
     if (period === "AM" && hour24 === 12) {
@@ -53,8 +53,11 @@ export default function TimePicker({
       hour24 += 12;
     }
     const formatted = `${String(hour24).padStart(2, '0')}:${minute}`;
+    // Close BEFORE calling onChange — prevents the popover backdrop from
+    // swallowing the next click after the parent re-renders on value change.
+    setOpen(false);
     onChange(formatted);
-  };
+  }, [hour, minute, period, onChange]);
 
   const handleClear = (e) => {
     e.stopPropagation();
