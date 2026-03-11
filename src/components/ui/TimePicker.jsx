@@ -131,6 +131,9 @@ export default function TimePicker({
         className="w-auto p-3" 
         align="start"
         style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}
+        // Prevent Radix focus-trap from stealing focus on open, which blocks
+        // native <select> interaction until another element is clicked first.
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="space-y-3">
           <div className="flex gap-2 items-start">
