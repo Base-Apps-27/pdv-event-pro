@@ -13,14 +13,20 @@ import { useLanguage } from '@/components/utils/i18n';
  * Mounted at session level (EventProgramView, DirectorConsole, etc.)
  * 
  * 2026-03-10: Desktop Notification API integration
+ * 2026-03-11: Fixed ReferenceError — use window.Notification to guard
+ *             against environments (WebKit/iOS) where Notification is not
+ *             in lexical scope even when the API is partially supported.
  */
+
+// Safe helper — avoids bare `Notification` which throws ReferenceError in WebKit
+const notifPermission = () => ('Notification' in window ? window.Notification.permission : 'denied');
 
 export default function NotificationTrigger({ sessionId, segments = [], language = 'en' }) {
   const { language: userLanguage } = useLanguage();
   const lang = language || userLanguage;
 
   useEffect(() => {
-    if (!sessionId || Notification.permission !== 'granted') return;
+    if (!sessionId || notifPermission() !== 'granted') return;
 
     // Monitor segments for state changes (active → trigger start alert)
     const unsubSegments = base44.entities.Segment.subscribe((event) => {
@@ -31,7 +37,6 @@ export default function NotificationTrigger({ sessionId, segments = [], language
       const isNowActive = segment.live_status === 'active';
 
       if (!wasActive && isNowActive) {
-        // Segment just became active — send notification
         triggerNotification('segment_starting', {
           segmentTitle: segment.title,
           segmentId: segment.id,
@@ -44,7 +49,7 @@ export default function NotificationTrigger({ sessionId, segments = [], language
   }, [sessionId, segments, lang]);
 
   useEffect(() => {
-    if (!sessionId || Notification.permission !== 'granted') return;
+    if (!sessionId || notifPermission() !== 'granted') return;
 
     // Monitor segment actions (new actions → trigger alert)
     const unsubActions = base44.entities.SegmentAction.subscribe((event) => {
@@ -75,15 +80,13 @@ export default function NotificationTrigger({ sessionId, segments = [], language
         ...data,
       });
 
-      if (response?.data?.notification) {
+      if (response?.data?.notification && notifPermission() === 'granted') {
         const { title, body } = response.data.notification;
-        if (Notification.permission === 'granted') {
-          new Notification(title, {
-            body,
-            icon: '/logo_v2.svg',
-            tag: `${type}-${data.segmentId}`,
-          });
-        }
+        new window.Notification(title, {
+          body,
+          icon: '/logo_v2.svg',
+          tag: `${type}-${data.segmentId}`,
+        });
       }
     } catch (error) {
       console.error('[NOTIF_ERROR]', error);
