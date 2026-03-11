@@ -119,6 +119,23 @@ export default function Dashboard() {
         language,
       });
       console.log('[TEST_NOTIF] Response:', response.data);
+
+      // Always show a local notification from the response payload so the test
+      // is observable even when Web Push subscriptions are unavailable (e.g.
+      // preview sandbox blocks service worker storage).
+      const notif = response?.data?.notification;
+      if (notif && 'Notification' in window) {
+        if (window.Notification.permission === 'default') {
+          await window.Notification.requestPermission();
+        }
+        if (window.Notification.permission === 'granted') {
+          new window.Notification(notif.title, {
+            body: notif.body,
+            icon: '/logo_v2.svg',
+            tag: `test-${type}`,
+          });
+        }
+      }
     } catch (error) {
       console.error('[TEST_NOTIF_ERROR]', error);
     } finally {
