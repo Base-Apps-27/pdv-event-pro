@@ -13,6 +13,7 @@ export default function TimePicker({
   className,
   ...props 
 }) {
+  const [open, setOpen] = useState(false);
   const [hour, setHour] = useState("9");
   const [minute, setMinute] = useState("00");
   const [period, setPeriod] = useState("AM");
