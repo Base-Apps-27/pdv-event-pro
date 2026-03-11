@@ -87,13 +87,15 @@ Deno.serve(async (req) => {
     const peData = await peRes.json();
     console.log('[PUSH] PushEngage response:', JSON.stringify(peData));
 
-    if (!peRes.ok) {
+    // Return 200 even if PushEngage rejects (rate limit, duplicate, etc.) so the
+    // frontend test buttons don't throw and callers can log/inspect the details.
+    const delivered = peRes.ok;
+    if (!delivered) {
       console.error('[PUSH] PushEngage API error:', peRes.status, JSON.stringify(peData));
-      return Response.json({ error: 'PushEngage delivery failed', details: peData }, { status: 502 });
     }
 
     return Response.json({
-      success: true,
+      success: delivered,
       notification: { title, body },
       pushengage: peData,
     });
