@@ -104,7 +104,8 @@ function parseScriptureReferences(rawText) {
   // - Handles optional trailing dot in book name
   // - Handles en-dash (–), em-dash (—) and hyphen (-) for ranges
   // - EXHAUSTIVE MODE: Matches globally (/g) and case-insensitive (/i)
-  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
+  // Group 9: optional Bible version abbreviation — e.g. NVI, NTV, RVR60, (NVI), ESV
+  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3}):(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?(?:\s+\(?([A-Z]{2,6}[0-9]{0,2})\)?)?/gi;
   
   const verses = [];
   const seenRefs = new Set(); // Deduplicate
