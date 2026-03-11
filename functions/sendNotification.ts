@@ -4,12 +4,13 @@ import webpush from 'npm:web-push@3.6.7';
 /**
  * sendNotification
  *
- * Delivers Web Push notifications via VAPID to subscribed users when:
- * - Segment actions are created (prep alerts)
- * - Segments transition to active state (segment start alerts)
+ * Builds bilingual notification payloads for:
+ * - Segment actions (prep alerts)
+ * - Segments transitioning to active (start alerts)
  *
- * Uses the web-push library for proper RFC 8291 payload encryption
- * and VAPID (RFC 8292) authentication.
+ * Returns the notification payload so the frontend can display a local
+ * Notification via the browser API. Additionally attempts Web Push delivery
+ * to the user's registered subscriptions (best-effort).
  */
 
 const NOTIFICATION_TITLES = {
@@ -39,28 +40,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Validate VAPID config (keys stored as base64url strings without padding)
-    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-    const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@pdvevent.local';
-
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      console.error('[NOTIFICATION] VAPID keys not configured');
-      return Response.json({ error: 'VAPID keys not configured' }, { status: 500 });
-    }
-
-    try {
-      webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-    } catch (vapidError) {
-      console.error('[NOTIFICATION] VAPID validation failed:', vapidError.message);
-      console.error('[NOTIFICATION] Public key length:', vapidPublicKey?.length);
-      console.error('[NOTIFICATION] Private key length:', vapidPrivateKey?.length);
-      return Response.json(
-        { error: 'VAPID configuration invalid: ' + vapidError.message },
-        { status: 500 }
-      );
-    }
-
     // Build notification message (bilingual)
     const title = NOTIFICATION_TITLES[language]?.[type] || NOTIFICATION_TITLES.es[type] || 'Notification';
     let body = '';
@@ -78,63 +57,74 @@ Deno.serve(async (req) => {
         : `${segmentTitle} is starting`;
     }
 
-    console.log(`[NOTIFICATION] User: ${user.email}, Type: ${type}`);
-
-    // Retrieve user's push subscriptions
-    const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter(
-      { user_email: user.email, is_active: true }
-    );
-
-    if (subscriptions.length === 0) {
-      console.log(`[NOTIFICATION] No active subscriptions for ${user.email}`);
-      return Response.json({ success: true, message: 'No subscriptions', notification: { title, body } });
-    }
-
-    // Build push payload
-    const notificationPayload = JSON.stringify({
+    const notification = {
       title,
       body,
       tag: `${type}-${segmentId || 'general'}`,
       data: { sessionId, segmentId, type },
-    });
+    };
 
-    // Send to all subscriptions via web-push (handles encryption + VAPID signing)
+    console.log(`[NOTIFICATION] User: ${user.email}, Type: ${type}, Title: ${title}`);
+
+    // Attempt Web Push delivery (best-effort, never blocks the response)
     let sent = 0;
     let failed = 0;
     let expired = 0;
 
-    for (const sub of subscriptions) {
-      if (!sub.endpoint || !sub.auth_key || !sub.p256dh_key) {
-        console.warn('[PUSH] Incomplete subscription, skipping:', sub.id);
-        failed++;
-        continue;
-      }
+    try {
+      const subscriptions = await base44.asServiceRole.entities.PushSubscription.filter(
+        { user_email: user.email, is_active: true }
+      );
 
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: {
-              auth: sub.auth_key,
-              p256dh: sub.p256dh_key,
-            },
-          },
-          notificationPayload
-        );
-        sent++;
-      } catch (error) {
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          expired++;
-          await base44.asServiceRole.entities.PushSubscription.update(sub.id, { is_active: false });
-          console.log(`[PUSH] Subscription expired, deactivated: ${sub.id}`);
+      if (subscriptions.length > 0) {
+        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+        const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@pdvevent.local';
+
+        if (vapidPublicKey && vapidPrivateKey) {
+          try {
+            webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+          } catch (vapidError) {
+            console.error('[NOTIFICATION] VAPID validation failed:', vapidError.message);
+            console.error('[NOTIFICATION] Public key length:', vapidPublicKey?.length);
+            console.error('[NOTIFICATION] Private key length:', vapidPrivateKey?.length);
+            throw vapidError; // caught by outer try/catch — non-fatal
+          }
+
+          const notificationPayload = JSON.stringify(notification);
+
+          for (const sub of subscriptions) {
+            if (!sub.endpoint || !sub.auth_key || !sub.p256dh_key) {
+              console.warn('[PUSH] Incomplete subscription, skipping:', sub.id);
+              failed++;
+              continue;
+            }
+            try {
+              await webpush.sendNotification(
+                { endpoint: sub.endpoint, keys: { auth: sub.auth_key, p256dh: sub.p256dh_key } },
+                notificationPayload
+              );
+              sent++;
+            } catch (error) {
+              if (error.statusCode === 410 || error.statusCode === 404) {
+                expired++;
+                await base44.asServiceRole.entities.PushSubscription.update(sub.id, { is_active: false });
+                console.log(`[PUSH] Subscription expired, deactivated: ${sub.id}`);
+              } else {
+                failed++;
+                console.warn(`[PUSH] Failed for sub ${sub.id}:`, error.statusCode || error.message);
+              }
+            }
+          }
         } else {
-          failed++;
-          console.error(`[PUSH] Failed for sub ${sub.id}:`, error.statusCode, error.body);
+          console.warn('[NOTIFICATION] VAPID keys not configured, skipping Web Push');
         }
       }
+    } catch (pushError) {
+      console.warn('[NOTIFICATION] Web Push delivery error (non-fatal):', pushError.message);
     }
 
-    console.log(`[NOTIFICATION] Sent: ${sent}, Failed: ${failed}, Expired: ${expired}`);
+    console.log(`[NOTIFICATION] Push results — Sent: ${sent}, Failed: ${failed}, Expired: ${expired}`);
 
     return Response.json({
       success: true,
