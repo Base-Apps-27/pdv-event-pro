@@ -93,7 +93,8 @@ const BIBLE_BOOKS = {
 
 function parseScriptureReferences(rawText) {
   if (!rawText || rawText.trim() === '') return { type: 'empty', sections: [] };
-  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})\s*:\s*(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?/gi;
+  // Group 9: optional Bible version abbreviation after the reference — e.g. NVI, NTV, RVR60, (NVI), ESV
+  const versePattern = /\b(([1-3]\s)?(?:S\.\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})\s*:\s*(\d{1,3})([–—-](\d{1,3}))?(:(\d{1,3}))?(?:\s+\(?([A-Z]{2,6}[0-9]{0,2})\)?)?/gi;
   const verses = [];
   const seenRefs = new Set();
   const matches = [...rawText.matchAll(versePattern)];
