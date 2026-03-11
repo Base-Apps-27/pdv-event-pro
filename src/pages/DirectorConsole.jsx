@@ -78,6 +78,10 @@ import { resolveStreamActions } from '@/components/utils/resolveStreamActions';
 export default function DirectorConsole() {
   const { t, language } = useLanguage();
   const queryClient = useQueryClient();
+
+  // Prompt for notification permission — directors need push alerts for segment/action events.
+  // Not on MyProgram (volunteers) or PublicCountdownDisplay (TV).
+  useNotificationPermissionPrompt();
   
   // DirectorConsole is for EVENT sessions only.
   // Services use the start-time offset feature (LiveTimeAdjustmentModal), not Director Console.
