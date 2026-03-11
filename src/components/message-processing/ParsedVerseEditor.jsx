@@ -87,6 +87,52 @@ export default function ParsedVerseEditor({ open, onOpenChange, segment, onSaved
         setEditingVerseId(null);
     };
 
+    /**
+     * Scan the original submitted_content for version tokens (NVI, NTV, RVR60, ESV, etc.)
+     * sitting right after a chapter:verse pattern, then append them to matching verse rows
+     * that don't already have a version. Does NOT touch rows that already have a version,
+     * and does NOT alter any other text.
+     */
+    const handlePatchVersions = () => {
+        const raw = segment?.submitted_content;
+        if (!raw) return;
+
+        // Same pattern as parseScriptureReferences — captures optional version in group 9
+        const versionPattern = /\b(([1-3]\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})[:\s](\d{1,3})(?:[–—-]\d{1,3})?(?:\s+\(?([A-Z]{2,6}[0-9]{0,2})\)?)?/gi;
+
+        // Build a map: "chapter:verse" → version token (first one found per ref)
+        const versionMap = new Map();
+        for (const m of raw.matchAll(versionPattern)) {
+            const version = m[5]; // group 5 = version token
+            if (!version) continue;
+            const chVerse = `${m[3]}:${m[4]}`;
+            if (!versionMap.has(chVerse)) {
+                versionMap.set(chVerse, version.toUpperCase());
+            }
+        }
+
+        if (versionMap.size === 0) return;
+
+        // Append version to each verse row that (a) matches a chVerse in the map
+        // and (b) doesn't already contain a version token on that row.
+        const versionRegex = /\b[A-Z]{2,6}[0-9]{0,2}\b/; // detect existing version token
+        const chVerseExtract = /(\d{1,3}:\d{1,3})/; // pull chapter:verse from row content
+
+        setVerses(prev => prev.map(v => {
+            // Skip rows that already have a version token
+            if (versionRegex.test(v.content)) return v;
+            const cvMatch = v.content.match(chVerseExtract);
+            if (!cvMatch) return v;
+            const token = versionMap.get(cvMatch[1]);
+            if (!token) return v;
+            // Append " TOKEN" to both sides of the " | " pipe if present
+            const updated = v.content.includes(' | ')
+                ? v.content.replace(/(\d[\d\-:]+)(\s*\|)/, `$1 ${token}$2`).replace(/(\d[\d\-:]+)$/, `$1 ${token}`)
+                : `${v.content} ${token}`;
+            return { ...v, content: updated };
+        }));
+    };
+
     const handleEditTakeaway = (id, newText) => {
         setTakeaways(takeaways.map(t => t.id === id ? { ...t, content: newText } : t));
         setEditingTakeawayId(null);
