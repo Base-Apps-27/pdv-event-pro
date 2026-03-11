@@ -624,22 +624,21 @@ export default function LiveOperationsChat({
         reactions: []
       });
       
-      // If this is a director ping, trigger backend notification
-      if (directorPing) {
-        try {
-          await base44.functions.invoke('sendChatNotification', {
-            contextType,
-            contextId,
-            contextName,
-            messageId: newMessage.id,
-            senderName: currentUser?.display_name || currentUser?.full_name || currentUser?.email,
-            messagePreview: text?.substring(0, 100) || '[Image]',
-            isDirectorPing: true
-          });
-        } catch (err) {
-          console.error('Failed to send director ping notification:', err);
-          // Don't fail the message send if notification fails
-        }
+      // Always broadcast via PushEngage so team members on other devices get notified.
+      // Director pings additionally send an email to the active Live Director.
+      try {
+        await base44.functions.invoke('sendChatNotification', {
+          contextType,
+          contextId,
+          contextName,
+          messageId: newMessage.id,
+          senderName: currentUser?.display_name || currentUser?.full_name || currentUser?.email,
+          messagePreview: text?.substring(0, 100) || '[Image]',
+          isDirectorPing: directorPing || false
+        });
+      } catch (err) {
+        console.error('Failed to send chat notification:', err);
+        // Don't fail the message send if notification fails
       }
       
       return newMessage;
