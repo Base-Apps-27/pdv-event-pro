@@ -11,7 +11,7 @@
  * For regular messages:
  * - Returns notification payload for browser Notification API
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // H-SEC-5 FIX (2026-02-20): Escape HTML to prevent injection in email body.
 // senderName, contextName, messagePreview are user-controlled strings.
