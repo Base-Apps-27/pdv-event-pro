@@ -112,15 +112,18 @@ function parseScriptureReferences(rawText) {
     let formattedContent = fullMatch.replace(/[–—]/g, '-');
     let foundMatch = false;
     
+    // Capture optional version token (group 9) e.g. NVI, NTV, RVR60, ESV
+    const versionToken = match[9] ? ` ${match[9].toUpperCase()}` : '';
+
     if (BIBLE_BOOKS[bookLower]) {
       const { en, es } = BIBLE_BOOKS[bookLower];
-      formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
+      formattedContent = `${en} ${restOfRef}${versionToken} | ${es} ${restOfRef}${versionToken}`;
       foundMatch = true;
     } else if (bookLower.length >= 3) {
       const matchedKey = Object.keys(BIBLE_BOOKS).find(key => key.startsWith(bookLower) || bookLower.startsWith(key));
       if (matchedKey) {
         const { en, es } = BIBLE_BOOKS[matchedKey];
-        formattedContent = `${en} ${restOfRef} | ${es} ${restOfRef}`;
+        formattedContent = `${en} ${restOfRef}${versionToken} | ${es} ${restOfRef}${versionToken}`;
         foundMatch = true;
       }
     }
