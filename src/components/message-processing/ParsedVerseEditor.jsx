@@ -90,46 +90,82 @@ export default function ParsedVerseEditor({ open, onOpenChange, segment, onSaved
     /**
      * Scan the original submitted_content for version tokens (NVI, NTV, RVR60, ESV, etc.)
      * sitting right after a chapter:verse pattern, then append them to matching verse rows
-     * that don't already have a version. Does NOT touch rows that already have a version,
-     * and does NOT alter any other text.
+     * that don't already have a version on that side.
+     *
+     * Rules:
+     * - Only whitelisted Bible version codes are accepted (prevents "SALMO" etc.)
+     * - Bilingual rows (EN | ES) get the correct EN counterpart on the EN side
+     * - Does NOT alter any other text; only appends where version is missing
      */
     const handlePatchVersions = () => {
         const raw = segment?.submitted_content;
         if (!raw) return;
 
-        // Same pattern as parseScriptureReferences — captures optional version in group 9
+        // Strict whitelist — only real Bible version abbreviations pass through
+        const KNOWN_VERSIONS = new Set([
+            'NVI','NTV','RVR60','RVR','LBLA','DHH','TLA','BLP','NBD','PDT',
+            'NIV','ESV','NLT','KJV','NKJV','MSG','AMP','CSB','NET','NASB',
+            'CEV','GNT','ISV','WEB','YLT','ASV','NRSV'
+        ]);
+
+        // Bilingual counterpart map: detected token → { en: English version, es: Spanish version }
+        const VERSION_BILINGUAL = {
+            NVI:   { en: 'NIV',  es: 'NVI'   },
+            NTV:   { en: 'NLT',  es: 'NTV'   },
+            RVR60: { en: 'KJV',  es: 'RVR60' },
+            RVR:   { en: 'KJV',  es: 'RVR'   },
+            LBLA:  { en: 'NASB', es: 'LBLA'  },
+            DHH:   { en: 'GNT',  es: 'DHH'   },
+            TLA:   { en: 'CEV',  es: 'TLA'   },
+            BLP:   { en: 'BLP',  es: 'BLP'   },
+            PDT:   { en: 'PDT',  es: 'PDT'   },
+            NIV:   { en: 'NIV',  es: 'NVI'   },
+            ESV:   { en: 'ESV',  es: 'RVR60' },
+            NLT:   { en: 'NLT',  es: 'NTV'   },
+            KJV:   { en: 'KJV',  es: 'RVR60' },
+            NKJV:  { en: 'NKJV', es: 'RVR'   },
+            MSG:   { en: 'MSG',  es: 'MSG'   },
+            AMP:   { en: 'AMP',  es: 'AMP'   },
+            CSB:   { en: 'CSB',  es: 'CSB'   },
+            NASB:  { en: 'NASB', es: 'LBLA'  },
+            GNT:   { en: 'GNT',  es: 'DHH'   },
+            CEV:   { en: 'CEV',  es: 'TLA'   },
+        };
+
         const versionPattern = /\b(([1-3]\s)?(?:[A-ZÁ-Úa-zá-ú][a-zá-ú]{1,10}\.?))\s+(\d{1,3})[:\s](\d{1,3})(?:[–—-]\d{1,3})?(?:\s+\(?([A-Z]{2,6}[0-9]{0,2})\)?)?/gi;
 
-        // Build a map: "chapter:verse" → version token (first one found per ref)
+        // Build map: "chapter:verse" → whitelisted version token (first match per ref)
         const versionMap = new Map();
         for (const m of raw.matchAll(versionPattern)) {
-            const version = m[5]; // group 5 = version token
-            if (!version) continue;
+            const version = m[5]?.toUpperCase();
+            if (!version || !KNOWN_VERSIONS.has(version)) continue;
             const chVerse = `${m[3]}:${m[4]}`;
-            if (!versionMap.has(chVerse)) {
-                versionMap.set(chVerse, version.toUpperCase());
-            }
+            if (!versionMap.has(chVerse)) versionMap.set(chVerse, version);
         }
 
         if (versionMap.size === 0) return;
 
-        // Append version to each verse row that (a) matches a chVerse in the map
-        // and (b) doesn't already contain a version token on that row.
-        const versionRegex = /\b[A-Z]{2,6}[0-9]{0,2}\b/; // detect existing version token
-        const chVerseExtract = /(\d{1,3}:\d{1,3})/; // pull chapter:verse from row content
+        const hasVersion = (text) => /\b[A-Z]{2,6}[0-9]{0,2}\b/.test(text);
+        const chVerseExtract = /(\d{1,3}:\d{1,3})/;
 
         setVerses(prev => prev.map(v => {
-            // Skip rows that already have a version token
-            if (versionRegex.test(v.content)) return v;
             const cvMatch = v.content.match(chVerseExtract);
             if (!cvMatch) return v;
-            const token = versionMap.get(cvMatch[1]);
-            if (!token) return v;
-            // Append " TOKEN" to both sides of the " | " pipe if present
-            const updated = v.content.includes(' | ')
-                ? v.content.replace(/(\d[\d\-:]+)(\s*\|)/, `$1 ${token}$2`).replace(/(\d[\d\-:]+)$/, `$1 ${token}`)
-                : `${v.content} ${token}`;
-            return { ...v, content: updated };
+            const rawToken = versionMap.get(cvMatch[1]);
+            if (!rawToken) return v;
+            const bilingual = VERSION_BILINGUAL[rawToken] || { en: rawToken, es: rawToken };
+
+            if (v.content.includes(' | ')) {
+                // Bilingual row: append EN counterpart to left side, ES version to right side
+                const [enPart, esPart] = v.content.split(' | ');
+                const updatedEn = hasVersion(enPart) ? enPart : `${enPart} ${bilingual.en}`;
+                const updatedEs = hasVersion(esPart) ? esPart : `${esPart} ${bilingual.es}`;
+                if (updatedEn === enPart && updatedEs === esPart) return v; // nothing changed
+                return { ...v, content: `${updatedEn} | ${updatedEs}` };
+            } else {
+                if (hasVersion(v.content)) return v;
+                return { ...v, content: `${v.content} ${bilingual.es}` };
+            }
         }));
     };
 
