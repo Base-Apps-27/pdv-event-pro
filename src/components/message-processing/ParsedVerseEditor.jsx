@@ -148,9 +148,23 @@ export default function ParsedVerseEditor({ open, onOpenChange, segment, onSaved
                 <div className="flex-1 overflow-y-auto space-y-6 pr-2 py-2">
                     {/* Verses Section */}
                     <div className="space-y-3">
-                        <h3 className="font-semibold text-amber-800 text-sm uppercase tracking-wide">
-                            Versículos ({verses.length})
-                        </h3>
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-amber-800 text-sm uppercase tracking-wide">
+                                Versículos ({verses.length})
+                            </h3>
+                            {segment?.submitted_content && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handlePatchVersions}
+                                    className="text-xs h-7 gap-1 text-amber-700 border-amber-300 hover:bg-amber-50"
+                                    title="Rescatar versiones bíblicas del texto original (NVI, NTV, etc.)"
+                                >
+                                    <Wand2 className="w-3 h-3" />
+                                    Rescatar versiones
+                                </Button>
+                            )}
+                        </div>
                         <div className="space-y-2">
                             {verses.map((verse) => (
                                 <div key={verse.id} className="flex gap-2 items-start bg-amber-50 p-3 rounded border border-amber-100">
