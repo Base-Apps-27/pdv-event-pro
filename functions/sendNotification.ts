@@ -73,13 +73,15 @@ Deno.serve(async (req) => {
 
     console.log(`[PUSH] Broadcasting — type:${type} title:"${title}" body:"${body}"`);
 
+    // PushEngage REST API requires form-encoded body (not JSON)
+    const formBody = new URLSearchParams(pePayload).toString();
     const peRes = await fetch('https://api.pushengage.com/apiv1/notifications', {
       method: 'POST',
       headers: {
         'api_key': apiKey,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(pePayload),
+      body: formBody,
     });
 
     const peData = await peRes.json();
