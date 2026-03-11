@@ -43,6 +43,10 @@ export default function PublicProgramView() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
+  // Prompt for notification permission on this page (subscribers receive push alerts)
+  // Not on MyProgram (volunteers) or PublicCountdownDisplay (TV).
+  useNotificationPermissionPrompt();
+
   // AUTH GATE (2026-02-14): defense-in-depth
   useEffect(() => {
     const fetchUser = async () => {
