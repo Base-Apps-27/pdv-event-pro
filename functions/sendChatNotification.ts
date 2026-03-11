@@ -98,24 +98,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    // For regular messages, return notification payload for browser API
+    // For regular messages — broadcast via PushEngage to all subscribers
+    // so team members receive the message even if their tab is closed.
+    const apiKey = Deno.env.get('PUSHENGAGE_API_KEY');
+    if (apiKey) {
+      const title = `💬 ${contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}`;
+      const body = `${senderName}: ${messagePreview}`;
+      const formBody = new URLSearchParams({
+        notification_title: title,
+        notification_message: body,
+        notification_url: 'https://' + (req.headers.get('host') || 'pdveventpro.com'),
+      }).toString();
+
+      const peRes = await fetch('https://api.pushengage.com/apiv1/notifications', {
+        method: 'POST',
+        headers: { 'api_key': apiKey, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formBody,
+      });
+      const peData = await peRes.json();
+      console.log('[CHAT_PUSH] PushEngage response:', JSON.stringify(peData));
+
+      return Response.json({ success: true, pushengage: peData });
+    }
+
+    // Fallback: return payload for local browser Notification API
     const notificationPayload = {
       title: `💬 ${contextName || (contextType === 'event' ? 'Evento' : 'Servicio')}`,
       body: `${senderName}: ${messagePreview}`,
-      icon: '/favicon.ico',
       tag: `live-chat-${contextId}`,
-      renotify: true,
-      data: {
-        contextType,
-        contextId,
-        url: `/PublicProgramView?context=${contextType}&id=${contextId}`
-      }
     };
-
-    return Response.json({ 
-      success: true, 
-      notification: notificationPayload 
-    });
+    return Response.json({ success: true, notification: notificationPayload });
 
   } catch (error) {
     console.error('sendChatNotification error:', error);
