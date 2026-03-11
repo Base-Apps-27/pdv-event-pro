@@ -34,6 +34,7 @@ import DirectorPingFeed from '@/components/director/DirectorPingFeed';
 import StickyOpsDeck from '@/components/service/StickyOpsDeck';
 import LiveOperationsChat from '@/components/live/LiveOperationsChat';
 import { resolveBlockTime } from '@/components/utils/streamTiming';
+import { useNotificationPermissionPrompt } from '@/components/notifications/useNotificationPermissionPrompt';
 import { resolveStreamActions } from '@/components/utils/resolveStreamActions';
 
 /**

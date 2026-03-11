@@ -35,6 +35,7 @@ import ProgramInfoBanner from "@/components/liveview/ProgramInfoBanner";
 import LiveAdjustmentControls from "@/components/liveview/LiveAdjustmentControls";
 import useSegmentTiming from "@/components/liveview/useSegmentTiming";
 import CacheStalenessIndicator from "@/components/liveview/CacheStalenessIndicator";
+import { useNotificationPermissionPrompt } from "@/components/notifications/useNotificationPermissionPrompt";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
