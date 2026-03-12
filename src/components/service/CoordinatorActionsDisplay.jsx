@@ -353,15 +353,20 @@ export default function CoordinatorActionsDisplay({
                           {action.label}
                         </h4>
 
-                        {/* Meta */}
-                        <div className="flex items-center gap-1 text-[7px]">
-                          <span className={`font-bold uppercase px-1 py-0.5 rounded ${
-                            action.isPreSession ? 'bg-slate-200 text-slate-700'
-                            : action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                          }`}>
-                            {action.isPreSession ? 'PRE' : action.isPrep ? 'PREP' : 'LIVE'}
-                          </span>
-                          <span className="text-slate-500 truncate">{action.type}</span>
+                        {/* Meta + source segment for traceability */}
+                        <div className="flex flex-col gap-0.5 text-[7px]">
+                          <div className="flex items-center gap-1">
+                            <span className={`font-bold uppercase px-1 py-0.5 rounded ${
+                              action.isPreSession ? 'bg-slate-200 text-slate-700'
+                              : action.isPrep ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {action.isPreSession ? 'PRE' : action.isPrep ? 'PREP' : 'LIVE'}
+                            </span>
+                            <span className="text-slate-500 truncate">{action.type}</span>
+                          </div>
+                          {action.segmentTitle && !action.isPreSession && (
+                            <span className="text-slate-400 italic truncate">@ {action.segmentTitle}</span>
+                          )}
                         </div>
                       </div>
                     );
