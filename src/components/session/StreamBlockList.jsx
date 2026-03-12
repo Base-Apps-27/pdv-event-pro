@@ -98,6 +98,45 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
     setShowForm(true);
   };
 
+  // "Copy from Program" — bulk-creates link blocks from all visible segments that
+  // don't already have a matching stream block anchored to them.
+  const [copying, setCopying] = useState(false);
+  const handleCopyFromProgram = async () => {
+    const existingAnchors = new Set(blocks.map(b => b.anchor_segment_id).filter(Boolean));
+    const toCopy = (segments || []).filter(s => s.show_in_livestream !== false && !existingAnchors.has(s.id));
+
+    if (toCopy.length === 0) {
+      toast.info("All segments already have stream blocks.");
+      return;
+    }
+
+    setCopying(true);
+    try {
+      await Promise.all(
+        toCopy.map((seg, i) =>
+          base44.entities.StreamBlock.create({
+            session_id: sessionId,
+            block_type: 'link',
+            title: seg.title,
+            presenter: seg.presenter || '',
+            anchor_segment_id: seg.id,
+            anchor_point: 'at_start',
+            offset_min: 0,
+            duration_min: seg.duration_min || null,
+            order: (blocks.length + i + 1),
+            stream_actions: [],
+          })
+        )
+      );
+      queryClient.invalidateQueries(['streamBlocks', sessionId]);
+      toast.success(`${toCopy.length} link block${toCopy.length !== 1 ? 's' : ''} created from program`);
+    } catch {
+      toast.error("Failed to copy some blocks");
+    } finally {
+      setCopying(false);
+    }
+  };
+
   const openEdit = (block) => {
     setEditingBlock(block);
     setShowForm(true);
