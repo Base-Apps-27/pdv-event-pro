@@ -140,7 +140,11 @@ export default function CoordinatorActionsDisplay({
       const effectiveStart = segment?.actual_start_time || segment?.start_time;
       if (!segment || !effectiveStart) return;
 
-      const segStart = parseDateTime(activeDateStr, effectiveStart);
+      // Use segment's own date for multi-day events; fall back to active session date.
+      // Without this, all Day-2+ segments get their actions computed against today's date
+      // and appear as if they're firing imminently (the "1387m" infinite session bug).
+      const segDateStr = segment.date || activeDateStr;
+      const segStart = parseDateTime(segDateStr, effectiveStart);
       if (!segStart) return;
 
       const effectiveEnd = segment.actual_end_time || segment.end_time;
