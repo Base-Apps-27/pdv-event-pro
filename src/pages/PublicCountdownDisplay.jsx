@@ -206,21 +206,16 @@ export default function PublicCountdownDisplay() {
       {/* Top Gradient */}
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1F8A70] via-[#8DC63F] to-[#D7DF23]" />
 
-      {/* HARDENING (2026-03-08): Status indicators — offline/error/stale data warning */}
-      {(isOffline || isError || isStaleData) && (
-        <div className="absolute top-1.5 right-2 z-30 flex items-center gap-1.5">
-          {isOffline && (
-            <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-red-200">
-              <WifiOff className="w-3 h-3" />
-              <span>Sin conexión</span>
-            </div>
-          )}
-          {!isOffline && (isError || isStaleData) && (
-            <div className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-amber-200 animate-pulse">
-              <AlertTriangle className="w-3 h-3" />
-              <span>{isError ? 'Error de datos' : 'Datos desactualizados'}</span>
-            </div>
-          )}
+      {/* Status indicators — offline only. isStaleData badge removed 2026-03-12:
+          same reasoning as PublicProgramView — the timestamp created uncertainty without
+          being actionable. The watchdog reload (below) handles stale cache silently.
+          isError is also silent since the watchdog will reload if truly stuck. */}
+      {isOffline && (
+        <div className="absolute top-1.5 right-2 z-30">
+          <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-red-200">
+            <WifiOff className="w-3 h-3" />
+            <span>Sin conexión</span>
+          </div>
         </div>
       )}
 
