@@ -490,12 +490,12 @@ export async function generateArtsReportPDF({ event, sessions, segments }) {
  * Trigger a browser download of Arts PDF bytes.
  * Mirrors downloadPdf() from reportHelpers.js.
  */
-export function downloadArtsPdf(bytes, eventName) {
+export function downloadArtsPdf(bytes, filename) {
   const blob = new Blob([bytes], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `artes-reporte-${(eventName || 'evento').toLowerCase().replace(/\s+/g, '-')}.pdf`;
+  a.download = `${filename || 'artes-reporte'}.pdf`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
