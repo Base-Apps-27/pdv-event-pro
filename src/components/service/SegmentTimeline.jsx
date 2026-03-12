@@ -20,10 +20,18 @@ import { normalizeName } from "@/components/utils/textNormalization";
  */
 export default function SegmentTimeline({
   segments = [],
+  sessions = [],
   getTimeDate,
   className = ""
 }) {
   const { language, t } = useLanguage();
+
+  // Build session id → name map for divider labels
+  const sessionMap = React.useMemo(() => {
+    const m = {};
+    sessions.forEach(s => { if (s.id) m[s.id] = s.name; });
+    return m;
+  }, [sessions]);
 
   if (!segments || segments.length === 0) return null;
 
