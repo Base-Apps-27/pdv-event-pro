@@ -670,25 +670,16 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
               })}
             </div>
       </div>
-      {/* Duplicate Segment Dialog */}
-      <DuplicateSegmentDialog
-        open={!!duplicateSegment}
-        onOpenChange={(open) => { if (!open) setDuplicateSegment(null); }}
-        segment={duplicateSegment}
+      {/* Unified Transfer Dialog (Move + Copy) */}
+      <TransferSegmentDialog
+        open={!!transferState}
+        onOpenChange={(open) => { if (!open) setTransferState(null); }}
+        segment={transferState?.segment || null}
         sessions={sessions}
         allSegments={allEventSegments || segments}
         currentSessionId={sessionId}
         user={user}
-      />
-      {/* Move Segment Dialog */}
-      <MoveSegmentDialog
-        open={!!moveSegment}
-        onOpenChange={(open) => { if (!open) setMoveSegment(null); }}
-        segment={moveSegment}
-        sessions={sessions}
-        allSegments={allEventSegments || segments}
-        currentSessionId={sessionId}
-        user={user}
+        defaultMode={transferState?.mode || 'move'}
       />
     </>
   );
