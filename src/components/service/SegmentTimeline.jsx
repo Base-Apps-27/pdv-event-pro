@@ -90,8 +90,36 @@ export default function SegmentTimeline({
           // Sub-assignments (e.g. Ministración within Alabanza)
           const subAssignments = getSubAssignments(segment);
 
+          // Session change divider: bold visual break between sessions
+          const sessionDivider = sessionChanged ? (
+            <div key={`session-div-${index}`} className="flex items-center gap-2 py-1.5 px-1 mt-1">
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[#1F8A70] to-transparent" />
+              <div className="text-[8px] font-black uppercase tracking-widest text-[#1F8A70] whitespace-nowrap bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                {sessionName || '── SESIÓN ──'}
+              </div>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[#1F8A70] to-transparent" />
+            </div>
+          ) : null;
+
           // Break divider: visual separator, not a full card
           if (isBreak) {
+            return (
+              <React.Fragment key={segment.id || index}>
+                {sessionDivider}
+                <div className="flex items-center gap-2 py-1 px-1">
+                  <div className="h-px flex-1 bg-slate-300" />
+                  <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-1">
+                    <span className="font-mono text-slate-300">{timeStr}</span>
+                    <span>{segment.title}</span>
+                  </div>
+                  <div className="h-px flex-1 bg-slate-300" />
+                </div>
+              </React.Fragment>
+            );
+          }
+
+          // Dummy placeholder to satisfy removed early-return below
+          if (false) {
             return (
               <div key={segment.id || index} className="flex items-center gap-2 py-1 px-1">
                 <div className="h-px flex-1 bg-slate-300" />
