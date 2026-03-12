@@ -645,11 +645,8 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="h-7 px-2">
                                 <Edit className="w-3 h-3" />
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => setDuplicateSegment(segment)} className="h-7 px-2" title={language === 'es' ? 'Duplicar' : 'Duplicate'}>
-                                <Copy className="w-3 h-3 text-green-600" />
-                              </Button>
                               {canMove && (
-                                <Button variant="outline" size="sm" onClick={() => setMoveSegment(segment)} className="h-7 px-2" title={t('move.moveToSession')}>
+                                <Button variant="outline" size="sm" onClick={() => setTransferState({ segment, mode: 'move' })} className="h-7 px-2" title={language === 'es' ? 'Mover / Copiar' : 'Move / Copy'}>
                                   <ArrowRightLeft className="w-3 h-3 text-blue-500" />
                                 </Button>
                               )}
