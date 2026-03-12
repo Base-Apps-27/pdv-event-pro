@@ -16,8 +16,8 @@ import TransferSegmentDialog from "./TransferSegmentDialog";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user, sessions, allEventSegments }) {
   const { t, language } = useLanguage();
-  const [moveSegment, setMoveSegment] = React.useState(null);
-  const [duplicateSegment, setDuplicateSegment] = React.useState(null);
+  // Unified transfer dialog state: { segment, mode: 'move'|'copy' } | null
+  const [transferState, setTransferState] = React.useState(null);
   // Show move button only when there are other sessions to move to
   const canMove = sessions && sessions.length > 1;
   const queryClient = useQueryClient();
