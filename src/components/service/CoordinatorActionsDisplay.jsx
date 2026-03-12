@@ -296,6 +296,10 @@ export default function CoordinatorActionsDisplay({
                           {action.isPreSession ? 'PRE' : action.isPrep ? t('live.preparation') : t('live.during')}
                         </span>
                         <span className="text-slate-600 font-medium">{action.type}</span>
+                        {/* Source segment — critical for traceability; was captured but never displayed */}
+                        {action.segmentTitle && !action.isPreSession && (
+                          <span className="text-slate-400 italic truncate max-w-[80px]">@ {action.segmentTitle}</span>
+                        )}
                       </div>
 
                       {action.notes && (
