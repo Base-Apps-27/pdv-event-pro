@@ -150,7 +150,7 @@ export default function CoordinatorActionsDisplay({
       const effectiveEnd = segment.actual_end_time || segment.end_time;
       let segEnd;
       if (effectiveEnd) {
-        segEnd = parseDateTime(activeDateStr, effectiveEnd);
+        segEnd = parseDateTime(segDateStr, effectiveEnd);
       }
       if (!segEnd) {
         segEnd = new Date(segStart);
