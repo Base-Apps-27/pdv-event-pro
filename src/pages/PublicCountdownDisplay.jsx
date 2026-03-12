@@ -306,6 +306,7 @@ export default function PublicCountdownDisplay() {
                   {upcomingSegments.length > 0 ? (
                     <SegmentTimeline
                       segments={upcomingSegments}
+                      sessions={programData?.sessions || []}
                       getTimeDate={getTimeDateFn}
                       serviceDate={serviceDate}
                       className="h-full"
