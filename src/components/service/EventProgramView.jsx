@@ -329,14 +329,14 @@ export default function EventProgramView({
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center bg-gray-100 p-2 rounded-xl border border-gray-200">
         <div className="flex bg-gray-200/50 p-1 rounded-lg w-full sm:w-auto">
            <button
-             onClick={() => setViewMode("simple")}
+             onClick={() => { setViewMode("simple"); try { localStorage.setItem('liveview_viewMode', 'simple'); } catch {} }}
              className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "simple" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
            >
              <List className="w-3.5 h-3.5" />
              Simple
            </button>
            <button
-             onClick={() => setViewMode("full")}
+             onClick={() => { setViewMode("full"); try { localStorage.setItem('liveview_viewMode', 'full'); } catch {} }}
              className={`flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${viewMode === "full" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
            >
              <ListChecks className="w-3.5 h-3.5" />
