@@ -61,10 +61,19 @@ export default function StreamBlockItem({ block, index, total, segments, session
     );
   }
 
+  const isLink = block.block_type === 'link';
+
   return (
     <div className={`
-      relative flex items-center gap-3 p-3 rounded-lg border transition-all
-      ${isOrphaned ? 'border-red-300 bg-red-50' : isCurrent ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-500' : 'bg-white border-gray-200 hover:shadow-sm'}
+      relative flex items-center gap-3 p-3 rounded-lg border-l-4 border border-l-4 transition-all
+      ${isOrphaned
+        ? 'border-red-300 bg-red-50'
+        : isCurrent
+          ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-500'
+          : isLink
+            ? `bg-white/60 border-slate-100 ${config.leftBorder} opacity-75`
+            : `bg-white ${config.leftBorder} border-slate-200 hover:shadow-sm`
+      }
     `}>
       {/* Reorder Controls (Arrow System) */}
       {!readOnly && (
