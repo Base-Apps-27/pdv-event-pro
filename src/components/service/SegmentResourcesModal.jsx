@@ -237,8 +237,21 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
             <ArtsResourcesSection segment={segment} language={language} />
           )}
 
+          {/* 2026-03-12: arts_staff_notes — staff-only field, always show when present
+              regardless of whether art_types is populated. Moved from ArtsResourcesSection
+              so it doesn't get gated behind hasArtsData. */}
+          {(() => {
+            const notes = getData('arts_staff_notes');
+            if (!notes) return null;
+            return (
+              <div className="text-xs text-gray-600 bg-amber-50 rounded-lg p-2.5 border border-amber-100 whitespace-pre-wrap">
+                <span className="font-semibold text-amber-700">🔒 {language === 'es' ? 'Notas Técnicas:' : 'Tech Notes:'}</span> {notes}
+              </div>
+            );
+          })()}
+
           {/* Empty state only if nothing at all */}
-          {!hasResources && !hasArtsData && (
+          {!hasResources && !hasArtsData && !(getData('arts_staff_notes')) && (
             <div className="text-center py-6 text-gray-500">
               <ExternalLink className="w-10 h-10 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">{t('resources.noResources')}</p>
