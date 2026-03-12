@@ -143,25 +143,21 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
     }
   }
 
-  // Break type visual distinction (Receso/Almuerzo) - inline, no box
+  // Break type visual distinction (Receso/Almuerzo)
   if (['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     const isLunch = seg.segment_type === 'Almuerzo';
     stack.push({
-      text: [
-        { text: isLunch ? '🍽 ' : '☕ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
-        { text: `${seg.duration_min || 0} min`, bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.xs },
-      ],
+      text: `${isLunch ? 'ALMUERZO' : 'RECESO'} — ${seg.duration_min || 0} min`,
+      bold: true, color: isLunch ? '#C2410C' : '#374151', fontSize: pdfTheme.fontSize.xs,
       margin: [0, 0, 0, 0],
     });
   }
 
-  // Translation for breaks (Receso/Almuerzo) - show if present
-  // All translation items use purple color scheme
+  // Translation for breaks
   if (['Receso', 'Almuerzo'].includes(seg.segment_type) && seg.requires_translation) {
     const isInPerson = seg.translation_mode === 'InPerson';
     stack.push({
       text: [
-        { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
         { text: isInPerson ? 'TRAD-TARIMA' : 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
       ],
@@ -169,12 +165,10 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
     });
   }
 
-  // Translation - InPerson (on stage) - emoji icon for TARIMA
-  // All translation items use purple color scheme
+  // Translation - InPerson (on stage)
   if (seg.requires_translation && seg.translation_mode === 'InPerson' && !['Receso', 'Almuerzo'].includes(seg.segment_type)) {
     stack.push({
       text: [
-        { text: '🎙 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
         { text: 'TRAD-TARIMA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.sm },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#6D28D9', fontSize: pdfTheme.fontSize.sm } : '',
       ],
