@@ -152,7 +152,9 @@ Deno.serve(async (req) => {
             // Ordering (2026-02-28: art type performance sequence)
             'arts_type_order',
             // Other / General
-            'art_other_description', 'arts_run_of_show_url', 'description_details',
+            // 2026-03-12: arts_staff_notes replaces description_details on the arts form.
+            // description_details is NOT in this whitelist — arts form no longer writes to it.
+            'art_other_description', 'arts_run_of_show_url', 'arts_staff_notes',
         ];
 
         // SEC-6 (2026-03-02): Validate URL fields to prevent XSS/injection.
