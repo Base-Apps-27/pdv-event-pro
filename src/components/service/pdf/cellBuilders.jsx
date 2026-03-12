@@ -412,7 +412,7 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
         const isInPerson = room.translation_mode === 'InPerson';
         cardStack.push({
           text: [
-            { text: isInPerson ? '🎙 ' : '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+            { text: isInPerson ? 'TRAD-TARIMA: ' : 'TRAD-CABINA: ', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs },
             room.translator_name ? { text: room.translator_name, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : { text: 'Traducción', color: '#7C3AED', fontSize: pdfTheme.fontSize.xs, italics: true },
           ],
           margin: [0, 0, 0, 0.5],
