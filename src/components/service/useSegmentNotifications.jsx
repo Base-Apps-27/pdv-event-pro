@@ -214,8 +214,8 @@ export function useSegmentNotifications(segments = [], session = null) {
           const actionKey = `${segmentId}-action-${action.label}-${timeStr}`;
           
           if (actionDiffMins === 5 && !notifiedSegments.has(actionKey)) {
-             toast.warning(`⚠️ Acción Requerida en 5 min: ${action.label}`, {
-               description: `${segment.title} • ${action.department || 'General'}`,
+             toast.warning(action.label, {
+               description: `${segment.title} • ${action.department || 'General'} — en 5 min`,
                duration: 8000,
                icon: <AlertTriangle className="w-5 h-5 text-amber-500" />
              });
