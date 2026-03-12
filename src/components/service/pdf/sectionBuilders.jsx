@@ -92,7 +92,6 @@ export function buildNotesCell(seg) {
   if (seg.requires_translation && seg.translation_mode === 'RemoteBooth') {
     stack.push({
       text: [
-        { text: '🎧 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
         { text: 'TRAD-CABINA', bold: true, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs },
         seg.translator_name ? { text: `: ${seg.translator_name}`, color: '#7C3AED', fontSize: pdfTheme.fontSize.xs } : '',
       ],
