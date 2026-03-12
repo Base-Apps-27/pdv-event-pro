@@ -232,22 +232,33 @@ export default function Reports() {
   };
 
   const handleExportCurrentPdf = async () => {
-    if (!selectedEventId) return;
-    const typeMap = { detailed: 'detailed', projection: 'projection', sound: 'sound', ushers: 'ushers', hospitality: 'hospitality', general: 'general' };
-    const rt = typeMap[activeReport] || 'detailed';
-    const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
-    const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
-    await downloadPdf(rt, bytes);
+    if (!selectedEventId || exportingPdf) return;
+    // Map active tab to reportType; 'arts' has its own handler
+    const typeMap = { detailed: 'detailed', projection: 'projection', sound: 'sound', ushers: 'ushers', hospitality: 'hospitality', general: 'general', livestream: 'livestream' };
+    const rt = typeMap[activeReport];
+    if (!rt) { handleExportArtsPdf(); return; } // fall through to arts handler
+    setExportingPdf(true);
+    try {
+      const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
+      const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
+      await downloadPdf(rt, bytes);
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   const handleExportAllPdfs = async () => {
-    if (!selectedEventId) return;
-    const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
-    // 2026-03-06 audit: Added 'livestream' — was missing from export-all despite having a tab
-    const types = ['detailed','general','projection','sound','ushers','hospitality','livestream'];
-    for (const rt of types) {
-      const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
-      await downloadPdf(rt, bytes);
+    if (!selectedEventId || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
+      const types = ['detailed','general','projection','sound','ushers','hospitality','livestream'];
+      for (const rt of types) {
+        const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
+        await downloadPdf(rt, bytes);
+      }
+    } finally {
+      setExportingPdf(false);
     }
   };
 
