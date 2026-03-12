@@ -101,67 +101,39 @@ export default function SegmentTimeline({
             </div>
           ) : null;
 
-          // Break divider: visual separator, not a full card
-          if (isBreak) {
-            return (
-              <React.Fragment key={segment.id || index}>
-                {sessionDivider}
-                <div className="flex items-center gap-2 py-1 px-1">
-                  <div className="h-px flex-1 bg-slate-300" />
-                  <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-1">
-                    <span className="font-mono text-slate-300">{timeStr}</span>
-                    <span>{segment.title}</span>
-                  </div>
-                  <div className="h-px flex-1 bg-slate-300" />
-                </div>
-              </React.Fragment>
-            );
-          }
-
-
-
-          return (
-            <React.Fragment key={segment.id || index}>
-            {sessionDivider}
+          const cardContent = isBreak ? (
+            <div className="flex items-center gap-2 py-1 px-1">
+              <div className="h-px flex-1 bg-slate-300" />
+              <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-1">
+                <span className="font-mono text-slate-300">{timeStr}</span>
+                <span>{segment.title}</span>
+              </div>
+              <div className="h-px flex-1 bg-slate-300" />
+            </div>
+          ) : (
             <div
-              className={`
-                group flex items-start gap-2 p-2 rounded-xl transition-all
-                ${isFirst ? 'bg-white shadow-md border-l-3 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-3 border-transparent'}
-              `}
+              className={`group flex items-start gap-2 p-2 rounded-xl transition-all ${
+                isFirst ? 'bg-white shadow-md border-l-3 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-3 border-transparent'
+              }`}
             >
-              {/* Time */}
-              <div className={`
-                font-mono font-bold text-xs pt-0.5 min-w-[50px] text-right
-                ${isFirst ? 'text-pdv-teal' : 'text-slate-400'}
-              `}>
+              <div className={`font-mono font-bold text-xs pt-0.5 min-w-[50px] text-right ${isFirst ? 'text-pdv-teal' : 'text-slate-400'}`}>
                 {timeStr}
               </div>
-
-              {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className={`
-                  font-bold truncate leading-tight
-                  ${isFirst ? 'text-slate-900 text-sm' : 'text-slate-700 text-xs'}
-                `}>
+                <div className={`font-bold truncate leading-tight ${isFirst ? 'text-slate-900 text-sm' : 'text-slate-700 text-xs'}`}>
                   {segment.title}
                 </div>
-
-                {/* Speaker/presenter — solid black to match editor main field */}
                 {responsible && (
                   <div className={`text-[10px] truncate mt-0.5 ${isFirst ? 'text-slate-900 font-bold' : 'text-slate-700 font-semibold'}`}>
                     {responsible.label && <span className="font-semibold">{responsible.label}</span>}
                     {responsible.value}
                   </div>
                 )}
-
-                {/* Message title (Plenaria) */}
                 {secondary && (
                   <div className={`text-[9px] truncate mt-0.5 italic ${isFirst ? 'text-blue-600' : 'text-blue-400'}`}>
                     {secondary.value}
                   </div>
                 )}
-
-                {/* Sub-assignments inline (e.g. Ministración: Person Name) */}
                 {subAssignments.length > 0 && subAssignments.map((sub, idx) => (
                   <div key={idx} className="flex items-center gap-1 mt-0.5">
                     <Sparkles className="w-2.5 h-2.5 text-purple-400 flex-shrink-0" />
@@ -170,8 +142,6 @@ export default function SegmentTimeline({
                     </span>
                   </div>
                 ))}
-
-                {/* Translator badge — blue to match editor's blue translation section */}
                 {translator && (
                   <div className="flex items-center gap-0.5 mt-0.5">
                     <Languages className="w-2.5 h-2.5 text-blue-500" />
@@ -182,6 +152,12 @@ export default function SegmentTimeline({
                 )}
               </div>
             </div>
+          );
+
+          return (
+            <React.Fragment key={segment.id || index}>
+              {sessionDivider}
+              {cardContent}
             </React.Fragment>
           );
         })}
