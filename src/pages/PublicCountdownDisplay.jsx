@@ -3,7 +3,7 @@ import { useLanguage } from "@/components/utils/i18n.jsx";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
-import { Loader2, Layout, WifiOff, AlertTriangle } from "lucide-react";
+import { Loader2, Layout, WifiOff } from "lucide-react";
 
 import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
 import useSegmentDetection, { getTimeDate } from "@/components/tv/useSegmentDetection";
