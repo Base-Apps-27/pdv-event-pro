@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n";
 import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
