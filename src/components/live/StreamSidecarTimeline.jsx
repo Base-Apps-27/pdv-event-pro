@@ -86,8 +86,8 @@ export default function StreamSidecarTimeline({ session, segments }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header — matches Room Program header style */}
-      <div className="shrink-0 bg-slate-800/5 px-3 py-3 border-b border-slate-200/50 flex items-center gap-2">
+      {/* Header */}
+      <div className="shrink-0 bg-slate-800/5 px-3 py-2 border-b border-slate-200/50 flex items-center gap-2">
         <Radio className="w-4 h-4 text-red-500 shrink-0" />
         <h3 className="font-bold text-slate-600 uppercase tracking-wider text-xs truncate">
           Livestream
@@ -97,77 +97,82 @@ export default function StreamSidecarTimeline({ session, segments }) {
       {/* Block list — scrollable */}
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1.5"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1"
       >
         {blocksWithState.map((block) => {
           const { isCurrent, isPast } = block;
           const cfg = typeConfig(block.block_type);
+          const isLink = block.block_type === 'link';
+
+          // Link = connected to main room program (passthrough), muted appearance.
+          // Non-link (insert, replace, offline) = livestream-specific action, prominent.
+          const borderColor = isCurrent
+            ? "#3b82f6"
+            : isLink
+              ? "transparent"
+              : cfg.color;
+
+          const bgColor = isCurrent
+            ? "bg-white shadow-md"
+            : isLink
+              ? "bg-white/40"
+              : "bg-white/80";
 
           return (
             <div
               key={block.id}
               ref={isCurrent ? currentRef : undefined}
               className={`
-                flex items-start gap-2 p-2.5 rounded-xl transition-all
-                ${isCurrent
-                  ? "bg-white shadow-md border-l-4 border-blue-500"
-                  : isPast
-                    ? "opacity-35 border-l-4 border-transparent"
-                    : "bg-white/60 border-l-4 border-transparent hover:bg-white"
-                }
+                flex flex-col p-2 rounded-lg transition-all border-l-4
+                ${isPast ? "opacity-30" : ""}
+                ${bgColor}
               `}
+              style={{ borderLeftColor: borderColor }}
             >
-              {/* Left: time column */}
-              <div className="shrink-0 pt-0.5">
-                <span
-                  className="font-mono font-bold block leading-none"
-                  style={{
-                    fontSize: "13px",
-                    color: isCurrent ? "#2563eb" : isPast ? "#94a3b8" : "#64748b",
-                  }}
-                >
-                  {fmtTime(block.startTime)}
-                </span>
+              {/* Time — always on top, full width */}
+              <span
+                className="font-mono font-bold leading-none mb-0.5"
+                style={{
+                  fontSize: "11px",
+                  color: isCurrent ? "#2563eb" : isPast ? "#94a3b8" : isLink ? "#94a3b8" : "#475569",
+                }}
+              >
+                {fmtTime(block.startTime)}
+              </span>
+
+              {/* Title — wraps, scales down for long text */}
+              <div
+                className="font-semibold leading-tight break-words"
+                style={{
+                  fontSize: isLink ? "11px" : "12px",
+                  color: isCurrent
+                    ? "#0f172a"
+                    : isPast
+                      ? "#94a3b8"
+                      : isLink
+                        ? "#94a3b8"
+                        : "#1e293b",
+                  fontWeight: isLink ? 500 : 700,
+                }}
+              >
+                {block.title}
               </div>
 
-              {/* Right: content */}
-              <div className="flex-1 min-w-0">
-                {/* Title */}
-                <div
-                  className="font-semibold leading-tight truncate"
-                  style={{
-                    fontSize: "13px",
-                    color: isCurrent ? "#0f172a" : isPast ? "#94a3b8" : "#334155",
-                  }}
-                >
-                  {block.title}
-                </div>
-
-                {/* Meta row: type + current indicator */}
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  {/* Type dot + label */}
+              {/* Type badge — only show for non-link, or when current */}
+              {(!isLink || isCurrent) && (
+                <div className="flex items-center gap-1.5 mt-1">
                   <span
                     className="inline-flex items-center gap-1 leading-none"
-                    style={{ fontSize: "10px", color: cfg.color, fontWeight: 700 }}
+                    style={{ fontSize: "9px", color: isCurrent ? "#2563eb" : cfg.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
                   >
                     <span
                       className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ backgroundColor: cfg.color }}
+                      style={{ backgroundColor: isCurrent ? "#3b82f6" : cfg.color }}
                     />
-                    {cfg.label}
+                    {isCurrent ? "AHORA" : cfg.label}
                   </span>
-
-                  {/* Current indicator — just "AHORA" label, no broadcast language */}
-                  {isCurrent && (
-                    <span
-                      className="inline-flex items-center gap-1 leading-none"
-                      style={{ fontSize: "9px", fontWeight: 800, color: "#2563eb", letterSpacing: "0.05em" }}
-                    >
-                      AHORA
-                    </span>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           );
         })}
