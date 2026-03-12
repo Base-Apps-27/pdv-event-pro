@@ -20,11 +20,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  *   language?: 'es' | 'en'  (defaults to user.ui_language or 'es')
  */
 
-const TITLES = {
-  en: { action: 'Action Needed',     segment_starting: 'Segment Starting' },
-  es: { action: 'Acción Requerida',  segment_starting: 'Segmento Comenzando' },
-};
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -42,18 +37,27 @@ Deno.serve(async (req) => {
     }
 
     const lang = ['en', 'es'].includes(language) ? language : 'es';
-    const title = TITLES[lang][type] || TITLES.es[type] || 'Notification';
 
+    // Title = the specific context (action label or segment name) so it's visible
+    // at a glance on the lock screen even without the body text.
+    // Body = supporting detail (where/when).
+    let title = '';
     let body = '';
+
     if (type === 'action' && actionLabel) {
+      // Title: the action itself  — e.g. "Mesa de Registro Abre"
+      title = actionLabel;
+      // Body: which segment + optional clock time — e.g. "Alabanza @ 8:30"
       body = lang === 'es'
-        ? `${actionLabel} en ${segmentTitle}`
-        : `${actionLabel} in ${segmentTitle}`;
-      if (actionTime) body += ` @ ${actionTime}`;
+        ? `en ${segmentTitle}${actionTime ? ` @ ${actionTime}` : ''}`
+        : `in ${segmentTitle}${actionTime ? ` @ ${actionTime}` : ''}`;
     } else if (type === 'segment_starting') {
-      body = lang === 'es'
-        ? `${segmentTitle} está comenzando`
-        : `${segmentTitle} is starting`;
+      // Title: the segment name — e.g. "Alabanza"
+      title = segmentTitle;
+      body = lang === 'es' ? '▶ Comenzando ahora' : '▶ Starting now';
+    } else {
+      title = segmentTitle;
+      body = '';
     }
 
     const apiKey = Deno.env.get('PUSHENGAGE_API_KEY');
