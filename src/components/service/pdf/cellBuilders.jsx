@@ -209,7 +209,6 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
   // Video info - full details matching HTML (in details left column)
   if (seg.has_video) {
     const videoParts = [
-      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm },
       { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.sm },
     ];
     if (seg.video_name) videoParts.push({ text: seg.video_name, color: '#1E3A8A', fontSize: pdfTheme.fontSize.sm });
