@@ -449,6 +449,9 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                     <Button variant="ghost" size="sm" onClick={() => onEdit(segment)}>
                       <Edit className="w-4 h-4" />
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setDuplicateSegment(segment)} title={language === 'es' ? 'Duplicar segmento' : 'Duplicate segment'}>
+                      <Copy className="w-4 h-4 text-green-600" />
+                    </Button>
                     {canMove && (
                       <Button variant="ghost" size="sm" onClick={() => setMoveSegment(segment)} title={t('move.moveToSession')}>
                         <ArrowRightLeft className="w-4 h-4 text-blue-500" />
@@ -646,6 +649,9 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
                               <Button variant="outline" size="sm" onClick={() => onEdit(segment)} className="h-7 px-2">
                                 <Edit className="w-3 h-3" />
                               </Button>
+                              <Button variant="outline" size="sm" onClick={() => setDuplicateSegment(segment)} className="h-7 px-2" title={language === 'es' ? 'Duplicar' : 'Duplicate'}>
+                                <Copy className="w-3 h-3 text-green-600" />
+                              </Button>
                               {canMove && (
                                 <Button variant="outline" size="sm" onClick={() => setMoveSegment(segment)} className="h-7 px-2" title={t('move.moveToSession')}>
                                   <ArrowRightLeft className="w-3 h-3 text-blue-500" />
@@ -671,6 +677,16 @@ export default function SegmentList({ segments, sessionId, onEdit, onEditPreSess
               })}
             </div>
       </div>
+      {/* Duplicate Segment Dialog */}
+      <DuplicateSegmentDialog
+        open={!!duplicateSegment}
+        onOpenChange={(open) => { if (!open) setDuplicateSegment(null); }}
+        segment={duplicateSegment}
+        sessions={sessions}
+        allSegments={allEventSegments || segments}
+        currentSessionId={sessionId}
+        user={user}
+      />
       {/* Move Segment Dialog */}
       <MoveSegmentDialog
         open={!!moveSegment}
