@@ -282,14 +282,10 @@ export default function PublicProgramView() {
             {/* DEV-1: Extracted info banner */}
             <ProgramInfoBanner viewType={viewType} selectedEvent={selectedEvent} selectedService={selectedService} isOverride={_isOverride} />
 
-            {/* Cache staleness indicator (2026-03-09): shows data freshness + admin force-refresh.
-                Surfaces the last_refresh_at from ActiveProgramCache so coordinators are never
-                silently operating on stale data. Admin-only refresh button mirrors server guard. */}
-            <CacheStalenessIndicator
-              cacheRecord={cacheRecord}
-              currentUser={currentUser}
-              language={language}
-            />
+            {/* CacheStalenessIndicator removed 2026-03-12:
+                The timestamp created more confusion than value — age text goes stale between renders,
+                the Refresh button silently skips on concurrency guard, and non-admins see a number
+                they can't act on. Real-time subscription + 2-min safety poll handle freshness silently. */}
 
             {/* DEV-1: Extracted adjustment controls (service only) */}
             {viewType === "service" && (
