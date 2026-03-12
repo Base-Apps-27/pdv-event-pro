@@ -23,6 +23,13 @@ export default function CoordinatorActionsDisplay({
 }) {
   const { t, language } = useLanguage();
 
+  // Build session_id → session_color map for action card tinting
+  const sessionColorMap = useMemo(() => {
+    const m = {};
+    sessions.forEach(s => { if (s.id && s.session_color) m[s.id] = s.session_color; });
+    return m;
+  }, [sessions]);
+
   const upcomingActions = useMemo(() => {
     const actions = [];
     const now = currentTime.getTime();
