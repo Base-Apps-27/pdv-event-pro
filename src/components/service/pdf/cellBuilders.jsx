@@ -101,12 +101,10 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
     },
   ];
   if ((seg.presentation_url && seg.presentation_url.length > 0) || (seg.notes_url && seg.notes_url.length > 0) || seg.content_is_slides_only) {
-    titleParts.push({ text: '  📎 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm });
-    titleParts.push({ text: 'RECURSOS', color: '#3B82F6', fontSize: pdfTheme.fontSize.xs, bold: true });
+    titleParts.push({ text: '  [RECURSOS]', color: '#3B82F6', fontSize: pdfTheme.fontSize.xs, bold: true });
   }
   if (seg.parsed_verse_data?.key_takeaways?.length > 0 || seg.scripture_references) {
-    titleParts.push({ text: '  💡 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.sm });
-    titleParts.push({ text: 'VERSOS', color: '#F59E0B', fontSize: pdfTheme.fontSize.xs, bold: true });
+    titleParts.push({ text: '  [VERSOS]', color: '#F59E0B', fontSize: pdfTheme.fontSize.xs, bold: true });
   }
   
   if (seg.segment_type) {
