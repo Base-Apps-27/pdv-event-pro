@@ -218,7 +218,7 @@ export default function CoordinatorActionsDisplay({
     return actions
       .filter(a => a.isPreSession ? a.time.getTime() >= now - 60000 : true)
       .sort((a, b) => a.time.getTime() - b.time.getTime());
-  }, [currentSegment, nextSegment, allSegments, preSessionData, currentTime, serviceDate]);
+  }, [currentSegment, nextSegment, allSegments, sessions, preSessionData, currentTime, serviceDate]);
 
   if (upcomingActions.length === 0) {
     return null;
