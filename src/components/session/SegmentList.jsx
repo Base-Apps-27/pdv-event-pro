@@ -16,7 +16,7 @@ import MoveSegmentDialog from "./MoveSegmentDialog";
 import DuplicateSegmentDialog from "./DuplicateSegmentDialog";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user, sessions, allEventSegments }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [moveSegment, setMoveSegment] = React.useState(null);
   const [duplicateSegment, setDuplicateSegment] = React.useState(null);
   // Show move button only when there are other sessions to move to
