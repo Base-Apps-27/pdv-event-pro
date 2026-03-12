@@ -124,7 +124,7 @@ export default function StreamBlockItem({ block, index, total, segments, session
           )}
         </div>
 
-        <h4 className="font-semibold text-slate-900 text-sm truncate">{block.title}</h4>
+        <h4 className={`text-sm truncate ${isLink ? 'font-medium text-slate-400' : 'font-bold text-slate-900'}`}>{block.title}</h4>
         
         {/* Anchor Indicator — own row to prevent overflow */}
         {anchorSegment && (
