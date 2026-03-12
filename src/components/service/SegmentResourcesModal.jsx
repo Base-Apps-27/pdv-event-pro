@@ -251,7 +251,7 @@ export default function SegmentResourcesModal({ open, onOpenChange, segment, onO
           })()}
 
           {/* Empty state only if nothing at all */}
-          {!hasResources && !hasArtsData && !(getData('arts_staff_notes')) && (
+          {!hasResources && !hasArtsData && !getData('arts_staff_notes') && (
             <div className="text-center py-6 text-gray-500">
               <ExternalLink className="w-10 h-10 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">{t('resources.noResources')}</p>
