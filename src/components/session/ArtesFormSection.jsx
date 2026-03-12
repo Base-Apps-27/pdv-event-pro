@@ -388,6 +388,22 @@ export default function ArtesFormSection({ formData, setFormData, language }) {
           placeholder="https://drive.google.com/..."
         />
       </div>
+
+      {/* 2026-03-12: Staff-only notes field. Replaces description_details on arts form.
+          Never rendered on MyProgram/public views. Shown in SegmentResourcesModal (staff). */}
+      <div className="border-t border-pink-200 pt-3 mt-3 space-y-2">
+        <Label className="text-xs">
+          🔒 {language === 'es' ? 'Notas Técnicas (Solo Staff)' : 'Tech Notes (Staff Only)'}
+        </Label>
+        <p className="text-[10px] text-amber-600">{language === 'es' ? 'No se muestra a los asistentes.' : 'Not shown to attendees.'}</p>
+        <Textarea
+          rows={3}
+          value={formData.arts_staff_notes || ''}
+          onChange={(e) => setFormData({ ...formData, arts_staff_notes: e.target.value })}
+          placeholder={language === 'es' ? 'Instrucciones para sonido, proyección, luces...' : 'Instructions for sound, projection, lights...'}
+          className="text-sm"
+        />
+      </div>
     </div>
   );
 }
