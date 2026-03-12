@@ -231,6 +231,17 @@ export default function Reports() {
     return { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession };
   };
 
+  // Build export filename: "Event - Theme - Year - Report Type"
+  const buildExportFilename = (reportType) => {
+    const parts = [
+      selectedEvent?.name,
+      selectedEvent?.theme,
+      selectedEvent?.year,
+      reportType,
+    ].filter(Boolean);
+    return parts.join(' - ');
+  };
+
   const handleExportCurrentPdf = async () => {
     if (!selectedEventId || exportingPdf) return;
     // Map active tab to reportType; 'arts' has its own handler
@@ -241,7 +252,7 @@ export default function Reports() {
     try {
       const { segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession } = buildPdfData();
       const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
-      await downloadPdf(rt, bytes);
+      await downloadPdf(buildExportFilename(rt), bytes);
     } finally {
       setExportingPdf(false);
     }
@@ -255,7 +266,7 @@ export default function Reports() {
       const types = ['detailed','general','projection','sound','ushers','hospitality','livestream'];
       for (const rt of types) {
         const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
-        await downloadPdf(rt, bytes);
+        await downloadPdf(buildExportFilename(rt), bytes);
       }
     } finally {
       setExportingPdf(false);
@@ -265,7 +276,7 @@ export default function Reports() {
   const handleExportArtsPdf = async () => {
     if (!selectedEventId) return;
     const bytes = await generateArtsReportPDF({ event: selectedEvent, sessions: eventSessions, segments: allSegments });
-    downloadArtsPdf(bytes, selectedEvent?.name);
+    downloadArtsPdf(bytes, buildExportFilename('artes'));
   };
 
   // Shared props for all view components
