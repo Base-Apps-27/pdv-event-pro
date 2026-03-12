@@ -337,6 +337,9 @@ export default function CoordinatorActionsDisplay({
                     const minutesUntil = Math.ceil(timeUntil / 60000);
                     const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
                     const isClusteredWithHero = clusteredSecondaryIds.includes(action.id);
+                    const secTint = !isUrgent && action.sessionId
+                      ? SESSION_COLOR_TINTS[sessionColorMap[action.sessionId]] || null
+                      : null;
 
                     return (
                       <div
@@ -348,6 +351,7 @@ export default function CoordinatorActionsDisplay({
                             ? 'bg-slate-50 border-2 border-pdv-teal/60'
                             : 'bg-slate-50 border border-slate-200'
                         }`}
+                        style={secTint ? { backgroundColor: secTint } : undefined}
                       >
                         {/* Cluster badge - shows when grouped with hero */}
                         {isClusteredWithHero && !isUrgent && (
