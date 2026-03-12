@@ -325,13 +325,13 @@ export default function Reports() {
                   <List className="w-4 h-4 mr-2" />
                   {t('reports.printAll')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportCurrentPdf}>
+                <DropdownMenuItem onClick={handleExportCurrentPdf} disabled={exportingPdf}>
                   <FileText className="w-4 h-4 mr-2" />
-                  {t('reports.exportCurrentPdf')}
+                  {exportingPdf ? 'Generando…' : t('reports.exportCurrentPdf')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportAllPdfs}>
+                <DropdownMenuItem onClick={handleExportAllPdfs} disabled={exportingPdf}>
                   <FileText className="w-4 h-4 mr-2" />
-                  {t('reports.exportAllPdfs')}
+                  {exportingPdf ? 'Generando…' : t('reports.exportAllPdfs')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportArtsPdf}>
                   <Palette className="w-4 h-4 mr-2" />
