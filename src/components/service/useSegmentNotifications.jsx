@@ -165,20 +165,22 @@ export function useSegmentNotifications(segments = [], session = null) {
         const diffMs = segmentStart - now;
         const diffMins = Math.floor(diffMs / 60000);
         
-        // Notify 2 minutes before
-        const key2Min = `${segmentId}-2min-${timeStr}`; // Include time in key so rescheduled segments re-notify
+        // Notify 2 minutes before — title = segment name, description = time
+        const key2Min = `${segmentId}-2min-${timeStr}`;
         if (diffMins === 2 && !notifiedSegments.has(key2Min)) {
-          toast.info(`⏰ ${segment.title} comienza en 2 minutos`, {
+          toast.info(segment.title, {
+            description: `Comienza en 2 min — ${formatTimeToEST(timeStr)}`,
             duration: 10000,
             icon: <BellRing className="w-5 h-5" />,
           });
           setNotifiedSegments(prev => new Set(prev).add(key2Min));
         }
         
-        // Notify when segment starts
+        // Notify when segment starts — title = segment name, description = now
         const keyStart = `${segmentId}-start-${timeStr}`;
         if (diffMins === 0 && !notifiedSegments.has(keyStart)) {
-          toast.success(`▶️ ${segment.title} está comenzando ahora`, {
+          toast.success(segment.title, {
+            description: `▶ Comenzando ahora — ${formatTimeToEST(timeStr)}`,
             duration: 8000,
             icon: <PlayCircle className="w-5 h-5" />,
           });
