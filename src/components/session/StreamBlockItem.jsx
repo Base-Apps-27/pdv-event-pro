@@ -19,11 +19,12 @@ export default function StreamBlockItem({ block, index, total, segments, session
     });
   };
 
+  // Link = passthrough to main program (muted). Non-link = livestream-specific action (prominent).
   const blockTypeConfig = {
-    link: { icon: LinkIcon, color: "bg-blue-100 text-blue-700 border-blue-200", label: "Link" },
-    insert: { icon: Plus, color: "bg-green-100 text-green-700 border-green-200", label: "Insert" },
-    replace: { icon: Radio, color: "bg-orange-100 text-orange-700 border-orange-200", label: "Replace" },
-    offline: { icon: PowerOff, color: "bg-gray-100 text-gray-700 border-gray-200", label: "Offline" },
+    link:    { icon: LinkIcon, color: "bg-slate-100 text-slate-400 border-slate-200", label: "Link",    leftBorder: "border-l-slate-200" },
+    insert:  { icon: Plus,     color: "bg-green-100 text-green-700 border-green-200", label: "Insert",  leftBorder: "border-l-green-400" },
+    replace: { icon: Radio,    color: "bg-orange-100 text-orange-700 border-orange-200", label: "Replace", leftBorder: "border-l-orange-400" },
+    offline: { icon: PowerOff, color: "bg-gray-100 text-gray-600 border-gray-200",   label: "Offline", leftBorder: "border-l-gray-400" },
   };
 
   const config = blockTypeConfig[block.block_type] || blockTypeConfig.link;
