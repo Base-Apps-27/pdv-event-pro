@@ -59,6 +59,7 @@ export default function Reports() {
   const [activeReport, setActiveReport] = useState("detailed");
   const [copySuccess, setCopySuccess] = useState(false);
   const [printAllMode, setPrintAllMode] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   // CLEANUP (2026-02-10): Auth check removed — Layout already gates all non-public pages.
 
