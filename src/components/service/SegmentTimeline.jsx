@@ -118,19 +118,7 @@ export default function SegmentTimeline({
             );
           }
 
-          // Dummy placeholder to satisfy removed early-return below
-          if (false) {
-            return (
-              <div key={segment.id || index} className="flex items-center gap-2 py-1 px-1">
-                <div className="h-px flex-1 bg-slate-300" />
-                <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap flex items-center gap-1">
-                  <span className="font-mono text-slate-300">{timeStr}</span>
-                  <span>{segment.title}</span>
-                </div>
-                <div className="h-px flex-1 bg-slate-300" />
-              </div>
-            );
-          }
+
 
           return (
             <div
