@@ -182,6 +182,7 @@ export default function SegmentTimeline({
                 )}
               </div>
             </div>
+            </React.Fragment>
           );
         })}
       </div>
