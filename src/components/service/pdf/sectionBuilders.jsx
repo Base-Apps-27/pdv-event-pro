@@ -316,7 +316,7 @@ export function buildPrepActionRow(act, seg) {
             width: 55,
             stack: [{
               text: [
-                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: '! ', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
                 { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
               ],
               alignment: 'center',
@@ -362,7 +362,7 @@ export function buildBreakPrepActionRow(act, seg) {
             width: 55,
             stack: [{
               text: [
-                { text: '⚠ ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
+                { text: '! ', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
                 { text: 'PREP', bold: true, fontSize: pdfTheme.fontSize.xs, color: '#FFFFFF' },
               ],
               alignment: 'center',
