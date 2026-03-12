@@ -203,6 +203,7 @@ export default function CoordinatorActionsDisplay({
             label: action.label,
             segmentTitle: segment.title,
             segmentId: segment.id,
+            sessionId: segment.session_id || null,
             type: action.department || 'General',
             isPrep,
             isPreSession: false,
