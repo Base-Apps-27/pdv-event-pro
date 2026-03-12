@@ -163,7 +163,18 @@ export default function StreamBlockList({ sessionId, session, segments, sessionD
             <HelpTooltip helpKey="stream.overview" />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Copy from Program — skips segments that already have a block */}
+          <Button
+            onClick={handleCopyFromProgram}
+            size="sm"
+            variant="outline"
+            disabled={copying || !segments?.length}
+            className="border-slate-300 text-slate-600 hover:bg-slate-50 flex-1"
+          >
+            {copying ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Copy className="w-4 h-4 mr-1" />}
+            Copy from Program
+          </Button>
           <Button onClick={() => setShowAIHelper(true)} size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-1">
             <Sparkles className="w-4 h-4 mr-1" /> IA Stream
           </Button>
