@@ -277,6 +277,7 @@ export default function PublicCountdownDisplay() {
                 currentSegment={currentSegment}
                 nextSegment={nextSegment}
                 allSegments={segments}
+                sessions={programData?.sessions || []}
                 preSessionData={activePreSessionData}
                 currentTime={currentTime}
                 serviceDate={serviceDate}
