@@ -121,8 +121,9 @@ export default function SegmentTimeline({
 
 
           return (
+            <React.Fragment key={segment.id || index}>
+            {sessionDivider}
             <div
-              key={segment.id || index}
               className={`
                 group flex items-start gap-2 p-2 rounded-xl transition-all
                 ${isFirst ? 'bg-white shadow-md border-l-3 border-pdv-teal scale-[1.01]' : 'bg-white/60 border-l-3 border-transparent'}
