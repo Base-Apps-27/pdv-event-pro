@@ -338,10 +338,14 @@ export default function ArtsSegmentAccordion({ segment: initialSeg, submitterNam
                 placeholder="https://drive.google.com/..."
                 helpText={t('Suba el archivo final (≤50MB) o pegue un enlace.', 'Upload the final file (≤50MB) or paste a link.')}
               />
+              {/* 2026-03-12: Arts form now writes to arts_staff_notes (staff-only field).
+                  description_details was inadvertently exposed on MyProgram (public-facing).
+                  arts_staff_notes is never rendered on public views. */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas Adicionales', 'Additional Notes')}</label>
-                <AutoGrowTextarea value={seg.description_details || ''} onChange={e => updateField('description_details', e.target.value)}
-                  placeholder={t('Detalles para el equipo técnico...', 'Details for the technical team...')} minRows={2} />
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('Notas para el Equipo Técnico', 'Notes for the Tech Team')}</label>
+                <p className="text-[10px] text-amber-600 mb-1">🔒 {t('Solo visible para el equipo de staff — no se muestra a los asistentes', 'Only visible to staff — not shown to attendees')}</p>
+                <AutoGrowTextarea value={seg.arts_staff_notes || ''} onChange={e => updateField('arts_staff_notes', e.target.value)}
+                  placeholder={t('Detalles para el equipo técnico (sonido, proyección, luces)...', 'Details for the technical team (sound, projection, lights)...')} minRows={2} />
               </div>
             </div>
           )}

@@ -304,13 +304,15 @@ export default function ArtsResourcesSection({ segment, language = 'es' }) {
        ) : null);
       })()}
 
-      {/* Description/notes if present */}
+      {/* 2026-03-12: Render arts_staff_notes (staff-only field from arts form).
+          description_details is intentionally NOT rendered here anymore — it was
+          exposed on MyProgram (public-facing). arts_staff_notes is staff-only. */}
       {(() => {
        const getField = (field) => segment[field] !== undefined ? segment[field] : segment.data?.[field];
-       const desc = getField('description_details');
-       return desc ? (
-         <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-100 whitespace-pre-wrap">
-           <span className="font-semibold text-gray-600">{es ? 'Notas:' : 'Notes:'}</span> {desc}
+       const notes = getField('arts_staff_notes');
+       return notes ? (
+         <div className="text-xs text-gray-500 bg-amber-50 rounded-lg p-2.5 border border-amber-100 whitespace-pre-wrap">
+           <span className="font-semibold text-amber-700">🔒 {es ? 'Notas Técnicas:' : 'Tech Notes:'}</span> {notes}
          </div>
        ) : null;
       })()}
