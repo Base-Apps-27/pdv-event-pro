@@ -177,7 +177,7 @@ export default function CoordinatorActionsDisplay({
             break;
           case 'absolute':
             if (action.absolute_time) {
-              const absDate = parseDateTime(activeDateStr, action.absolute_time);
+              const absDate = parseDateTime(segDateStr, action.absolute_time);
               if (absDate) actionTime = absDate;
             }
             break;
