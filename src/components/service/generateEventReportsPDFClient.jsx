@@ -42,29 +42,110 @@ pdfMake.fonts = {
 };
 
 // ============================================================================
+// SIMPLE TABLE BUILDERS FOR FILTERED REPORT TYPES
+// ============================================================================
+
+function fmt12(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const p = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${p}`;
+}
+
+const TH = (text) => ({ text, bold: true, fillColor: '#f3f4f6', fontSize: 8, color: '#111827' });
+
+function buildSimpleNotesTable(segments, noteField, columnTitle) {
+  const body = [[TH('Hora'), TH('Título'), TH(columnTitle)]];
+  segments
+    .filter(s => s[noteField] || true) // show all, blank notes show dash
+    .forEach(s => body.push([
+      { text: fmt12(s.start_time) || '—', fontSize: 8 },
+      { text: s.title || '—', fontSize: 8, bold: true },
+      { text: s[noteField] || '—', fontSize: 8 },
+    ]));
+  return { table: { widths: [60, 160, '*'], body }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 6] };
+}
+
+function buildGeneralTable(segments) {
+  const body = [[TH('Hora'), TH('Título'), TH('Responsable'), TH('Duración')]];
+  segments
+    .filter(s => s.show_in_general !== false)
+    .forEach(s => body.push([
+      { text: fmt12(s.start_time) || '—', fontSize: 8 },
+      { text: s.title || '—', fontSize: 8, bold: true },
+      { text: s.presenter || '—', fontSize: 8 },
+      { text: s.duration_min ? `${s.duration_min} min` : '—', fontSize: 8 },
+    ]));
+  return { table: { widths: [60, '*', 160, 60], body }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 6] };
+}
+
+function buildHospitalityTable(tasks) {
+  const body = [[TH('Tiempo'), TH('Categoría'), TH('Descripción'), TH('Ubicación'), TH('Notas')]];
+  if (!tasks || tasks.length === 0) {
+    body.push([{ text: 'Sin tareas registradas', colSpan: 5, color: '#6b7280', fontSize: 8 }, {}, {}, {}, {}]);
+  } else {
+    tasks.forEach(t => body.push([
+      { text: t.time_hint || '—', fontSize: 8 },
+      { text: t.category || '—', fontSize: 8 },
+      { text: t.description || '—', fontSize: 8 },
+      { text: t.location_notes || '—', fontSize: 8 },
+      { text: t.notes || '—', fontSize: 8 },
+    ]));
+  }
+  return { table: { widths: [60, 70, '*', 100, 100], body }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 6] };
+}
+
+function buildLivestreamTable(segments) {
+  const body = [[TH('Hora'), TH('Título'), TH('Presenter'), TH('Notas Livestream')]];
+  segments
+    .filter(s => s.show_in_livestream !== false)
+    .forEach(s => body.push([
+      { text: fmt12(s.start_time) || '—', fontSize: 8 },
+      { text: s.title || '—', fontSize: 8, bold: true },
+      { text: s.presenter || '—', fontSize: 8 },
+      { text: s.livestream_notes || '—', fontSize: 8 },
+    ]));
+  return { table: { widths: [60, 160, 120, '*'], body }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 6] };
+}
+
+// ============================================================================
 // MAIN EXPORT
 // ============================================================================
 
-export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, rooms = [], hospitalityTasksBySession = {} }) {
+export async function generateEventReportPDFClient({ event, sessions, segmentsBySession, preSessionDetailsBySession, rooms = [], hospitalityTasksBySession = {}, reportType = 'detailed' }) {
   const content = [];
 
   sessions.forEach((session, idx) => {
-    // Check if session has hospitality tasks assigned
+    const allSegs = (segmentsBySession?.[session.id] || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
     const hasHospitalityTasks = Array.isArray(hospitalityTasksBySession?.[session.id]) && hospitalityTasksBySession[session.id].length > 0;
-    
-    // Session header with team info
+
+    // Session header with team info (all report types)
     content.push(buildSessionHeader(event, session, hasHospitalityTasks));
 
-    // Pre-session details
+    // Pre-session details (all report types)
     const psd = preSessionDetailsBySession?.[session.id];
     if (psd) {
       const psdBlock = buildPreSessionDetailsBlock(psd);
       if (psdBlock) content.push(psdBlock);
     }
 
-    // Main table
-    const allSegs = segmentsBySession?.[session.id] || [];
-    content.push(buildDayTable(session, allSegs, rooms));
+    // Main table — branch by reportType
+    if (reportType === 'projection') {
+      content.push(buildSimpleNotesTable(allSegs.filter(s => s.show_in_projection !== false), 'projection_notes', 'Notas Proyección'));
+    } else if (reportType === 'sound') {
+      content.push(buildSimpleNotesTable(allSegs.filter(s => s.show_in_sound !== false), 'sound_notes', 'Notas Sonido'));
+    } else if (reportType === 'ushers') {
+      content.push(buildSimpleNotesTable(allSegs.filter(s => s.show_in_ushers !== false), 'ushers_notes', 'Notas Ujieres'));
+    } else if (reportType === 'general') {
+      content.push(buildGeneralTable(allSegs));
+    } else if (reportType === 'hospitality') {
+      content.push(buildHospitalityTable(hospitalityTasksBySession?.[session.id] || []));
+    } else if (reportType === 'livestream') {
+      content.push(buildLivestreamTable(allSegs));
+    } else {
+      // 'detailed' (default)
+      content.push(buildDayTable(session, allSegs, rooms));
+    }
 
     // Page break after each session (except last)
     if (idx < sessions.length - 1) {
