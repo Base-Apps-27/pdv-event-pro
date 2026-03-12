@@ -240,7 +240,6 @@ export function buildDetailsLeftCell(seg, allRooms = []) {
   if (seg.scripture_references) {
     stack.push({
       text: [
-        { text: '📖 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
         { text: 'CITAS: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
         { text: seg.scripture_references, color: '#1E3A8A', fontSize: pdfTheme.fontSize.xs },
       ],
