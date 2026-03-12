@@ -12,10 +12,22 @@ import { AlertCircle, Clock } from "lucide-react";
  * matching the same data contract as StickyOpsDeck.
  * Sorted by time, highlighted by urgency.
  */
+// Session color → subtle background tint for action cards (non-urgent only)
+const SESSION_COLOR_TINTS = {
+  green:  'rgba(141,198,63,0.10)',
+  blue:   'rgba(31,138,112,0.10)',
+  pink:   'rgba(236,72,153,0.10)',
+  orange: 'rgba(249,115,22,0.10)',
+  yellow: 'rgba(215,223,35,0.10)',
+  purple: 'rgba(168,85,247,0.10)',
+  red:    'rgba(239,68,68,0.10)',
+};
+
 export default function CoordinatorActionsDisplay({
   currentSegment,
   nextSegment,
   allSegments = [],       // All session segments — used for look-ahead window + pre-session fallbacks
+  sessions = [],          // All sessions — used to build session_color tint map
   preSessionData = null,  // PreSessionDetails for the active session
   currentTime,
   serviceDate,
