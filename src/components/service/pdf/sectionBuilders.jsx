@@ -256,9 +256,6 @@ export function buildPreSessionDetailsBlock(psd) {
     // Inline details separated by bullets
     const textParts = [];
     details.forEach((d, idx) => {
-      if (d.useEmoji && d.icon) {
-        textParts.push({ text: d.icon + ' ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs });
-      }
       textParts.push({ text: `${d.label}: `, bold: true, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary });
       textParts.push({ text: d.value, fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.primary });
       if (idx < details.length - 1) {
