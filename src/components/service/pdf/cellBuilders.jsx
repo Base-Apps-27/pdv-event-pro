@@ -58,12 +58,11 @@ export function buildTimeCell(seg, sessionColor = null) {
     });
   }
 
-  // Translation mode indicator in time cell with emoji icons (using NotoEmoji font)
+  // Translation mode indicator
   if (seg.requires_translation) {
     const isInPerson = seg.translation_mode === 'InPerson';
     stack.push({
-      text: isInPerson ? '🎙' : '🎧',
-      font: 'NotoEmoji',
+      text: isInPerson ? '[TRAD]' : '[TRAD-CAB]',
       fontSize: pdfTheme.fontSize.xs,
       color: '#7C3AED',
       alignment: 'center',
@@ -71,11 +70,10 @@ export function buildTimeCell(seg, sessionColor = null) {
     });
   }
 
-  // Major break indicator with emoji icon
+  // Major break indicator
   if (seg.major_break) {
     stack.push({
-      text: '🍽',
-      font: 'NotoEmoji',
+      text: '[RECESO]',
       fontSize: pdfTheme.fontSize.xs,
       color: '#EA580C',
       alignment: 'center',
