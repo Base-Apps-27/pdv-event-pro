@@ -57,7 +57,6 @@ export function buildNotesCell(seg) {
   // Video info in notes column (matching HTML) with timecode marker
   if (seg.has_video && (seg.video_name || seg.video_location)) {
     const videoParts = [
-      { text: '🎬 ', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.xs },
       { text: 'VIDEO: ', bold: true, color: '#1E40AF', fontSize: pdfTheme.fontSize.xs },
       { text: seg.video_name || seg.video_location || '', fontSize: pdfTheme.fontSize.xs, color: pdfTheme.text.secondary },
     ];
