@@ -4,7 +4,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Copy, Clock, ChevronUp, ChevronDown, ArrowRightLeft } from "lucide-react";
+import { Edit, Trash2, Music, MessageSquare, Languages, ListOrdered, Circle, Users, AlertTriangle, Bookmark, Clock, ChevronUp, ChevronDown, ArrowRightLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
 import { getSegmentData } from "@/components/utils/segmentDataUtils";
