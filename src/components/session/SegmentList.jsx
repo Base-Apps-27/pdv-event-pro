@@ -12,8 +12,7 @@ import { logDelete, logReorder } from "@/components/utils/editActionLogger";
 import { invalidateSegmentCaches } from "@/components/utils/queryKeys";
 import { getSegmentResponsibleDisplay, getSegmentSecondaryDisplay } from "@/components/utils/segmentTypeDisplay";
 import { useLanguage } from "@/components/utils/i18n";
-import MoveSegmentDialog from "./MoveSegmentDialog";
-import DuplicateSegmentDialog from "./DuplicateSegmentDialog";
+import TransferSegmentDialog from "./TransferSegmentDialog";
 
 export default function SegmentList({ segments, sessionId, onEdit, onEditPreSession, user, sessions, allEventSegments }) {
   const { t, language } = useLanguage();
