@@ -265,6 +265,9 @@ export default function CoordinatorActionsDisplay({
                 const timeUntil = action.time.getTime() - now;
                 const minutesUntil = Math.ceil(timeUntil / 60000);
                 const isUrgent = timeUntil > 0 && timeUntil < 5 * 60000;
+                const heroTint = !isUrgent && action.sessionId
+                  ? SESSION_COLOR_TINTS[sessionColorMap[action.sessionId]] || null
+                  : null;
 
                 return (
                   <div
@@ -274,6 +277,7 @@ export default function CoordinatorActionsDisplay({
                         ? 'bg-amber-50 border-amber-400 shadow-sm'
                         : 'bg-gradient-to-br from-white to-slate-50 border-pdv-teal/40 shadow-sm'
                     }`}
+                    style={heroTint ? { backgroundColor: heroTint } : undefined}
                   >
                     {/* Time Block */}
                     <div className="flex flex-col items-center min-w-[45px] flex-shrink-0">
