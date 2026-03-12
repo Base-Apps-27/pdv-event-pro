@@ -74,7 +74,10 @@ export default function EventProgramView({
 
   // Event-specific state
   const [selectedSessionId, setSelectedSessionId] = useState("all");
-  const [viewMode, setViewMode] = useState("simple"); // "simple" or "full"
+  // 2026-03-12: Persist view mode to localStorage so users don't lose "Run of Show" on reload.
+  const [viewMode, setViewMode] = useState(() => {
+    try { return localStorage.getItem('liveview_viewMode') || "simple"; } catch { return "simple"; }
+  });
   const [expandedSegments, setExpandedSegments] = useState({});
   const [expandedSessions, setExpandedSessions] = useState({});
   const [expandedTeams, setExpandedTeams] = useState({});
