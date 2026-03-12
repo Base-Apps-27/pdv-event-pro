@@ -268,6 +268,9 @@ export default function Reports() {
         const bytes = await generateEventReportPDFClient({ event: selectedEvent, sessions: eventSessions, segmentsBySession, preSessionDetailsBySession, hospitalityTasksBySession, rooms, reportType: rt });
         await downloadPdf(buildExportFilename(rt), bytes);
       }
+      // Arts PDF is portrait/separate format — included in Export All
+      const artsBytes = await generateArtsReportPDF({ event: selectedEvent, sessions: eventSessions, segments: allSegments });
+      downloadArtsPdf(artsBytes, buildExportFilename('artes'));
     } finally {
       setExportingPdf(false);
     }
@@ -343,10 +346,6 @@ export default function Reports() {
                 <DropdownMenuItem onClick={handleExportAllPdfs} disabled={exportingPdf}>
                   <FileText className="w-4 h-4 mr-2" />
                   {exportingPdf ? 'Generando…' : t('reports.exportAllPdfs')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportArtsPdf}>
-                  <Palette className="w-4 h-4 mr-2" />
-                  Exportar PDF — Artes
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
