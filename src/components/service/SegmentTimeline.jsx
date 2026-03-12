@@ -74,6 +74,12 @@ export default function SegmentTimeline({
           const isFirst = index === 0;
           const isBreak = isBreakType(segment);
 
+          // Session change divider: show when session_id changes between consecutive segments
+          const prevSegment = index > 0 ? segments[index - 1] : null;
+          const sessionChanged = prevSegment && segment.session_id && prevSegment.session_id &&
+            segment.session_id !== prevSegment.session_id;
+          const sessionName = sessionChanged ? (sessionMap[segment.session_id] || null) : null;
+
           // Rich metadata from canonical display config
           const responsible = getSegmentResponsibleDisplay(segment, language);
           const secondary = getSegmentSecondaryDisplay(segment, language);
