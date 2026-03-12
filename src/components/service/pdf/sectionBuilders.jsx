@@ -136,11 +136,10 @@ export function buildSessionHeader(event, session, hasHospitalityTasks = false) 
   ];
   // Hospitality tasks indicator (🍴)
   if (hasHospitalityTasks) {
-    titleParts.push({ text: ' 🍴', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg, color: '#DB2777' });
+    titleParts.push({ text: ' [HOSP]', fontSize: pdfTheme.fontSize.sm, color: '#DB2777' });
   }
-  // Translated session indicator (🌐)
   if (session?.is_translated_session) {
-    titleParts.push({ text: ' 🌐', font: 'NotoEmoji', fontSize: pdfTheme.fontSize.lg });
+    titleParts.push({ text: ' [TRAD]', fontSize: pdfTheme.fontSize.sm, color: '#7C3AED' });
   }
 
   // Date/time/location line
