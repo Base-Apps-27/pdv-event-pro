@@ -187,22 +187,19 @@ function LayoutContentInner({ children }) {
 }
 
 export default function Layout({ children }) {
-  // Inject PushEngage Web Push SDK into <head> on first mount.
-  // This is equivalent to the "copy to head" snippet provided by PushEngage.
-  // appId: 968eaa2b-cba4-4999-b736-393668e20d9b
-  useEffect(() => {
-    if (!window.PushEngage) {
-      window.PushEngage = [];
-      window._peq = window._peq || [];
-      window.PushEngage.push(['init', { appId: '968eaa2b-cba4-4999-b736-393668e20d9b' }]);
-
-      const script = document.createElement('script');
-      script.src = 'https://clientcdn.pushengage.com/sdks/pushengage-web-sdk.js';
-      script.async = true;
-      script.type = 'text/javascript';
-      document.head.appendChild(script);
-    }
-  }, []);
+  // 2026-03-13: PushEngage SDK loading REMOVED from global Layout.
+  // CRITICAL FIX: Previously, PushEngage SDK loaded for ALL users on every page,
+  // causing MyProgram-only / EventDayViewer users to subscribe to push notifications.
+  // When checkUpcomingNotifications broadcast, ALL subscribers received it — including
+  // view-only volunteers who should never get operational alerts.
+  //
+  // PushEngage SDK is now loaded ONLY on pages that need it, gated by permission:
+  //   ✅ PublicProgramView (access_live_view) — via PushEngageLoader component
+  //   ✅ DirectorConsole (manage_live_director) — via PushEngageLoader component
+  //   ❌ MyProgram — NEVER loads PushEngage
+  //   ❌ PublicCountdownDisplay — NEVER loads PushEngage
+  //
+  // See Decision: "PushEngage SDK gated by permission" (2026-03-13)
 
   return (
     <LanguageProvider>
