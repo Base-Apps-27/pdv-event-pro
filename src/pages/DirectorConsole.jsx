@@ -35,6 +35,7 @@ import StickyOpsDeck from '@/components/service/StickyOpsDeck';
 import LiveOperationsChat from '@/components/live/LiveOperationsChat';
 import { resolveBlockTime } from '@/components/utils/streamTiming';
 import { useNotificationPermissionPrompt } from '@/components/notifications/useNotificationPermissionPrompt';
+import PushEngageLoader from '@/components/notifications/PushEngageLoader';
 import { resolveStreamActions } from '@/components/utils/resolveStreamActions';
 
 /**
@@ -292,6 +293,8 @@ export default function DirectorConsole() {
   
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* 2026-03-13: PushEngage SDK gated to Director Console (not global Layout) */}
+      <PushEngageLoader />
       {/* Header */}
       <DirectorHeader
         session={session}

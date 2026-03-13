@@ -36,6 +36,7 @@ import LiveAdjustmentControls from "@/components/liveview/LiveAdjustmentControls
 import useSegmentTiming from "@/components/liveview/useSegmentTiming";
 import CacheStalenessIndicator from "@/components/liveview/CacheStalenessIndicator";
 import { useNotificationPermissionPrompt } from "@/components/notifications/useNotificationPermissionPrompt";
+import PushEngageLoader from "@/components/notifications/PushEngageLoader";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -46,6 +47,10 @@ export default function PublicProgramView() {
   // Prompt for notification permission on this page (subscribers receive push alerts)
   // Not on MyProgram (volunteers) or PublicCountdownDisplay (TV).
   useNotificationPermissionPrompt();
+
+  // 2026-03-13: PushEngage SDK now loaded ONLY on Live View and Director Console,
+  // not globally in Layout. This prevents MyProgram-only users from subscribing.
+  // PushEngageLoader is idempotent — safe to mount on multiple pages.
 
   // AUTH GATE (2026-02-14): defense-in-depth
   useEffect(() => {
@@ -265,6 +270,8 @@ export default function PublicProgramView() {
 
   return (
     <div className="min-h-screen bg-[#F0F1F3]">
+      {/* 2026-03-13: PushEngage SDK gated to Live View only (not global Layout) */}
+      <PushEngageLoader />
       {/* GRO-5 (2026-03-02): Offline banner */}
       <OfflineBanner language={language} />
 
