@@ -22,7 +22,7 @@ import { getSessionLabels } from "@/components/myprogram/normalizeSession";
 import StreamCoordinatorView from "@/components/live/StreamCoordinatorView";
 import { resolveBlockTime } from "@/components/utils/streamTiming";
 import { resolveStreamActions } from "@/components/utils/resolveStreamActions";
-import NotificationTrigger from "@/components/notifications/NotificationTrigger";
+// 2026-03-13: NotificationTrigger removed — replaced by server-side checkUpcomingNotifications
 
 /**
  * EventProgramView Component
@@ -235,12 +235,10 @@ export default function EventProgramView({
 
   return (
     <div className="space-y-6">
-      {/* 2026-03-10: Desktop notification triggers for segment actions and starts */}
-      <NotificationTrigger 
-        sessionId={filteredSessions[0]?.id} 
-        segments={allSegments}
-        language={language}
-      />
+      {/* 2026-03-13: NotificationTrigger REMOVED — was causing midnight spam by firing
+           on global Segment.subscribe() events. Replaced by scheduled backend function
+           checkUpcomingNotifications which runs every 5 min server-side.
+           See Decision: "Notification System Rebuild" */}
 
       {/* Live Director Panel - SHELVED for future iteration
          Reasons: blocking not working reliably, any user can change at any time, 
