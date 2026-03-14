@@ -134,8 +134,15 @@ export default function EventProgramView({
   // Detect if any session has livestream enabled
   const hasAnyLivestream = eventSessions.some(s => s.has_livestream);
 
-  // Fetch stream blocks for livestream sessions to determine current LS block
-  const livestreamSession = eventSessions.find(s => s.has_livestream);
+  // Fetch stream blocks for livestream sessions to determine current LS block.
+  // 2026-03-14 FIX: For multi-day events, prefer the livestream session whose date
+  // matches today. Previously .find() always returned Session 1 regardless of day.
+  const livestreamSession = useMemo(() => {
+    const lsSessions = eventSessions.filter(s => s.has_livestream);
+    if (lsSessions.length <= 1) return lsSessions[0] || null;
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    return lsSessions.find(s => s.date === todayStr) || lsSessions[0];
+  }, [eventSessions]);
   const { data: streamBlocks = [] } = useQuery({
     queryKey: ['streamBlocksForStatusCard', livestreamSession?.id],
     queryFn: () => base44.entities.StreamBlock.filter({ session_id: livestreamSession.id }, 'order'),
