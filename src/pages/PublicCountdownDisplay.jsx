@@ -327,8 +327,13 @@ export default function PublicCountdownDisplay() {
           </div>
 
           {/* Col 3: Livestream Sidecar — only when stream blocks exist */}
+          {/* 2026-03-14 FIX: For multi-day events, prefer the activeSession (derived from
+              currentSegment.session_id) if it has livestream. Previously .find() always
+              returned Session 1, causing Day 2+ to show stale Day 1 stream blocks. */}
           {hasLivestreamSession && (() => {
-            const sess = (programData?.sessions || []).find((s) => s.has_livestream);
+            const sessions = programData?.sessions || [];
+            const sess = (activeSession?.has_livestream ? activeSession : null)
+              || sessions.find((s) => s.has_livestream);
             if (!sess) return null;
             return (
               <div className="flex flex-col gap-0 overflow-hidden bg-white/80 rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm h-full p-1">
