@@ -31,9 +31,12 @@ export default function CountdownBlock({
 }) {
   const { t, language } = useLanguage();
 
-  // Canonical time parser — either from parent or inline fallback
+  // Canonical time parser — either from parent or inline fallback.
+  // 2026-03-14 FIX: Must pass segment.date to parent getTimeDate so multi-day events
+  // resolve times against the correct calendar date, not the event start_date.
+  // Without this, Day 2+ segments get times on Day 1's date → instantly "DONE".
   const parseTime = (timeStr) => {
-    if (getTimeDate) return getTimeDate(timeStr);
+    if (getTimeDate) return getTimeDate(timeStr, segment?.date || null);
     if (!timeStr) return null;
     const [h, m] = timeStr.split(':').map(Number);
     const d = new Date(currentTime);
