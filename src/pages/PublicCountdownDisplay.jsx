@@ -157,11 +157,9 @@ export default function PublicCountdownDisplay() {
     };
   }, []);
 
-  // Stale = cache older than 5 minutes (should refresh every ~2 min via poll)
-  const isStaleData = useMemo(() => {
-    if (!cacheRecord?.last_refresh_at) return false;
-    return (Date.now() - new Date(cacheRecord.last_refresh_at).getTime()) > 5 * 60 * 1000;
-  }, [cacheRecord?.last_refresh_at, currentTime]); // currentTime drives re-eval every second
+  // Stale detection: if no data after initial load, consider stale
+  // (useTVProgramData polls every 30s, so data should always be fresh)
+  const isStaleData = !programData && !isLoading;
 
   // ── Loading ──
   // Initial load only — isLoading in React Query v5 = isPending && isFetching,
