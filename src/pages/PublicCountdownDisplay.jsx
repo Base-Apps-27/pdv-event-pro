@@ -122,27 +122,27 @@ export default function PublicCountdownDisplay() {
     return preSessionDetails.find(p => p.session_id === activeSession.id) || preSessionDetails[0] || null;
   }, [activeSession, preSessionDetails]);
 
-  // ── HARDENING (2026-03-08): Stale-data watchdog ──
-  // Tracks how long since the cache was last refreshed. If the TV has been
-  // running for 10+ minutes without a successful cache update, the subscription
-  // or polling may have silently died. Force a full page reload to re-establish
-  // all connections. This is the last-resort safety net for unattended TVs.
-  const lastReloadCheckRef = useRef(Date.now());
+  // ── HARDENING (2026-03-08, updated 2026-03-15): Stale-data watchdog ──
+  // With useTVProgramData (backend function polling every 30s), if data goes
+  // null for 10+ minutes, the network or function is down. Force reload to
+  // re-establish connections. This is the last-resort safety net for unattended TVs.
+  const lastGoodDataRef = useRef(Date.now());
   useEffect(() => {
-    if (mockTimeParam || !cacheRecord?.last_refresh_at) return;
-    const STALE_RELOAD_MS = 10 * 60 * 1000; // 10 min without cache update → reload
+    // Reset the timer whenever we have valid program data
+    if (programData) lastGoodDataRef.current = Date.now();
+  }, [programData]);
+  useEffect(() => {
+    if (mockTimeParam) return;
+    const STALE_RELOAD_MS = 10 * 60 * 1000;
     const checkInterval = setInterval(() => {
-      const cacheAge = Date.now() - new Date(cacheRecord.last_refresh_at).getTime();
-      const timeSinceLastCheck = Date.now() - lastReloadCheckRef.current;
-      // Only reload if: cache is stale AND we haven't just loaded the page
-      // (prevents reload loops if the backend is truly down)
-      if (cacheAge > STALE_RELOAD_MS && timeSinceLastCheck > STALE_RELOAD_MS) {
-        console.warn('[TV Watchdog] Cache stale for 10+ min. Reloading page.');
+      const timeSinceGoodData = Date.now() - lastGoodDataRef.current;
+      if (timeSinceGoodData > STALE_RELOAD_MS) {
+        console.warn('[TV Watchdog] No valid data for 10+ min. Reloading page.');
         window.location.reload();
       }
-    }, 60 * 1000); // Check every minute
+    }, 60 * 1000);
     return () => clearInterval(checkInterval);
-  }, [cacheRecord?.last_refresh_at, mockTimeParam]);
+  }, [mockTimeParam]);
 
   // ── Offline / error state detection ──
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
