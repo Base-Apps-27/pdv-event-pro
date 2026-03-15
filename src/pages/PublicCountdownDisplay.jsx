@@ -5,7 +5,12 @@ import { normalizeProgramData } from "@/components/utils/normalizeProgram";
 import { normalizeStreamBlocks } from "@/components/utils/normalizeStreamBlocks";
 import { Loader2, Layout, WifiOff } from "lucide-react";
 
-import useActiveProgramCache from "@/components/myprogram/useActiveProgramCache";
+// 2026-03-15 FIX: TV Display is a PUBLIC page (no auth). useActiveProgramCache reads
+// entities directly via frontend SDK which requires auth → silently returns null on
+// unauthenticated pages → persistent StandbyScreen. useTVProgramData calls the backend
+// function getPublicProgramData (uses asServiceRole) which always works.
+// Decision: "TV Display must use backend function for data access (public page auth constraint)"
+import useTVProgramData from "@/components/tv/useTVProgramData";
 import useSegmentDetection, { getTimeDate } from "@/components/tv/useSegmentDetection";
 
 import CountdownBlock from "@/components/service/CountdownBlock";
