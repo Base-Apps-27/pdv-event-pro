@@ -17,17 +17,7 @@
 import { useEffect } from 'react';
 
 export function useNotificationPermissionPrompt() {
-  useEffect(() => {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'default') return;
-
-    // Small delay so the page has painted before the browser dialog appears
-    const timer = setTimeout(() => {
-      Notification.requestPermission().catch(() => {
-        // Permission request can be blocked in sandboxed iframes — ignore silently
-      });
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // ═══ SUSPENDED (2026-03-15) ═══════════════════════════════════
+  // All push notifications suspended. No longer prompting users for
+  // notification permission. Re-enable after PushEngage audit.
 }
