@@ -62,8 +62,8 @@ export default function PublicCountdownDisplay() {
     return () => clearInterval(id);
   }, [mockTimeParam]);
 
-  // ── Data: cache-first from ActiveProgramCache ──
-  const { programData, isLoading, isError, cacheRecord, _isOverride } = useActiveProgramCache({
+  // ── Data: backend-function-based (works without auth on public pages) ──
+  const { programData, isLoading, isError, cacheRecord, _isOverride } = useTVProgramData({
     overrideServiceId,
     overrideEventId,
   });
