@@ -21,23 +21,9 @@
 import { useEffect } from 'react';
 
 export default function PushEngageLoader() {
-  useEffect(() => {
-    // Idempotent: skip if already loaded
-    if (window._pushEngageLoaded) return;
-    window._pushEngageLoaded = true;
-
-    if (!window.PushEngage) {
-      window.PushEngage = [];
-      window._peq = window._peq || [];
-      window.PushEngage.push(['init', { appId: '968eaa2b-cba4-4999-b736-393668e20d9b' }]);
-
-      const script = document.createElement('script');
-      script.src = 'https://clientcdn.pushengage.com/sdks/pushengage-web-sdk.js';
-      script.async = true;
-      script.type = 'text/javascript';
-      document.head.appendChild(script);
-    }
-  }, []);
-
-  return null; // Headless — no UI
+  // ═══ SUSPENDED (2026-03-15) ═══════════════════════════════════
+  // All push notifications suspended. PushEngage was sending repeated
+  // non-rich spam notifications. SDK loading disabled to prevent new
+  // subscriptions. Re-enable after PushEngage integration is audited.
+  return null;
 }
