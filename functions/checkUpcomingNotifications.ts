@@ -78,6 +78,15 @@ async function broadcastPush(title, body, url) {
 
 
 Deno.serve(async (req) => {
+  // ═══ KILL SWITCH (2026-03-15) ═══════════════════════════════════
+  // All push notifications suspended. Users were receiving repeated
+  // non-rich "Palabras de Vida from PDV Event Pro" spam.
+  // PushEngage broadcast is sending empty/default notifications
+  // instead of the rich content we specify. Root cause TBD.
+  // Re-enable only after PushEngage integration is audited and fixed.
+  console.log('[NOTIF_ENGINE] ⛔ SUSPENDED — kill switch active (2026-03-15)');
+  return Response.json({ suspended: true, reason: 'kill_switch_2026_03_15' });
+
   try {
     const base44 = createClientFromRequest(req);
 
