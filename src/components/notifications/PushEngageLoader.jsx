@@ -32,10 +32,27 @@ export default function PushEngageLoader() {
     if (window._peSDKLoaded) return;
     window._peSDKLoaded = true;
 
+    // 2026-03-16: Register our merged SW BEFORE loading PE SDK.
+    // PE dashboard "Enable the service worker registration" = OFF,
+    // so PE won't register its own SW. We must register our merged
+    // /service-worker.js (which has importScripts for PE's handler)
+    // so the browser has an active push-capable SW before PE initializes.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+        .then((reg) => {
+          console.log('[PushEngageLoader] SW registered, scope:', reg.scope);
+          // Force update check to pick up merged version
+          reg.update();
+        })
+        .catch((err) => console.error('[PushEngageLoader] SW registration failed:', err));
+    }
+
     window.PushEngage = window.PushEngage || [];
     window._peq = window._peq || [];
     window.PushEngage.push(['init', {
-      appId: '968eaa2b-cba4-4999-b736-393668e20d9b'
+      appId: '968eaa2b-cba4-4999-b736-393668e20d9b',
+      // Tell PE SDK we handle SW registration ourselves
+      serviceWorkerPath: '/service-worker.js'
     }]);
 
     const script = document.createElement('script');
