@@ -21,9 +21,29 @@
 import { useEffect } from 'react';
 
 export default function PushEngageLoader() {
-  // ═══ SUSPENDED (2026-03-15) ═══════════════════════════════════
-  // All push notifications suspended. PushEngage was sending repeated
-  // non-rich spam notifications. SDK loading disabled to prevent new
-  // subscriptions. Re-enable after PushEngage integration is audited.
+  // 2026-03-16: RE-ENABLED after merging PushEngage SW into custom SW.
+  // importScripts fix deployed — PE now owns push event handling.
+  // SDK loads once per page mount to register/maintain subscriptions.
+  // PE dashboard: "Enable the service worker registration" = OFF
+  // (our merged SW at /service-worker.js handles registration).
+
+  useEffect(() => {
+    // Idempotent: skip if already loaded
+    if (window._peSDKLoaded) return;
+    window._peSDKLoaded = true;
+
+    window.PushEngage = window.PushEngage || [];
+    window._peq = window._peq || [];
+    window.PushEngage.push(['init', {
+      appId: '968eaa2b-cba4-4999-b736-393668e20d9b'
+    }]);
+
+    const script = document.createElement('script');
+    script.src = 'https://clientcdn.pushengage.com/sdks/pushengage-web-sdk.js';
+    script.async = true;
+    script.type = 'text/javascript';
+    document.head.appendChild(script);
+  }, []);
+
   return null;
 }
