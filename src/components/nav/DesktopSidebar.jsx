@@ -6,9 +6,9 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n.jsx";
-import { hasPermission, hasDashboardAccess, getLandingPage } from "@/components/utils/permissions";
+import { hasPermission, hasDashboardAccess } from "@/components/utils/permissions";
 import { primaryNav, secondaryNav, adminNav } from "@/components/nav/navItems";
-import { Calendar, Languages, MoreHorizontal, X, LogOut, Pin, PinOff, ChevronDown } from "lucide-react";
+import { Languages, MoreHorizontal, X, LogOut, Pin, PinOff, ChevronDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useNavPins from "@/components/nav/useNavPins";
 
@@ -86,18 +86,13 @@ export default function DesktopSidebar({ user }) {
     <>
       {/* Slim icon rail — 72px wide, always visible */}
       <aside className="hidden lg:flex lg:flex-col w-[72px] bg-[#0D0D0D] fixed h-full z-50 print:hidden items-center py-4 overflow-visible">
-        {/* Brand mark */}
-        <Link to={createPageUrl(getLandingPage(user))} className="mb-6 group">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
-            style={{ background: GRADIENT }}
-          >
-            <Calendar className="w-6 h-6 text-white" />
-          </div>
-        </Link>
+        {/* 2026-03-16: Brand mark removed. Was a redundant home shortcut that confused admins
+           because getLandingPage() sent them to WeeklyServiceManager instead of Dashboard.
+           Dashboard already exists in primaryNav — no need for a second home button.
+           Decision: "Remove sidebar brand-mark home button" */}
 
-        {/* Gradient accent line */}
-        <div className="w-8 h-0.5 rounded-full mb-5 opacity-40" style={{ background: GRADIENT_H }} />
+        {/* Gradient accent line — top of rail visual anchor */}
+        <div className="w-8 h-0.5 rounded-full mb-3 mt-1 opacity-40" style={{ background: GRADIENT_H }} />
 
         {/* Primary nav icons */}
         <nav className="flex flex-col items-center gap-1.5 flex-1 overflow-visible">
