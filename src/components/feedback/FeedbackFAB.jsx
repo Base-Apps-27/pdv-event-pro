@@ -19,12 +19,15 @@ export default function FeedbackFAB({ contextEventId, contextServiceId, contextS
 
   return (
     <>
-      {/* FAB button — positioned above mobile bottom nav (pb-20 in layout) */}
+      {/* FAB button — positioned above StickyOpsDeck's bar/expanded view on mobile.
+           StickyOpsDeck bar uses bottom-[5.5rem] + ~80px height = ~170px from bottom.
+           FAB sits at bottom-[11rem] (176px) on mobile to clear it.
+           On lg+ screens, bottom tab bar is gone so bottom-6 suffices. */}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             onClick={() => setOpen(true)}
-            className="fixed bottom-24 lg:bottom-6 right-4 z-40 w-12 h-12 rounded-full brand-gradient text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center active:scale-95"
+            className="fixed bottom-[11rem] lg:bottom-6 right-4 z-30 w-12 h-12 rounded-full brand-gradient text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center active:scale-95"
             aria-label={t('feedback.fabLabel')}
           >
             <MessageSquarePlus className="w-5 h-5" />
