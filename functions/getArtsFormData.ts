@@ -88,6 +88,21 @@ Deno.serve(async (req) => {
             }, { headers: corsHeaders });
         }
 
+        // 2026-03-16: Block submissions for completed events.
+        // Decision: "Block submission links with gentle notice for completed events"
+        if (targetEvent.status === 'completed' || targetEvent.status === 'archived') {
+            return Response.json({
+                closed: true,
+                event: {
+                    id: targetEvent.id,
+                    name: targetEvent.name,
+                    location: targetEvent.location || '',
+                    start_date: targetEvent.start_date || '',
+                },
+                segments: []
+            }, { headers: corsHeaders });
+        }
+
         // Fetch sessions and "Artes" segments
         const sessions = await base44.asServiceRole.entities.Session.filter({ event_id: targetEvent.id });
         const sessionsMap = {};

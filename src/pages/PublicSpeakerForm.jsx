@@ -17,6 +17,7 @@ import SpeakerFormHeader from '@/components/publicforms/SpeakerFormHeader';
 import SpeakerSubmissionForm from '@/components/publicforms/SpeakerSubmissionForm';
 import { PublicFormLangProvider } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
+import EventClosedNotice from '@/components/publicforms/EventClosedNotice';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorCard from '@/components/ui/ErrorCard';
 
@@ -25,6 +26,7 @@ export default function PublicSpeakerForm() {
     const [error, setError] = useState(null);
     const [event, setEvent] = useState(null);
     const [options, setOptions] = useState([]);
+    const [closed, setClosed] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -37,7 +39,10 @@ export default function PublicSpeakerForm() {
             const response = await base44.functions.invoke('getSpeakerFormData', payload);
             const data = response.data;
 
-            if (data.error && !data.event) {
+            if (data.closed) {
+                setEvent(data.event);
+                setClosed(true);
+            } else if (data.error && !data.event) {
                 setError(data.error);
             } else {
                 setEvent(data.event);
@@ -51,6 +56,18 @@ export default function PublicSpeakerForm() {
 
     if (loading) {
         return <LoadingSpinner size="fullPage" label="Cargando formulario..." />;
+    }
+
+    if (closed) {
+        return (
+            <PublicFormLangProvider>
+                <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
+                    <div className="w-full max-w-[640px]">
+                        <EventClosedNotice event={event} />
+                    </div>
+                </div>
+            </PublicFormLangProvider>
+        );
     }
 
     if (error) {

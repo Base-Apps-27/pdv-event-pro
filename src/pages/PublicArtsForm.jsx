@@ -20,6 +20,7 @@ import ArtsStickyBar from '@/components/publicforms/ArtsStickyBar';
 import ArtsChangeHistory from '@/components/publicforms/ArtsChangeHistory';
 import { PublicFormLangProvider, usePublicLang } from '@/components/publicforms/PublicFormLangContext';
 import PublicFormLangToggle from '@/components/publicforms/PublicFormLangToggle';
+import EventClosedNotice from '@/components/publicforms/EventClosedNotice';
 import ArtsReportSegmentCard from '@/components/arts/ArtsReportSegmentCard';
 import { Printer } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export default function PublicArtsForm() {
   const [segments, setSegments] = useState([]);
   const [isUnica, setIsUnica] = useState(false);
   const [gateUser, setGateUser] = useState(null);
+  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,7 +49,10 @@ export default function PublicArtsForm() {
       const response = await base44.functions.invoke('getArtsFormData', payload);
       const data = response.data;
 
-      if (data.error && !data.event) {
+      if (data.closed) {
+        setEvent(data.event);
+        setClosed(true);
+      } else if (data.error && !data.event) {
         setError(data.error);
       } else {
         setEvent(data.event);
@@ -62,6 +67,19 @@ export default function PublicArtsForm() {
     };
     loadData();
   }, []);
+
+  // 2026-03-16: Closed event — show gentle notice instead of form
+  if (!loading && closed) {
+    return (
+      <PublicFormLangProvider>
+        <div className="min-h-screen bg-[#F0F1F3] flex items-center justify-center p-4 md:p-8">
+          <div className="w-full max-w-[720px]">
+            <EventClosedNotice event={event} />
+          </div>
+        </div>
+      </PublicFormLangProvider>
+    );
+  }
 
   // Hard error: no event found at all (only show after loading finishes)
   if (!loading && error) {
