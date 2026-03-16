@@ -4,7 +4,7 @@
 // 2026-02-18: slimmed secondary from 12→6 items. Admin tools moved to separate adminNav
 //   to prevent "More" tray overflow on mobile. Merged roles into users matchPages.
 
-import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, MapPin, Copy, Sparkles, Shield, FileCode, Wrench, Palette } from "lucide-react";
+import { LayoutDashboard, Calendar, Bell, Clock, Plus, FileText, Users, MapPin, Copy, Sparkles, Shield, FileCode, Wrench, Palette, MessageSquarePlus } from "lucide-react";
 
 // PRIMARY: always visible in rail / bottom bar (max 5-6)
 export const primaryNav = [
@@ -91,6 +91,14 @@ export const secondaryNav = [
     page: 'Templates',
     permission: 'view_templates',
     matchPages: ['Templates'],
+  },
+  {
+    id: 'feedback',
+    labelKey: 'nav.feedback',
+    icon: MessageSquarePlus,
+    page: 'FeedbackReview',
+    permission: 'access_live_view',
+    matchPages: ['FeedbackReview'],
   },
 ];
 
