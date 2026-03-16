@@ -88,9 +88,17 @@ Deno.serve(async (req) => {
             }, { headers: corsHeaders });
         }
 
-        // 2026-03-16: Block submissions for completed events.
-        // Decision: "Block submission links with gentle notice for completed events"
-        if (targetEvent.status === 'completed' || targetEvent.status === 'archived') {
+        // 2026-03-16 v2: Block submissions for completed/archived events.
+        // Defense-in-depth: also check end_date directly in case the nightly
+        // lifecycle job hasn't run yet. See getSpeakerFormData for rationale.
+        // Decision: "Automate full event lifecycle based on dates"
+        const _nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const _todayStr = `${_nowET.getFullYear()}-${String(_nowET.getMonth() + 1).padStart(2, '0')}-${String(_nowET.getDate()).padStart(2, '0')}`;
+        const _eventEnd = targetEvent.end_date || targetEvent.start_date;
+        const isExpiredByDate = _eventEnd && _eventEnd < _todayStr;
+        const isClosedStatus = targetEvent.status === 'completed' || targetEvent.status === 'archived';
+
+        if (isClosedStatus || isExpiredByDate) {
             return Response.json({
                 closed: true,
                 event: {
