@@ -49,6 +49,10 @@ function formatTime12h(timeStr) {
 }
 
 // ─── PushEngage Broadcast ────────────────────────────────────────
+// FIX (2026-03-16): Header was 'api_key' (lowercase/underscore) — PushEngage
+// requires 'Api-Key' (PascalCase/hyphen) per their official API docs.
+// Wrong header caused PushEngage to fall back to generic site-name notifications
+// instead of rendering the rich title/body we send.
 async function broadcastPush(title, body, url) {
   const apiKey = Deno.env.get('PUSHENGAGE_API_KEY');
   if (!apiKey) {
@@ -65,7 +69,7 @@ async function broadcastPush(title, body, url) {
   const res = await fetch('https://api.pushengage.com/apiv1/notifications', {
     method: 'POST',
     headers: {
-      'api_key': apiKey,
+      'Api-Key': apiKey,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: formBody,
