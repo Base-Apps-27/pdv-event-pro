@@ -284,5 +284,37 @@ The server accepted and processed the notification with rich content. The conten
 
 ---
 
+---
+
+## 11. Resolution (2026-03-16)
+
+### Root Cause Confirmed
+PushEngage dashboard had "Enable the service worker registration from PushEngage" **ON** with path `/service-worker.js`. This told PushEngage's SDK to register a SW at that path — but the file at that path was **our custom SW**, not PushEngage's. Our custom push listener couldn't parse PushEngage's proprietary payload and fell back to the hardcoded "Palabras de Vida" title.
+
+### Fix Applied
+**Merged PushEngage's SW into our custom file** per [PushEngage's official merge guide](https://www.pushengage.com/documentation/how-to-merge-service-worker-with-existing-one-on-your-site/):
+
+1. Added `importScripts("https://clientcdn.pushengage.com/sdks/service-worker.js");` to the top of our custom SW
+2. **Removed** our custom `push` event listener (PushEngage's imported SW handles push events with their proprietary payload format)
+3. **Kept** our custom `notificationclick` listener for session/segment deep-linking (with guard: only activates when our custom data fields are present)
+4. Kept `install`/`activate` lifecycle hooks for immediate takeover
+
+### PushEngage Dashboard Changes Required
+1. **Turn OFF** "Enable the service worker registration from PushEngage"
+2. Save Changes
+
+### Deployment Steps
+1. Copy updated `components/notifications/service-worker.js` to `/public/service-worker.js`
+2. Toggle OFF PE's registration in their dashboard
+3. Re-enable PushEngageLoader component (currently returns null)
+4. Re-enable checkUpcomingNotifications function (remove kill switch)
+5. Re-enable scheduled automation
+6. Test with `testPushBroadcast` function
+
+### Re-enablement Sequence (IMPORTANT — do steps in order)
+1. Deploy merged SW → 2. PE dashboard toggle OFF → 3. Wait for SW to propagate (users revisit site) → 4. Enable PushEngageLoader → 5. Test broadcast → 6. If rich content confirmed, enable automation
+
+---
+
 **Report prepared by:** Base44 AI Development Agent  
-**Last updated:** 2026-03-16T20:00:00Z
+**Last updated:** 2026-03-16T22:00:00Z
