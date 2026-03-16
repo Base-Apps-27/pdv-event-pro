@@ -37,8 +37,8 @@ import useSegmentTiming from "@/components/liveview/useSegmentTiming";
 import CacheStalenessIndicator from "@/components/liveview/CacheStalenessIndicator";
 import { useNotificationPermissionPrompt } from "@/components/notifications/useNotificationPermissionPrompt";
 import PushEngageLoader from "@/components/notifications/PushEngageLoader";
-import FeedbackFAB from "@/components/feedback/FeedbackFAB";
 import PostSessionFeedbackBanner from "@/components/feedback/PostSessionFeedbackBanner";
+import FeedbackBottomSection from "@/components/feedback/FeedbackBottomSection";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -374,10 +374,10 @@ export default function PublicProgramView() {
         <LiveOperationsChat currentUser={currentUser} contextType={viewType} contextId={viewType === "event" ? selectedEventId : selectedServiceId} contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date} contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name} isOpen={chatOpen} onToggle={setChatOpen} onUnreadCountChange={setChatUnreadCount} hideTrigger={true} />
       )}
 
-      {/* 2026-03-16: Feedback FAB — persistent icon for quick feedback submission.
-           Permission-gated: only users with access_live_view see this (already enforced by page auth). */}
+      {/* 2026-03-16: Static feedback section — scroll-to-bottom CTA replaces floating FAB
+           to avoid overlap with StickyOpsDeck. Always accessible at end of program content. */}
       {currentUser && hasPermission(currentUser, 'access_live_view') && hasSelection && (
-        <FeedbackFAB
+        <FeedbackBottomSection
           contextEventId={viewType === 'event' ? selectedEventId : undefined}
           contextServiceId={viewType === 'service' ? selectedServiceId : undefined}
           contextSessionId={sessions[0]?.id}

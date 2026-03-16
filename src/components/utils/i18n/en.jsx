@@ -830,6 +830,8 @@ export const en = {
   'feedback.submit': 'Submit',
   'feedback.submitSuccess': 'Feedback submitted — thank you!',
   'feedback.share': 'Share',
+  'feedback.bottomTitle': 'Have feedback or observations?',
+  'feedback.bottomSubtitle': 'Help improve future events by sharing what you noticed',
   'feedback.bannerText': 'Session ended — any observations to share?',
   'feedback.reviewTitle': 'FEEDBACK & OBSERVATIONS',
   'feedback.reviewSubtitle': 'Review team feedback and institutional knowledge',

@@ -830,6 +830,8 @@ export const es = {
   'feedback.submit': 'Enviar',
   'feedback.submitSuccess': '¡Observación enviada — gracias!',
   'feedback.share': 'Compartir',
+  'feedback.bottomTitle': '¿Tienes observaciones o comentarios?',
+  'feedback.bottomSubtitle': 'Ayuda a mejorar futuros eventos compartiendo lo que notaste',
   'feedback.bannerText': 'Sesión terminada — ¿alguna observación para compartir?',
   'feedback.reviewTitle': 'RETROALIMENTACIÓN Y OBSERVACIONES',
   'feedback.reviewSubtitle': 'Revisa la retroalimentación del equipo y el conocimiento institucional',
