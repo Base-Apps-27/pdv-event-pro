@@ -37,6 +37,8 @@ import useSegmentTiming from "@/components/liveview/useSegmentTiming";
 import CacheStalenessIndicator from "@/components/liveview/CacheStalenessIndicator";
 import { useNotificationPermissionPrompt } from "@/components/notifications/useNotificationPermissionPrompt";
 import PushEngageLoader from "@/components/notifications/PushEngageLoader";
+import FeedbackFAB from "@/components/feedback/FeedbackFAB";
+import PostSessionFeedbackBanner from "@/components/feedback/PostSessionFeedbackBanner";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -286,6 +288,16 @@ export default function PublicProgramView() {
 
         {hasSelection && (
           <>
+            {/* 2026-03-16: Post-session feedback banner — gentle nudge after all segments end */}
+            <PostSessionFeedbackBanner
+              segments={allSegments}
+              sessions={sessions}
+              currentTime={currentTime}
+              serviceDate={actualServiceData?.date}
+              contextEventId={viewType === 'event' ? selectedEventId : undefined}
+              contextServiceId={viewType === 'service' ? selectedServiceId : undefined}
+            />
+
             {/* DEV-1: Extracted info banner */}
             <ProgramInfoBanner viewType={viewType} selectedEvent={selectedEvent} selectedService={selectedService} isOverride={_isOverride} />
 
@@ -360,6 +372,17 @@ export default function PublicProgramView() {
       <TimeAdjustmentHistoryModal isOpen={historyModalOpen} onClose={() => setHistoryModalOpen(false)} logs={adjustmentLogs} selectedDate={rawServiceData?.date ? formatDateET(rawServiceData.date) : ''} />
       {currentUser && hasPermission(currentUser, 'view_live_chat') && (viewType === "event" ? selectedEvent : selectedService) && (
         <LiveOperationsChat currentUser={currentUser} contextType={viewType} contextId={viewType === "event" ? selectedEventId : selectedServiceId} contextDate={viewType === "event" ? selectedEvent?.end_date : rawServiceData?.date} contextName={viewType === "event" ? selectedEvent?.name : selectedService?.name} isOpen={chatOpen} onToggle={setChatOpen} onUnreadCountChange={setChatUnreadCount} hideTrigger={true} />
+      )}
+
+      {/* 2026-03-16: Feedback FAB — persistent icon for quick feedback submission.
+           Permission-gated: only users with access_live_view see this (already enforced by page auth). */}
+      {currentUser && hasPermission(currentUser, 'access_live_view') && hasSelection && (
+        <FeedbackFAB
+          contextEventId={viewType === 'event' ? selectedEventId : undefined}
+          contextServiceId={viewType === 'service' ? selectedServiceId : undefined}
+          contextSessionId={sessions[0]?.id}
+          sessions={sessions}
+        />
       )}
 
       {/* Footer */}
