@@ -2,7 +2,7 @@
  * NotificationHistoryTab — Lists sent push notifications with PE stats.
  * 2026-03-17: Created for PushNotifications admin page.
  */
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/utils/i18n.jsx";
