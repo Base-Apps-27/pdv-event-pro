@@ -473,6 +473,18 @@ export default function UserManagement() {
                       <span>{t('users.viewer')}</span>
                     </div>
                   </SelectItem>
+                  <SelectItem value="Guest">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-amber-600" />
+                      <span>{t('users.guest')}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Deactivated">
+                    <div className="flex items-center gap-2">
+                      <UserX className="w-4 h-4 text-red-500" />
+                      <span>{t('users.deactivated')}</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -609,6 +621,18 @@ export default function UserManagement() {
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-teal-600" />
                       <span>{t('users.roleBadge.EventDayCoordinator')}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Guest">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-amber-600" />
+                      <span>{t('users.roleBadge.Guest')}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Deactivated">
+                    <div className="flex items-center gap-2">
+                      <UserX className="w-4 h-4 text-red-500" />
+                      <span>{t('users.roleBadge.Deactivated')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
