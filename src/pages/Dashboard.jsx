@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n.jsx";
-import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, Send } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
-  const [testLoading, setTestLoading] = useState(false);
   
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -108,40 +107,6 @@ export default function Dashboard() {
     archived: "border-l-slate-400"
   };
 
-  // Test notification helpers
-  const sendTestNotification = async (type) => {
-    setTestLoading(true);
-    try {
-      const response = await base44.functions.invoke('sendNotification', {
-        type,
-        actionLabel: type === 'action' ? 'Test Action' : undefined,
-        segmentTitle: 'Test Segment',
-        language,
-      });
-      console.log('[TEST_NOTIF] Response:', response.data);
-
-      // Always show a local notification from the response payload so the test
-      // is observable even when Web Push subscriptions are unavailable (e.g.
-      // preview sandbox blocks service worker storage).
-      const notif = response?.data?.notification;
-      if (notif && 'Notification' in window) {
-        if (window.Notification.permission === 'default') {
-          await window.Notification.requestPermission();
-        }
-        if (window.Notification.permission === 'granted') {
-          new window.Notification(notif.title, {
-            body: notif.body,
-            icon: '/logo_v2.svg',
-            tag: `test-${type}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('[TEST_NOTIF_ERROR]', error);
-    } finally {
-      setTestLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -163,34 +128,6 @@ export default function Dashboard() {
             <LoadingSpinner size="md" />
           </div>
         )}
-
-        {/* Test Notification Buttons (Dev only) */}
-        <Card className="bg-amber-50 border-2 border-amber-200">
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold text-amber-900 mb-3">📢 Test Web Push Notifications</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              <Button
-                onClick={() => sendTestNotification('action')}
-                disabled={testLoading}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Action Alert
-              </Button>
-              <Button
-                onClick={() => sendTestNotification('segment_starting')}
-                disabled={testLoading}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Segment Start Alert
-              </Button>
-            </div>
-            <p className="text-xs text-amber-700 mt-3">
-              ℹ️ Sends a test notification to all active subscriptions. Check browser notification center.
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Live Program — compact secondary link. Red when a program is active. (2026-03-02) */}
         <div
