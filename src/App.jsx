@@ -8,6 +8,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import FeedbackReview from './pages/FeedbackReview';
+import PushNotifications from './pages/PushNotifications';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/FeedbackReview" element={<LayoutWrapper currentPageName="FeedbackReview"><FeedbackReview /></LayoutWrapper>} />
+      <Route path="/PushNotifications" element={<LayoutWrapper currentPageName="PushNotifications"><PushNotifications /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
