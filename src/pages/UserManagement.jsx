@@ -99,6 +99,9 @@ export default function UserManagement() {
     }
   });
 
+  // 2026-03-17: Access expiry date for temporary users
+  const [editingExpiresAt, setEditingExpiresAt] = useState("");
+
   const handleEditUser = (user) => {
     setEditingUser(user);
     const role = user.app_role || 'EventDayViewer';
@@ -107,6 +110,7 @@ export default function UserManagement() {
     setEditingFullName(user.display_name || user.full_name || "");
     setCustomPermissions(user.custom_permissions || []);
     setRevokedPermissions(user.revoked_permissions || []);
+    setEditingExpiresAt(user.access_expires_at || "");
   };
 
   const handleSaveUser = () => {
@@ -119,6 +123,8 @@ export default function UserManagement() {
           app_role: selectedRole,
           custom_permissions: customPermissions,
           revoked_permissions: revokedPermissions,
+          // 2026-03-17: Optional access expiry for temporary users
+          access_expires_at: editingExpiresAt || null,
         }
       });
     }
