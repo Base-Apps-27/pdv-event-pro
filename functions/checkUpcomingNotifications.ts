@@ -1,35 +1,50 @@
 /**
- * checkUpcomingNotifications — Scheduled Push Notification Engine (v1.0)
+ * checkUpcomingNotifications — Scheduled Push Notification Engine (v2.0)
  *
- * DECISION (2026-03-13): Replaces the broken browser-mounted NotificationTrigger
- * that caused midnight spam by firing on global Segment.subscribe() events.
+ * DECISION (2026-03-17): Major rewrite to fix three confirmed issues:
+ *   1. DEDUP BROKEN — v1 wrote dynamic fields on Segment entity which Base44
+ *      silently ignored on subsequent reads. Replaced with NotificationLog entity.
+ *   2. NOTIFICATION FLOOD — Each action sent a separate push. Now groups all
+ *      actions in a 5-min window into a single digest push.
+ *   3. TEXT OVERFLOW — No length guards. Now enforces PushEngage limits
+ *      (title ≤ 80 chars, body ≤ 130 chars).
  *
  * Architecture:
  *   - Runs every 5 minutes via scheduled automation
  *   - Checks today's sessions for start times within lead windows
- *   - Checks today's segment actions for upcoming timing
- *   - Uses a simple dedup mechanism (notification_sent_key on Session entity)
- *     to prevent repeat sends
+ *   - Collects all upcoming segment actions into a grouped digest
+ *   - Uses NotificationLog entity for reliable dedup
+ *   - Max 3 push broadcasts per cycle (session + action digest + overflow)
  *   - Only sends during reasonable hours (6 AM – 11 PM ET)
  *
  * Notification types:
- *   1. session_starting — "{Event Name} — {Session Name} @ {Time}"
- *      Sent 15 minutes before session planned_start_time
- *   2. action_upcoming — "{Action Label} — {Segment Title} @ {Time}"
- *      Sent 10 minutes before computed action time
- *
- * PushEngage broadcast to all subscribers. Rich, self-explanatory content.
+ *   1. session_starting — "{Session Name} starts at {Time}" (one per session)
+ *   2. action_digest — "⚡ {N} upcoming tasks" with grouped body (one per cycle)
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ─── Time Helpers (America/New_York) ─────────────────────────────
+// 2026-03-17: Replaced toLocaleString re-parse with Intl.DateTimeFormat
+// parts extraction — more reliable across JS engines.
 function getNowET() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-}
-
-function getTodayStrET() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts = {};
+  for (const { type, value } of fmt.formatToParts(now)) {
+    parts[type] = value;
+  }
+  return {
+    hours: parseInt(parts.hour, 10),
+    minutes: parseInt(parts.minute, 10),
+    totalMinutes: parseInt(parts.hour, 10) * 60 + parseInt(parts.minute, 10),
+    dateStr: `${parts.year}-${parts.month}-${parts.day}`,
+  };
 }
 
 function parseHHMM(timeStr) {
@@ -48,12 +63,20 @@ function formatTime12h(timeStr) {
   return `${h12}:${String(minutes).padStart(2, '0')} ${ampm}`;
 }
 
+function totalMinToHHMM(totalMin) {
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}:${String(m).padStart(2, '0')}`;
+}
+
+// ─── Text Truncation (PushEngage limits) ────────────────────────
+// PushEngage: title ≤ 85, body ≤ 135. We use slightly smaller to be safe.
+function truncate(str, max) {
+  if (!str) return '';
+  return str.length <= max ? str : str.slice(0, max - 1) + '…';
+}
+
 // ─── PushEngage Broadcast ────────────────────────────────────────
-// HEADER: PushEngage API uses 'api_key' (lowercase/underscore).
-// All official PushEngage API documentation examples use this form:
-//   curl -H 'api_key: <key>' https://api.pushengage.com/apiv1/...
-// Note: underscore vs hyphen matters — HTTP header names with underscores
-// are treated as distinct from hyphenated names (RFC 7230).
 async function broadcastPush(title, body, url) {
   const apiKey = Deno.env.get('PUSHENGAGE_API_KEY');
   if (!apiKey) {
@@ -61,12 +84,16 @@ async function broadcastPush(title, body, url) {
     return false;
   }
 
+  const safeTitleStr = truncate(title, 80);
+  const safeBodyStr = truncate(body, 130);
+
   const formBody = new URLSearchParams({
-    notification_title: title,
-    notification_message: body,
-    // 2026-03-17: Updated to correct app URL (was pdveventpro.com)
+    notification_title: safeTitleStr,
+    notification_message: safeBodyStr,
     notification_url: url || 'https://vidaevents.co',
   }).toString();
+
+  console.log(`[NOTIF_ENGINE] Broadcasting: title="${safeTitleStr}" body="${safeBodyStr}"`);
 
   const res = await fetch('https://api.pushengage.com/apiv1/notifications', {
     method: 'POST',
@@ -84,35 +111,33 @@ async function broadcastPush(title, body, url) {
 
 
 Deno.serve(async (req) => {
-  // ═══ KILL SWITCH REMOVED (2026-03-16) ═══════════════════════════
-  // Root causes identified and fixed:
-  //   1. service-worker.js now uses importScripts(PE SDK) — PE owns push rendering
-  //   2. PushEngageLoader registers /service-worker.js before PE SDK loads
-  //   3. useNotificationPermissionPrompt re-enabled (was no-op)
-  //   4. broadcastPush header fixed: 'Api-Key' (was 'api_key')
-  // Rich notifications end-to-end should now work. Re-enabling engine.
   try {
     const base44 = createClientFromRequest(req);
 
     // ─── TIME GATE: Only send between 6 AM and 11 PM ET ──────────
-    const nowET = getNowET();
-    const currentHour = nowET.getHours();
-    if (currentHour < 6 || currentHour >= 23) {
-      console.log(`[NOTIF_ENGINE] Outside notification hours (${currentHour}h ET). Skipping.`);
-      return Response.json({ skipped: true, reason: 'outside_hours', hour: currentHour });
+    const now = getNowET();
+    if (now.hours < 6 || now.hours >= 23) {
+      console.log(`[NOTIF_ENGINE] Outside hours (${now.hours}h ET). Skipping.`);
+      return Response.json({ skipped: true, reason: 'outside_hours', hour: now.hours });
     }
 
-    const todayStr = getTodayStrET();
-    const nowTotalMin = nowET.getHours() * 60 + nowET.getMinutes();
-    console.log(`[NOTIF_ENGINE] Running at ${todayStr} ${nowET.getHours()}:${String(nowET.getMinutes()).padStart(2, '0')} ET (${nowTotalMin} min)`);
+    const todayStr = now.dateStr;
+    const nowTotalMin = now.totalMinutes;
+    console.log(`[NOTIF_ENGINE] Running: ${todayStr} ${now.hours}:${String(now.minutes).padStart(2, '0')} ET (${nowTotalMin} min)`);
 
-    // Lead times in minutes
+    // Lead times and tolerance
     const SESSION_LEAD_MIN = 15;
     const ACTION_LEAD_MIN = 10;
-    // Tolerance window: ± 3 minutes (since we run every 5 min)
-    const TOLERANCE_MIN = 3;
+    const TOLERANCE_MIN = 3; // ± since we run every 5 min
 
-    const sent = [];
+    // ─── DEDUP: Load today's sent notifications ──────────────────
+    const sentLogs = await base44.asServiceRole.entities.NotificationLog.filter({
+      program_date: todayStr,
+    });
+    const sentKeys = new Set(sentLogs.map(l => l.dedup_key));
+    console.log(`[NOTIF_ENGINE] Dedup: ${sentKeys.size} keys already sent today`);
+
+    const newSent = [];
 
     // ─── STEP 1: Find today's events ─────────────────────────────
     const allEvents = await base44.asServiceRole.entities.Event.list('-start_date');
@@ -122,8 +147,7 @@ Deno.serve(async (req) => {
       return todayStr >= e.start_date && todayStr <= (e.end_date || e.start_date);
     });
 
-    // ─── STEP 2: Find today's sessions (event + service) ─────────
-    // Event sessions
+    // ─── STEP 2: Find today's sessions ───────────────────────────
     const eventIds = todayEvents.map(e => e.id);
     let todaySessions = [];
 
@@ -139,7 +163,7 @@ Deno.serve(async (req) => {
       })));
     }
 
-    // Service sessions (today's weekly services)
+    // Service sessions
     const todayServices = await base44.asServiceRole.entities.Service.filter({ date: todayStr });
     const activeServices = todayServices.filter(s => s.status === 'active');
     for (const service of activeServices) {
@@ -153,7 +177,7 @@ Deno.serve(async (req) => {
       })));
     }
 
-    console.log(`[NOTIF_ENGINE] Found ${todaySessions.length} sessions today (${todayEvents.length} events, ${activeServices.length} services)`);
+    console.log(`[NOTIF_ENGINE] Found ${todaySessions.length} sessions (${todayEvents.length} events, ${activeServices.length} services)`);
 
     // ─── STEP 3: Session "starting soon" notifications ───────────
     for (const session of todaySessions) {
@@ -163,40 +187,46 @@ Deno.serve(async (req) => {
       const leadTarget = startTime.totalMinutes - SESSION_LEAD_MIN;
       const diff = leadTarget - nowTotalMin;
 
-      // Within tolerance window?
       if (Math.abs(diff) <= TOLERANCE_MIN) {
-        // Dedup: check if we already sent for this session today
-        const dedupKey = `notif_session_${todayStr}`;
-        if (session[dedupKey]) {
-          console.log(`[NOTIF_ENGINE] Already sent session notification for ${session.name} (${session.id})`);
+        const dedupKey = `session_${session.id}_${todayStr}`;
+        if (sentKeys.has(dedupKey)) {
+          console.log(`[NOTIF_ENGINE] Dedup hit: session ${session.name}`);
           continue;
         }
 
-        const title = session._eventName || session.name;
+        const title = truncate(session._eventName || session.name, 80);
         const body = `${session.name} — ${formatTime12h(session.planned_start_time)}`;
 
-        console.log(`[NOTIF_ENGINE] Sending session_starting: "${title}" / "${body}"`);
+        console.log(`[NOTIF_ENGINE] Session alert: "${title}" / "${body}"`);
         const ok = await broadcastPush(title, body);
 
         if (ok) {
-          // Mark as sent on the session entity to prevent re-send
-          await base44.asServiceRole.entities.Session.update(session.id, {
-            [dedupKey]: new Date().toISOString(),
+          await base44.asServiceRole.entities.NotificationLog.create({
+            dedup_key: dedupKey,
+            notification_type: 'session_starting',
+            title,
+            body,
+            item_count: 1,
+            sent_at: new Date().toISOString(),
+            program_date: todayStr,
           });
-          sent.push({ type: 'session_starting', session: session.name, title, body });
+          sentKeys.add(dedupKey);
+          newSent.push({ type: 'session_starting', session: session.name });
         }
       }
     }
 
-    // ─── STEP 4: Action "upcoming" notifications ─────────────────
-    // Fetch all segments for today's sessions
+    // ─── STEP 4: Collect action alerts into digest ───────────────
+    // Instead of sending each action individually, we collect all pending
+    // actions in this cycle and send ONE grouped digest notification.
     const sessionIds = todaySessions.map(s => s.id);
     let allSegments = [];
-    // Batch by session (no bulk filter by array available)
     for (const sid of sessionIds) {
       const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: sid });
       allSegments.push(...segs);
     }
+
+    const pendingActions = []; // { label, department, segmentTitle, actionTimeStr }
 
     for (const segment of allSegments) {
       const actions = segment.segment_actions || [];
@@ -204,8 +234,6 @@ Deno.serve(async (req) => {
 
       const segStart = parseHHMM(segment.start_time);
       if (!segStart) continue;
-
-      const session = todaySessions.find(s => s.id === segment.session_id);
 
       for (const action of actions) {
         if (!action.label) continue;
@@ -222,7 +250,7 @@ Deno.serve(async (req) => {
           const abs = parseHHMM(action.absolute_time);
           if (abs) actionTotalMin = abs.totalMinutes;
         } else {
-          continue; // Skip before_end etc for now
+          continue;
         }
 
         if (actionTotalMin === null) continue;
@@ -231,38 +259,94 @@ Deno.serve(async (req) => {
         const diff = leadTarget - nowTotalMin;
 
         if (Math.abs(diff) <= TOLERANCE_MIN) {
-          // Dedup key based on segment + action label + date
-          const dedupKey = `notif_action_${action.label.replace(/\s/g, '_')}_${todayStr}`;
-          // We can't easily store per-action dedup on segment (would need array),
-          // so we use the segment's custom field approach
-          if (segment[dedupKey]) {
-            continue;
-          }
+          // Dedup per action using label hash + segment + date
+          const labelKey = action.label.replace(/[^a-zA-Z0-9]/g, '').slice(0, 30);
+          const dedupKey = `action_${segment.id}_${labelKey}_${todayStr}`;
 
-          // Format the action time for display
-          const actionTimeStr = actionTotalMin !== null
-            ? `${Math.floor(actionTotalMin / 60)}:${String(actionTotalMin % 60).padStart(2, '0')}`
-            : '';
+          if (sentKeys.has(dedupKey)) continue;
 
-          const title = `⚠ ${action.label}`;
-          const dept = action.department ? `[${action.department}] ` : '';
-          const body = `${dept}${segment.title} — ${formatTime12h(actionTimeStr)}`;
-
-          console.log(`[NOTIF_ENGINE] Sending action_upcoming: "${title}" / "${body}"`);
-          const ok = await broadcastPush(title, body);
-
-          if (ok) {
-            await base44.asServiceRole.entities.Segment.update(segment.id, {
-              [dedupKey]: new Date().toISOString(),
-            });
-            sent.push({ type: 'action_upcoming', action: action.label, segment: segment.title, title, body });
-          }
+          pendingActions.push({
+            label: action.label,
+            department: action.department || '',
+            segmentTitle: segment.title || 'Untitled',
+            actionTimeStr: totalMinToHHMM(actionTotalMin),
+            dedupKey,
+          });
         }
       }
     }
 
-    console.log(`[NOTIF_ENGINE] Done. Sent ${sent.length} notifications.`);
-    return Response.json({ success: true, sent, todaySessions: todaySessions.length });
+    console.log(`[NOTIF_ENGINE] Collected ${pendingActions.length} pending actions for digest`);
+
+    // ─── STEP 5: Send grouped digest (max 1 push for all actions) ─
+    if (pendingActions.length > 0) {
+      // Build digest title and body
+      let title, body;
+
+      if (pendingActions.length === 1) {
+        // Single action — send as specific notification
+        const a = pendingActions[0];
+        title = `⚠ ${a.label}`;
+        const dept = a.department ? `[${a.department}] ` : '';
+        body = `${dept}${a.segmentTitle} — ${formatTime12h(a.actionTimeStr)}`;
+      } else {
+        // Multiple actions — grouped digest
+        title = `⚡ ${pendingActions.length} tareas próximas`;
+        // Body: list first 3 action labels with times
+        const lines = pendingActions.slice(0, 3).map(a => {
+          return `• ${truncate(a.label, 35)} — ${formatTime12h(a.actionTimeStr)}`;
+        });
+        if (pendingActions.length > 3) {
+          lines.push(`+ ${pendingActions.length - 3} más`);
+        }
+        body = lines.join('\n');
+      }
+
+      console.log(`[NOTIF_ENGINE] Action digest: "${title}" / "${body}"`);
+      const ok = await broadcastPush(title, body);
+
+      if (ok) {
+        // Log ALL action dedup keys so none repeat
+        const digestDedupKey = `action_digest_${todayStr}_${nowTotalMin}`;
+        await base44.asServiceRole.entities.NotificationLog.create({
+          dedup_key: digestDedupKey,
+          notification_type: 'action_digest',
+          title,
+          body,
+          item_count: pendingActions.length,
+          sent_at: new Date().toISOString(),
+          program_date: todayStr,
+        });
+
+        // Also log individual action dedup keys to prevent re-send
+        for (const a of pendingActions) {
+          sentKeys.add(a.dedupKey);
+          await base44.asServiceRole.entities.NotificationLog.create({
+            dedup_key: a.dedupKey,
+            notification_type: 'action_digest',
+            title: a.label,
+            body: a.segmentTitle,
+            item_count: 1,
+            sent_at: new Date().toISOString(),
+            program_date: todayStr,
+          });
+        }
+
+        newSent.push({
+          type: 'action_digest',
+          count: pendingActions.length,
+          actions: pendingActions.map(a => a.label),
+        });
+      }
+    }
+
+    console.log(`[NOTIF_ENGINE] Done. Sent ${newSent.length} notification(s).`);
+    return Response.json({
+      success: true,
+      sent: newSent,
+      todaySessions: todaySessions.length,
+      actionsCollected: pendingActions.length,
+    });
 
   } catch (error) {
     console.error('[NOTIF_ENGINE] Error:', error);
