@@ -682,6 +682,9 @@ export const es = {
 
   // SpeakerMaterialSection
   'speaker.materialTitle': 'Material del Orador',
+  'speaker.addResource': 'Agregar recurso',
+  'speaker.pasteUrl': 'Pega la URL aquí...',
+  'common.add': 'Agregar',
 
   // EmptyDayPrompt
   'empty.noService': 'No hay servicio para {day}',
