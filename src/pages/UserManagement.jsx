@@ -380,10 +380,25 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant="outline" className={getRoleBadge(user.app_role)}>
-                          <Shield className="w-3 h-3 mr-1" />
-                          {t(`users.roleBadge.${user.app_role}`) || t('users.roleBadge.EventDayViewer')}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className={getRoleBadge(user.app_role)}>
+                            <Shield className="w-3 h-3 mr-1" />
+                            {t(`users.roleBadge.${user.app_role}`) || t('users.roleBadge.EventDayViewer')}
+                          </Badge>
+                          {/* 2026-03-17: Show expiry status for Guest/temporary users */}
+                          {user.access_expires_at && (
+                            <Badge variant="outline" className={
+                              user.access_expires_at < new Date().toISOString().split('T')[0]
+                                ? "bg-red-50 text-red-600 border-red-200 text-[10px]"
+                                : "bg-gray-50 text-gray-500 border-gray-200 text-[10px]"
+                            }>
+                              <Clock className="w-3 h-3 mr-1" />
+                              {user.access_expires_at < new Date().toISOString().split('T')[0]
+                                ? t('users.expired')
+                                : `${t('users.expiresAt')} ${user.access_expires_at}`}
+                            </Badge>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-1">
