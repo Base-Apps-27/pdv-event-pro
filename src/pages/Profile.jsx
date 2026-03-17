@@ -32,14 +32,19 @@ export default function Profile() {
     }
   };
 
+  // 2026-03-17: Mark account for deletion via auth.updateMe (iOS App Store compliance).
+  // Uses updateMe so it works without a backend function dependency.
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      await base44.functions.invoke('deleteUserAccount');
-      // Redirect to login after deletion
-      base44.auth.redirectToLogin();
+      await base44.auth.updateMe({
+        deletion_requested: true,
+        deletion_requested_at: new Date().toISOString(),
+      });
+      // Log out after a brief delay so the user sees the confirmation state
+      setTimeout(() => base44.auth.logout(), 1500);
     } catch (error) {
-      console.error("Error deleting account:", error);
+      console.error("Error requesting account deletion:", error);
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }

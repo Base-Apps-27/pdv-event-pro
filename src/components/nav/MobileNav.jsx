@@ -179,7 +179,7 @@ export default function MobileNav({ user }) {
                     <Link
                       to={createPageUrl(item.page)}
                       onClick={() => setSheetOpen(false)}
-                      className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all no-select ${
                         active
                           ? 'text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-50'
@@ -192,7 +192,7 @@ export default function MobileNav({ user }) {
                     <button
                       onClick={() => togglePin(item.id)}
                       disabled={!itemPinned && !canPin}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 no-select
                         ${itemPinned
                           ? 'text-[#1F8A70]'
                           : canPin
@@ -230,7 +230,7 @@ export default function MobileNav({ user }) {
                             <Link
                               to={createPageUrl(item.page)}
                               onClick={() => setSheetOpen(false)}
-                              className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                              className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all no-select ${
                                 active
                                   ? 'text-white shadow-md'
                                   : 'text-gray-700 hover:bg-gray-50'
@@ -243,7 +243,7 @@ export default function MobileNav({ user }) {
                             <button
                               onClick={() => togglePin(item.id)}
                               disabled={!itemPinned && !canPin}
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 no-select
                                 ${itemPinned
                                   ? 'text-[#1F8A70]'
                                   : canPin
@@ -280,22 +280,22 @@ export default function MobileNav({ user }) {
                     setLanguage(language === 'es' ? 'en' : 'es');
                     setSheetOpen(false);
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors no-select"
                 >
                   <Languages className="w-4 h-4" />
                   {language === 'es' ? 'English' : 'Español'}
                 </button>
                 <button
                   onClick={() => base44.auth.logout()}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors no-select"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Safe area padding for iOS */}
-            <div className="h-6" />
+            {/* 2026-03-17: Safe area padding for iOS — uses env() for dynamic Home Indicator clearance */}
+            <div className="h-6" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }} />
           </div>
         </>
       )}

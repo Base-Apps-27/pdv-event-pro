@@ -20,7 +20,24 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+// 2026-03-17: System dark mode detector — applies 'dark' class to <html> when OS
+// prefers dark color scheme. Desktop users are unaffected (CSS vars handle both modes).
+// Runs once on mount + listens for OS-level theme changes.
+function useDarkModeDetector() {
+  React.useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (matches) => {
+      document.documentElement.classList.toggle('dark', matches);
+    };
+    apply(mq.matches);
+    const handler = (e) => apply(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+}
+
 const AuthenticatedApp = () => {
+  useDarkModeDetector();
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
