@@ -32,11 +32,15 @@ try {
 
 // ── Custom notificationclick handler ──
 // Deep-links to PublicProgramView with session/segment context.
-// PE's own click handler runs first (for analytics); ours adds app routing.
+// ONLY intercepts if our custom session/segment data is present on the notification.
+// If not, returns early so PE's default click handler uses notification_url instead.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const notifData = event.notification.data || {};
   const { sessionId, segmentId } = notifData;
+
+  // No PDV routing data → let PushEngage's default handler navigate to notification_url
+  if (!sessionId && !segmentId) return;
 
   let targetUrl = '/PublicProgramView';
   if (sessionId) {
