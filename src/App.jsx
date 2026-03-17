@@ -24,7 +24,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 // prefers dark color scheme. Desktop users are unaffected (CSS vars handle both modes).
 // Runs once on mount + listens for OS-level theme changes.
 function useDarkModeDetector() {
-  React.useEffect(() => {
+  useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = (matches) => {
       document.documentElement.classList.toggle('dark', matches);
