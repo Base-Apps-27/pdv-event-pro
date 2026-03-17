@@ -26,7 +26,8 @@ Deno.serve(async (req) => {
 
     const title = '🔔 Test Rich Notification';
     const body = 'If you see this title and body, the fix works!';
-    const url = 'https://pdveventpro.com';
+    // 2026-03-17: Updated to correct app URL (was pdveventpro.com)
+    const url = 'https://vidaevents.co';
 
     const formBody = new URLSearchParams({
       notification_title: title,

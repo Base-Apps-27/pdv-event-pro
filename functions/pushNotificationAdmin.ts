@@ -86,7 +86,8 @@ Deno.serve(async (req) => {
       const formBody = new URLSearchParams({
         notification_title: title,
         notification_message: message,
-        notification_url: 'https://pdveventpro.com',
+        // 2026-03-17: Updated to correct app URL (was pdveventpro.com)
+        notification_url: 'https://vidaevents.co',
       }).toString();
 
       console.log(`[PUSH_ADMIN] ${user.email} sending broadcast: "${title}" / "${message}"`);
