@@ -55,6 +55,26 @@ export default function UserManagement() {
     onError: (err) => toast.error(t('users.updateError') + ': ' + err.message),
   });
 
+  // 2026-03-17: Deactivate all guest users mutation
+  const deactivateGuestsMutation = useMutation({
+    mutationFn: async () => {
+      const guests = users.filter(u => u.app_role === 'Guest');
+      if (guests.length === 0) {
+        toast.info(t('users.deactivateGuestsNone'));
+        return [];
+      }
+      return Promise.all(guests.map(u => base44.entities.User.update(u.id, { app_role: 'Deactivated' })));
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries(['users']);
+      setDeactivateGuestsOpen(false);
+      if (results.length > 0) {
+        toast.success(t('users.guestsDeactivated').replace('{count}', results.length));
+      }
+    },
+    onError: (err) => toast.error(t('users.bulkUpdateError') + ': ' + err.message),
+  });
+
   // Bulk update mutation
   const bulkUpdateMutation = useMutation({
     mutationFn: async ({ userIds, updateFn }) => {
@@ -564,6 +584,65 @@ export default function UserManagement() {
               style={{ background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)', color: '#ffffff' }}
             >
               {updateUserMutation.isPending ? t('btn.saving') : t('btn.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2026-03-17: Deactivate All Guests quick action */}
+      {users.some(u => u.app_role === 'Guest') && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h4 className="font-bold text-amber-900 text-sm uppercase tracking-wide flex items-center gap-2">
+                <UserX className="w-4 h-4" />
+                {t('users.deactivateGuestsTitle')}
+              </h4>
+              <p className="text-xs text-amber-700 mt-1">
+                {users.filter(u => u.app_role === 'Guest').length} {t('users.roleBadge.Guest').toLowerCase()}(s) {language === 'es' ? 'activo(s)' : 'active'}
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeactivateGuestsOpen(true)}
+              className="gap-2 bg-amber-600 hover:bg-amber-700"
+            >
+              <UserX className="w-4 h-4" />
+              {t('users.deactivateGuests')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Deactivate Guests Confirmation Dialog */}
+      <Dialog open={deactivateGuestsOpen} onOpenChange={setDeactivateGuestsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              {t('users.deactivateGuestsTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('users.deactivateGuestsDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-sm font-semibold text-gray-700">
+              {users.filter(u => u.app_role === 'Guest').length} {t('users.roleBadge.Guest').toLowerCase()}(s)
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeactivateGuestsOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deactivateGuestsMutation.mutate()}
+              disabled={deactivateGuestsMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {deactivateGuestsMutation.isPending ? t('users.applying') : t('users.deactivateGuestsConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
