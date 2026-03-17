@@ -530,6 +530,39 @@ export default function UserManagement() {
               </Select>
             </div>
 
+            {/* 2026-03-17: Access Expiry Date — useful for Guest/temporary users */}
+            {(selectedRole === 'Guest' || editingExpiresAt) && (
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  {t('users.expiresAt')}
+                </div>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="date"
+                    value={editingExpiresAt}
+                    onChange={(e) => setEditingExpiresAt(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  {editingExpiresAt && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingExpiresAt("")}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      {t('users.noExpiry')}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400">
+                  {language === 'es'
+                    ? 'Después de esta fecha, el acceso se revoca automáticamente.'
+                    : 'After this date, access is automatically revoked.'}
+                </p>
+              </div>
+            )}
+
             {/* All Permissions (Unified View) */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-gray-700">
