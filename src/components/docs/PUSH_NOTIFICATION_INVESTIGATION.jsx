@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-16  
 **Prepared for:** External developer review  
-**App:** PDV Event Pro (Vida Events Pro)  
+**App:** Vida Events Pro  
 **Platform:** Base44 (React + Vite, hosted PWA)  
 **Custom Domain:** https://vidaevents.co  
 **PushEngage Site:** vidaevents.co (PushEngage dashboard)
@@ -148,9 +148,9 @@ PushEngage does NOT deliver push payloads in a simple `{title: "...", body: "...
 
 Either way, the notification displays the hardcoded fallback instead of the rich content.
 
-### 4.3 Why "PDV Event Pro" Appears
+### 4.3 Why "PDV Event Pro" Appeared
 
-The notification subtitle "from PDV Event Pro" likely comes from the **Base44 app name** as registered in the Base44 dashboard. The browser may append the app/site name from the manifest or the service worker's registration origin. The manifest shows `"name": "Vida Events Pro"`, but "PDV Event Pro" is the Base44 internal app name — the browser or OS may source this from a different location.
+The notification subtitle "from PDV Event Pro" came from the **Base44-generated manifest.json** or the internal Base44 app name. The browser appends the app name from the manifest to push notification displays. This was resolved by updating the app name to "Vida Events Pro" in all code references. The Base44 dashboard app name should also be verified.
 
 ### 4.4 Why the Api-Key Fix Didn't Help
 
@@ -275,7 +275,7 @@ This **exact string** is what users see in generic notifications. The PushEngage
 ```
 POST https://api.pushengage.com/apiv1/notifications
 Header: Api-Key: [redacted]
-Body: notification_title=🔔 Test Rich Notification&notification_message=If you see this title and body, the fix works!&notification_url=https://pdveventpro.com
+Body: notification_title=🔔 Test Rich Notification&notification_message=If you see this title and body, the fix works!&notification_url=https://vidaevents.co
 
 Response: { "success": true, "notification_id": 168185070 }
 ```

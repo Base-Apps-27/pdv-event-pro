@@ -1,4 +1,4 @@
-// Mobile Navigation — PDV Event Pro
+// Mobile Navigation — Vida Events Pro
 // 2026-02-14 redesign: bottom tab bar with 4 primary + "More" sheet.
 // Shared navItems data with desktop sidebar. Permission-gated.
 
@@ -150,7 +150,7 @@ export default function MobileNav({ user }) {
                   <Calendar className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-900 uppercase tracking-wide">PDV Event Pro</p>
+                  <p className="text-xs font-bold text-gray-900 uppercase tracking-wide">Vida Events Pro</p>
                 </div>
               </div>
               <button

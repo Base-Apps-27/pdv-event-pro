@@ -1,4 +1,4 @@
-// Desktop Sidebar — PDV Event Pro
+// Desktop Sidebar — Vida Events Pro
 // 2026-02-14 redesign: slim branded rail with icon buttons + flyout "More" panel.
 // Replaces the old full-width list sidebar. Shared navItems data with mobile.
 

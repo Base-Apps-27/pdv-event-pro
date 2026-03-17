@@ -1,5 +1,5 @@
 /**
- * Service Worker for PDV Event Pro — Merged with PushEngage
+ * Service Worker for Vida Events Pro — Merged with PushEngage
  * DEPLOY TO: /public/service-worker.js manually
  *
  * 2026-03-16: MERGED PushEngage service worker via importScripts.

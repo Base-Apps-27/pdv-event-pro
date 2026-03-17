@@ -90,7 +90,7 @@ tag: `${type}-${segmentId}`
 Example: `action-seg-12345` — duplicate notifications are replaced instead of stacked
 
 ### Icon & Badge
-- Icon: `/logo_v2.svg` (PDV branding)
+- Icon: `/logo_v2.svg` (Vida Events branding)
 - Badge: `/logo_v2.svg`
 
 ### Bilingual Strings
