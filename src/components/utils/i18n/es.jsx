@@ -250,6 +250,7 @@ export const es = {
   'error.please_complete': 'Por favor completa:',
   'hint.allowed_placeholders': 'Se permiten marcadores como "TBD", "Por definir" o "---"',
   'error.save_failed': 'No se pudo guardar el segmento',
+  'error.generic': 'Ocurrió un error inesperado',
   'errors.createFailed': 'Error al crear',
   'errors.updateFailed': 'Error al actualizar',
   'errors.deleteFailed': 'Error al eliminar',
