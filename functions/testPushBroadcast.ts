@@ -1,8 +1,8 @@
 /**
  * testPushBroadcast — One-shot test to verify PushEngage rich notifications.
  * 
- * 2026-03-16: Created to verify the Api-Key header fix.
- * Root cause: broadcastPush used 'api_key' (wrong) instead of 'Api-Key' (correct).
+ * 2026-03-16: Created to verify PushEngage rich notification delivery.
+ * Header: 'api_key' (lowercase/underscore) per PushEngage official docs.
  * This function sends a single test notification and returns the PushEngage response.
  * 
  * Admin-only. Delete after verification.
@@ -34,12 +34,12 @@ Deno.serve(async (req) => {
       notification_url: url,
     }).toString();
 
-    console.log(`[TEST_PUSH] Sending with Api-Key header...`);
+    console.log(`[TEST_PUSH] Sending with api_key header...`);
 
     const res = await fetch('https://api.pushengage.com/apiv1/notifications', {
       method: 'POST',
       headers: {
-        'Api-Key': apiKey,
+        'api_key': apiKey,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: formBody,

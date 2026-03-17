@@ -51,8 +51,17 @@ export default function PushEngageLoader() {
     window._peq = window._peq || [];
     window.PushEngage.push(['init', {
       appId: '968eaa2b-cba4-4999-b736-393668e20d9b',
-      // Tell PE SDK we handle SW registration ourselves
-      serviceWorkerPath: '/service-worker.js'
+      // PE dashboard: "Enable the service worker registration" = OFF
+      // We register /service-worker.js manually above, so PE SDK must not
+      // attempt its own registration. 'serviceWorkerPath' is not a valid
+      // PE SDK config option (PE SDK uses internal 'path' mapped from 'worker').
+      // No SW config needed here — our manual register() call handles it.
+
+      // Suppress PE SDK's built-in permission prompt — we call
+      // Notification.requestPermission() ourselves via useNotificationPermissionPrompt
+      // to control timing (after SW + SDK init). Without this, PE SDK may
+      // trigger a second, conflicting permission dialog.
+      disabledDefaultPrompt: true,
     }]);
 
     const script = document.createElement('script');
