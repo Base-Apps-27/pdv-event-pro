@@ -201,9 +201,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // 2026-03-17: 🟢 session name in title, event context + time in body
-        // Compact format for collapsed notification glanceability
-        const title = truncate(`🟢 ${session.name}`, 80);
+        // 2026-03-17: 🟢 session name + countdown in title, event + time in body
+        // "🟢 Sesión PM · Inicio en 15 min" gives urgency on collapsed view
+        const minsUntilStart = startTime.totalMinutes - nowTotalMin;
+        const countdownText = minsUntilStart <= 1 ? 'Inicio YA' : `Inicio en ${minsUntilStart} min`;
+        const title = truncate(`🟢 ${session.name} · ${countdownText}`, 80);
         const body = `${truncate(session._eventName || '', 60)} · ${formatTime12h(session.planned_start_time)}`;
 
         console.log(`[NOTIF_ENGINE] Session alert: "${title}" / "${body}"`);
