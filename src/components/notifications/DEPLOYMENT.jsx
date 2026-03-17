@@ -180,7 +180,7 @@ To enable notifications when app is **closed**:
 
 ✅ **Bilingual:** Notifications support EN/ES via i18n context
 ✅ **Accessibility:** Notifications respect browser settings (mute, focus)
-✅ **Branding:** Uses PDV logo and app icon
+✅ **Branding:** Uses Vida Events logo and app icon
 ✅ **No destructive changes:** New entity (PushSubscription) for future use only
 ✅ **Observable:** Logged in server console for audit trail
 ✅ **User control:** Permission prompt, can disable anytime
