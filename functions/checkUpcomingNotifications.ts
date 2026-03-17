@@ -18,8 +18,15 @@
  *   - Only sends during reasonable hours (6 AM – 11 PM ET)
  *
  * Notification types:
- *   1. session_starting — "{Session Name} starts at {Time}" (one per session)
- *   2. action_digest — "⚡ {N} upcoming tasks" with grouped body (one per cycle)
+ *   1. session_starting — "🟢 {Session Name}" / "{Event} · {Time}" (one per session)
+ *   2. action_digest — "🚨 {N} tareas próximas" / compact body (one per cycle)
+ *
+ * TEXT OPTIMIZATION (2026-03-17): Notifications are designed for collapsed/glance view.
+ *   - 🚨 (red siren) for actions — urgent, eye-catching
+ *   - 🟢 (green circle) for sessions — "go time"
+ *   - [Department] prefix REMOVED from body — wastes ~15 chars
+ *   - Separator changed from " — " to " · " — saves 2 chars
+ *   - Digest bullets removed — saves 2 chars per line
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
@@ -194,8 +201,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const title = truncate(session._eventName || session.name, 80);
-        const body = `${session.name} — ${formatTime12h(session.planned_start_time)}`;
+        // 2026-03-17: 🟢 session name in title, event context + time in body
+        // Compact format for collapsed notification glanceability
+        const title = truncate(`🟢 ${session.name}`, 80);
+        const body = `${truncate(session._eventName || '', 60)} · ${formatTime12h(session.planned_start_time)}`;
 
         console.log(`[NOTIF_ENGINE] Session alert: "${title}" / "${body}"`);
         const ok = await broadcastPush(title, body);
@@ -284,20 +293,20 @@ Deno.serve(async (req) => {
       let title, body;
 
       if (pendingActions.length === 1) {
-        // Single action — send as specific notification
+        // Single action: 🚨 action label in title, segment · time in body
+        // Department intentionally omitted — wastes chars on collapsed view
         const a = pendingActions[0];
-        title = `⚠ ${a.label}`;
-        const dept = a.department ? `[${a.department}] ` : '';
-        body = `${dept}${a.segmentTitle} — ${formatTime12h(a.actionTimeStr)}`;
+        title = `🚨 ${a.label}`;
+        body = `${a.segmentTitle} · ${formatTime12h(a.actionTimeStr)}`;
       } else {
-        // Multiple actions — grouped digest
-        title = `⚡ ${pendingActions.length} tareas próximas`;
-        // Body: list first 3 action labels with times
+        // Multiple actions: 🚨 count in title, compact list in body
+        // No bullets, no department — every char counts on collapsed view
+        title = `🚨 ${pendingActions.length} tareas próximas`;
         const lines = pendingActions.slice(0, 3).map(a => {
-          return `• ${truncate(a.label, 35)} — ${formatTime12h(a.actionTimeStr)}`;
+          return `${truncate(a.label, 30)} · ${formatTime12h(a.actionTimeStr)}`;
         });
         if (pendingActions.length > 3) {
-          lines.push(`+ ${pendingActions.length - 3} más`);
+          lines.push(`+${pendingActions.length - 3} más`);
         }
         body = lines.join('\n');
       }
