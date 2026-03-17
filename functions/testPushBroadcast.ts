@@ -24,10 +24,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'PUSHENGAGE_API_KEY not set' }, { status: 500 });
     }
 
-    const title = '🔔 Test Rich Notification';
-    const body = 'If you see this title and body, the fix works!';
-    // 2026-03-17: Updated to correct app URL (was pdveventpro.com)
-    const url = 'https://vidaevents.co';
+    // 2026-03-17: Accept custom title/body from payload for scenario testing
+    const payload = await req.json().catch(() => ({}));
+    const title = payload.title || '🔔 Test Rich Notification';
+    const body = payload.body || 'If you see this title and body, the fix works!';
+    const url = payload.url || 'https://vidaevents.co';
 
     const formBody = new URLSearchParams({
       notification_title: title,
