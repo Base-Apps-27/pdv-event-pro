@@ -92,7 +92,7 @@ async function broadcastPush(title, body, url) {
   const formBody = new URLSearchParams({
     notification_title: title,
     notification_message: body,
-    notification_url: url || 'https://pdveventpro.com',
+    notification_url: url || 'https://vidaevents.co',
   }).toString();
 
   const res = await fetch('https://api.pushengage.com/apiv1/notifications', {
