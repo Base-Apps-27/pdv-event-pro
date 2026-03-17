@@ -70,6 +70,15 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'access_live_view',
     'view_reports',
   ],
+  // Guest: Temporary external users (contractors, event volunteers).
+  // 2026-03-17: Gets MyProgram only — same as EventDayViewer but clearly labeled as temporary.
+  // Admins can bulk-deactivate all Guests after an event.
+  Guest: [
+    'access_my_program',
+  ],
+  // Deactivated: Access fully revoked. User record preserved for audit trail.
+  // 2026-03-17: Zero permissions. Layout will redirect to login/blocked screen.
+  Deactivated: [],
 };
 
 // MyProgram: All roles get access_my_program by default.
@@ -81,6 +90,14 @@ export const DEFAULT_ROLE_PERMISSIONS = {
  */
 export function getUserPermissions(user) {
   if (!user) return [];
+
+  // 2026-03-17: Check access expiry — treat expired users as Deactivated
+  if (user.access_expires_at) {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    if (user.access_expires_at < today) {
+      return []; // Expired = zero permissions
+    }
+  }
 
   const permissions = new Set();
 
