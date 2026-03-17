@@ -134,6 +134,7 @@ export const en = {
   'error.please_complete': 'Please complete:',
   'hint.allowed_placeholders': 'Placeholders like "TBD", "To be defined", or "---" are allowed',
   'error.save_failed': 'Failed to save segment',
+  'error.generic': 'An unexpected error occurred',
   'errors.createFailed': 'Failed to create',
   'errors.updateFailed': 'Failed to update',
   'errors.deleteFailed': 'Failed to delete',
