@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog, Trash2, AlertTriangle } from "lucide-react";
+import { Users, Search, Shield, Mail, Calendar, Edit2, Plus, Minus, CheckSquare, Square, UserCog, Trash2, AlertTriangle, UserX, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { getAllPermissionDefinitions, DEFAULT_ROLE_PERMISSIONS } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n.jsx";
@@ -30,6 +30,8 @@ export default function UserManagement() {
   const [bulkAction, setBulkAction] = useState(""); // "role", "addPerm", "removePerm"
   const [bulkRole, setBulkRole] = useState("");
   const [bulkPermission, setBulkPermission] = useState("");
+  // 2026-03-17: Deactivate all guests dialog
+  const [deactivateGuestsOpen, setDeactivateGuestsOpen] = useState(false);
 
   const allPermissions = getAllPermissionDefinitions();
 
@@ -184,7 +186,9 @@ export default function UserManagement() {
       LiveManager: "bg-indigo-100 text-indigo-800 border-indigo-300",
       LivestreamAdmin: "bg-red-100 text-red-800 border-red-300",
       EventDayCoordinator: "bg-teal-100 text-teal-800 border-teal-300",
-      EventDayViewer: "bg-gray-100 text-gray-800 border-gray-300"
+      EventDayViewer: "bg-gray-100 text-gray-800 border-gray-300",
+      Guest: "bg-amber-100 text-amber-800 border-amber-300",
+      Deactivated: "bg-red-50 text-red-500 border-red-200"
     };
     return styles[role] || styles.EventDayViewer;
   };
