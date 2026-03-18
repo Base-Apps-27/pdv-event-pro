@@ -33,11 +33,12 @@ import TeamServersDisplay from "@/components/service/TeamServersDisplay";
 export default function PublicCountdownDisplay() {
   const { t } = useLanguage();
 
-  // ── Testing override: URL params ──
+  // ── Testing override: URL params (dev mode only — SEC: prevent unauthorized data access) ──
   const urlParams = new URLSearchParams(window.location.search);
-  const overrideServiceId = urlParams.get('override_service_id');
-  const overrideEventId = urlParams.get('override_event_id');
-  const mockTimeParam = urlParams.get('mock_time');
+  const isDev = import.meta.env.DEV;
+  const overrideServiceId = isDev ? urlParams.get('override_service_id') : null;
+  const overrideEventId = isDev ? urlParams.get('override_event_id') : null;
+  const mockTimeParam = isDev ? urlParams.get('mock_time') : null;
   const isOverrideMode = !!(overrideServiceId || overrideEventId);
 
   // ── Clock tick (1 s) — freeze if mock time provided ──

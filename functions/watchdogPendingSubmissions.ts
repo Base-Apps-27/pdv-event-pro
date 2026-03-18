@@ -67,6 +67,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, requeued: requeuedCount, results });
   } catch (error) {
     console.error(`[WATCHDOG] Fatal error: ${error.message}`);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

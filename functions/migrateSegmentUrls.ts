@@ -84,6 +84,6 @@ Deno.serve(async (req) => {
         });
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        return Response.json({ error: 'Internal server error' }, { status: 500 });
     }
 });

@@ -24,14 +24,17 @@ Deno.serve(async (req) => {
     // Convert base64 PDF to attachment
     const pdfBase64 = pdfBlob.split(',')[1] || pdfBlob;
 
+    const senderEmail = Deno.env.get('SENDER_EMAIL') || 'danny.sena@ccpvida.org';
+    const senderName = Deno.env.get('SENDER_NAME') || 'Palabras de Vida';
+
     const emailData = {
       personalizations: [{
         to: [{ email: to }],
         subject: subject
       }],
       from: {
-        email: 'danny.sena@ccpvida.org',
-        name: 'Palabras de Vida'
+        email: senderEmail,
+        name: senderName
       },
       content: [{
         type: 'text/plain',
@@ -55,14 +58,14 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('SendGrid error:', error);
-      return Response.json({ error: 'Failed to send email', details: error }, { status: 500 });
+      const errorBody = await response.text();
+      console.error('SendGrid error:', errorBody);
+      return Response.json({ error: 'Failed to send email' }, { status: 502 });
     }
 
     return Response.json({ success: true, message: 'Email sent successfully' });
   } catch (error) {
     console.error('Error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

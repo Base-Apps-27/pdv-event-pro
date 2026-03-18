@@ -144,9 +144,8 @@ Deno.serve(async (req) => {
     
   } catch (error) {
     console.error('[SYNC FEB 22] Error:', error);
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    return Response.json({
+      error: 'Internal server error',
     }, { status: 500 });
   }
 });

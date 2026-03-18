@@ -47,13 +47,12 @@ Deno.serve(async (req) => {
       ],
     };
 
-    console.log('VAPID KEYS GENERATED:');
-    console.log('PUBLIC:', vapidKeys.publicKey);
-    console.log('PRIVATE:', vapidKeys.privateKey);
+    // SEC: Only log public key; private key is returned in JSON response (admin-gated)
+    console.log('VAPID keys generated successfully');
 
     return Response.json(output);
   } catch (error) {
     console.error('[VAPID_ERROR]', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

@@ -25,6 +25,12 @@ Deno.serve(async (req) => {
     }
 
     try {
+        // SEC: Reject oversized payloads before parsing
+        const contentLength = parseInt(req.headers.get('content-length') || '0', 10);
+        if (contentLength > 100_000) {
+            return Response.json({ error: 'Payload too large' }, { status: 413, headers: corsHeaders });
+        }
+
         const base44 = createClientFromRequest(req);
         const url = new URL(req.url);
 
@@ -207,6 +213,6 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error('getArtsFormData error:', error);
-        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+        return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
     }
 });

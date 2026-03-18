@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
+import { sanitizeHtml } from "@/components/utils/sanitizeHtml";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintData, onServiceCreated, sessionDefs }) {
@@ -164,9 +165,11 @@ export default function EmptyDayPrompt({ dayOfWeek, date, slotNames, blueprintDa
       {blueprintData ? (
         <p className="text-xs text-[#1F8A70] font-medium mb-4"
           dangerouslySetInnerHTML={{
-            __html: t('empty.blueprintWillUse')
-              .replace('{name}', blueprintData.name || 'Blueprint')
-              .replace('{count}', (blueprintData.segments || []).length)
+            __html: sanitizeHtml(
+              t('empty.blueprintWillUse')
+                .replace('{name}', blueprintData.name || 'Blueprint')
+                .replace('{count}', (blueprintData.segments || []).length)
+            )
           }}
         />
       ) : (

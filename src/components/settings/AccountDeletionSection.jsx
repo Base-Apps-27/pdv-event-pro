@@ -22,8 +22,8 @@ export default function AccountDeletionSection() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await base44.functions.invoke('deleteUserAccount', {});
-      toast.success(t('account.deleteSuccess'));
+      const result = await base44.functions.invoke('deleteUserAccount', {});
+      toast.success(result?.message || t('account.deleteSuccess'));
       setConfirmOpen(false);
       // After deletion request, log the user out
       setTimeout(() => base44.auth.logout(), 2000);

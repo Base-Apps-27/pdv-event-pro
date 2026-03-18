@@ -44,21 +44,37 @@ Deno.serve(async (req) => {
       });
       console.log(`[PUSH] Updated subscription for ${user.email}`);
     } else {
-      // Create new subscription
-      result = await base44.asServiceRole.entities.PushSubscription.create({
-        user_email: user.email,
-        endpoint,
-        auth_key,
-        p256dh_key,
-        user_agent,
-        is_active: true,
-      });
-      console.log(`[PUSH] Created subscription for ${user.email}`);
+      // Create new subscription (with race-condition retry)
+      try {
+        result = await base44.asServiceRole.entities.PushSubscription.create({
+          user_email: user.email,
+          endpoint,
+          auth_key,
+          p256dh_key,
+          user_agent,
+          is_active: true,
+        });
+        console.log(`[PUSH] Created subscription for ${user.email}`);
+      } catch (createErr) {
+        // SEC: Handle race where concurrent request created the record first
+        const retry = await base44.asServiceRole.entities.PushSubscription.filter({
+          user_email: user.email,
+          user_agent,
+        });
+        if (retry.length > 0) {
+          result = await base44.asServiceRole.entities.PushSubscription.update(retry[0].id, {
+            endpoint, auth_key, p256dh_key, is_active: true,
+          });
+          console.log(`[PUSH] Race-retry updated subscription for ${user.email}`);
+        } else {
+          throw createErr;
+        }
+      }
     }
 
     return Response.json({ success: true, subscriptionId: result.id });
   } catch (error) {
     console.error('[STORE_PUSH_ERROR]', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

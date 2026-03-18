@@ -14,7 +14,8 @@ Deno.serve(async (req) => {
         return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Rate Limiting
+    // Layer 1: In-memory rate limiting (best-effort, resets on cold start)
+    // NOTE: TOCTOU race under concurrency is accepted; Layer 2 provides persistent protection.
     const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
     const windowMs = 60000; // 1 minute
@@ -109,6 +110,6 @@ Deno.serve(async (req) => {
         }, { headers: corsHeaders });
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+        return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
     }
 });

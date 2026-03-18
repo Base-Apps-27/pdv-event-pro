@@ -93,11 +93,11 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('fetchUrlMetadata error:', error);
-    return Response.json({ 
-      title: null, 
-      thumbnail: null, 
+    return Response.json({
+      title: null,
+      thumbnail: null,
       type: 'error',
-      error: error.message 
+      error: 'Failed to fetch URL metadata'
     }, { status: 500 });
   }
 });

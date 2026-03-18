@@ -195,6 +195,46 @@ Total: ~1,469 lines of dead code removed
 
 ---
 
+## SECURITY AUDIT REMEDIATION — 2026-03-18
+
+Full security audit performed (see SECURITY_AUDIT_REPORT.md). 23 issues identified, 17 fixed.
+
+### CRITICAL fixes:
+- **server_url validation** (`src/lib/app-params.js`): Added allowlist validation to prevent API redirection attacks via `?server_url=` param
+- **Override params** (`PublicCountdownDisplay.jsx`, `PublicProgramView.jsx`): Gated `override_service_id`, `override_event_id`, `mock_time` to `import.meta.env.DEV` only
+- **Account deletion** (`deleteUserAccount.ts`): Changed from false `success: true` to honest `status: 'pending'` response
+
+### HIGH fixes:
+- **XSS** (`EmptyDayPrompt.jsx:166`): Added `sanitizeHtml()` wrapper around `dangerouslySetInnerHTML` with `blueprintData.name`
+- **Error info leaks**: Removed `error.message`, `details`, and stack traces from client-facing responses across 30+ backend functions
+- **Drive query injection** (`uploadToDrive.ts:33`): Escape single quotes in folder name query
+- **CORS** (`updateLiveSegmentTiming.ts`): Replaced wildcard CORS with origin validation on authenticated endpoint
+- **Hardcoded email** (`sendEmailWithPDF.ts:33`): Moved sender email to env vars with fallback
+
+### MEDIUM fixes:
+- **Rate limiting**: Added TOCTOU race documentation; `getSpeakerOptions.ts` has Layer 1 with Layer 2 recommendation
+- **Push subscription race** (`storePushSubscription.ts`): Added retry-on-conflict for concurrent create
+- **Body size limits**: Added 100KB `content-length` check to `getArtsFormData.ts`, `getSpeakerFormData.ts`, `getWeeklyFormData.ts`
+- **Segments limit** (`getSegmentsBySessionIds.ts`): Added `MAX_TOTAL_SEGMENTS = 500` cap
+- **URL validation** (`submitWeeklyServiceContent.ts`): Replaced prefix check with `new URL()` constructor
+- **Permission check docs** (`updateLiveSegmentTiming.ts`): Documented why backend checks raw fields vs frontend hierarchy
+
+### LOW fixes:
+- **VAPID key logging** (`generateVAPIDKeys.ts`): Removed `console.log` of private key
+
+### Platform constraints (NOT fixed — accepted risk):
+| Issue | Reason |
+|-------|--------|
+| Auth token in URL/localStorage | Base44 SDK manages auth lifecycle |
+| `postMessage('*')` in VisualEditAgent | Platform file, already documented |
+| Wildcard CORS on 8 public form endpoints | Intentional for unauthenticated public forms |
+| Client-side admin gating in DevTools | Backend enforces entity-level permissions via SDK |
+| BIBLE_BOOKS duplication across 4 functions | Deno Deploy doesn't support shared modules across functions |
+| Deprecated serve*.ts redirects | Kept for old URLs in circulation |
+| Supabase project ID in image URL | Public storage URL, not exploitable alone |
+
+---
+
 ## VERIFICATION CHECKLIST
 
 All backend functions tested:

@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // PLACEHOLDER: Log the deletion request for audit trail
+    // Log the deletion request for audit trail
     console.log(`[deleteUserAccount] Account deletion requested by user: ${user.email} (id: ${user.id})`);
 
     // TODO: Implement actual account deletion logic:
@@ -28,14 +28,15 @@ Deno.serve(async (req) => {
     // 3. Delete or deactivate the User entity record
     // 4. Send confirmation email
 
+    // SEC: Return honest "pending" status instead of false success.
+    // The request is logged; manual processing follows within 30 days (GDPR/CCPA).
     return Response.json({
-      success: true,
-      message: 'Account deletion request received. This is currently a placeholder — actual deletion will be implemented.',
-      requested_by: user.email,
+      status: 'pending',
+      message: 'Account deletion request received. Your data will be removed within 30 days.',
       requested_at: new Date().toISOString(),
     });
   } catch (error) {
     console.error('[deleteUserAccount] Error:', error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

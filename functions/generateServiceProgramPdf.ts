@@ -63,11 +63,9 @@ Deno.serve(async (req) => {
     if (!helloResponse.ok) {
       const errorText = await helloResponse.text();
       console.error('HELLO WORLD TEST FAILED:', helloResponse.status, errorText);
-      return Response.json({ 
-        error: 'PDFShift Hello World test failed - API is not operational',
-        status: helloResponse.status,
-        details: errorText
-      }, { status: 500 });
+      return Response.json({
+        error: 'PDF service is not operational',
+      }, { status: 502 });
     }
 
     const helloBlob = await helloResponse.arrayBuffer();
@@ -80,11 +78,9 @@ Deno.serve(async (req) => {
       console.error('HELLO WORLD TEST FAILED: Invalid or suspiciously small PDF');
       console.error('Byte length:', helloBlob.byteLength);
       console.error('Header:', helloPdfHeader);
-      return Response.json({ 
-        error: 'Hello World test produced invalid PDF',
-        byteLength: helloBlob.byteLength,
-        header: helloPdfHeader
-      }, { status: 500 });
+      return Response.json({
+        error: 'PDF service produced invalid output',
+      }, { status: 502 });
     }
 
     logPDFShiftHeaders(helloResponse);
@@ -128,11 +124,9 @@ Deno.serve(async (req) => {
       console.error('Status:', pdfResponse.status);
       console.error('Error body:', errorText);
       
-      return Response.json({ 
-        error: 'PDF generation failed', 
-        status: pdfResponse.status,
-        details: errorText
-      }, { status: 500 });
+      return Response.json({
+        error: 'PDF generation failed',
+      }, { status: 502 });
     }
 
     // Log response headers
@@ -164,7 +158,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('PDF generation error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 

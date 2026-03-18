@@ -62,10 +62,17 @@ Deno.serve(async (req) => {
         const URL_FIELDS_TO_CHECK = { presentation_url, notes_url };
         for (const [fieldName, val] of Object.entries(URL_FIELDS_TO_CHECK)) {
             if (val && typeof val === 'string' && val.trim() !== '') {
-                const trimmed = val.trim().toLowerCase();
-                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                try {
+                    const parsed = new URL(val.trim());
+                    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                        return Response.json(
+                            { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                            { status: 400, headers: corsHeaders }
+                        );
+                    }
+                } catch {
                     return Response.json(
-                        { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                        { error: `Invalid URL format in field "${fieldName}".` },
                         { status: 400, headers: corsHeaders }
                     );
                 }
@@ -288,6 +295,6 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error("[SUBMIT_ERROR]", error.message);
-        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+        return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
     }
 });

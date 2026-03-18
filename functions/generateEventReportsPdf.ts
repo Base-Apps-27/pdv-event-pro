@@ -512,6 +512,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    return Response.json({ error: error.message || String(error) }, { status: 500 });
+    console.error('[generateEventReportsPdf] Error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

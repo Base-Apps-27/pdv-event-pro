@@ -353,6 +353,6 @@ ${content.substring(0, 15000)}`;
     return Response.json({ success: true, processed: segmentId });
   } catch (error) {
     console.error(`[PROCESS_SEGMENT] Error: ${error.message}`);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

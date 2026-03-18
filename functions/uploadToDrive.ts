@@ -30,7 +30,9 @@ const DRIVE_API = 'https://www.googleapis.com/';
  * Find or create a folder by name under a parent folder.
  */
 async function findOrCreateFolder(token, name, parentId) {
-  let q = `name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  // SEC: Escape single quotes to prevent Drive query manipulation
+  const safeName = name.replace(/'/g, "\\'");
+  let q = `name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   if (parentId) q += ` and '${parentId}' in parents`;
 
   const res = await fetch(
@@ -115,6 +117,6 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Unknown action. Use "init" or "finalize".' }, { status: 400 });
   } catch (error) {
     console.error('[uploadToDrive] Error:', error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

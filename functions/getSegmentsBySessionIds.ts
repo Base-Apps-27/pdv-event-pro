@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const MAX_SESSION_IDS = 50;
 const BATCH_SIZE = 10;
+const MAX_TOTAL_SEGMENTS = 500;
 
 Deno.serve(async (req) => {
   try {
@@ -56,6 +57,13 @@ Deno.serve(async (req) => {
       allResults.push(...batchResults.flat());
     }
 
+    // SEC: Cap total segments to prevent oversized responses
+    if (allResults.length > MAX_TOTAL_SEGMENTS) {
+      return Response.json({
+        error: `Result set too large (${allResults.length} segments). Please request fewer sessions.`,
+      }, { status: 400 });
+    }
+
     // Deterministic ordering: by session order, then by start_time (HH:MM), then by order as tie-breaker
     const toMinutes = (t) => {
       if (!t || typeof t !== 'string') return Number.POSITIVE_INFINITY;
@@ -86,6 +94,6 @@ Deno.serve(async (req) => {
       stack: error.stack,
       timestamp: new Date().toISOString()
     });
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

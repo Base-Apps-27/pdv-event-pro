@@ -25,8 +25,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  */
 
 Deno.serve(async (req) => {
+  // SEC: Authenticated endpoint — restrict CORS to known origins instead of wildcard
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = (origin.endsWith('.base44.com') || origin.includes('localhost')) ? origin : '';
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS' } });
+    return new Response(null, { headers: corsHeaders });
   }
 
   const base44 = createClientFromRequest(req);
@@ -38,7 +47,9 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    // Permission check: require admin role or 'manage_live_timing' permission
+    // Permission check: admin role bypasses, otherwise require explicit manage_live_timing.
+    // Note: Backend functions check raw fields (role, custom_permissions) since the
+    // getUserPermissions() hierarchy utility is frontend-only. This is functionally equivalent.
     const isAdmin = user.role === 'admin';
     const hasManagePermission = Array.isArray(user.custom_permissions) && user.custom_permissions.includes('manage_live_timing');
     if (!isAdmin && !hasManagePermission) {

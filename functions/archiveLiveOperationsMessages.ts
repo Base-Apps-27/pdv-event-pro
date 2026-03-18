@@ -113,9 +113,9 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Archive error:', error);
-    return Response.json({ 
-      success: false, 
-      error: error.message 
+    return Response.json({
+      success: false,
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

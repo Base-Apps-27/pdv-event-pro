@@ -72,9 +72,11 @@ export default function PublicProgramView() {
   const preloadedDate = urlParams.get('date') || "";
   const preloadedSlug = urlParams.get('slug');
   const isStreamMode = urlParams.get('view') === 'livestream';
-  const overrideServiceId = urlParams.get('override_service_id');
-  const overrideEventId = urlParams.get('override_event_id');
-  const mockTimeParam = urlParams.get('mock_time');
+  // SEC: Override/mock params restricted to dev mode to prevent unauthorized data access
+  const isDev = import.meta.env.DEV;
+  const overrideServiceId = isDev ? urlParams.get('override_service_id') : null;
+  const overrideEventId = isDev ? urlParams.get('override_event_id') : null;
+  const mockTimeParam = isDev ? urlParams.get('mock_time') : null;
 
   // State
   const [viewType, setViewType] = useState(preloadedServiceId || preloadedDate ? "service" : "event");

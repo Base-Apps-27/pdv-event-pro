@@ -207,6 +207,6 @@ Deno.serve(async (req) => {
                 console.error("Failed to cleanup idempotency:", cleanupErr);
             }
         }
-        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+        return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
     }
 });

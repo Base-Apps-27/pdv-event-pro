@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
     }
 
     // ── RATE LIMITING (2026-02-28: hardened with dual keys — IP + email) ──
+    // NOTE: In-memory rate limiting has a known TOCTOU race under concurrency.
+    // Accepted as best-effort; Layer 2 entity-based limiting provides persistent protection.
     const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
     const windowMs = 60000; // 1 minute window
@@ -268,6 +270,6 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error('[ArtsSubmission] Error:', error);
-        return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+        return Response.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
     }
 });
