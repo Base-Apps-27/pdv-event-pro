@@ -25,7 +25,10 @@ export default function PublicFormShell({ title, subtitle, description, event, c
     : '';
 
   return (
-    <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+    {/* 2026-03-19: color-scheme:light forces browser to render all form controls
+         in light mode regardless of OS dark mode preference — prevents white-on-white
+         text in textareas/inputs on dark-mode devices */}
+    <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-6" style={{ colorScheme: 'light' }}>
       {/* Brand gradient top bar */}
       <div className="h-1.5 brand-gradient" />
 
