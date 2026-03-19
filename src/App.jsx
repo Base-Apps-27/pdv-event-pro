@@ -33,7 +33,7 @@ function useEnsureLightMode() {
 }
 
 const AuthenticatedApp = () => {
-  useDarkModeDetector();
+  useEnsureLightMode();
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
