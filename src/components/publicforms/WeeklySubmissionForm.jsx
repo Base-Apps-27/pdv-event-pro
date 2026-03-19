@@ -138,7 +138,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                     {t('Seleccione su Horario y Nombre', 'Select your Time Slot and Name')} <span className="text-red-600">*</span>
                 </label>
                 <select value={segmentId} onChange={e => handleSegmentChange(e.target.value)} required
-                    className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10">
+                    className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10">
                     <option value="" disabled>{t('Seleccione...', 'Select...')}</option>
                     {serviceGroups.map(group => (
                         <optgroup key={group.label} label={group.label}>
@@ -154,7 +154,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
             <div className="mb-6">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('Título del Mensaje', 'Message Title')}</label>
                 <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('Título de la predicación (Opcional)', 'Sermon title (Optional)')}
-                    className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
+                    className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10" />
             </div>
 
             {/* PATH A ("notes"): Paste first, optional slides second */}
@@ -175,7 +175,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                                 "No necesita separar los versículos manualmente. Simplemente pegue su bosquejo o notas completas aquí.",
                                 "No need to separate the verses manually. Just paste your complete outline or notes here."
                             )}
-                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[200px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 min-h-[200px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                         />
                     </div>
 
@@ -263,7 +263,7 @@ export default function WeeklySubmissionForm({ serviceGroups, siblingMap }) {
                                 "Opcional: solo si tiene texto adicional fuera de la presentación.",
                                 "Optional: only if you have additional text outside the presentation."
                             )}
-                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                         />
                     </div>
                 </>
