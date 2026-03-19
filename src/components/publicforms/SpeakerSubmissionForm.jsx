@@ -145,7 +145,7 @@ export default function SpeakerSubmissionForm({ options }) {
                             if (e.target.value) setTimeout(() => contentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
                         }}
                         required
-                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                     >
                         <option value="" disabled>{t('Seleccione una opción...', 'Select an option...')}</option>
                         {Object.entries(grouped).map(([groupName, groupOpts]) => (
@@ -176,7 +176,7 @@ export default function SpeakerSubmissionForm({ options }) {
                         value={title}
                         onChange={e => setTitle(e.target.value)}
                         placeholder={t('Título de la predicación', 'Sermon title')}
-                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                        className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                     />
                 </div>
             </div>
@@ -210,7 +210,7 @@ export default function SpeakerSubmissionForm({ options }) {
                                     "No es necesario separar los versículos. Puede pegar todo su documento aquí y nosotros haremos el resto.",
                                     "No need to separate the verses. You can paste your entire document here and we'll do the rest."
                                 )}
-                                className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[180px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                                className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 min-h-[180px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                             />
                         </div>
                     </div>
@@ -304,7 +304,7 @@ export default function SpeakerSubmissionForm({ options }) {
                                 "Opcional: solo si tiene texto adicional fuera de la presentación.",
                                 "Optional: only if you have additional text outside the presentation."
                             )}
-                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
+                            className="w-full p-3 border border-gray-200 rounded-md text-base bg-white text-gray-900 min-h-[100px] resize-y focus:outline-none focus:border-[#1F8A70] focus:ring-2 focus:ring-[#1F8A70]/10"
                         />
                     </div>
                 </>
