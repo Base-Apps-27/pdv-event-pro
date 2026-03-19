@@ -21,19 +21,14 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
-// 2026-03-17: System dark mode detector — applies 'dark' class to <html> when OS
-// prefers dark color scheme. Desktop users are unaffected (CSS vars handle both modes).
-// Runs once on mount + listens for OS-level theme changes.
-function useDarkModeDetector() {
+// 2026-03-19: Dark mode detector REMOVED. The app's design system (brand gradients,
+// segment color coding, #F0F1F3 backgrounds) is built for light mode only. Enabling
+// .dark class via OS preference broke contrast and backgrounds across all surfaces.
+// If dark mode is needed in the future, every component must be audited first.
+function useEnsureLightMode() {
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = (matches) => {
-      document.documentElement.classList.toggle('dark', matches);
-    };
-    apply(mq.matches);
-    const handler = (e) => apply(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    // Force-remove dark class in case it was previously applied or cached
+    document.documentElement.classList.remove('dark');
   }, []);
 }
 
