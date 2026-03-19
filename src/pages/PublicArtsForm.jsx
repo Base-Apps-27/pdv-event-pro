@@ -95,7 +95,8 @@ export default function PublicArtsForm() {
 
   return (
     <PublicFormLangProvider>
-      <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+      {/* 2026-03-19: color-scheme:light prevents OS dark mode from overriding form control text colors */}
+      <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8" style={{ colorScheme: 'light' }}>
         <div className="w-full max-w-[720px] mx-auto">
           <div className="flex justify-between items-center mb-2">
             {/* Print button — only useful after gate is passed and segments are loaded */}

@@ -83,7 +83,8 @@ export default function PublicSpeakerForm() {
 
     return (
         <PublicFormLangProvider>
-            <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8">
+            {/* 2026-03-19: color-scheme:light prevents OS dark mode from overriding form control text colors */}
+            <div className="min-h-screen bg-[#F0F1F3] p-4 md:p-8" style={{ colorScheme: 'light' }}>
                 <div className="w-full max-w-[640px] mx-auto">
                     <div className="flex justify-end mb-2">
                         <PublicFormLangToggle />
