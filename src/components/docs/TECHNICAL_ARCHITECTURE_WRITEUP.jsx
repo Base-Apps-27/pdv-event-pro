@@ -1,6 +1,6 @@
 # PDV Event Pro — Comprehensive Technical Architecture Document
 
-**Prepared:** 2026-03-21
+**Prepared:** 2026-03-21 (rebuilt)
 **Purpose:** Full-stack technical reference for migration evaluation, integration planning, or rebuilding on another platform.
 
 ---
