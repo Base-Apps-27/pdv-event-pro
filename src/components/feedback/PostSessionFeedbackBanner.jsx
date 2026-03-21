@@ -18,10 +18,21 @@ export default function PostSessionFeedbackBanner({ segments, sessions, currentT
   const [formOpen, setFormOpen] = useState(false);
 
   // Detect if all segments have ended (last segment end_time < currentTime)
+  // 2026-03-21 FIX: Must compare against serviceDate, not today. Previously the
+  // banner would show for tomorrow's services because segment end times (e.g. 10:05)
+  // were compared to today's clock, making them appear "in the past" after that hour.
   const allSegmentsEnded = useMemo(() => {
     if (!segments || segments.length === 0) return false;
     const now = currentTime || new Date();
-    // Check if every segment with an end_time has passed
+
+    // Guard: if serviceDate is in the future, session hasn't happened yet
+    if (serviceDate) {
+      const svcDate = new Date(serviceDate + 'T00:00:00');
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      if (svcDate > todayStart) return false;
+    }
+
     const segmentsWithTime = segments.filter(s => s.end_time || s.actual_end_time);
     if (segmentsWithTime.length === 0) return false;
 
@@ -33,7 +44,7 @@ export default function PostSessionFeedbackBanner({ segments, sessions, currentT
       endDate.setHours(h, m, 0, 0);
       return now > endDate;
     });
-  }, [segments, currentTime]);
+  }, [segments, currentTime, serviceDate]);
 
   if (dismissed || !allSegmentsEnded) return null;
 
