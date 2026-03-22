@@ -343,7 +343,10 @@ export default function StickyOpsDeck({
           <div
             onClick={() => setViewState('bar')}
             className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0 shadow-[0_12px_35px_rgba(0,0,0,0.25)] border-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 ${
-              isUrgent ? 'bg-amber-500 text-black border-amber-600 shadow-lg animate-pulse' : 
+              /* 2026-03-22: Removed animate-pulse from urgent state — the 1-second
+                 currentTime tick restarts the CSS animation each render, causing a strobe.
+                 Urgent state is already visually distinct via amber background + shadow. */
+              isUrgent ? 'bg-amber-500 text-black border-amber-600 shadow-lg' : 
               isPast ? 'bg-slate-200 text-slate-400 border-slate-300' : 'bg-white text-pdv-teal border-slate-200'
             }`}
           >
@@ -429,7 +432,8 @@ export default function StickyOpsDeck({
               <div 
                 onClick={(e) => { e.stopPropagation(); setViewState('icon'); }}
                 className={`flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform ${
-                  isUrgent ? 'bg-amber-500 text-black shadow-md animate-pulse' : 
+                  /* 2026-03-22: animate-pulse removed — see icon view comment */
+                  isUrgent ? 'bg-amber-500 text-black shadow-md' : 
                   isPast ? 'bg-slate-200 text-slate-400' : 'bg-white text-pdv-teal border-2 border-slate-200'
                 }`}
                 title="Minimizar a icono"
