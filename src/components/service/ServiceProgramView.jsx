@@ -5,6 +5,8 @@ import StickyOpsDeck from "@/components/service/StickyOpsDeck";
 import PublicProgramSegment from "@/components/service/PublicProgramSegment";
 import { normalizeName } from "@/components/utils/textNormalization";
 import { formatTimeToEST } from "@/components/utils/timeFormat";
+import { Presentation } from "lucide-react";
+import { useLanguage } from "@/components/utils/i18n.jsx";
 
 /**
  * ServiceProgramView Component
@@ -265,6 +267,9 @@ export default function ServiceProgramView({
     );
   }
 
+  // 2026-03-22: i18n hook for slides notice
+  const { t } = useLanguage();
+
   const hasEntityWeeklySlots = adjustedEntitySlots.length > 0;
   const hasCustomSegments = isCustomService && adjustedAllSegments.length > 0;
 
@@ -475,6 +480,33 @@ export default function ServiceProgramView({
                     );
                   }
                   return <h3 className={`text-2xl font-bold uppercase mb-1 ${colors.text}`}>{parsed?.display || slot.name}</h3>;
+                })()}
+
+                {/* 2026-03-22: Per-slot slides/presentation notice — indigo to match
+                    the global SlidesMaterialBanner. Appears when any segment in this
+                    slot has presentation_url, notes_url, or content_is_slides_only. */}
+                {(() => {
+                  const slidesSegs = slot.segments.filter(seg => {
+                    const hasP = seg.presentation_url && (Array.isArray(seg.presentation_url) ? seg.presentation_url.length > 0 : !!seg.presentation_url);
+                    const hasN = seg.notes_url && (Array.isArray(seg.notes_url) ? seg.notes_url.length > 0 : !!seg.notes_url);
+                    return hasP || hasN || seg.content_is_slides_only === true;
+                  });
+                  if (slidesSegs.length === 0) return null;
+                  return (
+                    <div className="mt-2 bg-indigo-50 border border-indigo-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-indigo-900">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <Presentation className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="font-bold uppercase text-[10px] tracking-wider text-indigo-700">
+                          {t('slides.slotNotice').replace('{count}', slidesSegs.length)}
+                        </span>
+                      </div>
+                      {slidesSegs.map((seg, i) => (
+                        <span key={seg.id || i} className="text-indigo-800 text-xs block">
+                          • {seg.title}{seg.presenter ? ` — ${seg.presenter}` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  );
                 })()}
 
                 {/* 2026-03-01: Pre-service notes displayed in slot header.

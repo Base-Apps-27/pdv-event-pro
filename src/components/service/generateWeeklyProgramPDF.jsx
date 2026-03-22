@@ -344,6 +344,46 @@ function buildWeeklyTeamInfo(serviceData, scale) {
 function buildWeeklySegments(segments, timeSlot, scale, preServiceNote, slotColor) {
   const items = [];
 
+  // 2026-03-22: Per-column slides/presentation notice — indigo box at top of each slot
+  // that has segments with slides. Ensures print teams see the requirement.
+  if (segments) {
+    const slidesSegs = segments.filter(seg => {
+      const hasP = seg.presentation_url && (Array.isArray(seg.presentation_url) ? seg.presentation_url.length > 0 : !!seg.presentation_url);
+      const hasN = seg.notes_url && (Array.isArray(seg.notes_url) ? seg.notes_url.length > 0 : !!seg.notes_url);
+      return hasP || hasN || seg.content_is_slides_only;
+    });
+    if (slidesSegs.length > 0) {
+      items.push({
+        table: {
+          widths: ['*'],
+          body: [[{
+            stack: [
+              {
+                text: [
+                  { text: '(!) MATERIALES DE PRESENTACION  ', bold: true, color: '#4338CA', fontSize: 8.5 * scale },
+                  { text: `(${slidesSegs.length} segmento${slidesSegs.length > 1 ? 's' : ''})`, color: '#6366F1', fontSize: 7.5 * scale }
+                ]
+              },
+              ...slidesSegs.map(seg => ({
+                text: [
+                  { text: '  - ', color: '#4338CA', fontSize: 7.5 * scale },
+                  { text: (seg.title || '').toUpperCase(), bold: true, color: '#312E81', fontSize: 7.5 * scale },
+                  seg.content_is_slides_only ? { text: ' [SOLO DIAPOSITIVAS]', color: '#B45309', fontSize: 6.5 * scale, bold: true } : ''
+                ],
+                margin: [0, 0, 0, 0]
+              }))
+            ],
+            fillColor: '#EEF2FF',
+            border: [true, true, true, true],
+            borderColor: ['#A5B4FC', '#A5B4FC', '#A5B4FC', '#A5B4FC'],
+            margin: [4, 3, 4, 3]
+          }]]
+        },
+        margin: [0, 0, 0, 6]
+      });
+    }
+  }
+
   // Pre-service Note
   if (preServiceNote) {
     items.push({

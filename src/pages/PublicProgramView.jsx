@@ -39,6 +39,7 @@ import { useNotificationPermissionPrompt } from "@/components/notifications/useN
 import PushEngageLoader from "@/components/notifications/PushEngageLoader";
 import PostSessionFeedbackBanner from "@/components/feedback/PostSessionFeedbackBanner";
 import FeedbackBottomSection from "@/components/feedback/FeedbackBottomSection";
+import SlidesMaterialBanner from "@/components/liveview/SlidesMaterialBanner";
 
 export default function PublicProgramView() {
   const queryClient = useQueryClient();
@@ -297,6 +298,10 @@ export default function PublicProgramView() {
               contextEventId={viewType === 'event' ? selectedEventId : undefined}
               contextServiceId={viewType === 'service' ? selectedServiceId : undefined}
             />
+
+            {/* 2026-03-22: Slides/Presentation Material Banner — highest priority visual.
+                 Distinct indigo/purple gradient separates it from amber (timing) and green (feedback). */}
+            <SlidesMaterialBanner allSegments={allSegments} sessions={sessions} />
 
             {/* DEV-1: Extracted info banner */}
             <ProgramInfoBanner viewType={viewType} selectedEvent={selectedEvent} selectedService={selectedService} isOverride={_isOverride} />
