@@ -907,4 +907,12 @@ export const es = {
   'push.sending': 'Enviando...',
   'push.sendSuccess': '¡Notificación enviada con éxito!',
   'push.sendError': 'Error al enviar la notificación',
+
+  // ── Slides/Presentation Material Banner (2026-03-22) ──
+  'slides.bannerTitle': 'Materiales de Presentación Requeridos',
+  'slides.bannerSubtitle': 'Los siguientes segmentos tienen diapositivas o notas que deben cargarse antes del servicio',
+  'slides.openSlides': 'Abrir diapositivas',
+  'slides.openNotes': 'Abrir notas',
+  'slides.slidesOnly': 'Solo Diapositivas',
+  'slides.slotNotice': 'Esta sesión tiene {count} segmento(s) con diapositivas de presentación',
   };

@@ -907,4 +907,12 @@ export const en = {
   'push.sending': 'Sending...',
   'push.sendSuccess': 'Notification sent successfully!',
   'push.sendError': 'Failed to send notification',
+
+  // ── Slides/Presentation Material Banner (2026-03-22) ──
+  'slides.bannerTitle': 'Presentation Materials Required',
+  'slides.bannerSubtitle': 'The following segments have slides or notes that must be loaded before service',
+  'slides.openSlides': 'Open slides',
+  'slides.openNotes': 'Open notes',
+  'slides.slidesOnly': 'Slides Only',
+  'slides.slotNotice': 'This session has {count} segment(s) with presentation slides',
   };
