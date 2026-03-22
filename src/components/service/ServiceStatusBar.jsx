@@ -33,7 +33,7 @@ function parseHHMM(str) {
   return h * 60 + m;
 }
 
-export default React.memo(function ServiceStatusBar({
+export default function ServiceStatusBar({
   segments,
   currentTime,
   onScrollTo,
@@ -172,7 +172,7 @@ export default React.memo(function ServiceStatusBar({
       {current ? (
         <button
           onClick={() => onScrollTo?.(current)}
-          className="flex-1 flex flex-col gap-1.5 bg-yellow-500/15 border border-yellow-500/30 rounded-2xl px-4 py-3 text-left hover:bg-yellow-500/25 min-w-0 relative overflow-hidden"
+          className="flex-1 flex flex-col gap-1.5 bg-yellow-500/15 border border-yellow-500/30 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-yellow-500/25 min-w-0 relative overflow-hidden"
         >
           {/* Progress bar */}
           {currentRemaining && currentEnd && (() => {
@@ -286,7 +286,7 @@ export default React.memo(function ServiceStatusBar({
       {next && (
         <button
           onClick={() => onScrollTo?.(next)}
-          className="flex-1 flex flex-col gap-1.5 bg-white border border-gray-200 rounded-2xl px-4 py-3 text-left hover:bg-gray-50 min-w-0"
+          className="flex-1 flex flex-col gap-1.5 bg-white border border-gray-200 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-gray-50 min-w-0"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('live.upNext')}</span>
@@ -307,4 +307,4 @@ export default React.memo(function ServiceStatusBar({
       )}
     </div>
   );
-})
+}
