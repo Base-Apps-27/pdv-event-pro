@@ -348,15 +348,43 @@ ${submission.content.substring(0, 15000)}
         // ── PHASE 2: Build ONE update payload (shared by both paths) ──
         // DO NOT APPEND RAW CONTENT TO PROJECTION NOTES.
         // Raw content must only live in SpeakerSubmissionVersion.
+        //
+        // 2026-03-22 FIX: Use MERGE semantics for resource fields (presentation_url,
+        // notes_url, content_is_slides_only). Only overwrite these fields when the
+        // submission actually provides them. AdminSubmissionDialog only sends text
+        // content — it doesn't carry URLs. Previously the processor unconditionally
+        // wrote empty strings for these fields, wiping URLs set by a prior public
+        // form submission. Now: only include a field if the submission has a truthy
+        // value for it. This preserves existing Segment data for fields the
+        // submission doesn't touch.
         const updateData = {
             submission_status: 'processed',
             parsed_verse_data: parsedData,
             scripture_references: scriptureReferences,
-            presentation_url: submission.presentation_url || "",
-            notes_url: submission.notes_url || "",
-            content_is_slides_only: !!submission.content_is_slides_only,
             ...(submission.title?.trim() ? { message_title: submission.title.trim() } : {}),
         };
+
+        // Resource fields: only overwrite if the submission actually provides them.
+        // An empty array [] or empty string "" means "not provided" — skip the field.
+        const hasPresentationUrl = submission.presentation_url &&
+            (Array.isArray(submission.presentation_url) ? submission.presentation_url.length > 0 : !!submission.presentation_url);
+        const hasNotesUrl = submission.notes_url &&
+            (Array.isArray(submission.notes_url) ? submission.notes_url.length > 0 : !!submission.notes_url);
+
+        if (hasPresentationUrl) updateData.presentation_url = submission.presentation_url;
+        if (hasNotesUrl) updateData.notes_url = submission.notes_url;
+
+        // content_is_slides_only: only set if explicitly true on the submission.
+        // Admin text submissions don't set this field, so we must not overwrite
+        // a prior slides-only=true with false.
+        if (submission.content_is_slides_only === true) {
+            updateData.content_is_slides_only = true;
+        } else if (hasPresentationUrl || hasNotesUrl) {
+            // If the submission explicitly provides URLs AND slides_only is false,
+            // then it's a public form submission that intentionally set this flag.
+            updateData.content_is_slides_only = !!submission.content_is_slides_only;
+        }
+        // Otherwise: don't touch content_is_slides_only on the Segment.
 
         // ── PHASE 3: Staleness guard + Write to Segment ──
         // CRITICAL (2026-03-09): Check if admin has manually edited this segment AFTER this submission was created.
