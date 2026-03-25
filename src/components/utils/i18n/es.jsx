@@ -783,6 +783,16 @@ export const es = {
   'custom.tomorrow': 'Mañana',
   'custom.inDays': 'En {n} días',
   'custom.completed': 'Finalizado',
+  'custom.deleteTitle': '¿Eliminar Servicio?',
+  'custom.deleteConfirm': '¿Estás seguro de que deseas eliminar "{name}"? Puedes restaurarlo después desde la papelera.',
+  'custom.deleteError': 'Error al eliminar el servicio',
+  'custom.trash': 'Eliminados Recientemente',
+  'custom.deletedLabel': 'Eliminado',
+  'custom.deletedBy': 'Eliminado por',
+  'custom.restore': 'Restaurar',
+  'custom.restoring': 'Restaurando...',
+  'custom.restoreSuccess': 'Servicio restaurado con éxito',
+  'custom.restoreError': 'Error al restaurar el servicio',
 
   // PublicCountdownDisplay (2026-03-06 i18n sweep)
   'tv.noActiveSegment': 'Sin segmento activo',

@@ -783,6 +783,16 @@ export const en = {
   'custom.tomorrow': 'Tomorrow',
   'custom.inDays': 'In {n} days',
   'custom.completed': 'Completed',
+  'custom.deleteTitle': 'Delete Service?',
+  'custom.deleteConfirm': 'Are you sure you want to delete "{name}"? You can restore it later from the trash.',
+  'custom.deleteError': 'Failed to delete service',
+  'custom.trash': 'Recently Deleted',
+  'custom.deletedLabel': 'Deleted',
+  'custom.deletedBy': 'Deleted by',
+  'custom.restore': 'Restore',
+  'custom.restoring': 'Restoring...',
+  'custom.restoreSuccess': 'Service restored successfully',
+  'custom.restoreError': 'Failed to restore service',
 
   // PublicCountdownDisplay (2026-03-06 i18n sweep)
   'tv.noActiveSegment': 'No active segment',

@@ -9,7 +9,7 @@ import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Clock, ChevronDown, ChevronUp, Archive, Trash2 } from "lucide-react";
+import { Plus, Calendar, Clock, ChevronDown, ChevronUp, Archive, Trash2, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { es as esLocale } from "date-fns/locale";
 import DeleteServiceDialog from "@/components/service/DeleteServiceDialog";
@@ -18,8 +18,10 @@ export default function CustomServicesManager() {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [restoringId, setRestoringId] = useState(null);
   // Audit fix: Use shared useCurrentUser hook instead of manual auth.me()
   const { user } = useCurrentUser();
 
@@ -27,7 +29,7 @@ export default function CustomServicesManager() {
     background: 'linear-gradient(90deg, #1F8A70 0%, #4DC15F 50%, #D9DF32 100%)',
   };
 
-  // Fetch one-off / custom services
+  // Fetch one-off / custom services (exclude soft-deleted)
   // Supports both new service_type field and legacy structural detection
   const { data: allServices = [], isLoading, refetch } = useQuery({
     queryKey: ['customServices'],
@@ -37,6 +39,19 @@ export default function CustomServicesManager() {
       return services.filter(s =>
         s.service_type === 'one_off' ||
         // Legacy fallback: has segments array but no service_type set
+        (!s.service_type && s.segments && s.segments.length > 0)
+      );
+    },
+  });
+
+  // 2026-03-25: Fetch soft-deleted services for trash view
+  const { data: deletedServices = [], refetch: refetchDeleted } = useQuery({
+    queryKey: ['customServicesDeleted'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const services = await base44.entities.Service.filter({ status: 'deleted' }, '-updated_date');
+      return services.filter(s =>
+        s.service_type === 'one_off' ||
         (!s.service_type && s.segments && s.segments.length > 0)
       );
     },
@@ -79,6 +94,29 @@ export default function CustomServicesManager() {
 
   const handleDeleteSuccess = () => {
     refetch();
+    refetchDeleted();
+  };
+
+  // 2026-03-25: Restore a soft-deleted service
+  const handleRestore = async (serviceId) => {
+    setRestoringId(serviceId);
+    try {
+      await base44.entities.Service.update(serviceId, {
+        status: 'active',
+        deleted_at: null,
+        deleted_by: null,
+      });
+      const { toast } = await import('sonner');
+      toast.success(t('custom.restoreSuccess') || 'Service restored');
+      refetch();
+      refetchDeleted();
+    } catch (error) {
+      console.error('Failed to restore service:', error);
+      const { toast } = await import('sonner');
+      toast.error(t('custom.restoreError') || 'Failed to restore service');
+    } finally {
+      setRestoringId(null);
+    }
   };
 
   // Helper to parse "YYYY-MM-DD" as local date at midnight to prevent timezone shifts
@@ -280,6 +318,72 @@ export default function CustomServicesManager() {
                            return format(localDate, "d 'de' MMM, yyyy", { locale: language === 'es' ? esLocale : undefined });
                          })()}
                         </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 2026-03-25: Trash / Recently Deleted section */}
+        {deletedServices.length > 0 && (
+          <div className="mt-8">
+            <Button
+              variant="ghost"
+              onClick={() => setShowTrash(!showTrash)}
+              className="mb-4 text-gray-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t('custom.trash')} ({deletedServices.length})
+              {showTrash ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+            </Button>
+
+            {showTrash && (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {deletedServices.map((service) => (
+                  <Card
+                    key={service.id}
+                    className="border-2 border-dashed border-red-200 opacity-60 hover:opacity-80 transition-opacity"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge className="bg-red-500 text-white">
+                          {t('custom.deletedLabel')}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-xl text-gray-900 line-through">{service.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {service.date && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4" />
+                          {(() => {
+                            const [y, m, d] = service.date.split('-').map(Number);
+                            const localDate = new Date(y, m - 1, d);
+                            return format(localDate, "d 'de' MMM, yyyy", { locale: language === 'es' ? esLocale : undefined });
+                          })()}
+                        </div>
+                      )}
+                      {service.deleted_by && (
+                        <p className="text-xs text-gray-400">
+                          {t('custom.deletedBy')} {service.deleted_by}
+                        </p>
+                      )}
+                      {hasPermission(user, 'delete_services') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 w-full"
+                          onClick={() => handleRestore(service.id)}
+                          disabled={restoringId === service.id}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          {restoringId === service.id
+                            ? (t('custom.restoring') || 'Restoring...')
+                            : (t('custom.restore') || 'Restore')}
+                        </Button>
                       )}
                     </CardContent>
                   </Card>
