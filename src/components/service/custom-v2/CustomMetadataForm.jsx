@@ -113,6 +113,11 @@ export default memo(function CustomMetadataForm({ service, onServiceUpdated }) {
               onChange={(val) => {
                 setTime(val);
                 saveField({ time: val });
+                // 2026-03-25: Sync session planned_start_time + name when service time changes.
+                // Custom services have exactly 1 session. Without this sync, the Live View
+                // displays segment times based on the stale session start time (e.g. 10:00 AM)
+                // while the editor shows the updated service time (e.g. 7:30 PM).
+                syncSessionTime(service?.id, val);
               }}
             />
           </div>
