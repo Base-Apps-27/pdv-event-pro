@@ -116,8 +116,11 @@ export default function CustomEditorV2() {
   const segments = session ? (segmentsBySession[session.id] || []) : [];
   const psd = session ? (psdBySession[session.id] || null) : null;
 
-  // ── Auto-create state (must be above all early returns per Rules of Hooks) ──
-  const [autoCreateTriggered, setAutoCreateTriggered] = useState(false);
+  // 2026-03-25: Auto-create state replaced with explicit user action.
+  // DECISION: Removed auto-create useEffect that spawned services on page load,
+  // which caused duplicate/orphan services when page was refreshed or double-navigated.
+  // Now shows a create prompt that requires explicit user click.
+  const [showCreatePrompt, setShowCreatePrompt] = useState(!serviceId);
 
   // ── Dialog state ──
   const [showSpecialDialog, setShowSpecialDialog] = useState(false);
@@ -296,15 +299,10 @@ export default function CustomEditorV2() {
     }
   }, [selectedAnnouncements, existingService, en]);
 
-  // ── Auto-create on mount when no serviceId (2026-03-03) ──
-  // Eliminates redundant "Create Service" button — user already clicked it on CustomServicesManager.
-  // MUST be above early returns to satisfy Rules of Hooks.
-  useEffect(() => {
-    if (!serviceId && !existingService && !creating && !autoCreateTriggered && !serviceLoading) {
-      setAutoCreateTriggered(true);
-      handleCreateNew();
-    }
-  }, [serviceId, existingService, creating, autoCreateTriggered, serviceLoading, handleCreateNew]);
+  // 2026-03-25: Auto-create useEffect REMOVED.
+  // Previous behavior (2026-03-03) triggered handleCreateNew() on mount when no ?id= param,
+  // which caused phantom services on refresh, double-navigation, or accidental page visit.
+  // Replaced with explicit "Create Service" prompt below (showCreatePrompt state).
 
   // ── Loading states ──
   if (serviceLoading || (serviceId && dataLoading)) {
@@ -315,13 +313,40 @@ export default function CustomEditorV2() {
     );
   }
 
+  // 2026-03-25: Explicit creation prompt instead of auto-create
   if (!serviceId || !existingService) {
     return (
-      <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-        <p className="text-gray-500 text-sm">
-          {en ? 'Creating service...' : 'Creando servicio...'}
-        </p>
+      <div className="p-6 md:p-8 flex flex-col items-center justify-center gap-6 min-h-[50vh]">
+        {creating ? (
+          <>
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <p className="text-gray-500 text-sm">
+              {en ? 'Creating service...' : 'Creando servicio...'}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="text-center">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h2 className="text-2xl text-gray-900 uppercase">
+                {en ? 'New Special Service' : 'Nuevo Servicio Especial'}
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">
+                {en ? 'This will create a service with default segments' : 'Se creará un servicio con segmentos predeterminados'}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => navigate(createPageUrl('CustomServicesManager'))}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {en ? 'Back' : 'Volver'}
+              </Button>
+              <Button onClick={handleCreateNew} style={{ backgroundColor: '#1F8A70', color: '#fff' }} className="font-semibold">
+                <Plus className="w-4 h-4 mr-2" />
+                {en ? 'Create Service' : 'Crear Servicio'}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     );
   }
