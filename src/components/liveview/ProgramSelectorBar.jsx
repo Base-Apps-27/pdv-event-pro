@@ -101,6 +101,9 @@ function ServiceSelector({ services, selectedId, onSelect, t }) {
   const today = parseDateStringLocal(todayStr);
   const sevenDaysOut = new Date(today); sevenDaysOut.setDate(today.getDate() + 7);
 
+  // 2026-03-25: Removed .reduce() deduplication that collapsed multiple same-date services
+  // into one. Multiple services on the same date are legitimate (e.g., prayer + worship).
+  // The old dedup caused "SERVICIO DE ADORACIÓN" to be hidden when orphan services existed.
   const upcomingServices = services
     .filter(s => {
       const sd = parseDateStringLocal(s.date);
@@ -111,15 +114,7 @@ function ServiceSelector({ services, selectedId, onSelect, t }) {
       const diffTime = sd.getTime() - today.getTime();
       const daysUntil = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       return { ...service, daysUntil };
-    })
-    .reduce((acc, service) => {
-      const existing = acc.find(s => s.date === service.date);
-      if (!existing) { acc.push(service); }
-      else if (new Date(service.updated_date) > new Date(existing.updated_date)) {
-        acc[acc.indexOf(existing)] = service;
-      }
-      return acc;
-    }, []);
+    });
 
   return (
     <div className="w-full max-w-full">
