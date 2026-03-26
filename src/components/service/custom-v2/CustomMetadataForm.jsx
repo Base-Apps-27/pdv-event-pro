@@ -66,6 +66,36 @@ export default memo(function CustomMetadataForm({ service, onServiceUpdated }) {
     }, DEBOUNCE_MS);
   }, [service?.id, onServiceUpdated, en]);
 
+  // 2026-03-25: Sync session time/date when service metadata changes.
+  // Custom services have exactly 1 session linked by service_id.
+  // Without this, Live View shows stale times from the session entity.
+  const syncSessionTime = useCallback(async (serviceId, newTime) => {
+    if (!serviceId) return;
+    try {
+      const sessions = await base44.entities.Session.filter({ service_id: serviceId });
+      if (sessions?.[0]) {
+        await base44.entities.Session.update(sessions[0].id, {
+          planned_start_time: newTime,
+          name: newTime,
+        });
+      }
+    } catch (err) {
+      console.error('[CustomMetadata] Session time sync failed:', err.message);
+    }
+  }, []);
+
+  const syncSessionDate = useCallback(async (serviceId, newDate) => {
+    if (!serviceId) return;
+    try {
+      const sessions = await base44.entities.Session.filter({ service_id: serviceId });
+      if (sessions?.[0]) {
+        await base44.entities.Session.update(sessions[0].id, { date: newDate });
+      }
+    } catch (err) {
+      console.error('[CustomMetadata] Session date sync failed:', err.message);
+    }
+  }, []);
+
   // Cleanup timer on unmount
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
@@ -96,6 +126,8 @@ export default memo(function CustomMetadataForm({ service, onServiceUpdated }) {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dow = val ? days[new Date(val + 'T00:00:00').getDay()] : '';
                 saveField({ date: val, day_of_week: dow });
+                // 2026-03-25: Keep session date in sync with service date
+                syncSessionDate(service?.id, val);
               }}
               className="w-full max-w-full"
             />
