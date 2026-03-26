@@ -4,7 +4,7 @@
  *   - Memoized with React.memo
  *   - Print: read-only song list
  *   - Song row numbering with accent color
- *   - Better sync with entity: tracks all 6 lead/key fields
+ *   - Better sync with entity: tracks all 10 song slots (2026-03-26: expanded from 6)
  */
 
 import React, { useState, useEffect, useCallback, memo } from "react";
@@ -38,7 +38,7 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
   const { t } = useLanguage();
   const [songs, setSongs] = useState(() => getSongsFromEntity(segment));
 
-  // Sync from entity when segment changes
+  // Sync from entity when segment changes — tracks all 10 song slots (2026-03-26)
   useEffect(() => {
     setSongs(getSongsFromEntity(segment));
   }, [
@@ -46,8 +46,10 @@ export default memo(function SongRows({ segment, onWriteSongs, canEdit = true })
     segment.number_of_songs,
     segment.song_1_title, segment.song_2_title, segment.song_3_title,
     segment.song_4_title, segment.song_5_title, segment.song_6_title,
+    segment.song_7_title, segment.song_8_title, segment.song_9_title, segment.song_10_title,
     segment.song_1_lead, segment.song_2_lead, segment.song_3_lead,
     segment.song_4_lead, segment.song_5_lead, segment.song_6_lead,
+    segment.song_7_lead, segment.song_8_lead, segment.song_9_lead, segment.song_10_lead,
   ]);
 
   const updateSong = useCallback((idx, field, value) => {

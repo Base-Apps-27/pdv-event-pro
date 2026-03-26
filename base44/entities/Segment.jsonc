@@ -1,0 +1,878 @@
+{
+  "name": "Segment",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Reference to Session"
+    },
+    "service_id": {
+      "type": "string",
+      "description": "Reference to Service"
+    },
+    "parent_segment_id": {
+      "type": "string",
+      "description": "Reference to parent Segment"
+    },
+    "order": {
+      "type": "number",
+      "description": "Order within session for sorting"
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "template",
+        "duplicate"
+      ],
+      "default": "manual"
+    },
+    "field_origins": {
+      "type": "object",
+      "description": "Map of field names to their origin",
+      "default": {}
+    },
+    "segment_type": {
+      "type": "string",
+      "enum": [
+        "Alabanza",
+        "Bienvenida",
+        "Ofrenda",
+        "Plenaria",
+        "Video",
+        "Anuncio",
+        "Din\u00e1mica",
+        "Break",
+        "TechOnly",
+        "Oraci\u00f3n",
+        "Especial",
+        "Cierre",
+        "MC",
+        "Ministraci\u00f3n",
+        "Receso",
+        "Almuerzo",
+        "Artes",
+        "Breakout",
+        "Panel"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "presenter": {
+      "type": "string"
+    },
+    "description_details": {
+      "type": "string",
+      "description": "Detailed description \u2014 internal staff notes (do NOT render on MyProgram/public views)"
+    },
+    "arts_staff_notes": {
+      "type": "string",
+      "description": "Internal tech/production notes submitted by arts admins via the Arts form. Staff-only \u2014 never shown on public-facing views."
+    },
+    "prep_instructions": {
+      "type": "string"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "duration_min": {
+      "type": "number"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "actual_start_time": {
+      "type": "string"
+    },
+    "actual_end_time": {
+      "type": "string"
+    },
+    "is_live_adjusted": {
+      "type": "boolean",
+      "default": false
+    },
+    "timing_source": {
+      "type": "string",
+      "enum": [
+        "plan",
+        "director"
+      ],
+      "default": "plan"
+    },
+    "live_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "skipped",
+        "shifted"
+      ],
+      "default": "active"
+    },
+    "live_hold_status": {
+      "type": "string",
+      "enum": [
+        "held",
+        "finalized"
+      ]
+    },
+    "live_hold_placed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "live_hold_placed_by": {
+      "type": "string"
+    },
+    "stage_call_offset_min": {
+      "type": "number"
+    },
+    "stage_call_time": {
+      "type": "string"
+    },
+    "coordinator_notes": {
+      "type": "string"
+    },
+    "projection_notes": {
+      "type": "string"
+    },
+    "sound_notes": {
+      "type": "string"
+    },
+    "ushers_notes": {
+      "type": "string"
+    },
+    "translation_notes": {
+      "type": "string"
+    },
+    "livestream_notes": {
+      "type": "string"
+    },
+    "stage_decor_notes": {
+      "type": "string"
+    },
+    "microphone_assignments": {
+      "type": "string"
+    },
+    "other_notes": {
+      "type": "string"
+    },
+    "show_in_general": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_in_projection": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_in_sound": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_in_ushers": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_in_livestream": {
+      "type": "boolean",
+      "default": true
+    },
+    "color_code": {
+      "type": "string",
+      "enum": [
+        "worship",
+        "preach",
+        "break",
+        "tech",
+        "special",
+        "default"
+      ],
+      "default": "default"
+    },
+    "message_title": {
+      "type": "string"
+    },
+    "scripture_references": {
+      "type": "string"
+    },
+    "parsed_verse_data": {
+      "type": "object"
+    },
+    "submitted_content": {
+      "type": "string"
+    },
+    "submission_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processed",
+        "ignored"
+      ],
+      "default": "ignored"
+    },
+    "presentation_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_is_slides_only": {
+      "type": "boolean",
+      "default": false
+    },
+    "number_of_songs": {
+      "type": "number"
+    },
+    "song_1_title": {
+      "type": "string"
+    },
+    "song_1_lead": {
+      "type": "string"
+    },
+    "song_1_key": {
+      "type": "string"
+    },
+    "song_2_title": {
+      "type": "string"
+    },
+    "song_2_lead": {
+      "type": "string"
+    },
+    "song_2_key": {
+      "type": "string"
+    },
+    "song_3_title": {
+      "type": "string"
+    },
+    "song_3_lead": {
+      "type": "string"
+    },
+    "song_3_key": {
+      "type": "string"
+    },
+    "song_4_title": {
+      "type": "string"
+    },
+    "song_4_lead": {
+      "type": "string"
+    },
+    "song_4_key": {
+      "type": "string"
+    },
+    "song_5_title": {
+      "type": "string"
+    },
+    "song_5_lead": {
+      "type": "string"
+    },
+    "song_5_key": {
+      "type": "string"
+    },
+    "song_6_title": {
+      "type": "string"
+    },
+    "song_6_lead": {
+      "type": "string"
+    },
+    "song_6_key": {
+      "type": "string"
+    },
+    "song_7_title": {
+      "type": "string",
+      "description": "Added 2026-03-26: Support up to 10 songs"
+    },
+    "song_7_lead": {
+      "type": "string"
+    },
+    "song_7_key": {
+      "type": "string"
+    },
+    "song_8_title": {
+      "type": "string"
+    },
+    "song_8_lead": {
+      "type": "string"
+    },
+    "song_8_key": {
+      "type": "string"
+    },
+    "song_9_title": {
+      "type": "string"
+    },
+    "song_9_lead": {
+      "type": "string"
+    },
+    "song_9_key": {
+      "type": "string"
+    },
+    "song_10_title": {
+      "type": "string"
+    },
+    "song_10_lead": {
+      "type": "string"
+    },
+    "song_10_key": {
+      "type": "string"
+    },
+    "slide_pack_id": {
+      "type": "string"
+    },
+    "countdown_asset_id": {
+      "type": "string"
+    },
+    "music_profile_id": {
+      "type": "string"
+    },
+    "requires_translation": {
+      "type": "boolean",
+      "default": false
+    },
+    "translation_mode": {
+      "type": "string",
+      "enum": [
+        "InPerson",
+        "RemoteBooth"
+      ],
+      "default": "InPerson"
+    },
+    "translator_name": {
+      "type": "string"
+    },
+    "default_translator_source": {
+      "type": "string"
+    },
+    "panel_moderators": {
+      "type": "string"
+    },
+    "panel_panelists": {
+      "type": "string"
+    },
+    "major_break": {
+      "type": "boolean",
+      "default": false
+    },
+    "ui_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ui_sub_assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "person_field_name": {
+            "type": "string"
+          },
+          "duration_min": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "breakout_rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "type": "string"
+          },
+          "hosts": {
+            "type": "string"
+          },
+          "speakers": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "general_notes": {
+            "type": "string"
+          },
+          "other_notes": {
+            "type": "string"
+          },
+          "requires_translation": {
+            "type": "boolean",
+            "default": false
+          },
+          "translation_mode": {
+            "type": "string",
+            "enum": [
+              "InPerson",
+              "RemoteBooth"
+            ],
+            "default": "InPerson"
+          },
+          "translator_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "room_id": {
+      "type": "string"
+    },
+    "has_video": {
+      "type": "boolean",
+      "default": false
+    },
+    "video_name": {
+      "type": "string"
+    },
+    "video_location": {
+      "type": "string"
+    },
+    "video_owner": {
+      "type": "string"
+    },
+    "video_length_sec": {
+      "type": "number"
+    },
+    "video_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "video_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "art_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "DANCE",
+          "DRAMA",
+          "VIDEO",
+          "SPOKEN_WORD",
+          "PAINTING",
+          "OTHER"
+        ]
+      }
+    },
+    "arts_type_order": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "drama_handheld_mics": {
+      "type": "number"
+    },
+    "drama_headset_mics": {
+      "type": "number"
+    },
+    "drama_start_cue": {
+      "type": "string"
+    },
+    "drama_end_cue": {
+      "type": "string"
+    },
+    "drama_outfit_colors": {
+      "type": "string"
+    },
+    "drama_special_items": {
+      "type": "string"
+    },
+    "drama_has_song": {
+      "type": "boolean",
+      "default": false
+    },
+    "drama_song_title": {
+      "type": "string"
+    },
+    "drama_song_source": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drama_song_owner": {
+      "type": "string"
+    },
+    "drama_song_1_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "drama_song_2_title": {
+      "type": "string"
+    },
+    "drama_song_2_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drama_song_2_owner": {
+      "type": "string"
+    },
+    "drama_song_2_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "drama_song_3_title": {
+      "type": "string"
+    },
+    "drama_song_3_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drama_song_3_owner": {
+      "type": "string"
+    },
+    "drama_song_3_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dance_handheld_mics": {
+      "type": "number"
+    },
+    "dance_headset_mics": {
+      "type": "number"
+    },
+    "dance_start_cue": {
+      "type": "string"
+    },
+    "dance_end_cue": {
+      "type": "string"
+    },
+    "dance_outfit_colors": {
+      "type": "string"
+    },
+    "dance_special_items": {
+      "type": "string"
+    },
+    "dance_has_song": {
+      "type": "boolean",
+      "default": false
+    },
+    "dance_song_title": {
+      "type": "string"
+    },
+    "dance_song_source": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dance_song_owner": {
+      "type": "string"
+    },
+    "dance_song_1_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dance_song_2_title": {
+      "type": "string"
+    },
+    "dance_song_2_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dance_song_2_owner": {
+      "type": "string"
+    },
+    "dance_song_2_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dance_song_3_title": {
+      "type": "string"
+    },
+    "dance_song_3_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dance_song_3_owner": {
+      "type": "string"
+    },
+    "dance_song_3_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "spoken_word_mic_position": {
+      "type": "string",
+      "enum": [
+        "headset",
+        "handheld",
+        "stand",
+        "off_stage",
+        "lapel",
+        "podium"
+      ]
+    },
+    "spoken_word_outfit_colors": {
+      "type": "string"
+    },
+    "spoken_word_special_items": {
+      "type": "string"
+    },
+    "spoken_word_has_music": {
+      "type": "boolean",
+      "default": false
+    },
+    "spoken_word_music_title": {
+      "type": "string"
+    },
+    "spoken_word_music_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spoken_word_music_owner": {
+      "type": "string"
+    },
+    "spoken_word_notes": {
+      "type": "string"
+    },
+    "spoken_word_description": {
+      "type": "string"
+    },
+    "spoken_word_speaker": {
+      "type": "string"
+    },
+    "spoken_word_script_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spoken_word_audio_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "painting_needs_easel": {
+      "type": "boolean",
+      "default": false
+    },
+    "painting_needs_drop_cloth": {
+      "type": "boolean",
+      "default": false
+    },
+    "painting_needs_lighting": {
+      "type": "boolean",
+      "default": false
+    },
+    "painting_canvas_size": {
+      "type": "string"
+    },
+    "painting_other_setup": {
+      "type": "string"
+    },
+    "painting_notes": {
+      "type": "string"
+    },
+    "art_other_description": {
+      "type": "string"
+    },
+    "arts_run_of_show_url": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "arts_run_of_show_url_meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "arts_last_submitted_by": {
+      "type": "string"
+    },
+    "arts_last_submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "announcement_title": {
+      "type": "string"
+    },
+    "announcement_description": {
+      "type": "string"
+    },
+    "announcement_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "announcement_tone": {
+      "type": "string"
+    },
+    "announcement_series_id": {
+      "type": "string"
+    },
+    "segment_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string",
+            "enum": [
+              "Admin",
+              "MC",
+              "Sound",
+              "Projection",
+              "Hospitality",
+              "Ujieres",
+              "Kids",
+              "Coordinador",
+              "Stage & Decor",
+              "Alabanza",
+              "Translation",
+              "Livestream",
+              "Other"
+            ]
+          },
+          "timing": {
+            "type": "string",
+            "enum": [
+              "before_start",
+              "after_start",
+              "before_end",
+              "absolute"
+            ]
+          },
+          "offset_min": {
+            "type": "number"
+          },
+          "absolute_time": {
+            "type": "string"
+          },
+          "is_prep": {
+            "type": "boolean",
+            "default": true
+          },
+          "is_required": {
+            "type": "boolean",
+            "default": false
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

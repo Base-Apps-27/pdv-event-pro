@@ -234,10 +234,10 @@ export function useEntityWrite(queryKey) {
 
   const writeSongs = useCallback((segmentId, songs) => {
     if (!segmentId) return;
-    // Build flat field payload
+    // Build flat field payload — supports up to 10 songs (2026-03-26)
     const payload = {};
     const safeArray = Array.isArray(songs) ? songs : [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       const song = safeArray[i];
       payload[`song_${i + 1}_title`] = song?.title || "";
       payload[`song_${i + 1}_lead`] = song?.lead || "";
