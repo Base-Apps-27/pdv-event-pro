@@ -29,8 +29,9 @@
  */
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useMemo, useEffect, useRef, useCallback } from 'react';
+import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import { sortSessionsChronologically, buildSessionIndexMap } from '@/components/utils/sessionSort';
+import { getTodayET } from '@/components/utils/timeFormat';
 
 export default function useActiveProgramCache(overrideParams = {}) {
   const queryClient = useQueryClient();
@@ -157,10 +158,27 @@ export default function useActiveProgramCache(overrideParams = {}) {
   });
 
   // ── Extract data: override takes precedence over cache ──
+  // 2026-03-27: Multi-program awareness. Uses activeIndex from programs[] when available.
   const detected = useMemo(() => {
     const record = overrideData || cacheRecord;
     if (!record) return { contextType: null, contextId: null, event: null, service: null };
 
+    // Multi-program path: use the active program from the array
+    if (!overrideData && programs.length > 0 && programs[activeIndex]) {
+      const activeProgram = programs[activeIndex];
+      const snapshot = activeProgram.program_snapshot;
+      const programType = activeProgram.program_type;
+      if (!snapshot) return { contextType: null, contextId: null, event: null, service: null };
+      return {
+        contextType: programType,
+        contextId: activeProgram.program_id,
+        event: programType === 'event' ? snapshot.event || snapshot.program : null,
+        service: programType === 'service' ? snapshot.program : null,
+        _isOverride: false,
+      };
+    }
+
+    // Backward compat: single program_snapshot
     const snapshot = record.program_snapshot;
     const programType = record.program_type;
 
@@ -169,20 +187,65 @@ export default function useActiveProgramCache(overrideParams = {}) {
     }
 
     return {
-      contextType: programType, // 'event' or 'service'
+      contextType: programType,
       contextId: record.program_id,
       event: programType === 'event' ? snapshot.event || snapshot.program : null,
       service: programType === 'service' ? snapshot.program : null,
-      _isOverride: !!overrideData, // Flag for debugging
+      _isOverride: !!overrideData,
     };
+  }, [cacheRecord, overrideData, programs, activeIndex]);
+
+  // ── Multi-program array (2026-03-27) ──
+  // Returns all programs for the detected date, ordered by start time.
+  // Each entry has: program_type, program_id, program_name, program_snapshot,
+  // first_session_start_time, last_session_end_time.
+  const programs = useMemo(() => {
+    if (overrideData) return []; // Override = single program, no progression
+    return cacheRecord?.programs || [];
   }, [cacheRecord, overrideData]);
 
-  // ── Program data (the full snapshot) ──
+  // ── Auto-progression: determine which program is "active now" ──
+  // Compare current ET time against each program's last_session_end_time.
+  // The active program is the last one whose first_session_start_time has been reached
+  // but whose last_session_end_time hasn't yet passed. If all have ended, show the last.
+  // If none have started, show the first.
+  // Re-evaluates every 60s via a clock tick.
+  const [clockTick, setClockTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeIndex = useMemo(() => {
+    if (programs.length <= 1) return 0;
+    // Get current time in ET as HH:MM
+    const nowET = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(new Date());
+    // Find the program that is currently active
+    // Logic: iterate from last to first. The first program whose start has been reached is active,
+    // UNLESS a later program has also started (in which case the later one wins).
+    for (let i = programs.length - 1; i >= 0; i--) {
+      const p = programs[i];
+      if (p.first_session_start_time && nowET >= p.first_session_start_time) {
+        return i;
+      }
+    }
+    return 0; // None started yet — show the first (upcoming)
+  }, [programs, clockTick]);
+
+  // ── Program data: use the active program from the array if available ──
   const programData = useMemo(() => {
     const record = overrideData || cacheRecord;
-    if (!record?.program_snapshot) return null;
+    if (!record) return null;
+    // If multi-program array exists and has data, use the active program's snapshot
+    if (programs.length > 0 && programs[activeIndex]?.program_snapshot) {
+      return programs[activeIndex].program_snapshot;
+    }
+    // Backward compat: fall back to single program_snapshot
+    if (!record.program_snapshot) return null;
     return record.program_snapshot;
-  }, [cacheRecord, overrideData]);
+  }, [cacheRecord, overrideData, programs, activeIndex]);
 
   // ── Selector options for Live View dropdowns ──
   const selectorOptions = useMemo(() => {
@@ -230,5 +293,8 @@ export default function useActiveProgramCache(overrideParams = {}) {
     allEvents: selectorOptions.events || [],
     allServices: selectorOptions.services || [],
     cacheRecord: overrideData || cacheRecord, // For debugging / metadata display
+    // 2026-03-27: Multi-program-per-day support
+    programs,       // Full ordered array of all day's programs
+    activeIndex,    // Index of the currently-active program (auto-progression)
   };
 }

@@ -210,56 +210,101 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── STEP 3: Determine active program (auto-detection only) ───
-    let targetProgram = null;
-    let isEvent = false;
+    // ─── STEP 3: Determine active programs (auto-detection) ───
+    // 2026-03-27: MULTI-PROGRAM-PER-DAY support.
+    // Collect ALL programs for the target date (multiple services + events can coexist).
+    // Sort by earliest session start time. The first program is the "primary" for backward compat.
+    // All programs are stored in the `programs` array for display progression.
+    let targetPrograms = []; // Array of { program, isEvent }
 
-    const todayService = relevantServices.find(s => s.date === todayStr);
-    const todayEvent = relevantEvents.find(e => {
+    const todayServices = relevantServices.filter(s => s.date === todayStr);
+    const todayEvents = relevantEvents.filter(e => {
       if (!e.start_date) return false;
       return todayStr >= e.start_date && todayStr <= (e.end_date || e.start_date);
     });
 
-    if (todayService) {
-      targetProgram = todayService;
-      isEvent = false;
-    } else if (todayEvent) {
-      targetProgram = todayEvent;
-      isEvent = true;
-    } else {
+    // Collect all today's programs
+    todayServices.forEach(s => targetPrograms.push({ program: s, isEvent: false }));
+    todayEvents.forEach(e => targetPrograms.push({ program: e, isEvent: true }));
+
+    // If nothing today, fall back to nearest future program (single, for forward display)
+    if (targetPrograms.length === 0) {
       const futureService = relevantServices.find(s => s.date > todayStr);
       const futureEvent = relevantEvents.find(e => e.start_date > todayStr);
 
       if (futureService && futureEvent) {
         if (futureService.date <= futureEvent.start_date) {
-          targetProgram = futureService; isEvent = false;
+          targetPrograms.push({ program: futureService, isEvent: false });
         } else {
-          targetProgram = futureEvent; isEvent = true;
+          targetPrograms.push({ program: futureEvent, isEvent: true });
         }
       } else if (futureService) {
-        targetProgram = futureService; isEvent = false;
+        targetPrograms.push({ program: futureService, isEvent: false });
       } else if (futureEvent) {
-        targetProgram = futureEvent; isEvent = true;
+        targetPrograms.push({ program: futureEvent, isEvent: true });
       }
     }
 
-    // ─── STEP 4: Build full program snapshot ───
+    // Backward compat: primary program (used for program_snapshot, program_id, etc.)
+    let targetProgram = targetPrograms[0]?.program || null;
+    let isEvent = targetPrograms[0]?.isEvent || false;
+
+    console.log(`[refreshActiveProgram] Detected ${targetPrograms.length} program(s) for ${todayStr}`);
+
+    // ─── STEP 4: Build full program snapshots ───
     // HARDENING (2026-03-08): Wrapped in try/finally to guarantee the concurrency
-    // lock is always released. Previously, if buildProgramSnapshot threw (network error,
-    // timeout, rate limit), the catch block returned early WITHOUT clearing the lock,
-    // leaving refresh_in_progress=true for up to 30 seconds and blocking all subsequent
-    // automation triggers. This was the primary cause of the TV display going stale
-    // during a live service when a save triggered a refresh that happened to fail.
+    // lock is always released.
+    // 2026-03-27: MULTI-PROGRAM: Build snapshots for ALL detected programs.
     let programSnapshot = null;
+    let programsArray = []; // Array of { program_type, program_id, program_name, program_snapshot, first_session_start_time, last_session_end_time }
 
     try {
-      if (targetProgram) {
+      for (const tp of targetPrograms) {
+        console.log(`[refreshActiveProgram] Building snapshot for ${tp.isEvent ? 'event' : 'service'}: ${tp.program.name} (${tp.program.id})`);
         const response = await base44.functions.invoke('buildProgramSnapshot', {
-          targetProgram,
-          isEvent
+          targetProgram: tp.program,
+          isEvent: tp.isEvent
         });
-        programSnapshot = response.data;
+        const snapshot = response.data;
+
+        // Compute timing boundaries from sessions for progression logic
+        const sessions = snapshot?.sessions || [];
+        let firstStart = null;
+        let lastEnd = null;
+        for (const sess of sessions) {
+          const st = sess.planned_start_time || '';
+          if (st && (!firstStart || st < firstStart)) firstStart = st;
+          // Compute session end: planned_start_time + sum of segment durations
+          const sessSegments = (snapshot?.segments || []).filter(seg => seg.session_id === sess.id);
+          let totalDur = sessSegments.reduce((sum, seg) => sum + (seg.duration_min || 0), 0);
+          if (st && totalDur > 0) {
+            const [h, m] = st.split(':').map(Number);
+            const endMin = h * 60 + m + totalDur;
+            const endStr = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+            if (!lastEnd || endStr > lastEnd) lastEnd = endStr;
+          }
+          // Also check last segment's end_time directly (more accurate if computed)
+          for (const seg of sessSegments) {
+            if (seg.end_time && (!lastEnd || seg.end_time > lastEnd)) lastEnd = seg.end_time;
+          }
+        }
+
+        programsArray.push({
+          program_type: tp.isEvent ? 'event' : 'service',
+          program_id: tp.program.id,
+          program_name: tp.program.name || '',
+          program_snapshot: snapshot,
+          first_session_start_time: firstStart || '',
+          last_session_end_time: lastEnd || '',
+        });
       }
+
+      // Sort by first_session_start_time so earliest program is index 0
+      programsArray.sort((a, b) => (a.first_session_start_time || '').localeCompare(b.first_session_start_time || ''));
+
+      // Primary snapshot = first program (backward compat for program_snapshot field)
+      programSnapshot = programsArray[0]?.program_snapshot || null;
+
     } catch (snapshotErr) {
       // Release the lock immediately so subsequent triggers can retry
       console.error(`[refreshActiveProgram] buildProgramSnapshot failed: ${snapshotErr.message}. Releasing lock.`);
@@ -282,6 +327,9 @@ Deno.serve(async (req) => {
     }
 
     // ─── STEP 5: Write to ActiveProgramCache ───
+    // 2026-03-27: Writes both backward-compat single fields AND new `programs` array.
+    // program_snapshot/program_id/program_type = first program (backward compat).
+    // programs[] = all programs for the day, ordered by start time.
     const cacheData = {
       cache_key: 'current_display',
       program_type: targetProgram ? (isEvent ? 'event' : 'service') : 'none',
@@ -290,6 +338,7 @@ Deno.serve(async (req) => {
       program_date: isEvent ? (targetProgram?.start_date || '') : (targetProgram?.date || ''),
       detected_date: todayStr,
       program_snapshot: programSnapshot,
+      programs: programsArray,
       selector_options: selectorOptions,
       last_refresh_trigger: trigger,
       last_refresh_at: new Date().toISOString(),

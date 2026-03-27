@@ -161,6 +161,8 @@ Deno.serve(async (req) => {
                     preSessionDetails: snap.preSessionDetails || [],
                     liveAdjustments: snap.liveAdjustments || [],
                     streamBlocks: snap.streamBlocks || [],
+                    // 2026-03-27: Multi-program array for TV progression
+                    programs: cached.programs || [],
                   };
                   if (listOptions || includeOptions) {
                     response.events = cached.selector_options?.events || [];

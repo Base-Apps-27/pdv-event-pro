@@ -19,7 +19,7 @@
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 export default function useTVProgramData(overrideParams = {}) {
   const queryClient = useQueryClient();
@@ -57,37 +57,70 @@ export default function useTVProgramData(overrideParams = {}) {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [queryClient, overrideServiceId, overrideEventId]);
 
+  // ── Multi-program array (2026-03-27) ──
+  const programs = useMemo(() => {
+    if (overrideServiceId || overrideEventId) return [];
+    return rawData?.programs || [];
+  }, [rawData, overrideServiceId, overrideEventId]);
+
+  // ── Auto-progression: same logic as useActiveProgramCache ──
+  // Re-evaluates every 60s.
+  const [clockTick, setClockTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeIndex = useMemo(() => {
+    if (programs.length <= 1) return 0;
+    const nowET = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(new Date());
+    for (let i = programs.length - 1; i >= 0; i--) {
+      if (programs[i].first_session_start_time && nowET >= programs[i].first_session_start_time) {
+        return i;
+      }
+    }
+    return 0;
+  }, [programs, clockTick]);
+
   // ── Shape the data to match what PublicCountdownDisplay expects ──
-  const programData = useMemo(() => {
-    if (!rawData) return null;
-    // getPublicProgramData returns: { event, program, sessions, segments, rooms, ... }
-    // The TV page expects programData.program, programData.sessions, programData.segments, etc.
-    // This matches the program_snapshot shape.
-    if (!rawData.program && !rawData.event) return null;
+  // 2026-03-27: Uses active program from multi-program array when available.
+  const activeProgram = useMemo(() => {
+    if (programs.length > 0 && programs[activeIndex]?.program_snapshot) {
+      return programs[activeIndex].program_snapshot;
+    }
     return rawData;
-  }, [rawData]);
+  }, [rawData, programs, activeIndex]);
+
+  const programData = useMemo(() => {
+    if (!activeProgram) return null;
+    if (!activeProgram.program && !activeProgram.event) return null;
+    return activeProgram;
+  }, [activeProgram]);
 
   const service = useMemo(() => {
-    if (!rawData?.program) return null;
-    return rawData.program._isEvent ? null : rawData.program;
-  }, [rawData]);
+    if (!programData?.program) return null;
+    return programData.program._isEvent ? null : programData.program;
+  }, [programData]);
 
   const event = useMemo(() => {
-    if (!rawData?.program) return null;
-    return rawData.program._isEvent ? rawData.program : null;
-  }, [rawData]);
+    if (!programData?.program) return null;
+    return programData.program._isEvent ? programData.program : null;
+  }, [programData]);
 
   return {
     contextType: event ? 'event' : service ? 'service' : null,
-    contextId: rawData?.program?.id || null,
+    contextId: programData?.program?.id || null,
     event,
     service,
     programData,
     isLoading,
     isError,
     _isOverride: !!(overrideServiceId || overrideEventId),
-    // For the stale-data watchdog — no direct cache record, but we track freshness
-    // via React Query's own dataUpdatedAt
     cacheRecord: null,
+    // 2026-03-27: Multi-program support
+    programs,
+    activeIndex,
   };
 }

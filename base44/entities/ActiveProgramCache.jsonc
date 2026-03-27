@@ -1,0 +1,118 @@
+{
+  "name": "ActiveProgramCache",
+  "type": "object",
+  "properties": {
+    "cache_key": {
+      "type": "string",
+      "description": "Unique key for the cache entry, e.g. 'current_display' for the main active program"
+    },
+    "program_type": {
+      "type": "string",
+      "enum": [
+        "event",
+        "service",
+        "none"
+      ],
+      "description": "What type of program is currently active (first/primary for backward compat)"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "ID of the active Event or Service entity (first/primary for backward compat)"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Display name of the active program (first/primary for backward compat)"
+    },
+    "program_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the active program"
+    },
+    "program_snapshot": {
+      "type": "object",
+      "description": "Full pre-computed program data snapshot for the ACTIVE program (backward compat: always the first/current program)"
+    },
+    "programs": {
+      "type": "array",
+      "description": "2026-03-27: Ordered array of ALL programs for the detected date. Each entry: { program_type, program_id, program_name, program_snapshot, last_session_end_time }. Sorted by earliest session start time. Enables multi-service-per-day progression.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "program_type": {
+            "type": "string",
+            "enum": [
+              "event",
+              "service"
+            ]
+          },
+          "program_id": {
+            "type": "string"
+          },
+          "program_name": {
+            "type": "string"
+          },
+          "program_snapshot": {
+            "type": "object"
+          },
+          "first_session_start_time": {
+            "type": "string",
+            "description": "HH:MM of the earliest session \u2014 used for sort order and progression"
+          },
+          "last_session_end_time": {
+            "type": "string",
+            "description": "HH:MM of the latest session end \u2014 when this time passes, advance to next program"
+          }
+        }
+      }
+    },
+    "detected_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The ET date when this detection was performed"
+    },
+    "selector_options": {
+      "type": "object",
+      "description": "Pre-computed dropdown options for Live View selectors: { events: [], services: [] }"
+    },
+    "last_refresh_trigger": {
+      "type": "string",
+      "description": "What triggered the last refresh: 'midnight', 'service_change', 'event_change', 'manual', 'admin_override'"
+    },
+    "last_refresh_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last successful refresh"
+    },
+    "refresh_in_progress": {
+      "type": "boolean",
+      "default": false,
+      "description": "CTO-2 (2026-03-02): Soft concurrency lock. Set true at start of refresh, cleared at end. 30s TTL prevents stale locks."
+    },
+    "admin_override_type": {
+      "type": "string",
+      "enum": [
+        "event",
+        "service"
+      ],
+      "description": "Type of admin-forced override (set by Force Display). Cleared by midnight refresh."
+    },
+    "admin_override_id": {
+      "type": "string",
+      "description": "ID of the admin-forced Event or Service. When set, refreshActiveProgram uses this instead of auto-detect. Cleared by midnight refresh."
+    },
+    "admin_override_by": {
+      "type": "string",
+      "description": "Email of the admin who set the override"
+    },
+    "admin_override_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when admin override was set"
+    }
+  },
+  "required": [
+    "cache_key",
+    "program_type",
+    "detected_date"
+  ]
+}
