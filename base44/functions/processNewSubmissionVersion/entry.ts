@@ -184,8 +184,35 @@ Deno.serve(async (req) => {
 
         // PIPELINE 2: Extract Key Takeaways (bilingual) & Verses via LLM (Best Effort)
         // 2026-03-01: Bilingual takeaways — LLM detects source language, returns EN + ES.
+        // 2026-03-29 FIX: Skip LLM when content is predominantly verse references.
+        // Root cause: When speakers submit only a list of verse references (e.g.
+        // "2 Crónicas 24:2\n2 Crónicas 24:17-18\n..."), the regex parser correctly
+        // extracts them, but the LLM hallucinates "key points" derived from the
+        // verse themes. These fabricated points appear in the edit UI, confusing admins.
+        // Guard: If regex already found ≥2 verses AND the content is mostly references
+        // (high verse-to-prose ratio), skip the LLM entirely.
+        const isVerseHeavy = (() => {
+            if (parsedData.sections.length < 2) return false;
+            const content = (submission.content || '').trim();
+            // Strip all detected verse references from content to measure remaining prose
+            let stripped = content;
+            for (const section of parsedData.sections) {
+                if (section.original) {
+                    // Escape regex special chars in the original reference
+                    const escaped = section.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    stripped = stripped.replace(new RegExp(escaped, 'gi'), '');
+                }
+            }
+            // Remove common delimiters, whitespace, bullets, dashes, newlines
+            stripped = stripped.replace(/[\s,;.\-–—•\n\r\t|:()]/g, '').trim();
+            // If remaining prose is very short relative to original, it's verse-heavy
+            const proseRatio = stripped.length / content.length;
+            console.log(`[VERSE_HEAVY_CHECK] ${parsedData.sections.length} verses, proseRatio=${proseRatio.toFixed(3)}, remaining="${stripped.substring(0, 80)}"`);
+            return proseRatio < 0.15; // Less than 15% of content is non-verse prose
+        })();
+
         try {
-            if (!isSlidesOnly && submission.content && submission.content.length > 100) {
+            if (!isSlidesOnly && submission.content && submission.content.length > 100 && !isVerseHeavy) {
                 console.log(`[TAKEAWAYS_PIPELINE] Starting bilingual LLM extraction for submission ${submissionId}`);
                 
                 const prompt = `
@@ -197,6 +224,8 @@ STEP 2: Extract the main key takeaways (3-5 bullet points) in BOTH English AND S
   - If the notes are in English, write the English takeaways first, then translate them to Spanish.
   - If the notes are in Spanish, write the Spanish takeaways first, then translate them to English.
   - Each takeaway should be a concise, complete sentence.
+  - CRITICAL: Only extract takeaways from ACTUAL SERMON CONTENT (commentary, explanations, teaching points).
+  - If the text is ONLY a list of Bible verse references with no commentary or sermon notes, return EMPTY arrays for key_takeaways_en and key_takeaways_es. Do NOT invent or fabricate takeaways based on what the verses might be about.
 
 STEP 3: Identify all actual biblical scripture references mentioned.
    IGNORE times, dates, or random numbers (e.g., "Domingo 9:30", "11:30").
@@ -267,6 +296,11 @@ ${submission.content.substring(0, 15000)}
         } catch (llmError) {
             console.error(`[TAKEAWAYS_PIPELINE_ERROR] LLM extraction failed: ${llmError.message}`);
             // Silently fail - fallback to regex result which was already calculated
+        }
+
+        // 2026-03-29: Log when LLM was skipped due to verse-heavy content
+        if (isVerseHeavy) {
+            console.log(`[TAKEAWAYS_PIPELINE] Skipped LLM — content is verse-heavy (${parsedData.sections.length} verses detected by regex). No key takeaways will be generated.`);
         }
 
         const segmentId = submission.segment_id;
