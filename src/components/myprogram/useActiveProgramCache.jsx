@@ -157,6 +157,46 @@ export default function useActiveProgramCache(overrideParams = {}) {
     enabled: !overrideServiceId && !overrideEventId, // Skip auto-detection when override is active
   });
 
+  // ── Multi-program array (2026-03-27) ──
+  // Returns all programs for the detected date, ordered by start time.
+  // Each entry has: program_type, program_id, program_name, program_snapshot,
+  // first_session_start_time, last_session_end_time.
+  // MUST be declared BEFORE `detected` useMemo which references `programs` and `activeIndex`.
+  const programs = useMemo(() => {
+    if (overrideData) return []; // Override = single program, no progression
+    return cacheRecord?.programs || [];
+  }, [cacheRecord, overrideData]);
+
+  // ── Auto-progression: determine which program is "active now" ──
+  // Compare current ET time against each program's last_session_end_time.
+  // The active program is the last one whose first_session_start_time has been reached
+  // but whose last_session_end_time hasn't yet passed. If all have ended, show the last.
+  // If none have started, show the first.
+  // Re-evaluates every 60s via a clock tick.
+  const [clockTick, setClockTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(t => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeIndex = useMemo(() => {
+    if (programs.length <= 1) return 0;
+    // Get current time in ET as HH:MM
+    const nowET = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(new Date());
+    // Find the program that is currently active
+    // Logic: iterate from last to first. The first program whose start has been reached is active,
+    // UNLESS a later program has also started (in which case the later one wins).
+    for (let i = programs.length - 1; i >= 0; i--) {
+      const p = programs[i];
+      if (p.first_session_start_time && nowET >= p.first_session_start_time) {
+        return i;
+      }
+    }
+    return 0; // None started yet — show the first (upcoming)
+  }, [programs, clockTick]);
+
   // ── Extract data: override takes precedence over cache ──
   // 2026-03-27: Multi-program awareness. Uses activeIndex from programs[] when available.
   const detected = useMemo(() => {
@@ -194,45 +234,6 @@ export default function useActiveProgramCache(overrideParams = {}) {
       _isOverride: !!overrideData,
     };
   }, [cacheRecord, overrideData, programs, activeIndex]);
-
-  // ── Multi-program array (2026-03-27) ──
-  // Returns all programs for the detected date, ordered by start time.
-  // Each entry has: program_type, program_id, program_name, program_snapshot,
-  // first_session_start_time, last_session_end_time.
-  const programs = useMemo(() => {
-    if (overrideData) return []; // Override = single program, no progression
-    return cacheRecord?.programs || [];
-  }, [cacheRecord, overrideData]);
-
-  // ── Auto-progression: determine which program is "active now" ──
-  // Compare current ET time against each program's last_session_end_time.
-  // The active program is the last one whose first_session_start_time has been reached
-  // but whose last_session_end_time hasn't yet passed. If all have ended, show the last.
-  // If none have started, show the first.
-  // Re-evaluates every 60s via a clock tick.
-  const [clockTick, setClockTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setClockTick(t => t + 1), 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const activeIndex = useMemo(() => {
-    if (programs.length <= 1) return 0;
-    // Get current time in ET as HH:MM
-    const nowET = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false
-    }).format(new Date());
-    // Find the program that is currently active
-    // Logic: iterate from last to first. The first program whose start has been reached is active,
-    // UNLESS a later program has also started (in which case the later one wins).
-    for (let i = programs.length - 1; i >= 0; i--) {
-      const p = programs[i];
-      if (p.first_session_start_time && nowET >= p.first_session_start_time) {
-        return i;
-      }
-    }
-    return 0; // None started yet — show the first (upcoming)
-  }, [programs, clockTick]);
 
   // ── Program data: use the active program from the array if available ──
   const programData = useMemo(() => {
