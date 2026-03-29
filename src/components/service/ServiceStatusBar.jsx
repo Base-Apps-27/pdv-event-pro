@@ -226,30 +226,44 @@ export default function ServiceStatusBar({
             </div>
           )}
 
-          {/* Resource links */}
-          <div className="flex gap-1.5 mt-1">
-            {getSegmentData(current, 'presentation_url') && (
-              <Button variant="outline" size="sm" asChild
-                className={`h-6 px-1.5 text-[10px] gap-1 ${getSegmentData(current, 'content_is_slides_only') ? 'border-amber-200 text-amber-700' : 'border-blue-200 text-blue-700'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <a href={getSegmentData(current, 'presentation_url')} target="_blank" rel="noopener noreferrer">
-                  {getSegmentData(current, 'content_is_slides_only') ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
-                  Slides
-                </a>
-              </Button>
-            )}
-            {getSegmentData(current, 'notes_url') && (
-              <Button variant="outline" size="sm" asChild
-                className="h-6 px-1.5 text-[10px] gap-1 border-purple-200 text-purple-700"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <a href={getSegmentData(current, 'notes_url')} target="_blank" rel="noopener noreferrer">
-                  <BookOpen className="w-3 h-3" /> Notas
-                </a>
-              </Button>
-            )}
-          </div>
+          {/* Resource links — 2026-03-29 FIX: getSegmentData returns [] for empty
+               arrays, which is truthy. Must check array length explicitly to avoid
+               showing Slides/Notas badges on segments with no actual materials. */}
+          {(() => {
+            const presUrl = getSegmentData(current, 'presentation_url');
+            const notesUrl = getSegmentData(current, 'notes_url');
+            // Normalize: empty arrays and empty strings are "no content"
+            const hasPresentation = Array.isArray(presUrl) ? presUrl.length > 0 : !!presUrl;
+            const hasNotes = Array.isArray(notesUrl) ? notesUrl.length > 0 : !!notesUrl;
+            const presHref = Array.isArray(presUrl) ? presUrl[0] : presUrl;
+            const notesHref = Array.isArray(notesUrl) ? notesUrl[0] : notesUrl;
+            if (!hasPresentation && !hasNotes) return null;
+            return (
+              <div className="flex gap-1.5 mt-1">
+                {hasPresentation && (
+                  <Button variant="outline" size="sm" asChild
+                    className={`h-6 px-1.5 text-[10px] gap-1 ${getSegmentData(current, 'content_is_slides_only') ? 'border-amber-200 text-amber-700' : 'border-blue-200 text-blue-700'}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <a href={presHref} target="_blank" rel="noopener noreferrer">
+                      {getSegmentData(current, 'content_is_slides_only') ? <AlertTriangle className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
+                      Slides
+                    </a>
+                  </Button>
+                )}
+                {hasNotes && (
+                  <Button variant="outline" size="sm" asChild
+                    className="h-6 px-1.5 text-[10px] gap-1 border-purple-200 text-purple-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <a href={notesHref} target="_blank" rel="noopener noreferrer">
+                      <BookOpen className="w-3 h-3" /> Notas
+                    </a>
+                  </Button>
+                )}
+              </div>
+            );
+          })()}
         </button>
       ) : preLaunch ? (
         <div className="flex-1 flex flex-col gap-1 bg-[#1F8A70]/10 border border-[#1F8A70]/20 rounded-2xl px-4 py-3 min-w-0">
