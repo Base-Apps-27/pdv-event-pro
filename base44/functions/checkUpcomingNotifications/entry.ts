@@ -233,8 +233,47 @@ Deno.serve(async (req) => {
     const sessionIds = todaySessions.map(s => s.id);
     let allSegments = [];
     for (const sid of sessionIds) {
-      const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: sid });
+      const segs = await base44.asServiceRole.entities.Segment.filter({ session_id: sid }, 'order');
       allSegments.push(...segs);
+    }
+
+    // 2026-03-29 FIX: Build a map of computed start times per segment.
+    // Many segments have start_time=null because the UI calculates times
+    // dynamically from session.planned_start_time + cumulative durations.
+    // Without this, ALL action notifications were silently skipped.
+    const segmentStartTimeMap = new Map();
+    const sessionMap = new Map(todaySessions.map(s => [s.id, s]));
+    
+    // Group segments by session, then compute cumulative start times
+    const segmentsBySession = new Map();
+    for (const seg of allSegments) {
+      if (!seg.session_id) continue;
+      if (!segmentsBySession.has(seg.session_id)) {
+        segmentsBySession.set(seg.session_id, []);
+      }
+      segmentsBySession.get(seg.session_id).push(seg);
+    }
+
+    for (const [sessionId, segs] of segmentsBySession) {
+      const session = sessionMap.get(sessionId);
+      const sessionStart = parseHHMM(session?.planned_start_time);
+      if (!sessionStart) continue;
+
+      // Sort by order (already sorted by query, but defensive)
+      segs.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      // Filter to top-level segments only (no sub-assignments)
+      const topLevel = segs.filter(s => !s.parent_segment_id);
+      let runningMin = sessionStart.totalMinutes;
+
+      for (const seg of topLevel) {
+        // If segment has explicit start_time, use it; otherwise use computed
+        const explicit = parseHHMM(seg.start_time);
+        const effectiveStart = explicit ? explicit.totalMinutes : runningMin;
+        segmentStartTimeMap.set(seg.id, effectiveStart);
+        // Advance running time by segment duration
+        runningMin = effectiveStart + (seg.duration_min || 0);
+      }
     }
 
     const pendingActions = []; // { label, department, segmentTitle, actionTimeStr }
@@ -243,8 +282,11 @@ Deno.serve(async (req) => {
       const actions = segment.segment_actions || [];
       if (actions.length === 0) continue;
 
-      const segStart = parseHHMM(segment.start_time);
-      if (!segStart) continue;
+      // 2026-03-29: Use computed start time map (handles null start_time)
+      const computedStartMin = segmentStartTimeMap.get(segment.id);
+      const explicitStart = parseHHMM(segment.start_time);
+      const segStartMin = explicitStart ? explicitStart.totalMinutes : computedStartMin;
+      if (segStartMin == null) continue;
 
       for (const action of actions) {
         if (!action.label) continue;
@@ -254,9 +296,9 @@ Deno.serve(async (req) => {
         const offset = action.offset_min || 0;
 
         if (action.timing === 'before_start') {
-          actionTotalMin = segStart.totalMinutes - offset;
+          actionTotalMin = segStartMin - offset;
         } else if (action.timing === 'after_start') {
-          actionTotalMin = segStart.totalMinutes + offset;
+          actionTotalMin = segStartMin + offset;
         } else if (action.timing === 'absolute' && action.absolute_time) {
           const abs = parseHHMM(action.absolute_time);
           if (abs) actionTotalMin = abs.totalMinutes;
