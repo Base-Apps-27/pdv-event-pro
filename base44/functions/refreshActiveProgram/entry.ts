@@ -26,7 +26,11 @@
  * Decision: "Disable Segment entity automation to prevent fan-out storms"
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-05: SDK bumped from 0.8.6 → 0.8.23 to fix 403 errors on
+// inter-function calls (base44.functions.invoke('buildProgramSnapshot')).
+// Old SDK didn't properly forward auth tokens for function-to-function calls,
+// causing ~11-16% failure rate on Segment/Session entity automations.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // Retry wrapper for rate-limit resilience
 async function withRetry(fn, maxRetries = 2) {

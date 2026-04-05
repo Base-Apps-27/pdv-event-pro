@@ -15,7 +15,16 @@ import { toast } from "sonner";
 export function useSpecialSegment(queryKey) {
   const queryClient = useQueryClient();
 
-  // 2026-03-06: Added requires_translation + translation_mode + default_translator_source support
+  // 2026-04-05: BUGFIX — Atomic insert + re-index.
+  // Previously, the new segment was created with a computed order but existing
+  // segments were NOT re-indexed, causing order collisions. Also, insertAfterIdx
+  // came from a filtered list in SpecialSegmentDialog (non-special segments only),
+  // so it didn't map to the actual segment array position. Now we:
+  //   1. Fetch existing parent segments for the session
+  //   2. Compute the correct insertion position using the actual segment list
+  //   3. Create the new segment with a temporary high order
+  //   4. Re-index ALL parent segments atomically
+  //   5. Only THEN invalidate the query cache (prevents race condition)
   const add = useCallback(async ({ sessionId, serviceId, title, duration, presenter, translator, insertAfterIdx, segmentType, requires_translation, translation_mode, default_translator_source }) => {
     if (!sessionId || !serviceId) {
       toast.error("Faltan datos: sessionId o serviceId");
@@ -28,12 +37,17 @@ export function useSpecialSegment(queryKey) {
     try {
       console.log(`[V2 Special] Adding "${resolvedTitle}" to session ${sessionId} after idx ${insertAfterIdx}`);
 
-      // 2026-03-06: Resolve translator from source segment when auto_from_segment:* pattern
+      // Step 1: Fetch all existing parent segments for this session (sorted by order)
+      const allSegs = await base44.entities.Segment.filter({ session_id: sessionId });
+      const parentSegs = allSegs
+        .filter(s => !s.parent_segment_id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      // Step 2: Resolve translator from source segment when auto_from_segment:* pattern
       let resolvedTranslator = translator || "";
       if (requires_translation && default_translator_source?.startsWith('auto_from_segment:')) {
         const sourceId = default_translator_source.split(':')[1];
         try {
-          const allSegs = await base44.entities.Segment.filter({ session_id: sessionId });
           const sourceSegment = allSegs.find(s => s.id === sourceId || String(allSegs.indexOf(s)) === sourceId);
           if (sourceSegment?.translator_name) {
             resolvedTranslator = sourceSegment.translator_name;
@@ -44,16 +58,33 @@ export function useSpecialSegment(queryKey) {
         }
       }
 
+      // Step 3: Compute actual insertion position.
+      // insertAfterIdx comes from SpecialSegmentDialog which filters out "special" types,
+      // so idx 2 means "after the 3rd non-special segment". Map back to the full array.
+      // -1 means "at the beginning".
+      let insertPosition = 0; // position in the full parentSegs array (0 = before first)
+      if (insertAfterIdx >= 0) {
+        // The dialog's dropdown uses the filtered-list index. Map it back.
+        const nonSpecialSegs = parentSegs.filter(s => s.segment_type !== 'Especial');
+        const targetSeg = nonSpecialSegs[insertAfterIdx];
+        if (targetSeg) {
+          insertPosition = parentSegs.findIndex(s => s.id === targetSeg.id) + 1;
+        } else {
+          // Fallback: insert at end if index is out of range
+          insertPosition = parentSegs.length;
+        }
+      }
+
+      // Step 4: Create the new segment with a temporary high order (will be re-indexed)
       const created = await base44.entities.Segment.create({
         session_id: sessionId,
         service_id: serviceId,
-        order: (insertAfterIdx || 0) + 2,
+        order: 9999, // temporary — will be overwritten by re-index below
         title: resolvedTitle,
         segment_type: resolvedType,
         duration_min: Math.max(1, duration || 15),
         presenter: presenter || "",
         translator_name: resolvedTranslator,
-        // 2026-03-06: Translation fields from SpecialSegmentDialog
         requires_translation: !!requires_translation,
         translation_mode: requires_translation ? (translation_mode || "InPerson") : undefined,
         default_translator_source: requires_translation ? (default_translator_source || "manual") : undefined,
@@ -67,7 +98,21 @@ export function useSpecialSegment(queryKey) {
         origin: "manual",
       });
 
-      // Refresh cache
+      // Step 5: Build the new ordered list and re-index ALL parent segments
+      const newOrder = [...parentSegs];
+      newOrder.splice(insertPosition, 0, created);
+
+      const reindexPromises = newOrder
+        .map((seg, idx) => ({ id: seg.id, correctOrder: idx + 1, currentOrder: seg.order }))
+        .filter(item => item.correctOrder !== item.currentOrder)
+        .map(item => base44.entities.Segment.update(item.id, { order: item.correctOrder }));
+
+      if (reindexPromises.length > 0) {
+        await Promise.all(reindexPromises);
+        console.log(`[V2 Special] Re-indexed ${reindexPromises.length} segments after insert at position ${insertPosition}`);
+      }
+
+      // Step 6: NOW invalidate cache — all DB writes are committed
       queryClient.invalidateQueries({ queryKey });
       toast.success(`"${resolvedTitle}" agregado`);
       return created;

@@ -32,9 +32,16 @@ export function useMoveSegment(queryKey, writeSegment, onError) {
       const reindexed = arr.map((seg, i) => ({ ...seg, order: i + 1 }));
       newSBS[sessionId] = reindexed;
 
-      // Queue entity writes via useEntityWrite (coalesced + retry-safe)
+      // 2026-04-05: BUGFIX — Use ID-based comparison instead of positional index.
+      // Previously compared reindexed[i].order against old[i].order, but after inserts
+      // the array composition changes (different segments at each index). Now we build
+      // an ID→order map from the old state and compare by segment ID.
+      const oldOrderById = {};
+      (old.segmentsBySession[sessionId] || []).forEach(s => {
+        if (s.id) oldOrderById[s.id] = s.order;
+      });
       const changedSegs = reindexed.filter(
-        (seg, i) => seg.id && seg.order !== (old.segmentsBySession[sessionId]?.[i]?.order)
+        seg => seg.id && seg.order !== oldOrderById[seg.id]
       );
 
       for (const seg of changedSegs) {
