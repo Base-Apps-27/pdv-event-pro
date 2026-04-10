@@ -141,12 +141,17 @@ export function useSpecialSegment(queryKey) {
       await base44.entities.Segment.delete(segmentId);
 
       // Re-order remaining segments to prevent order gaps
+      // 2026-04-10: BUGFIX — Use single loop instead of .filter().map() chain.
+      // The old pattern filtered first (changing indices), then mapped with wrong idx.
+      // Now we iterate the sorted parents array once, only updating segments whose
+      // order differs from their position. Same pattern as the add() re-index.
       if (sessionId) {
         const remaining = await base44.entities.Segment.filter({ session_id: sessionId });
         const parents = remaining.filter(s => !s.parent_segment_id).sort((a, b) => (a.order || 0) - (b.order || 0));
         const reorderPromises = parents
-          .filter((seg, idx) => seg.order !== idx + 1)
-          .map((seg, idx) => base44.entities.Segment.update(seg.id, { order: idx + 1 }));
+          .map((seg, idx) => ({ id: seg.id, correctOrder: idx + 1, currentOrder: seg.order }))
+          .filter(item => item.correctOrder !== item.currentOrder)
+          .map(item => base44.entities.Segment.update(item.id, { order: item.correctOrder }));
         if (reorderPromises.length > 0) {
           await Promise.all(reorderPromises);
           console.log(`[V2 Special] Re-ordered ${reorderPromises.length} segments`);
