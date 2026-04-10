@@ -221,6 +221,28 @@
   border-color: var(--brand-green);
 }
 
+/* 2026-04-10: Force 16px minimum on all text inputs to prevent iOS Safari
+ * auto-zoom on focus. iOS zooms the viewport when an input's computed
+ * font-size is below 16px. This rule overrides smaller sizes from
+ * Tailwind (text-sm = 14px, text-xs = 12px) on focusable form elements.
+ * Non-input text is unaffected — only <input>, <textarea>, <select>.
+ */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input:not([type]),
+textarea,
+select {
+  font-size: max(1em, 16px) !important;
+}
+
 /* 2026-03-07: Prevent text selection on interactive elements for mobile app feel */
 .no-select {
   -webkit-user-select: none;
