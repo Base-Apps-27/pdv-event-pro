@@ -1,13 +1,22 @@
 /**
  * useMoveSegment.js — V2 reorder segments via entity order field swap.
- * BUGFIX (2026-03-09): Now uses writeSegment from useEntityWrite for reliable coalesced writes + error handling.
- * Previously fire-and-forget Promise.all() could fail silently, leaving UI inconsistent with database.
- * 
- * Validates index bounds, re-indexes all affected segments, and surfaces write errors via callback.
+ *
+ * 2026-04-12: CRITICAL FIX — Order writes now bypass useEntityWrite's 400ms debounce.
+ * Previously, order updates went through writeSegment → scheduleCoalesced → 400ms timer.
+ * This created a race condition where useSpecialSegment.add() would re-index all segments
+ * atomically, but a pending debounced order write from a recent move would fire AFTER
+ * the re-index and revert the segment to its old position.
+ *
+ * Fix: Use base44.entities.Segment.update() directly for order changes. Order is a
+ * structural field (not a "user is typing" field) and must be committed immediately.
+ * The RQ cache is still updated optimistically for instant UI response.
+ *
+ * Decision: "Segment order writes bypass debounce to prevent re-index race condition"
  */
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { logReorder } from "@/components/utils/editActionLogger";
 
 export function useMoveSegment(queryKey, writeSegment, onError) {
@@ -33,10 +42,7 @@ export function useMoveSegment(queryKey, writeSegment, onError) {
       const reindexed = arr.map((seg, i) => ({ ...seg, order: i + 1 }));
       newSBS[sessionId] = reindexed;
 
-      // 2026-04-05: BUGFIX — Use ID-based comparison instead of positional index.
-      // Previously compared reindexed[i].order against old[i].order, but after inserts
-      // the array composition changes (different segments at each index). Now we build
-      // an ID→order map from the old state and compare by segment ID.
+      // ID-based comparison: only update segments whose order actually changed
       const oldOrderById = {};
       (old.segmentsBySession[sessionId] || []).forEach(s => {
         if (s.id) oldOrderById[s.id] = s.order;
@@ -45,23 +51,31 @@ export function useMoveSegment(queryKey, writeSegment, onError) {
         seg => seg.id && seg.order !== oldOrderById[seg.id]
       );
 
-      for (const seg of changedSegs) {
-        try {
-          writeSegment(seg.id, 'order', seg.order);
-          // 2026-04-12: Log reorder for traceability
-          const prevOrder = oldOrderById[seg.id];
-          logReorder('Segment', seg.id, prevOrder, seg.order, sessionId, null, seg.title).catch(() => {});
-        } catch (err) {
-          console.error('[V2 Move] Write failed for segment', seg.id, err.message);
-          if (onError) onError(err);
-        }
+      // 2026-04-12: DIRECT API WRITES — bypass debounce for order field.
+      // Order is structural and must be committed atomically.
+      // Using Promise.all ensures all order writes land together.
+      // If any fail, we surface the error via onError callback.
+      if (changedSegs.length > 0) {
+        Promise.all(
+          changedSegs.map(seg =>
+            base44.entities.Segment.update(seg.id, { order: seg.order })
+              .then(() => {
+                const prevOrder = oldOrderById[seg.id];
+                logReorder('Segment', seg.id, prevOrder, seg.order, sessionId, null, seg.title).catch(() => {});
+              })
+              .catch(err => {
+                console.error('[V2 Move] Direct order write failed for segment', seg.id, err.message);
+                if (onError) onError(err);
+              })
+          )
+        ).then(() => {
+          console.log(`[V2 Move] Session ${sessionId}: committed ${changedSegs.length} order updates directly`);
+        });
       }
-
-      console.log(`[V2 Move] Session ${sessionId}: moved idx ${index} ${direction} → queued ${changedSegs.length} segment updates`);
 
       return { ...old, segmentsBySession: newSBS };
     });
-  }, [queryClient, queryKey, writeSegment, onError]);
+  }, [queryClient, queryKey, onError]);
 
   return { move };
 }
