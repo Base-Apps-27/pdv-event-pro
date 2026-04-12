@@ -8,6 +8,7 @@
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { logReorder } from "@/components/utils/editActionLogger";
 
 export function useMoveSegment(queryKey, writeSegment, onError) {
   const queryClient = useQueryClient();
@@ -47,6 +48,9 @@ export function useMoveSegment(queryKey, writeSegment, onError) {
       for (const seg of changedSegs) {
         try {
           writeSegment(seg.id, 'order', seg.order);
+          // 2026-04-12: Log reorder for traceability
+          const prevOrder = oldOrderById[seg.id];
+          logReorder('Segment', seg.id, prevOrder, seg.order, sessionId, null, seg.title).catch(() => {});
         } catch (err) {
           console.error('[V2 Move] Write failed for segment', seg.id, err.message);
           if (onError) onError(err);

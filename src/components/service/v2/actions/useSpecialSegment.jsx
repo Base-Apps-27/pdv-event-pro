@@ -11,6 +11,7 @@ import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { logCreate, logDelete } from "@/components/utils/editActionLogger";
 
 export function useSpecialSegment(queryKey) {
   const queryClient = useQueryClient();
@@ -112,7 +113,10 @@ export function useSpecialSegment(queryKey) {
         console.log(`[V2 Special] Re-indexed ${reindexPromises.length} segments after insert at position ${insertPosition}`);
       }
 
-      // Step 6: NOW invalidate cache — all DB writes are committed
+      // Step 6: Log creation for traceability (2026-04-12)
+      logCreate('Segment', created, sessionId).catch(() => {});
+
+      // Step 7: NOW invalidate cache — all DB writes are committed
       queryClient.invalidateQueries({ queryKey });
       toast.success(`"${resolvedTitle}" agregado`);
       return created;
@@ -131,12 +135,19 @@ export function useSpecialSegment(queryKey) {
     try {
       console.log(`[V2 Special] Removing segment ${segmentId} from session ${sessionId}`);
 
+      // Fetch segment data before deletion for logging
+      const allSegsForDelete = await base44.entities.Segment.filter({ session_id: sessionId });
+
       // Also delete any child segments
       const children = await base44.entities.Segment.filter({ parent_segment_id: segmentId });
       if (children.length > 0) {
         await Promise.all(children.map(c => base44.entities.Segment.delete(c.id)));
         console.log(`[V2 Special] Deleted ${children.length} child segments`);
       }
+
+      // 2026-04-12: Log deletion for traceability before removing from DB
+      const deletedSeg = allSegsForDelete?.find(s => s.id === segmentId);
+      if (deletedSeg) logDelete('Segment', deletedSeg, sessionId).catch(() => {});
 
       await base44.entities.Segment.delete(segmentId);
 

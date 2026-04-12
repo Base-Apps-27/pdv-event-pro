@@ -17,6 +17,7 @@
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
+import { logUpdate } from "@/components/utils/editActionLogger";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -117,6 +118,13 @@ export function useEntityWrite(queryKey) {
   }, []);
 
   // ── Retry-aware write executor ────────────────────────────────
+  // 2026-04-12: Stable refs for queryKey and queryClient so executeWrite can
+  // read the RQ cache for EditActionLog snapshots without re-creating the callback.
+  const queryKeyRef = useRef(queryKey);
+  queryKeyRef.current = queryKey;
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
+
   const executeWrite = useCallback(async (entityType, entityId, fields, attempt = 0) => {
     const entityMap = {
       Segment: base44.entities.Segment,
@@ -127,7 +135,38 @@ export function useEntityWrite(queryKey) {
     if (!entity) return;
 
     try {
+      // 2026-04-12: Capture pre-write state from RQ cache for EditActionLog
+      // We snapshot BEFORE the API call so logUpdate can compute field diffs.
+      let previousSnapshot = null;
+      try {
+        const cachedData = queryClientRef.current?.getQueryData(queryKeyRef.current);
+        if (cachedData && entityType === 'Segment') {
+          for (const sessionId in cachedData.segmentsBySession) {
+            const found = cachedData.segmentsBySession[sessionId]?.find(s => s.id === entityId);
+            if (found) { previousSnapshot = { ...found }; break; }
+          }
+          if (!previousSnapshot) {
+            for (const parentId in cachedData.childSegments) {
+              const found = cachedData.childSegments[parentId]?.find(s => s.id === entityId);
+              if (found) { previousSnapshot = { ...found }; break; }
+            }
+          }
+        } else if (cachedData && entityType === 'Session') {
+          const found = cachedData.sessions?.find(s => s.id === entityId);
+          if (found) previousSnapshot = { ...found };
+        }
+      } catch (_snapshotErr) { /* non-fatal */ }
+
       await entity.update(entityId, fields);
+
+      // 2026-04-12: Fire-and-forget EditActionLog write for V2 Weekly Editor traceability.
+      // Uses previousSnapshot from RQ cache (already contains the optimistic update,
+      // but the diff is still accurate because logUpdate calculates old vs new).
+      if (previousSnapshot) {
+        const newState = { ...previousSnapshot, ...fields };
+        logUpdate(entityType, entityId, previousSnapshot, newState).catch(() => {});
+      }
+
       // GRO-1 (2026-03-02): Track admin write operations for observability
       base44.analytics.track({ eventName: `${entityType.toLowerCase()}_updated`, properties: { entity_id: entityId, fields_count: Object.keys(fields).length } });
     } catch (err) {
