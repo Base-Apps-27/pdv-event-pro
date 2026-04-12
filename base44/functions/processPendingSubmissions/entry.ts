@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // SAFETY NET: Scheduled job that processes any SpeakerSubmissionVersion records stuck in 'pending'.
 // Catches submissions where the primary automation (processNewSubmissionVersion) failed to trigger.

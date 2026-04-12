@@ -13,7 +13,8 @@
  * Auth: None required (public form). Uses asServiceRole for reads.
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+// 2026-04-12: SDK bumped from 0.8.20 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
     const corsHeaders = {

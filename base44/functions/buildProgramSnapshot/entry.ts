@@ -1,4 +1,7 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 to match refreshActiveProgram.
+// Old SDK didn't properly forward auth tokens for function-to-function calls,
+// causing intermittent 403 errors when refreshActiveProgram invoked this function.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
  * Shared utility function for backend modules.

@@ -24,7 +24,8 @@
  * See: SYSTEM_AUDIT_RECURRING_SERVICES.md §4
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const DAY_LABELS = {
   Sunday: "Domingo", Monday: "Lunes", Tuesday: "Martes",

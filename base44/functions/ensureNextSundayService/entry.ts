@@ -19,7 +19,8 @@
  * Constitution: No destructive ops. Additive only.
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Type normalization (inlined for Deno — no local imports)
 const TYPE_TO_ENUM = {

@@ -14,7 +14,8 @@
  * Parent: Live Director improvements
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {

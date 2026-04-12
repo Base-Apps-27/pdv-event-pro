@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// 2026-04-12: SDK bumped from 0.8.6 → 0.8.25 for consistency across all backend functions.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // ADMIN REPROCESSING ENDPOINT for speaker submissions.
 // Called on-demand from MessageProcessing.jsx admin UI (NOT by entity automation).
