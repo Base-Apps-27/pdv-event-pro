@@ -117,11 +117,17 @@ Deno.serve(async (req) => {
         const lockEntry = existingLock[0];
         if (lockEntry.refresh_in_progress && lockEntry.last_refresh_at) {
           const lockAge = Date.now() - new Date(lockEntry.last_refresh_at).getTime();
-          if (lockAge < 30000) {
+          // 2026-04-12: Bumped from 30s → 60s to absorb fan-out storms.
+          // Bulk operations (reorder 8 segments, reset-to-blueprint) fire many
+          // entity automations within milliseconds. 60s ensures only the first
+          // trigger does a full rebuild; subsequent triggers skip cleanly.
+          // The midnight scheduled refresh and manual admin refresh are unaffected
+          // (they always proceed regardless of the lock).
+          if (lockAge < 60000) {
             console.log(`[refreshActiveProgram] Concurrency guard: another refresh in progress (${lockAge}ms ago). Skipping.`);
             return Response.json({ skipped: true, reason: 'concurrency_guard' });
           }
-          // Lock older than 30s — stale, proceed and overwrite
+          // Lock older than 60s — stale, proceed and overwrite
           console.log(`[refreshActiveProgram] Stale lock detected (${lockAge}ms). Proceeding.`);
         }
         // Set the lock
