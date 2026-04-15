@@ -62,10 +62,9 @@ const SegmentCard = memo(function SegmentCard({
   canEdit = true,
   // Write handlers
   onWrite,
+  onWriteSongs,
   onWriteChild,
   onWriteDuration,
-  // 2026-04-15: SegmentSong entity data (replaces onWriteSongs flat-field approach)
-  segmentSongs,
   // Action handlers
   onMove,
   onRemove,
@@ -181,13 +180,14 @@ const SegmentCard = memo(function SegmentCard({
             segment={segment}
             field={field}
             onWrite={onWrite}
+            onWriteSongs={onWriteSongs}
             onOpenVerseParser={() => onOpenVerseParser?.(segment.id)}
           />
         ))}
 
-        {/* Songs (worship segments) — 2026-04-15: Now reads from SegmentSong entities */}
+        {/* Songs (worship segments) */}
         {hasSongs && (
-          <SongRows segmentId={segment.id} songs={segmentSongs || []} canEdit={canEdit} />
+          <SongRows segment={segment} onWriteSongs={onWriteSongs} canEdit={canEdit} />
         )}
 
         {/* Translation — FieldRenderer now applies its own blue box styling (Phase 2, 2026-03-03).
@@ -197,7 +197,6 @@ const SegmentCard = memo(function SegmentCard({
             segment={segment}
             field="translator"
             onWrite={onWrite}
-            onWriteSongs={onWriteSongs}
           />
         )}
 

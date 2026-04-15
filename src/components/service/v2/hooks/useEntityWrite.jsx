@@ -32,7 +32,6 @@ const RETRY_DELAY_MS = 1000;
  *   writeSegment: (segmentId: string, column: string, value: any) => void,
  *   writeSession: (sessionId: string, column: string, value: any) => void,
  *   writePSD: (sessionId: string, column: string, value: any) => void,
- *   writeSongs: (segmentId: string, songs: object[]) => void,
  *   dirtyIds: Set<string>,
  *   flushAll: () => Promise<void>,
  *   flushEntity: (entityId: string) => Promise<void>,
@@ -271,44 +270,10 @@ export function useEntityWrite(queryKey) {
     scheduleCoalesced('PreSessionDetails', psdId, column, value);
   }, [updateCache, scheduleCoalesced, queryClient, queryKey, markDirty, markClean]);
 
-  const writeSongs = useCallback((segmentId, songs) => {
-    if (!segmentId) return;
-    // Build flat field payload — supports up to 10 songs (2026-03-26)
-    const payload = {};
-    const safeArray = Array.isArray(songs) ? songs : [];
-    for (let i = 0; i < 10; i++) {
-      const song = safeArray[i];
-      payload[`song_${i + 1}_title`] = song?.title || "";
-      payload[`song_${i + 1}_lead`] = song?.lead || "";
-      payload[`song_${i + 1}_key`] = song?.key || "";
-    }
-    payload.number_of_songs = safeArray.length;
-
-    updateCache('Segment', segmentId, payload);
-
-    // Songs go through coalesced path too — all 19 fields merge into one call
-    markDirty(segmentId);
-    const entityKey = `Segment:${segmentId}`;
-    if (!pendingRef.current[entityKey]) {
-      pendingRef.current[entityKey] = { entityType: 'Segment', entityId: segmentId, fields: {} };
-    }
-    Object.assign(pendingRef.current[entityKey].fields, payload);
-
-    if (timersRef.current[entityKey]) clearTimeout(timersRef.current[entityKey]);
-    timersRef.current[entityKey] = setTimeout(async () => {
-      const entry = pendingRef.current[entityKey];
-      delete pendingRef.current[entityKey];
-      delete timersRef.current[entityKey];
-      if (!entry) return;
-      try {
-        await executeWrite(entry.entityType, entry.entityId, entry.fields);
-      } catch (_) {}
-      const hasMore = Object.keys(pendingRef.current).some(k =>
-        pendingRef.current[k]?.entityId === segmentId
-      );
-      if (!hasMore) markClean(segmentId);
-    }, DEBOUNCE_MS);
-  }, [updateCache, markDirty, markClean, executeWrite]);
+  // 2026-04-15: writeSongs REMOVED. Songs are now individual SegmentSong entities,
+  // managed directly by SongRows.jsx via CRUD on base44.entities.SegmentSong.
+  // The old flat-field write path (song_1_title..song_10_key) is deprecated.
+  // Kept as comment for traceability per Constitution rule §4.
 
   // ── Flush logic ───────────────────────────────────────────────
 
@@ -401,7 +366,6 @@ export function useEntityWrite(queryKey) {
     writeSegment,
     writeSession,
     writePSD,
-    writeSongs,
     dirtyIds,
     flushAll,
     flushEntity,

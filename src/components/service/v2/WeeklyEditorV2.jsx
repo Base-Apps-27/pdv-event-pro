@@ -39,7 +39,7 @@ import { resolveSegmentEnum } from "@/components/utils/segmentTypeMap";
 import { buildPdfData } from "./utils/buildPdfData";
 import { generateWeeklyProgramPDF } from "@/components/service/generateWeeklyProgramPDF";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
-import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
+// 2026-04-15: getNormalizedSongs import removed — songs now use SegmentSong entity
 import { useLanguage } from "@/components/utils/i18n.jsx";
 
 export default function WeeklyEditorV2({
