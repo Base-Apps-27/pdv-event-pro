@@ -5,10 +5,16 @@
  * Event, Session, Segment, EventDay, and PreSessionDetails entities.
  * 
  * Logs capture:
- * - Full previous state (for undo)
- * - Field-level changes (for display)
- * - User attribution
+ * - Field-level changes with old_value/new_value (for display AND undo)
+ * - User attribution (email + name)
  * - Human-readable descriptions
+ * 
+ * 2026-04-15 SNAPSHOT BLOAT FIX:
+ * previous_state and new_state are no longer written on new entries.
+ * For Segment (169 fields), each log was storing two full copies.
+ * field_changes already captures old_value/new_value per changed field,
+ * which is all that's needed for both display and undo.
+ * Historical entries with snapshots are preserved (no deletion).
  */
 
 import { base44 } from "@/api/base44Client";
@@ -124,6 +130,7 @@ export async function logCreate(entityType, newEntity, parentId = null, user = n
     
     console.log('[EditActionLog] Logging create for', entityType, newEntity.id);
     
+    // 2026-04-15: No longer storing new_state snapshot (bloat fix)
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: newEntity.id,
@@ -131,7 +138,7 @@ export async function logCreate(entityType, newEntity, parentId = null, user = n
       action_type: 'create',
       field_changes: null,
       previous_state: null,
-      new_state: { ...newEntity },
+      new_state: null,
       description: generateChangeDescription(entityType, 'create', null, title),
       user_email: user?.email || null,
       user_name: user?.display_name || user?.full_name || null,
@@ -163,14 +170,16 @@ export async function logUpdate(entityType, entityId, previousState, newState, p
     
     console.log('[EditActionLog] Logging update for', entityType, entityId, 'with', Object.keys(fieldChanges).length, 'field changes');
     
+    // 2026-04-15: No longer storing previous_state/new_state snapshots (bloat fix).
+    // field_changes already captures old_value/new_value per field — sufficient for undo.
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: entityId,
       parent_id: resolvedParentId,
       action_type: 'update',
       field_changes: fieldChanges,
-      previous_state: { ...previousState },
-      new_state: { ...newState },
+      previous_state: null,
+      new_state: null,
       description: generateChangeDescription(entityType, 'update', fieldChanges, title),
       user_email: user?.email || null,
       user_name: user?.display_name || user?.full_name || null,
@@ -193,13 +202,15 @@ export async function logDelete(entityType, deletedEntity, parentId = null, user
     
     console.log('[EditActionLog] Logging delete for', entityType, deletedEntity.id);
     
+    // 2026-04-15: No longer storing previous_state snapshot (bloat fix).
+    // Delete undo recreates from field_changes or is not supported without snapshot.
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: deletedEntity.id,
       parent_id: resolvedParentId,
       action_type: 'delete',
       field_changes: null,
-      previous_state: { ...deletedEntity },
+      previous_state: null,
       new_state: null,
       description: generateChangeDescription(entityType, 'delete', null, title),
       user_email: user?.email || null,
@@ -216,6 +227,7 @@ export async function logDelete(entityType, deletedEntity, parentId = null, user
  */
 export async function logReorder(entityType, entityId, previousOrder, newOrder, parentId = null, user = null, entityTitle = '') {
   try {
+    // 2026-04-15: No longer storing previous_state/new_state snapshots (bloat fix)
     await base44.entities.EditActionLog.create({
       entity_type: entityType,
       entity_id: entityId,
@@ -224,8 +236,8 @@ export async function logReorder(entityType, entityId, previousOrder, newOrder, 
       field_changes: {
         order: { old_value: previousOrder, new_value: newOrder }
       },
-      previous_state: { order: previousOrder },
-      new_state: { order: newOrder },
+      previous_state: null,
+      new_state: null,
       description: generateChangeDescription(entityType, 'reorder', null, entityTitle),
       user_email: user?.email || null,
       user_name: user?.display_name || user?.full_name || null,
@@ -253,14 +265,16 @@ export async function logBatchReorder(sessionId, changes, description = '') {
       fieldChanges[c.id] = { old_value: c.oldOrder, new_value: c.newOrder };
     }
 
+    // 2026-04-15: No longer storing previous_state/new_state snapshots (bloat fix).
+    // field_changes already contains per-segment old/new order values.
     await base44.entities.EditActionLog.create({
       entity_type: 'Segment',
       entity_id: changes[0]?.id || 'batch',
       parent_id: sessionId,
       action_type: 'reorder',
       field_changes: fieldChanges,
-      previous_state: { segments: changes.map(c => ({ id: c.id, title: c.title, order: c.oldOrder })) },
-      new_state: { segments: changes.map(c => ({ id: c.id, title: c.title, order: c.newOrder })) },
+      previous_state: null,
+      new_state: null,
       description: description || `Se reordenaron ${changes.length} segmentos`,
       undone: false,
     });

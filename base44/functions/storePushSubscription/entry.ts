@@ -8,9 +8,11 @@
  * If subscription already exists, updates endpoint (may change on browser reinstall).
  * 
  * 2026-03-10: VAPID Web Push backend storage
+ * 2026-04-15: Added unsubscribe action — clears VAPID keys when is_active=false
+ *   (security: keys are no longer needed once subscription is deactivated)
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
@@ -21,7 +23,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { endpoint, auth_key, p256dh_key, user_agent } = await req.json();
+    const body = await req.json();
+    const { action } = body;
+
+    // ── UNSUBSCRIBE: Deactivate + clear VAPID keys ──────────────
+    // 2026-04-15: Security fix — auth_key and p256dh_key are cleared when
+    // subscription is deactivated so stale keys don't persist in the DB.
+    if (action === 'unsubscribe') {
+      const existing = await base44.asServiceRole.entities.PushSubscription.filter({
+        user_email: user.email,
+        is_active: true,
+      });
+      let deactivated = 0;
+      for (const sub of existing) {
+        await base44.asServiceRole.entities.PushSubscription.update(sub.id, {
+          is_active: false,
+          auth_key: null,
+          p256dh_key: null,
+        });
+        deactivated++;
+      }
+      console.log(`[PUSH] Deactivated ${deactivated} subscription(s) for ${user.email}`);
+      return Response.json({ success: true, deactivated });
+    }
+
+    // ── SUBSCRIBE: Store or update VAPID keys ───────────────────
+    const { endpoint, auth_key, p256dh_key, user_agent } = body;
 
     if (!endpoint || !auth_key || !p256dh_key) {
       return Response.json({ error: 'Missing subscription keys' }, { status: 400 });
