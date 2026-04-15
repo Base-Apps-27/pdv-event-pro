@@ -46,10 +46,9 @@ const FIELD_BOX_STYLES = {
  * @param {object} segment - Raw Segment entity object
  * @param {string} field - Key from segment.ui_fields (e.g. "leader", "verse")
  * @param {function} onWrite - (segmentId, column, value) => void
- * @param {function} onWriteSongs - (segmentId, songs[]) => void
  * @param {function} onOpenVerseParser - () => void (already bound to segmentId by parent)
  */
-const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onWriteSongs, onOpenVerseParser }) {
+const FieldRenderer = memo(function FieldRenderer({ segment, field, onWrite, onOpenVerseParser }) {
   const { t } = useLanguage();
   const config = FIELD_REGISTRY[field];
   if (!config) {
