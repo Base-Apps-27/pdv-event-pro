@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { useUserNameResolver } from '@/components/utils/useUserNameResolver';
 
 /**
  * DirectorHeader - Top bar for Director Console
@@ -46,6 +47,13 @@ export default function DirectorHeader({
   const [showEnableDialog, setShowEnableDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [showTakeoverDialog, setShowTakeoverDialog] = useState(false);
+  
+  // 2026-04-15: Resolve live director name from User entity at read time.
+  // live_director_user_id stores a User entity ID (not email), so use resolveNameById.
+  const { resolveNameById } = useUserNameResolver();
+  const directorDisplayName = session?.live_director_user_id 
+    ? resolveNameById(session.live_director_user_id, session.live_director_user_name)
+    : session?.live_director_user_name || '';
   
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -172,7 +180,7 @@ export default function DirectorHeader({
                   ) : (
                     <Badge variant="outline" className="border-amber-500 text-amber-400">
                       <Lock className="w-3 h-3 mr-1" />
-                      {session.live_director_user_name}
+                      {directorDisplayName}
                     </Badge>
                   )}
                 </>
@@ -307,8 +315,8 @@ export default function DirectorHeader({
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {language === 'es'
-                ? `${session?.live_director_user_name || 'Otro usuario'} es actualmente el Director. Si tomas el control, serán notificados.`
-                : `${session?.live_director_user_name || 'Another user'} is currently the Director. If you take over, they will be notified.`}
+                ? `${directorDisplayName || 'Otro usuario'} es actualmente el Director. Si tomas el control, serán notificados.`
+                : `${directorDisplayName || 'Another user'} is currently the Director. If you take over, they will be notified.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

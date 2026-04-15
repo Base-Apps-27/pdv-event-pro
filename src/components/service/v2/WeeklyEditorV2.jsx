@@ -74,13 +74,14 @@ export default function WeeklyEditorV2({
 
   // ── Load entities via V2 hook (NO transformation) ──
   const {
-    sessions, segmentsBySession, childSegments, psdBySession,
+    sessions, segmentsBySession, childSegments, psdBySession, songsBySegment,
     isLoading: dataLoading, queryKey
   } = useWeeklyData(serviceId);
 
   // ── Write hook (single write path, coalesced + retry) ──
+  // 2026-04-15: writeSongs removed — songs now use SegmentSong entity (CRUD in SongRows)
   const {
-    writeSegment, writeSession, writePSD, writeSongs,
+    writeSegment, writeSession, writePSD,
     dirtyIds, flushAll, flushEntity
   } = useEntityWrite(queryKey);
 
@@ -109,7 +110,7 @@ export default function WeeklyEditorV2({
   const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey, sessions, withLock);
   const { copySegmentContent, copyAllToSlot } = useCopyBetweenSlots(
     segmentsBySession, sessions, psdBySession,
-    writeSegment, writeSession, writePSD, writeSongs, childSegments
+    writeSegment, writeSession, writePSD, null, childSegments
   );
 
   // ── Sub-assignment child write handler ──
@@ -491,12 +492,12 @@ export default function WeeklyEditorV2({
         segmentsBySession={segmentsBySession}
         childSegments={childSegments}
         psdBySession={psdBySession}
+        songsBySegment={songsBySegment}
         columnProps={{
           serviceId,
           recesoNotes: existingService?.receso_notes || {},
           canEdit: hasPermission(user, 'edit_services'),
           onWrite: writeSegment,
-          onWriteSongs: writeSongs,
           onWriteChild: handleWriteChild,
           onWriteSession: writeSession,
           onWritePSD: writePSD,

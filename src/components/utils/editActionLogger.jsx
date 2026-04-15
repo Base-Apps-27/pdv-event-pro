@@ -363,10 +363,9 @@ export async function undoUpdate(log, user = null) {
     return { success: false, error: 'This action has already been undone' };
   }
   
-  if (!log.previous_state) {
-    return { success: false, error: 'No previous state available to restore' };
-  }
-  
+  // 2026-04-15: Undo now works from field_changes (old_value/new_value per field)
+  // instead of requiring previous_state. This is more reliable anyway because
+  // previous_state could be stale if other edits happened between log and undo.
   if (!log.field_changes || Object.keys(log.field_changes).length === 0) {
     return { success: false, error: 'No field changes recorded to undo' };
   }
@@ -446,15 +445,15 @@ export async function undoUpdate(log, user = null) {
     }
     
     // --- STEP 6: Log the undo as a new action (for audit trail) ---
-    // This creates a traceable record that an undo occurred
+    // 2026-04-15: No longer storing snapshots (bloat fix)
     await base44.entities.EditActionLog.create({
       entity_type: log.entity_type,
       entity_id: log.entity_id,
       parent_id: log.parent_id,
       action_type: 'update',
       field_changes: invertFieldChanges(log.field_changes), // Swap old/new
-      previous_state: { ...currentEntity },
-      new_state: restoredEntity ? { ...restoredEntity } : { ...log.previous_state },
+      previous_state: null,
+      new_state: null,
       description: `[UNDO] ${log.description}`,
       user_email: user?.email || null,
       user_name: user?.display_name || user?.full_name || null,
@@ -514,8 +513,10 @@ export async function undoDelete(log, user = null) {
     return { success: false, error: 'This action has already been undone' };
   }
   
+  // 2026-04-15: New entries no longer store previous_state. Undo-delete requires
+  // the snapshot to recreate the entity. Only historical entries (pre-2026-04-15) support this.
   if (!log.previous_state) {
-    return { success: false, error: 'No previous state available to restore' };
+    return { success: false, error: 'No previous state snapshot available. Delete undo is only available for entries created before 2026-04-15.' };
   }
   
   const entitySdk = ENTITY_SDK_MAP[log.entity_type]?.();
@@ -559,6 +560,7 @@ export async function undoDelete(log, user = null) {
     }
     
     // --- STEP 4: Log the restoration (NOT using logCreate - custom description) ---
+    // 2026-04-15: No longer storing new_state snapshot (bloat fix)
     const title = newEntity.title || newEntity.name || entityData.title || entityData.name || '';
     await base44.entities.EditActionLog.create({
       entity_type: log.entity_type,
@@ -567,7 +569,7 @@ export async function undoDelete(log, user = null) {
       action_type: 'create',
       field_changes: null,
       previous_state: null,
-      new_state: { ...newEntity },
+      new_state: null,
       description: `[UNDO-DELETE] Restored ${log.entity_type} "${title}" (original ID: ${log.entity_id})`,
       user_email: user?.email || null,
       user_name: user?.display_name || user?.full_name || null,

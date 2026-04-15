@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { formatTimestampToEST } from "@/components/utils/timeFormat";
 import { useLanguage } from "@/components/utils/i18n.jsx";
+import { useUserNameResolver } from "@/components/utils/useUserNameResolver";
 
 const ACTION_COLORS = {
   create: "bg-green-100 text-green-700 border-green-200",
@@ -114,12 +115,16 @@ function FieldChanges({ fieldChanges }) {
   );
 }
 
-function LogRow({ log }) {
+function LogRow({ log, resolveName }) {
   const ActionIcon = ACTION_ICONS[log.action_type] || Pencil;
   const actionColor = ACTION_COLORS[log.action_type] || ACTION_COLORS.update;
   const entityBadgeColor = ENTITY_BADGE_COLORS[log.entity_type] || "bg-gray-100 text-gray-700";
 
   const isUndo = log.description?.startsWith("[UNDO") || false;
+
+  // 2026-04-15: Resolve display name from User entity at read time.
+  // Stored user_name is fallback only (for deleted accounts).
+  const displayName = resolveName(log.user_email, log.user_name);
 
   return (
     <div className={`flex gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${isUndo ? "bg-amber-50" : ""}`}>
@@ -155,10 +160,10 @@ function LogRow({ log }) {
         <FieldChanges fieldChanges={log.field_changes} />
 
         <div className="flex flex-wrap items-center gap-3 mt-1.5">
-          {(log.user_name || log.user_email) && (
+          {(log.user_email || log.user_name) && (
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <User className="w-3 h-3" />
-              {log.user_name || log.user_email}
+              {displayName}
             </span>
           )}
           {log.created_date && (
@@ -240,6 +245,9 @@ export default function ActivityLog() {
       </div>
     );
   }
+
+  // 2026-04-15: Resolve usernames from User entity at read time
+  const { resolveName } = useUserNameResolver();
 
   const entityTypes = Object.keys(ENTITY_LABELS);
 
@@ -345,7 +353,7 @@ export default function ActivityLog() {
         ) : (
           <div className="divide-y divide-slate-100">
             {filtered.map(log => (
-              <LogRow key={log.id} log={log} />
+              <LogRow key={log.id} log={log} resolveName={resolveName} />
             ))}
           </div>
         )}

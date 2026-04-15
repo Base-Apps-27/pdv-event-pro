@@ -32,17 +32,21 @@ export default function LiveChatMessage({
   onToggleReaction,
   onDelete,
   onEdit,
-  isOptimistic = false
+  isOptimistic = false,
+  resolveName  // 2026-04-15: Username resolver function from useUserNameResolver
 }) {
   const [showReactors, setShowReactors] = useState(null); // 'thumbs_up' or 'thumbs_down' or null
   const [isEditing, setIsEditing] = useState(false);
   const isOwnMessage = message.created_by === currentUserEmail;
   
-  // Use stored full_name when available, fallback to email extraction for older messages
+  // 2026-04-15: Resolve display name from User entity at read time.
+  // created_by (built-in email field) is the durable key; created_by_name is fallback.
   const senderName = (() => {
-    if (message.created_by_name) {
-      return message.created_by_name;
+    if (resolveName && message.created_by) {
+      return resolveName(message.created_by, message.created_by_name);
     }
+    // Fallback for when resolveName is not provided (optimistic messages, etc.)
+    if (message.created_by_name) return message.created_by_name;
     if (message.created_by) {
       const emailPrefix = message.created_by.split('@')[0];
       const cleaned = emailPrefix.replace(/[._]/g, ' ').split(' ')[0];

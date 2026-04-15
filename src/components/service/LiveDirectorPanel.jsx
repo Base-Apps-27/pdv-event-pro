@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/utils/i18n";
 import { base44 } from "@/api/base44Client";
+import { useUserNameResolver } from "@/components/utils/useUserNameResolver";
 import { toast } from "sonner";
 
 /**
@@ -426,6 +427,13 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
   const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false);
   const [blockedByDirector, setBlockedByDirector] = useState(null);
 
+  // 2026-04-15: Resolve live director name from User entity at read time.
+  // live_director_user_id stores a User entity ID (not email), so use resolveNameById.
+  const { resolveNameById } = useUserNameResolver();
+  const directorDisplayName = session?.live_director_user_id 
+    ? resolveNameById(session.live_director_user_id, session.live_director_user_name)
+    : session?.live_director_user_name || '';
+
   // Subscribe to real-time session updates for ownership changes
   useEffect(() => {
     if (!session?.id) return;
@@ -466,7 +474,7 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
                 <div>
                   <p className="text-sm sm:text-base font-bold text-amber-200">
                     {language === 'es' ? 'Live Director Activo:' : 'Live Director Active:'}{' '}
-                    <span className="text-white">{session.live_director_user_name}</span>
+                    <span className="text-white">{directorDisplayName}</span>
                   </p>
                   <p className="text-xs sm:text-sm text-amber-300/80 mt-1">
                     {language === 'es' 
@@ -505,8 +513,8 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
               </AlertDialogTitle>
               <AlertDialogDescription className="text-slate-400">
                 {language === 'es' 
-                  ? `${blockedByDirector?.userName || 'Otro usuario'} es actualmente el Live Director. Si tomas el control, se les notificará que ya no tienen acceso para hacer cambios.`
-                  : `${blockedByDirector?.userName || 'Another user'} is currently the Live Director. If you take over, they will be notified that they no longer have control to make changes.`}
+                  ? `${directorDisplayName || 'Otro usuario'} es actualmente el Live Director. Si tomas el control, se les notificará que ya no tienen acceso para hacer cambios.`
+                  : `${directorDisplayName || 'Another user'} is currently the Live Director. If you take over, they will be notified that they no longer have control to make changes.`}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -945,8 +953,8 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {language === 'es' 
-                ? `${blockedByDirector?.userName || 'Otro usuario'} es actualmente el Live Director. Si tomas el control, se les notificará que ya no tienen acceso para hacer cambios.`
-                : `${blockedByDirector?.userName || 'Another user'} is currently the Live Director. If you take over, they will be notified that they no longer have control to make changes.`}
+                  ? `${blockedByDirector?.userName || directorDisplayName || 'Otro usuario'} es actualmente el Live Director. Si tomas el control, se les notificará que ya no tienen acceso para hacer cambios.`
+                  : `${blockedByDirector?.userName || directorDisplayName || 'Another user'} is currently the Live Director. If you take over, they will be notified that they no longer have control to make changes.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

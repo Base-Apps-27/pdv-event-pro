@@ -72,7 +72,6 @@ export default memo(function SlotColumn({
   recesoNotes,
   // Write handlers
   onWrite,
-  onWriteSongs,
   onWriteChild,
   onWriteSession,
   onWritePSD,
@@ -86,6 +85,8 @@ export default memo(function SlotColumn({
   onCopyAllToSlot,
   onResetSession,
   nextSlotName,
+  // 2026-04-15: SegmentSong data keyed by segment_id
+  songsBySegment,
   // Verse parser
   onOpenVerseParser,
   // Dirty tracking
@@ -196,7 +197,7 @@ export default memo(function SlotColumn({
             canEdit={canEdit}
             structuralBusy={structuralBusy}
             onWrite={onWrite}
-            onWriteSongs={onWriteSongs}
+            segmentSongs={songsBySegment?.[segment.id] || []}
             onWriteChild={handleWriteChild}
             onWriteDuration={onWriteDuration}
             onMove={handleMove}

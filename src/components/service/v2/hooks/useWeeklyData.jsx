@@ -53,7 +53,7 @@ export function useWeeklyData(serviceId) {
       const sessionIds = sessions.map(s => s.id);
       const sessionIdSet = new Set(sessionIds);
 
-      // 2. Batch load all segments + pre-session details in parallel
+      // 2. Batch load all segments + pre-session details + songs in parallel
       // Isolate errors so one failure doesn't break everything
       const [segResult, psdResult] = await Promise.allSettled([
         base44.entities.Segment.filter({ service_id: serviceId }),
@@ -64,6 +64,24 @@ export function useWeeklyData(serviceId) {
 
       const allSegments = segResult.status === 'fulfilled' ? segResult.value : [];
       const allPSD = psdResult.status === 'fulfilled' ? psdResult.value : [];
+
+      // 2026-04-15: Fetch SegmentSong entities for all segments in this service.
+      // Uses segment IDs from the loaded segments, batched by 50 for rate-limit safety.
+      let allSongs = [];
+      if (allSegments.length > 0) {
+        const segIds = allSegments.map(s => s.id);
+        try {
+          for (let i = 0; i < segIds.length; i += 50) {
+            const chunk = segIds.slice(i, i + 50);
+            const chunkSongs = await base44.entities.SegmentSong.filter({
+              segment_id: { $in: chunk }
+            });
+            allSongs = allSongs.concat(chunkSongs);
+          }
+        } catch (songErr) {
+          console.warn('[useWeeklyData] SegmentSong load failed (non-critical):', songErr.message);
+        }
+      }
 
       if (segResult.status === 'rejected') {
         console.error('[useWeeklyData] Segment load failed:', segResult.reason);
@@ -137,11 +155,21 @@ export function useWeeklyData(serviceId) {
       const psdBySession = {};
       allPSD.forEach(p => { psdBySession[p.session_id] = p; });
 
+      // 2026-04-15: Build songsBySegment map from SegmentSong entities
+      const songsBySegment = {};
+      allSongs
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .forEach(song => {
+          if (!songsBySegment[song.segment_id]) songsBySegment[song.segment_id] = [];
+          songsBySegment[song.segment_id].push(song);
+        });
+
       return {
         sessions: sessions.sort((a, b) => (a.order || 0) - (b.order || 0)),
         segmentsBySession,
         childSegments,
         psdBySession,
+        songsBySegment,
       };
     },
   });
@@ -151,6 +179,7 @@ export function useWeeklyData(serviceId) {
     segmentsBySession: data?.segmentsBySession || {},
     childSegments: data?.childSegments || {},
     psdBySession: data?.psdBySession || {},
+    songsBySegment: data?.songsBySegment || {},
     isLoading,
     error,
     queryKey,

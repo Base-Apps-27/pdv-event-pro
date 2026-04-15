@@ -123,20 +123,31 @@ export const getSegmentData = (segment, field) => {
 };
 
 /**
- * Normalizes songs from flat Segment entity fields
+ * Normalizes songs for a segment.
+ * 2026-04-15: Now checks for attached _songs array (SegmentSong entities) first,
+ * then falls back to flat fields (song_1_title..song_10_key) for backward compat.
  * Returns array of { title, lead, key }
  */
 export const getNormalizedSongs = (segment) => {
   if (!segment) return [];
 
+  // Prefer SegmentSong entities if attached by snapshot builder or data hook
+  if (Array.isArray(segment._songs) && segment._songs.length > 0) {
+    return segment._songs
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .filter(s => s.title)
+      .map(s => ({ title: s.title, lead: s.lead || '', key: s.key || '' }));
+  }
+
+  // Fallback: flat fields on Segment entity (deprecated, backward compat)
   const songs = [];
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 10; i++) {
     const title = segment[`song_${i}_title`];
     if (title) {
       songs.push({
         title,
-        lead: segment[`song_${i}_lead`],
-        key: segment[`song_${i}_key`]
+        lead: segment[`song_${i}_lead`] || '',
+        key: segment[`song_${i}_key`] || ''
       });
     }
   }

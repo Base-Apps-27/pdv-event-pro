@@ -304,19 +304,33 @@ Deno.serve(async (req) => {
           const segmentIds = segments.map(s => s.id).filter(Boolean);
           const ACTION_CHUNK = 50;
           const allActions = [];
+          // 2026-04-15: Also fetch SegmentSong entities for all segments
+          let allSongs = [];
           for (let i = 0; i < segmentIds.length; i += ACTION_CHUNK) {
             const chunk = segmentIds.slice(i, i + ACTION_CHUNK);
-            const chunkActions = await withRetry(() =>
-              base44.asServiceRole.entities.SegmentAction.filter({ segment_id: { $in: chunk } }, undefined, undefined, undefined, dataEnv)
-            );
+            const [chunkActions, chunkSongs] = await Promise.all([
+              withRetry(() =>
+                base44.asServiceRole.entities.SegmentAction.filter({ segment_id: { $in: chunk } }, undefined, undefined, undefined, dataEnv)
+              ),
+              withRetry(() =>
+                base44.asServiceRole.entities.SegmentSong.filter({ segment_id: { $in: chunk } }, 'order', undefined, undefined, dataEnv)
+              ).catch(() => []),
+            ]);
             allActions.push(...chunkActions);
+            allSongs.push(...chunkSongs);
           }
 
           const actionsBySegment = groupBy(allActions, a => a.segment_id);
+          const songsBySegment = groupBy(allSongs, s => s.segment_id);
           segments = segments.map(s => {
             const linked = actionsBySegment[s.id] || [];
             const embedded = s.segment_actions || [];
-            return { ...s, actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)) };
+            const songs = songsBySegment[s.id] || [];
+            return {
+              ...s,
+              actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)),
+              _songs: songs.sort((a, b) => (a.order || 0) - (b.order || 0)),
+            };
           });
         }
       }
@@ -403,19 +417,33 @@ Deno.serve(async (req) => {
             const segmentIds = segments.map(s => s.id).filter(Boolean);
             const ACTION_CHUNK = 50;
             const allActions = [];
+            // 2026-04-15: Also fetch SegmentSong entities for service path
+            let allSongs = [];
             for (let i = 0; i < segmentIds.length; i += ACTION_CHUNK) {
               const chunk = segmentIds.slice(i, i + ACTION_CHUNK);
-              const chunkActions = await withRetry(() =>
-                base44.asServiceRole.entities.SegmentAction.filter({ segment_id: { $in: chunk } }, undefined, undefined, undefined, dataEnv)
-              );
+              const [chunkActions, chunkSongs] = await Promise.all([
+                withRetry(() =>
+                  base44.asServiceRole.entities.SegmentAction.filter({ segment_id: { $in: chunk } }, undefined, undefined, undefined, dataEnv)
+                ),
+                withRetry(() =>
+                  base44.asServiceRole.entities.SegmentSong.filter({ segment_id: { $in: chunk } }, 'order', undefined, undefined, dataEnv)
+                ).catch(() => []),
+              ]);
               allActions.push(...chunkActions);
+              allSongs.push(...chunkSongs);
             }
 
             const actionsBySegment = groupBy(allActions, a => a.segment_id);
+            const songsBySegment = groupBy(allSongs, s => s.segment_id);
             segments = segments.map(s => {
               const linked = actionsBySegment[s.id] || [];
               const embedded = s.segment_actions || [];
-              return { ...s, actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)) };
+              const songs = songsBySegment[s.id] || [];
+              return {
+                ...s,
+                actions: [...embedded, ...linked].sort((a, b) => (a.order || 0) - (b.order || 0)),
+                _songs: songs.sort((a, b) => (a.order || 0) - (b.order || 0)),
+              };
             });
           }
 

@@ -24,7 +24,7 @@ function useIsMobile(breakpoint = 768) {
   return isMobile;
 }
 
-export default memo(function SlotColumnContainer({ sessions, segmentsBySession, childSegments, psdBySession, columnProps }) {
+export default memo(function SlotColumnContainer({ sessions, segmentsBySession, childSegments, psdBySession, songsBySegment, columnProps }) {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(sessions[0]?.name || '');
 
@@ -62,6 +62,7 @@ export default memo(function SlotColumnContainer({ sessions, segmentsBySession, 
         segments={segmentsBySession[session.id] || []}
         childSegments={childSegments}
         psd={psdBySession[session.id]}
+        songsBySegment={songsBySegment}
         slotIndex={idx}
         isLastSlot={isLast}
         nextSlotName={nextSession?.name}

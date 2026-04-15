@@ -39,15 +39,16 @@ export function useUserNameResolver(emails = []) {
     cacheTime: 10 * 60 * 1000,  // 10 min cache retention
   });
 
-  // Build email → full_name map
-  const nameMap = useMemo(() => {
-    const map = {};
+  // Build email → full_name AND id → full_name maps
+  const { nameByEmail, nameById } = useMemo(() => {
+    const byEmail = {};
+    const byId = {};
     for (const u of users) {
-      if (u.email) {
-        map[u.email.toLowerCase()] = u.full_name || u.email;
-      }
+      const name = u.full_name || u.email || 'Unknown';
+      if (u.email) byEmail[u.email.toLowerCase()] = name;
+      if (u.id) byId[u.id] = name;
     }
-    return map;
+    return { nameByEmail: byEmail, nameById: byId };
   }, [users]);
 
   /**
@@ -58,9 +59,21 @@ export function useUserNameResolver(emails = []) {
    */
   const resolveName = (email, fallback) => {
     if (!email) return fallback || 'Unknown';
-    const resolved = nameMap[email.toLowerCase()];
+    const resolved = nameByEmail[email.toLowerCase()];
     return resolved || fallback || email.split('@')[0] || 'Unknown';
   };
 
-  return { resolveName, isLoading, nameMap };
+  /**
+   * Resolve a display name from user ID (for Session.live_director_user_id, etc.)
+   * @param {string} userId - User entity ID
+   * @param {string} fallback - Stored denormalized name
+   * @returns {string} Best available display name
+   */
+  const resolveNameById = (userId, fallback) => {
+    if (!userId) return fallback || 'Unknown';
+    const resolved = nameById[userId];
+    return resolved || fallback || 'Unknown';
+  };
+
+  return { resolveName, resolveNameById, isLoading };
 }

@@ -138,7 +138,11 @@ Deno.serve(async (req) => {
     const ACTION_LEAD_MIN = 10;
     const TOLERANCE_MIN = 3; // ± since we run every 5 min
 
-    // ─── DEDUP: Load today's sent notifications ──────────────────
+    // ─── DEDUP: Load recent sent notifications (24h window) ─────
+    // 2026-04-15: Expanded dedup from same-date to 24-hour window.
+    // Before creating any NotificationLog entry, we check both the in-memory
+    // sentKeys set AND query for existing entries with the same dedup_key.
+    // This enforces application-level uniqueness since the DB has no unique constraints.
     const sentLogs = await base44.asServiceRole.entities.NotificationLog.filter({
       program_date: todayStr,
     });
@@ -146,6 +150,32 @@ Deno.serve(async (req) => {
     console.log(`[NOTIF_ENGINE] Dedup: ${sentKeys.size} keys already sent today`);
 
     const newSent = [];
+
+    // ─── DEDUP HELPER: Prevents duplicate NotificationLog entries ────
+    // 2026-04-15: Application-level uniqueness enforcement.
+    // Before creating a NotificationLog, check if dedup_key already exists
+    // in the last 24 hours. Prevents duplicates from concurrent runs.
+    async function createNotificationIfNew(data) {
+      if (sentKeys.has(data.dedup_key)) {
+        console.log(`[NOTIF_ENGINE] Dedup skip (in-memory): ${data.dedup_key}`);
+        return false;
+      }
+      // Double-check DB for same dedup_key (handles concurrent scheduled runs)
+      const existing = await base44.asServiceRole.entities.NotificationLog.filter({
+        dedup_key: data.dedup_key,
+      }, '-created_date', 1);
+      if (existing.length > 0) {
+        const existingAge = Date.now() - new Date(existing[0].created_date).getTime();
+        if (existingAge < 24 * 60 * 60 * 1000) {
+          console.log(`[NOTIF_ENGINE] Dedup skip (DB, ${Math.round(existingAge / 60000)}min old): ${data.dedup_key}`);
+          sentKeys.add(data.dedup_key);
+          return false;
+        }
+      }
+      await base44.asServiceRole.entities.NotificationLog.create(data);
+      sentKeys.add(data.dedup_key);
+      return true;
+    }
 
     // ─── STEP 1: Find today's events ─────────────────────────────
     const allEvents = await base44.asServiceRole.entities.Event.list('-start_date');
@@ -213,7 +243,7 @@ Deno.serve(async (req) => {
         const ok = await broadcastPush(title, body);
 
         if (ok) {
-          await base44.asServiceRole.entities.NotificationLog.create({
+          await createNotificationIfNew({
             dedup_key: dedupKey,
             notification_type: 'session_starting',
             title,
@@ -222,7 +252,6 @@ Deno.serve(async (req) => {
             sent_at: new Date().toISOString(),
             program_date: todayStr,
           });
-          sentKeys.add(dedupKey);
           newSent.push({ type: 'session_starting', session: session.name });
         }
       }
@@ -361,8 +390,9 @@ Deno.serve(async (req) => {
 
       if (ok) {
         // Log ALL action dedup keys so none repeat
+        // 2026-04-15: Uses createNotificationIfNew for application-level dedup
         const digestDedupKey = `action_digest_${todayStr}_${nowTotalMin}`;
-        await base44.asServiceRole.entities.NotificationLog.create({
+        await createNotificationIfNew({
           dedup_key: digestDedupKey,
           notification_type: 'action_digest',
           title,
@@ -374,8 +404,7 @@ Deno.serve(async (req) => {
 
         // Also log individual action dedup keys to prevent re-send
         for (const a of pendingActions) {
-          sentKeys.add(a.dedupKey);
-          await base44.asServiceRole.entities.NotificationLog.create({
+          await createNotificationIfNew({
             dedup_key: a.dedupKey,
             notification_type: 'action_digest',
             title: a.label,
