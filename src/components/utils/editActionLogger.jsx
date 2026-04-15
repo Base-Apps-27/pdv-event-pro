@@ -237,6 +237,39 @@ export async function logReorder(entityType, entityId, previousOrder, newOrder, 
 }
 
 /**
+ * Log a BATCH reorder — single EditActionLog entry for an entire session reorder.
+ * 2026-04-15: Created to replace per-segment logReorder calls. Prevents N log entries
+ * per reorder operation. Used by useStructuralOps.move().
+ *
+ * @param {string} sessionId - Session whose segments were reordered
+ * @param {Array<{id: string, title: string, oldOrder: number, newOrder: number}>} changes - What changed
+ * @param {string} description - Human-readable description of the operation
+ */
+export async function logBatchReorder(sessionId, changes, description = '') {
+  try {
+    // Build a compact field_changes map: { segmentId: { old: N, new: M } }
+    const fieldChanges = {};
+    for (const c of changes) {
+      fieldChanges[c.id] = { old_value: c.oldOrder, new_value: c.newOrder };
+    }
+
+    await base44.entities.EditActionLog.create({
+      entity_type: 'Segment',
+      entity_id: changes[0]?.id || 'batch',
+      parent_id: sessionId,
+      action_type: 'reorder',
+      field_changes: fieldChanges,
+      previous_state: { segments: changes.map(c => ({ id: c.id, title: c.title, order: c.oldOrder })) },
+      new_state: { segments: changes.map(c => ({ id: c.id, title: c.title, order: c.newOrder })) },
+      description: description || `Se reordenaron ${changes.length} segmentos`,
+      undone: false,
+    });
+  } catch (error) {
+    console.error('Failed to log batch reorder:', error);
+  }
+}
+
+/**
  * Get recent action logs for an entity or parent context
  * @param {string} entityType - Filter by entity type (optional)
  * @param {string} parentId - Filter by parent ID (e.g., session_id)

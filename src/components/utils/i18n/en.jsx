@@ -925,4 +925,30 @@ export const en = {
   'slides.openNotes': 'Open notes',
   'slides.slidesOnly': 'Slides Only',
   'slides.slotNotice': 'This session has {count} segment(s) with presentation slides',
+
+  // ── User Roles (2026-04-15) ──
+  'users.roleBadge.Viewer': 'Viewer',
+  'users.roleBadge.LiveManager': 'Live Manager',
+
+  // ── Data Healing (2026-04-15) ──
+  'nav.dataHealing': 'Data Healing',
+  'heal.title': 'Data Healing',
+  'heal.description': 'Fix segment ordering and timing issues across all sessions. Run a dry-run first to preview changes.',
+  'heal.segmentOrderTitle': 'Fix Segment Order & Times',
+  'heal.step1': 'Reassigns clean integer order values (1, 2, 3...) to all segments — fixes duplicates and gaps',
+  'heal.step2': 'Calculates start_time and end_time by chaining durations from each session\'s start time',
+  'heal.step3': 'Also fixes child segment (sub-assignment) ordering within each parent',
+  'heal.dryRun': 'Preview (Dry Run)',
+  'heal.execute': 'Fix Now',
+  'heal.dryRunLabel': 'DRY RUN — no changes made',
+  'heal.executedLabel': 'Applied',
+  'heal.sessionsScanned': 'Sessions Scanned',
+  'heal.sessionsFixed': 'Sessions Fixed',
+  'heal.ordersFixed': 'Orders Fixed',
+  'heal.timesFixed': 'Times Fixed',
+  'heal.colSession': 'Session',
+  'heal.colSegments': 'Segments',
+  'heal.colOrders': 'Orders Fixed',
+  'heal.colTimes': 'Times Fixed',
+  'heal.noIssuesFound': 'All segment orders and times are correct — no fixes needed!',
   };

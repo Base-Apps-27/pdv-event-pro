@@ -70,8 +70,14 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'access_live_view',
     'view_reports',
   ],
+  // Viewer: Minimum-access role (deny-by-default). 2026-04-15: Added as explicit
+  // least-privilege role. Users with null/undefined/unrecognized app_role fall here.
+  // Only gets access_my_program — everything else must be explicitly granted.
+  Viewer: [
+    'access_my_program',
+  ],
   // Guest: Temporary external users (contractors, event volunteers).
-  // 2026-03-17: Gets MyProgram only — same as EventDayViewer but clearly labeled as temporary.
+  // 2026-03-17: Gets MyProgram only — same as Viewer but clearly labeled as temporary.
   // Admins can bulk-deactivate all Guests after an event.
   Guest: [
     'access_my_program',
@@ -102,8 +108,10 @@ export function getUserPermissions(user) {
   const permissions = new Set();
 
   // 1. Start with role-based permissions (role = template)
-  const role = user.app_role || 'EventDayViewer';
-  const rolePerms = DEFAULT_ROLE_PERMISSIONS[role] || [];
+  // 2026-04-15: Deny-by-default — null/undefined/unrecognized roles resolve to Viewer
+  // (minimum permissions). Never assume access beyond basic view.
+  const role = user.app_role || 'Viewer';
+  const rolePerms = DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS['Viewer'] || [];
   
   rolePerms.forEach(p => permissions.add(p));
 

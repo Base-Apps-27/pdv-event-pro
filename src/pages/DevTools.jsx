@@ -8,12 +8,13 @@ import { useCurrentUser } from "@/components/utils/useCurrentUser";
 import { hasPermission } from "@/components/utils/permissions";
 import { useLanguage } from "@/components/utils/i18n.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, FileCode, Network, Activity } from "lucide-react";
+import { Shield, FileCode, Network, Activity, Wrench } from "lucide-react";
 
 // Lazy-load the actual content from existing pages to avoid code duplication
 import SchemaGuide from "@/pages/SchemaGuide";
 import DependencyTracker from "@/pages/DependencyTracker";
 import ActivityLog from "@/pages/ActivityLog";
+import DataHealingPanel from "@/components/admin/DataHealingPanel";
 
 export default function DevTools() {
   const { user, loading } = useCurrentUser();
@@ -51,6 +52,10 @@ export default function DevTools() {
               <Network className="w-4 h-4" />
               {t('nav.dependencies')}
             </TabsTrigger>
+            <TabsTrigger value="healing" className="gap-1.5 text-sm">
+              <Wrench className="w-4 h-4" />
+              {t('nav.dataHealing')}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -62,6 +67,9 @@ export default function DevTools() {
         </TabsContent>
         <TabsContent value="dependencies" className="mt-0">
           <DependencyTracker />
+        </TabsContent>
+        <TabsContent value="healing" className="mt-0">
+          <DataHealingPanel />
         </TabsContent>
       </Tabs>
     </div>

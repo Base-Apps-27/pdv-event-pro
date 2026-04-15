@@ -1,0 +1,70 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "ui_language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "es"
+      ],
+      "default": "es",
+      "description": "Preferred UI language for the application"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Custom display name override (editable by admins). If set, takes precedence over built-in full_name."
+    },
+    "app_role": {
+      "type": "string",
+      "enum": [
+        "Admin",
+        "AdmAsst",
+        "LiveManager",
+        "EventDayCoordinator",
+        "LivestreamAdmin",
+        "EventDayViewer",
+        "Viewer",
+        "Guest",
+        "Deactivated"
+      ],
+      "default": "Viewer",
+      "description": "Application role for permission checks. Viewer = minimum access (deny-by-default). Guest = temporary external users. Deactivated = access revoked. 2026-04-15: Added Viewer as explicit deny-by-default role."
+    },
+    "custom_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Additional permissions granted beyond role defaults"
+    },
+    "revoked_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Permissions revoked from role defaults"
+    },
+    "access_expires_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional expiry date. After this date, user is treated as Deactivated. Used for temporary Guest access."
+    },
+    "chat_last_seen": {
+      "type": "object",
+      "description": "Tracks last seen message ID per chat context. Keys are contextType:contextId, values are message IDs.",
+      "default": {}
+    },
+    "pinned_nav_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Up to 3 secondary nav item IDs surfaced into the main rail/tab bar. Stored as navItem id strings."
+    }
+  },
+  "required": []
+}

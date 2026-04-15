@@ -29,6 +29,7 @@ import { useEntityWrite } from "./hooks/useEntityWrite";
 import { useResetToBlueprint } from "./actions/useResetToBlueprint";
 import { useMoveSegment } from "./actions/useMoveSegment";
 import { useSpecialSegment } from "./actions/useSpecialSegment";
+import { useStructuralLock } from "./hooks/useStructuralLock";
 import { useCopyBetweenSlots } from "./actions/useCopyBetweenSlots";
 import SlotColumnContainer from "./columns/SlotColumnContainer";
 import EmptyDayPrompt from "@/components/service/weekly/EmptyDayPrompt";
@@ -95,12 +96,17 @@ export default function WeeklyEditorV2({
     };
   }, [flushAll]);
 
+  // ── Structural lock — serializes reorder, add, remove to prevent races ──
+  // 2026-04-15: All structural operations share this lock. Content edits (useEntityWrite)
+  // are unaffected — they use their own debounced path.
+  const { withLock, isBusy: structuralBusy } = useStructuralLock();
+
   // ── Action hooks ──
   const { execute: executeReset } = useResetToBlueprint(queryKey);
-  const { move: moveSegment } = useMoveSegment(queryKey, writeSegment, (err) => {
+  const { move: moveSegment } = useMoveSegment(queryKey, sessions, withLock, (err) => {
     toast.error(t('weekly.toast.reorderFailed') + (err?.message || ''));
   });
-  const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey);
+  const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey, sessions, withLock);
   const { copySegmentContent, copyAllToSlot } = useCopyBetweenSlots(
     segmentsBySession, sessions, psdBySession,
     writeSegment, writeSession, writePSD, writeSongs, childSegments
@@ -501,6 +507,7 @@ export default function WeeklyEditorV2({
             setShowSpecialDialog(true);
           },
           onMove: moveSegment,
+          structuralBusy, // 2026-04-15: Disables move buttons during structural saves
           onRemove: (sessionId, idx, segmentId) => removeSpecial(sessionId, idx, segmentId),
           onCopyToNext: copySegmentContent,
           onCopyAllToSlot: copyAllToSlot,

@@ -81,6 +81,7 @@ export default memo(function SlotColumn({
   onOpenSpecialDialog,
   onMove,
   onRemove,
+  structuralBusy = false, // 2026-04-15: Disables move/delete buttons during structural saves
   onCopyToNext,
   onCopyAllToSlot,
   onResetSession,

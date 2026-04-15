@@ -925,4 +925,30 @@ export const es = {
   'slides.openNotes': 'Abrir notas',
   'slides.slidesOnly': 'Solo Diapositivas',
   'slides.slotNotice': 'Esta sesión tiene {count} segmento(s) con diapositivas de presentación',
+
+  // ── User Roles (2026-04-15) ──
+  'users.roleBadge.Viewer': 'Visualizador',
+  'users.roleBadge.LiveManager': 'Gerente en Vivo',
+
+  // ── Data Healing (2026-04-15) ──
+  'nav.dataHealing': 'Sanación de Datos',
+  'heal.title': 'Sanación de Datos',
+  'heal.description': 'Corrige problemas de orden y tiempos de segmentos en todas las sesiones. Ejecuta una vista previa primero.',
+  'heal.segmentOrderTitle': 'Corregir Orden y Tiempos de Segmentos',
+  'heal.step1': 'Reasigna valores de orden enteros limpios (1, 2, 3...) a todos los segmentos — corrige duplicados y brechas',
+  'heal.step2': 'Calcula start_time y end_time encadenando duraciones desde la hora de inicio de cada sesión',
+  'heal.step3': 'También corrige el orden de segmentos hijos (sub-asignaciones) dentro de cada padre',
+  'heal.dryRun': 'Vista Previa (Simulación)',
+  'heal.execute': 'Corregir Ahora',
+  'heal.dryRunLabel': 'SIMULACIÓN — sin cambios aplicados',
+  'heal.executedLabel': 'Aplicado',
+  'heal.sessionsScanned': 'Sesiones Escaneadas',
+  'heal.sessionsFixed': 'Sesiones Corregidas',
+  'heal.ordersFixed': 'Órdenes Corregidos',
+  'heal.timesFixed': 'Tiempos Corregidos',
+  'heal.colSession': 'Sesión',
+  'heal.colSegments': 'Segmentos',
+  'heal.colOrders': 'Órdenes Corregidos',
+  'heal.colTimes': 'Tiempos Corregidos',
+  'heal.noIssuesFound': '¡Todos los órdenes y tiempos de segmentos son correctos — no se necesitan correcciones!',
   };

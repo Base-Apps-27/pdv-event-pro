@@ -174,15 +174,37 @@ Deno.serve(async (req) => {
         planned_start_time: sessionDef?.planned_start_time || undefined,
       });
 
+      // 2026-04-15: Compute segment times by chaining durations from session start.
+      // This eliminates null start_time/end_time on auto-created segments.
+      const sessPlannedStart = sessionDef?.planned_start_time || undefined;
+      let runningMinutes = 0;
+      if (sessPlannedStart) {
+        const [pH, pM] = sessPlannedStart.split(':').map(Number);
+        if (!isNaN(pH) && !isNaN(pM)) runningMinutes = pH * 60 + pM;
+      }
+
       for (let i = 0; i < bpSegments.length; i++) {
         const segData = bpSegments[i];
+        const segDuration = Number(segData.duration) || 0;
+
+        // Calculate start_time and end_time from chained durations
+        const segStartTime = sessPlannedStart
+          ? `${String(Math.floor(runningMinutes / 60) % 24).padStart(2, '0')}:${String(runningMinutes % 60).padStart(2, '0')}`
+          : undefined;
+        const segEndMinutes = runningMinutes + segDuration;
+        const segEndTime = sessPlannedStart
+          ? `${String(Math.floor(segEndMinutes / 60) % 24).padStart(2, '0')}:${String(segEndMinutes % 60).padStart(2, '0')}`
+          : undefined;
+
         const segPayload = {
           session_id: session.id,
           service_id: newService.id,
           order: i + 1,
           title: segData.title || "Sin título",
           segment_type: resolveSegmentEnum(segData.type),
-          duration_min: Number(segData.duration) || 0,
+          duration_min: segDuration,
+          start_time: segStartTime,
+          end_time: segEndTime,
           show_in_general: true,
           ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
           ui_sub_assignments: Array.isArray(segData.sub_assignments) ? segData.sub_assignments.map(sa => ({
@@ -202,6 +224,8 @@ Deno.serve(async (req) => {
 
         const createdSeg = await base44.asServiceRole.entities.Segment.create(segPayload);
         totalSegmentsCreated++;
+        // Advance running time for next segment
+        runningMinutes = segEndMinutes;
 
         // Create child entities for sub_assignments
         if (Array.isArray(segData.sub_assignments) && segData.sub_assignments.length > 0) {

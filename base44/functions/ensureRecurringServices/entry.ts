@@ -253,16 +253,37 @@ Deno.serve(async (req) => {
         });
         console.log(`[ENSURE_RECURRING] Created Session "${slotName}" (id: ${session.id})`);
 
+        // 2026-04-15: Compute segment times by chaining durations from session start.
+        // This eliminates null start_time/end_time on auto-created segments.
+        let runningMinutes = 0;
+        if (plannedStart) {
+          const [pH, pM] = plannedStart.split(':').map(Number);
+          if (!isNaN(pH) && !isNaN(pM)) runningMinutes = pH * 60 + pM;
+        }
+
         // Create Segment entities from blueprint
         for (let i = 0; i < bpSegments.length; i++) {
           const segData = bpSegments[i];
+          const segDuration = Number(segData.duration) || 0;
+
+          // Calculate start_time and end_time from chained durations
+          const segStartTime = plannedStart
+            ? `${String(Math.floor(runningMinutes / 60) % 24).padStart(2, '0')}:${String(runningMinutes % 60).padStart(2, '0')}`
+            : undefined;
+          const segEndMinutes = runningMinutes + segDuration;
+          const segEndTime = plannedStart
+            ? `${String(Math.floor(segEndMinutes / 60) % 24).padStart(2, '0')}:${String(segEndMinutes % 60).padStart(2, '0')}`
+            : undefined;
+
           const segmentPayload = {
             session_id: session.id,
             service_id: newService.id,
             order: i + 1,
             title: segData.title || "Untitled",
             segment_type: resolveSegmentEnum(segData.type),
-            duration_min: Number(segData.duration) || 0,
+            duration_min: segDuration,
+            start_time: segStartTime,
+            end_time: segEndTime,
             show_in_general: true,
             color_code: segData.color_code || 'default',
             ui_fields: Array.isArray(segData.fields) ? segData.fields : [],
@@ -287,6 +308,8 @@ Deno.serve(async (req) => {
 
           const createdSeg = await base44.asServiceRole.entities.Segment.create(segmentPayload);
           totalSegmentsCreated++;
+          // Advance running time for next segment
+          runningMinutes = segEndMinutes;
 
           // BUGFIX (2026-02-26): Create child Segment entities for sub_assignments
           // so Ministración rows appear immediately in the editor without manual creation.
