@@ -1,4 +1,5 @@
-# Rendering Pipeline Analysis: Weekly vs Custom Services in Live View
+/* eslint-disable */
+// # Rendering Pipeline Analysis: Weekly vs Custom Services in Live View
 
 **Date:** 2026-01-23  
 **Purpose:** Map the rendering flow for both service types to identify gaps and define alignment strategy  

@@ -86,7 +86,17 @@
     "refresh_in_progress": {
       "type": "boolean",
       "default": false,
-      "description": "CTO-2 (2026-03-02): Soft concurrency lock. Set true at start of refresh, cleared at end. 30s TTL prevents stale locks."
+      "description": "CTO-2 (2026-03-02): DEPRECATED but retained for backward compat. Use snapshot_version for concurrency control instead. Soft concurrency lock. Set true at start of refresh, cleared at end."
+    },
+    "snapshot_version": {
+      "type": "number",
+      "default": 0,
+      "description": "2026-04-15: Monotonically increasing version counter. Incremented on every successful cache write (full rebuild or patch). Display surfaces compare their local version with this to detect stale data."
+    },
+    "last_patch_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "2026-04-15: Timestamp of the most recent patch or rebuild operation. Used by display surfaces for staleness detection."
     },
     "admin_override_type": {
       "type": "string",

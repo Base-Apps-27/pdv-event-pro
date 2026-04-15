@@ -1,4 +1,5 @@
-# StreamBlocks: Complete Implementation Plan
+/* eslint-disable */
+// # StreamBlocks: Complete Implementation Plan
 
 ## Executive Summary
 **Objective**: Enable livestream coordination that runs parallel to in-person events with ~80% overlap and ~20% divergent content, without duplicating events, splitting chat, or losing timing synchronization.

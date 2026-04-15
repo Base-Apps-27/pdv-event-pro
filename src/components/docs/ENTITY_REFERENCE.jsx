@@ -1,4 +1,5 @@
-# PDV Event Pro — Entity Reference Guide
+/* eslint-disable */
+// # PDV Event Pro — Entity Reference Guide
 
 **Version:** 2026-02-12
 

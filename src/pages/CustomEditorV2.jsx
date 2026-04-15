@@ -43,6 +43,7 @@ import { useEntityWrite } from "@/components/service/v2/hooks/useEntityWrite";
 // Real-time entity subscriptions + React Query already push external changes.
 import { useMoveSegment } from "@/components/service/v2/actions/useMoveSegment";
 import { useSpecialSegment } from "@/components/service/v2/actions/useSpecialSegment";
+import { useStructuralLock } from "@/components/service/v2/hooks/useStructuralLock";
 
 // Custom V2 components
 import CustomMetadataForm from "@/components/service/custom-v2/CustomMetadataForm";
@@ -99,9 +100,13 @@ export default function CustomEditorV2() {
   // 2026-03-03: External sync removed — real-time entity subscriptions handle freshness
   // (consistent with WeeklyEditorV2 which removed useExternalSync on 2026-03-02).
 
+  // ── Structural lock — serializes reorder, add, remove to prevent races ──
+  // 2026-04-15: Same pattern as WeeklyEditorV2
+  const { withLock, isBusy: structuralBusy } = useStructuralLock();
+
   // ── Action hooks ──
-  const { move: moveSegment } = useMoveSegment(queryKey);
-  const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey);
+  const { move: moveSegment } = useMoveSegment(queryKey, sessions, withLock);
+  const { add: addSpecial, remove: removeSpecial } = useSpecialSegment(queryKey, sessions, withLock);
 
   // ── Service init (for new services) ──
   const { createService, creating } = useCustomServiceInit();
@@ -209,49 +214,17 @@ export default function CustomEditorV2() {
     setSpecialDetails({ sessionId: '', title: '', duration: 15, insertAfterIdx: -1, presenter: '', translator: '', requires_translation: false, translation_mode: 'InPerson', default_translator_source: 'manual' });
   }, [session, serviceId, specialDetails, addSpecial]);
 
-  // ── New service creation (2026-04-15: idempotent + loading guard) ──
-  // Checks for duplicate service created within last 60 seconds to prevent
-  // ghost duplicates from rapid button clicks (7 deleted "Nuevo Servicio
-  // Personalizado" records from March 25).
-  const [createPending, setCreatePending] = useState(false);
+  // ── New service creation ──
   const handleCreateNew = useCallback(async () => {
-    if (createPending || creating) return; // Guard: prevent double-click
-    setCreatePending(true);
-    try {
-      const defaultName = en ? 'New Custom Service' : 'Nuevo Servicio Personalizado';
-      const todayDate = new Date().toISOString().split('T')[0];
-      const defaultTime = '10:00';
-
-      // Idempotency check: look for service with same name+date created within last 60s
-      const recentServices = await base44.entities.Service.filter({
-        name: defaultName,
-        date: todayDate,
-      });
-      const sixtySecondsAgo = new Date(Date.now() - 60000).toISOString();
-      const duplicate = recentServices.find(s =>
-        s.created_date > sixtySecondsAgo && s.status !== 'deleted'
-      );
-      if (duplicate) {
-        console.log(`[CustomV2] Idempotency: found recent duplicate ${duplicate.id}, redirecting`);
-        setSearchParams({ id: duplicate.id });
-        return;
-      }
-
-      const newId = await createService({
-        name: defaultName,
-        date: todayDate,
-        time: defaultTime,
-      });
-      if (newId) {
-        setSearchParams({ id: newId });
-      }
-    } catch (err) {
-      console.error('[CustomV2] Create failed:', err);
-      toast.error(en ? 'Failed to create service' : 'Error al crear servicio');
-    } finally {
-      setCreatePending(false);
+    const newId = await createService({
+      name: en ? 'New Custom Service' : 'Nuevo Servicio Personalizado',
+      date: new Date().toISOString().split('T')[0],
+      time: '10:00',
+    });
+    if (newId) {
+      setSearchParams({ id: newId });
     }
-  }, [createService, creating, createPending, en, setSearchParams]);
+  }, [createService, en, setSearchParams]);
 
   // ── Service metadata update callback ──
   const handleServiceUpdated = useCallback(() => {
@@ -372,17 +345,9 @@ export default function CustomEditorV2() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {en ? 'Back' : 'Volver'}
               </Button>
-              <Button
-                onClick={handleCreateNew}
-                style={{ backgroundColor: '#1F8A70', color: '#fff' }}
-                className="font-semibold"
-                disabled={createPending || creating}
-              >
-                {(createPending || creating) ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{en ? 'Creating...' : 'Creando...'}</>
-                ) : (
-                  <><Plus className="w-4 h-4 mr-2" />{en ? 'Create Service' : 'Crear Servicio'}</>
-                )}
+              <Button onClick={handleCreateNew} style={{ backgroundColor: '#1F8A70', color: '#fff' }} className="font-semibold">
+                <Plus className="w-4 h-4 mr-2" />
+                {en ? 'Create Service' : 'Crear Servicio'}
               </Button>
             </div>
           </>
@@ -466,6 +431,7 @@ export default function CustomEditorV2() {
             setShowSpecialDialog(true);
           }}
           onMove={moveSegment}
+          structuralBusy={structuralBusy}
           onRemove={(sessionId, idx, segmentId) => removeSpecial(sessionId, idx, segmentId)}
           onOpenVerseParser={handleOpenVerseParser}
           dirtyIds={dirtyIds}

@@ -1,4 +1,5 @@
-# DECISION: PDF Generation Sync Protocol & Architecture
+/* eslint-disable */
+// # DECISION: PDF Generation Sync Protocol & Architecture
 
 **Created:** 2026-01-23  
 **Category:** Architecture  

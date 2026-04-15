@@ -340,6 +340,14 @@ Deno.serve(async (req) => {
     // 2026-03-27: Writes both backward-compat single fields AND new `programs` array.
     // program_snapshot/program_id/program_type = first program (backward compat).
     // programs[] = all programs for the day, ordered by start time.
+    //
+    // 2026-04-15: Added snapshot_version (monotonic counter) and last_patch_at.
+    // Display surfaces compare their local version to detect stale data.
+    const existingForWrite = await withRetry(() =>
+      base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
+    );
+    const currentVersion = existingForWrite?.[0]?.snapshot_version || 0;
+
     const cacheData = {
       cache_key: 'current_display',
       program_type: targetProgram ? (isEvent ? 'event' : 'service') : 'none',
@@ -352,26 +360,28 @@ Deno.serve(async (req) => {
       selector_options: selectorOptions,
       last_refresh_trigger: trigger,
       last_refresh_at: new Date().toISOString(),
+      // 2026-04-15: Version counter + patch timestamp for display surface staleness detection
+      snapshot_version: currentVersion + 1,
+      last_patch_at: new Date().toISOString(),
     };
 
-    const existing = await withRetry(() =>
-      base44.asServiceRole.entities.ActiveProgramCache.filter({ cache_key: 'current_display' })
-    );
-
-    // CTO-2 (2026-03-02): Clear concurrency lock on write
+    // CTO-2 (2026-03-02): Clear concurrency lock on write (kept for backward compat)
     cacheData.refresh_in_progress = false;
 
-    if (existing && existing.length > 0) {
+    if (existingForWrite && existingForWrite.length > 0) {
       await withRetry(() =>
-        base44.asServiceRole.entities.ActiveProgramCache.update(existing[0].id, cacheData)
+        base44.asServiceRole.entities.ActiveProgramCache.update(existingForWrite[0].id, cacheData)
       );
-      console.log(`[refreshActiveProgram] Updated cache record ${existing[0].id}`);
+      console.log(`[refreshActiveProgram] Updated cache record ${existingForWrite[0].id} (v${cacheData.snapshot_version})`);
     } else {
       await withRetry(() =>
         base44.asServiceRole.entities.ActiveProgramCache.create(cacheData)
       );
-      console.log(`[refreshActiveProgram] Created new cache record`);
+      console.log(`[refreshActiveProgram] Created new cache record (v${cacheData.snapshot_version})`);
     }
+
+    // Alias for backward compat in warm cache section below
+    const existing = existingForWrite;
 
     // ─── STEP 6: Rebuild warm cache entries for actively-worked programs ───
     // MULTI-SLOT WARM CACHE (2026-02-28): When entity automations fire,
@@ -496,6 +506,9 @@ Deno.serve(async (req) => {
                 program_name: programEntity.name || '',
                 last_refresh_trigger: `entity_${changedEntityType}`,
                 last_refresh_at: new Date().toISOString(),
+                // 2026-04-15: Increment version on warm cache rebuild too
+                snapshot_version: (entry.snapshot_version || 0) + 1,
+                last_patch_at: new Date().toISOString(),
               })
             );
             console.log(`[refreshActiveProgram] Rebuilt warm cache: ${entry.cache_key}`);

@@ -52,6 +52,7 @@ export default memo(function CustomSegmentColumn({
   onOpenSpecialDialog,
   onMove,
   onRemove,
+  structuralBusy = false, // 2026-04-15: Disables move/delete during structural saves
   onOpenVerseParser,
   // Dirty tracking
   dirtyIds,
@@ -146,6 +147,7 @@ export default memo(function CustomSegmentColumn({
             totalSegments={segments.length}
             accentColor="teal"
             canEdit={canEdit}
+            structuralBusy={structuralBusy}
             onWrite={onWrite}
             onWriteSongs={onWriteSongs}
             onWriteChild={handleWriteChild}
