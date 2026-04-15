@@ -12,12 +12,14 @@ import React from "react";
  * @param {string} currentUserEmail - Current user's email (excluded from display)
  */
 export default function TypingIndicator({ typingUsers = [], currentUserEmail }) {
-  // Filter out current user and stale entries (older than 8 seconds)
+  // 2026-04-15: Filter out current user and stale entries (older than 10 seconds).
+  // 10s TTL prevents ghost indicators from crashed/disconnected clients.
   const now = Date.now();
+  const TYPING_TTL_MS = 10000; // 10 seconds
   const active = typingUsers.filter(u => {
     if (u.email === currentUserEmail) return false;
     const ts = new Date(u.timestamp).getTime();
-    return now - ts < 8000; // 8s staleness threshold
+    return now - ts < TYPING_TTL_MS;
   });
 
   if (active.length === 0) return null;

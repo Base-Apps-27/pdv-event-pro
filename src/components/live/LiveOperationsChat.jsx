@@ -184,12 +184,18 @@ export default function LiveOperationsChat({
   const { data: serverMessages = [], isLoading } = useQuery({
     queryKey: ['liveChat', contextType, contextId],
     queryFn: async () => {
+      // 2026-04-15: Soft-deleted messages (deleted_at set) must never appear
+      // in the regular message list. We filter is_archived:false (existing)
+      // and also exclude any with deleted_at set, as a defense-in-depth measure
+      // in case is_archived was not flipped during soft-delete.
       const result = await base44.entities.LiveOperationsMessage.filter({
         context_type: contextType,
         context_id: contextId,
         is_archived: false
       }, 'created_date');
-      return result || [];
+      // Client-side filter: exclude soft-deleted messages that may have
+      // deleted_at set but is_archived not yet flipped (race condition defense)
+      return (result || []).filter(m => !m.deleted_at);
     },
     refetchInterval: 15000, // Fallback poll every 15s — subscription handles real-time
     enabled: shouldRender
@@ -524,7 +530,10 @@ export default function LiveOperationsChat({
     };
   }, [contextId, isOpen, contextType]);
 
-  // Broadcast typing status: add/refresh own entry in the beacon's typing_users array
+  // 2026-04-15: Broadcast typing status with 10s TTL pruning.
+  // Stale entries from crashed/disconnected clients are automatically removed
+  // every time any user broadcasts, preventing ghost indicators.
+  const TYPING_TTL_MS = 10000; // 10 seconds — matches TypingIndicator filter
   const broadcastTyping = useCallback(async () => {
     const now = Date.now();
     // Throttle: don't broadcast more than once per 2.5s
@@ -534,7 +543,7 @@ export default function LiveOperationsChat({
     if (!typingBeaconIdRef.current) return;
     const currentTyping = remoteTypingUsers.filter(u => u.email !== currentUser?.email);
     const updated = [
-      ...currentTyping.filter(u => now - new Date(u.timestamp).getTime() < 8000), // prune stale
+      ...currentTyping.filter(u => now - new Date(u.timestamp).getTime() < TYPING_TTL_MS), // prune stale (10s)
       { email: currentUser?.email, name: currentUser?.display_name || currentUser?.full_name || '', timestamp: new Date().toISOString() }
     ];
     base44.entities.LiveOperationsMessage.update(typingBeaconIdRef.current, {
@@ -551,16 +560,18 @@ export default function LiveOperationsChat({
     }).catch(() => {});
   }, [remoteTypingUsers, currentUser]);
 
-  // Auto-clear typing indicator 4s after last keystroke
+  // 2026-04-15: Auto-clear typing indicator 8s after last keystroke.
+  // Increased from 4s to 8s to reduce flicker during slow typing, while still
+  // clearing well before the 10s TTL so the indicator disappears promptly.
   const typingClearTimeoutRef = useRef(null);
   const handleTypingInput = useCallback((e) => {
     setMessageText(e.target.value);
     broadcastTyping();
-    // Reset the "stop typing" timer
+    // Reset the "stop typing" timer — 8s inactivity clears self
     if (typingClearTimeoutRef.current) clearTimeout(typingClearTimeoutRef.current);
     typingClearTimeoutRef.current = setTimeout(() => {
       clearTypingSelf();
-    }, 4000);
+    }, 8000);
   }, [broadcastTyping, clearTypingSelf]);
 
   // Cleanup typing timers on unmount
@@ -662,33 +673,53 @@ export default function LiveOperationsChat({
     }
   });
 
-  // Reaction mutation
-  // Stores user's full_name with reaction for display
+  // 2026-04-15: Reaction mutation with retry-on-conflict pattern.
+  // When two users react simultaneously, both read the same reactions array,
+  // both append, and the last writer overwrites the first. The retry pattern
+  // re-reads the entity after a failed save and retries once.
   const toggleReactionMutation = useMutation({
-    mutationFn: async ({ messageId, reactionType, currentReactions }) => {
-      const reactions = currentReactions || [];
-      const existingIndex = reactions.findIndex(
-        r => r.user_email === currentUser?.email && r.reaction_type === reactionType
-      );
+    mutationFn: async ({ messageId, reactionType }) => {
+      const MAX_RETRIES = 1;
       
-      let newReactions;
-      if (existingIndex >= 0) {
-        // Remove existing reaction
-        newReactions = reactions.filter((_, i) => i !== existingIndex);
-      } else {
-        // Add new reaction (remove any other reaction from same user first)
-        newReactions = reactions.filter(r => r.user_email !== currentUser?.email);
-        newReactions.push({
-          user_email: currentUser?.email,
-          user_name: currentUser?.display_name || currentUser?.full_name || null,
-          reaction_type: reactionType,
-          timestamp: new Date().toISOString()
-        });
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        // Always read fresh reactions from server (not stale local copy)
+        const freshMessages = await base44.entities.LiveOperationsMessage.filter({ id: messageId });
+        const freshMsg = freshMessages?.[0];
+        if (!freshMsg) return;
+        
+        const reactions = freshMsg.reactions || [];
+        const existingIndex = reactions.findIndex(
+          r => r.user_email === currentUser?.email && r.reaction_type === reactionType
+        );
+        
+        let newReactions;
+        if (existingIndex >= 0) {
+          // Remove existing reaction
+          newReactions = reactions.filter((_, i) => i !== existingIndex);
+        } else {
+          // Add new reaction (remove any other reaction from same user first)
+          newReactions = reactions.filter(r => r.user_email !== currentUser?.email);
+          newReactions.push({
+            user_email: currentUser?.email,
+            user_name: currentUser?.display_name || currentUser?.full_name || null,
+            reaction_type: reactionType,
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        try {
+          return await base44.entities.LiveOperationsMessage.update(messageId, {
+            reactions: newReactions
+          });
+        } catch (err) {
+          if (attempt < MAX_RETRIES) {
+            // Conflict — retry with fresh data
+            console.warn('Reaction conflict, retrying...', err);
+            continue;
+          }
+          throw err; // Exhausted retries
+        }
       }
-      
-      return await base44.entities.LiveOperationsMessage.update(messageId, {
-        reactions: newReactions
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['liveChat', contextType, contextId]);
@@ -895,8 +926,7 @@ export default function LiveOperationsChat({
                     onTogglePin={(m) => togglePinMutation.mutate(m)}
                     onToggleReaction={(reactionType) => toggleReactionMutation.mutate({
                       messageId: msg.id,
-                      reactionType,
-                      currentReactions: msg.reactions
+                      reactionType
                     })}
                     onEdit={(m, newText) => {
                       editMessageMutation.mutate({ msg: m, newText });

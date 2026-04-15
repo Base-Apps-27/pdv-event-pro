@@ -1,0 +1,31 @@
+{
+  "name": "SegmentSong",
+  "type": "object",
+  "properties": {
+    "segment_id": {
+      "type": "string",
+      "description": "Reference to parent Segment entity"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Song position within the segment (1, 2, 3...)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Song title"
+    },
+    "lead": {
+      "type": "string",
+      "description": "Who leads this song"
+    },
+    "key": {
+      "type": "string",
+      "description": "Musical key (e.g. G, Am, Bb)"
+    }
+  },
+  "required": [
+    "segment_id",
+    "order",
+    "title"
+  ]
+}
