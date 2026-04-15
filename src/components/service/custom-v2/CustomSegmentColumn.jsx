@@ -44,7 +44,6 @@ export default memo(function CustomSegmentColumn({
   canEdit,
   // Write handlers
   onWrite,
-  onWriteSongs,
   onWriteChild,
   onWritePSD,
   onWriteDuration,
@@ -53,6 +52,8 @@ export default memo(function CustomSegmentColumn({
   onMove,
   onRemove,
   structuralBusy = false, // 2026-04-15: Disables move/delete during structural saves
+  // 2026-04-15: SegmentSong data keyed by segment_id
+  songsBySegment,
   onOpenVerseParser,
   // Dirty tracking
   dirtyIds,
@@ -149,7 +150,7 @@ export default memo(function CustomSegmentColumn({
             canEdit={canEdit}
             structuralBusy={structuralBusy}
             onWrite={onWrite}
-            onWriteSongs={onWriteSongs}
+            segmentSongs={songsBySegment?.[segment.id] || []}
             onWriteChild={handleWriteChild}
             onWriteDuration={onWriteDuration}
             onMove={handleMove}

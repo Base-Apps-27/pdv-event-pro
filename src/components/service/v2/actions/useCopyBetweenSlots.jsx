@@ -9,6 +9,7 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { base44 } from "@/api/base44Client";
 import { TEAM_FIELDS, TEXT_COPY_COLUMNS } from "../constants/fieldMap";
 
 /**
@@ -86,20 +87,21 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
       fieldsCopied++;
     }
 
-    // Copy songs
-    const songs = [];
-    for (let i = 1; i <= 6; i++) {
-      if (sourceSeg[`song_${i}_title`]) {
-        songs.push({
-          title: sourceSeg[`song_${i}_title`],
-          lead: sourceSeg[`song_${i}_lead`] || '',
-          key: sourceSeg[`song_${i}_key`] || '',
-        });
+    // 2026-04-15: Copy songs via SegmentSong entity (replaces flat-field writeSongs)
+    try {
+      const srcSongs = await base44.entities.SegmentSong.filter({ segment_id: sourceSeg.id }, 'order');
+      if (srcSongs.length > 0) {
+        // Delete existing target songs first
+        const tgtSongs = await base44.entities.SegmentSong.filter({ segment_id: targetSeg.id });
+        await Promise.all(tgtSongs.map(s => base44.entities.SegmentSong.delete(s.id)));
+        // Create copies
+        await base44.entities.SegmentSong.bulkCreate(
+          srcSongs.map((s, i) => ({ segment_id: targetSeg.id, order: i + 1, title: s.title, lead: s.lead || '', key: s.key || '' }))
+        );
+        fieldsCopied += srcSongs.length;
       }
-    }
-    if (songs.length > 0) {
-      writeSongs(targetSeg.id, songs);
-      fieldsCopied++;
+    } catch (songCopyErr) {
+      console.warn('[useCopyBetweenSlots] Song copy failed:', songCopyErr.message);
     }
 
     // BUGFIX (2026-02-26): Copy sub-assignment (child segment) presenters for single copy too
@@ -117,7 +119,7 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
     }
 
     toast.success(`Copiado (${fieldsCopied} campos)`);
-  }, [segmentsBySession, sessions, writeSegment, writeSongs, childSegments]);
+  }, [segmentsBySession, sessions, writeSegment, childSegments]);
 
   const copyAllToSlot = useCallback(async (sourceSessionId, targetSessionId) => {
     const sourceSegs = segmentsBySession[sourceSessionId] || [];
@@ -144,18 +146,7 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
         writeSegment(tgt.id, 'parsed_verse_data', src.parsed_verse_data);
       }
 
-      // Songs
-      const songs = [];
-      for (let i = 1; i <= 6; i++) {
-        if (src[`song_${i}_title`]) {
-          songs.push({
-            title: src[`song_${i}_title`],
-            lead: src[`song_${i}_lead`] || '',
-            key: src[`song_${i}_key`] || '',
-          });
-        }
-      }
-      if (songs.length > 0) writeSongs(tgt.id, songs);
+      // 2026-04-15: Songs copied via SegmentSong entity in bulk after loop
     });
 
     // BUGFIX (2026-02-26): Copy sub-assignment (child segment) presenters.
@@ -197,8 +188,27 @@ export function useCopyBetweenSlots(segmentsBySession, sessions, psdBySession, w
       totalCopied++;
     }
 
+    // 2026-04-15: Batch copy songs for all matched segments
+    try {
+      const usedForSongs = new Set();
+      for (const src of sourceSegs) {
+        const tgt = findMatchingSegment(src, targetSegs, usedForSongs);
+        if (!tgt) continue;
+        const srcSongs = await base44.entities.SegmentSong.filter({ segment_id: src.id }, 'order');
+        if (srcSongs.length === 0) continue;
+        const tgtSongs = await base44.entities.SegmentSong.filter({ segment_id: tgt.id });
+        await Promise.all(tgtSongs.map(s => base44.entities.SegmentSong.delete(s.id)));
+        await base44.entities.SegmentSong.bulkCreate(
+          srcSongs.map((s, i) => ({ segment_id: tgt.id, order: i + 1, title: s.title, lead: s.lead || '', key: s.key || '' }))
+        );
+        totalCopied += srcSongs.length;
+      }
+    } catch (songErr) {
+      console.warn('[useCopyBetweenSlots] Bulk song copy failed:', songErr.message);
+    }
+
     toast.success(`Todo copiado (${totalCopied} campos)`);
-  }, [segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, writeSongs, childSegments]);
+  }, [segmentsBySession, sessions, psdBySession, writeSegment, writeSession, writePSD, childSegments]);
 
   return { copySegmentContent, copyAllToSlot };
 }

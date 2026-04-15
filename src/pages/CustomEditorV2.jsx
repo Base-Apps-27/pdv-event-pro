@@ -87,13 +87,13 @@ export default function CustomEditorV2() {
 
   // ── Load entities via V2 hook ──
   const {
-    sessions, segmentsBySession, childSegments, psdBySession,
+    sessions, segmentsBySession, childSegments, psdBySession, songsBySegment,
     isLoading: dataLoading, queryKey,
   } = useWeeklyData(serviceId);
 
-  // ── Write hook ──
+  // ── Write hook — 2026-04-15: writeSongs removed, songs use SegmentSong entity ──
   const {
-    writeSegment, writeSession, writePSD, writeSongs,
+    writeSegment, writeSession, writePSD,
     dirtyIds, flushAll, flushEntity,
   } = useEntityWrite(queryKey);
 
@@ -422,7 +422,7 @@ export default function CustomEditorV2() {
           serviceTime={existingService.time || '10:00'}
           canEdit={hasPermission(user, 'edit_services')}
           onWrite={writeSegment}
-          onWriteSongs={writeSongs}
+          songsBySegment={songsBySegment}
           onWriteChild={handleWriteChild}
           onWritePSD={writePSD}
           onWriteDuration={handleWriteDuration}
