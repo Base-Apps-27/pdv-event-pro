@@ -138,12 +138,12 @@ const SegmentCard = memo(function SegmentCard({
       <CardHeader className={`pb-2 ${isSpecial ? '' : 'bg-gray-50/50'}`}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
-            {/* Move buttons */}
+            {/* Move buttons — disabled during structural saves to prevent overlapping reorders */}
             <div className="print:hidden flex flex-col gap-0.5">
-              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0} className="h-4 w-5 p-0 hover:bg-blue-100">
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0 || structuralBusy} className="h-4 w-5 p-0 hover:bg-blue-100">
                 <ChevronUp className="w-3 h-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'down')} disabled={index === totalSegments - 1} className="h-4 w-5 p-0 hover:bg-blue-100">
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'down')} disabled={index === totalSegments - 1 || structuralBusy} className="h-4 w-5 p-0 hover:bg-blue-100">
                 <ChevronDown className="w-3 h-3" />
               </Button>
             </div>

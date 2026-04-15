@@ -440,7 +440,7 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
     return unsubscribe;
   }, [session?.id, refetchData]);
 
-  // Sort segments by order — must be before any early returns (Rules of Hooks)
+  // 2026-04-15: Moved useMemo above early returns to satisfy React hooks rules-of-hooks
   const sortedSegments = useMemo(() => {
     return [...(segments || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [segments]);

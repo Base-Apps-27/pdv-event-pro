@@ -255,12 +255,12 @@ export default function ServiceProgramView({
     return allPreSessionDetails.find(p => p.session_id === lastSess.id) || preSessionData;
   }, [sessions, allPreSessionDetails, preSessionData, currentTime, actualServiceData?.date]);
 
-  // 2026-04-15: Hook moved before early returns to satisfy Rules of Hooks
-  const { t } = useLanguage();
-
   // ═══════════════════════════════════════════════════════════════════
   // EMPTY STATE
   // ═══════════════════════════════════════════════════════════════════
+  // 2026-04-15: Moved above early return to satisfy React hooks rules-of-hooks
+  const { t } = useLanguage();
+
   if (!actualServiceData) {
     return (
       <div className="p-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">

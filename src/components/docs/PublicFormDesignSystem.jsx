@@ -1,30 +1,69 @@
-html
+# Design System: Public Intake Forms
+
+## Visual Identity & Aesthetic Principles
+
+### 1. Brand Color Palette
+```css
+:root {
+  --brand-charcoal: #1A1A1A;
+  --brand-teal: #1F8A70;
+  --brand-green: #8DC63F;
+  --brand-yellow: #D7DF23;
+
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --border-light: #E5E7EB;
+  --bg-light: #F9FAFB;
+}
+```
+
+### 2. Typography System
+```css
+/* Headings - Bold, uppercase, high-impact */
+h1, h2 { font-family: 'Anton', 'Impact', sans-serif; text-transform: uppercase; }
+
+/* Body - Clean, readable */
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+/* Form labels - Small caps, medium weight */
+label { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+```
+
+### 3. Spacing & Layout
+*   **Container max-width**: 600px (form-focused, reduces cognitive load)
+*   **Padding**: 24px (card), 16px (sections)
+*   **Gap between form groups**: 24px
+*   **Mobile**: 16px padding, 100% width
+
+---
+
+## HTML Structure Template
+
+### Complete Form Shell
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Event Pro - Intake Form</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Intake Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --brand-charcoal: #1A1A1A; /* Added from overall design system variables */
       --brand-teal: #1F8A70;
       --brand-green: #8DC63F;
       --brand-yellow: #D7DF23;
-
       --text-primary: #111827;
       --text-secondary: #6B7280;
-      --border-light: #E5E7EB; /* Corresponds to border-gray-200 */
+      --border-light: #E5E7EB;
       --bg-light: #F9FAFB;
-      --bg-page: #F0F1F3; /* New background color from Visual Identity */
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg-page); /* Changed to use new --bg-page variable */
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
       color: var(--text-primary);
       line-height: 1.6;
       min-height: 100vh;
@@ -36,12 +75,11 @@ html
 
     .form-container {
       width: 100%;
-      max-width: 640px; /* Changed from 600px as per UX Patterns */
+      max-width: 600px;
       margin: 0 auto;
       padding: 24px;
-      background: white; /* "Cards: white" */
-      border: 1px solid var(--border-light); /* Added as per "Cards: border-gray-200" */
-      border-radius: 8px; /* Changed from 12px as per "Cards: rounded-lg" */
+      background: white;
+      border-radius: 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
@@ -71,7 +109,7 @@ html
       padding: 24px;
       background: var(--bg-light);
       border-radius: 8px;
-      border-left: 4px solid var(--brand-teal); /* Consistent with "Section left borders: teal (primary)" */
+      border-left: 4px solid var(--brand-teal);
     }
 
     .form-section h3 {
@@ -89,12 +127,12 @@ html
 
     label {
       display: block;
-      font-size: 0.75rem; /* Changed from 0.875rem as per "Labels: text-xs" */
-      font-weight: 700; /* Changed from 500 as per "Labels: font-bold" */
-      color: var(--text-secondary); /* Corresponds to "Labels: text-gray-500" */
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
       margin-bottom: 8px;
-      text-transform: uppercase; /* As per "Labels: uppercase" */
-      letter-spacing: 0.05em; /* Changed from 0.5px as per "Labels: tracking-wide" */
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     input, textarea, select {
@@ -127,7 +165,7 @@ html
     }
 
     .btn-primary {
-      background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 100%); /* Consistent with "Submit buttons: brand-gradient class" */
+      background: linear-gradient(90deg, var(--brand-teal) 0%, var(--brand-green) 100%);
       color: white;
       width: 100%;
     }
@@ -163,3 +201,4 @@ html
   </div>
 </body>
 </html>
+``

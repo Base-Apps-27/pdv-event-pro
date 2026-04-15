@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * Service Worker for Vida Events Pro — Merged with PushEngage
  * DEPLOY TO: /public/service-worker.js manually

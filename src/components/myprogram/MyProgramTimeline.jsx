@@ -96,7 +96,7 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
     }
   }, [segmentsWithStatus]);
 
-  // Resolve pre-service notes for current session (weekly services)
+  // 2026-04-15: Moved above early return to satisfy React hooks rules-of-hooks
   const resolvedPreServiceNote = useMemo(() => {
     if (!preServiceNotes || !selectedSession) return null;
     // Dynamic lookup: selectedSession is the slot name (e.g. "9:30am", "6:00pm")

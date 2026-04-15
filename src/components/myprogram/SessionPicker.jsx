@@ -23,7 +23,7 @@ export default function SessionPicker({ sessions, value, onChange, showAll = fal
   const scrollRef = useRef(null);
   const activeRef = useRef(null);
 
-  // Auto-scroll active pill into view on mount / change
+  // 2026-04-15: Moved above early return to satisfy React hooks rules-of-hooks
   useEffect(() => {
     if (activeRef.current && scrollRef.current) {
       activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });

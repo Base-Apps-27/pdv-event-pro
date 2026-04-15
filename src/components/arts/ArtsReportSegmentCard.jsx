@@ -273,8 +273,9 @@ const TYPE_RENDERERS = {
 export default function ArtsReportSegmentCard({ seg, sessionName }) {
   const types = seg.art_types || [];
 
+  // 2026-04-15: Moved above early return to satisfy React hooks rules-of-hooks
   const orderedTypes = useMemo(() => {
-    if (types.length === 0) return types;
+    if (!types || types.length === 0) return types;
     if (!seg.arts_type_order || seg.arts_type_order.length === 0) return types;
     const orderMap = {};
     seg.arts_type_order.forEach(o => { orderMap[o.type] = o.order ?? 99; });
