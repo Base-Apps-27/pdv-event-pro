@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # Tech Debt Remediation Plan — Corrected & Verified
+# Tech Debt Remediation Plan — Corrected & Verified
 
 > Updated: 2026-02-11  
 > Source: Independent cross-check of original plan against actual codebase  

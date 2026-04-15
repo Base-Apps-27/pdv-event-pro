@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # Segment Editor Regression Checklist
+# Segment Editor Regression Checklist
 
 ## Purpose
 Manual verification checklist for segment CRUD operations. Run after ANY change to:

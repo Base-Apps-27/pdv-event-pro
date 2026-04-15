@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # PDF Generation Architecture
+# PDF Generation Architecture
 
 **Version:** 2026-02-12  
 **Single Library:** pdfmake (client-side)  

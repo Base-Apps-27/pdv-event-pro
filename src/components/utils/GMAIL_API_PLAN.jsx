@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # Gmail API Integration Plan for Transactional Emails
+# Gmail API Integration Plan for Transactional Emails
 
 **Status:** Ready to implement - feasibility confirmed ✅  
 **Priority:** Future enhancement  

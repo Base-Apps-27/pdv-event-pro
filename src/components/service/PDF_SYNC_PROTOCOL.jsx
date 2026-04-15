@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # PDF Generation Sync Protocol
+# PDF Generation Sync Protocol
 
 **Status:** ACTIVE (2026-01-23)  
 **Category:** Architecture → Maintenance Discipline  

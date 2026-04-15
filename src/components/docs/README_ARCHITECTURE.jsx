@@ -1,5 +1,4 @@
-/* eslint-disable */
-// # PDV Event Pro — Architecture Overview
+# PDV Event Pro — Architecture Overview
 
 **Version:** 2026-02-12  
 **Platform:** Base44 (React + Tailwind + TypeScript runtime)  
