@@ -76,6 +76,30 @@ function LayoutContentInner({ children }) {
     }
   }, [loading, user, isPublicPage]);
 
+  // 2026-04-15: ONE-TIME MIGRATION — Fix ~30 users with null app_role.
+  // Runs automatically on first admin login. Idempotent (no-op if already fixed).
+  // CLEANUP: Remove this useEffect + the fixNullAppRoles function after confirming fix.
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    const migrationKey = 'fixNullAppRoles_v1_done';
+    if (sessionStorage.getItem(migrationKey)) return; // Only once per session
+    sessionStorage.setItem(migrationKey, 'pending');
+    base44.functions.invoke('fixNullAppRoles', {})
+      .then(res => {
+        const fixed = res?.data?.fixed ?? 0;
+        if (fixed > 0) {
+          console.log(`[Layout] fixNullAppRoles migration: fixed ${fixed} users`);
+        } else {
+          console.log('[Layout] fixNullAppRoles migration: no users needed fixing');
+        }
+        sessionStorage.setItem(migrationKey, 'done');
+      })
+      .catch(err => {
+        console.error('[Layout] fixNullAppRoles migration failed:', err.message);
+        sessionStorage.removeItem(migrationKey); // Allow retry next nav
+      });
+  }, [user]);
+
   // Permission-based redirects for authenticated users (2026-02-16 simplified)
   // Waterfall: Dashboard > Live View > MyProgram (universal).
   // Users are only allowed to navigate to pages their permissions grant.
