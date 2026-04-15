@@ -255,6 +255,9 @@ export default function ServiceProgramView({
     return allPreSessionDetails.find(p => p.session_id === lastSess.id) || preSessionData;
   }, [sessions, allPreSessionDetails, preSessionData, currentTime, actualServiceData?.date]);
 
+  // 2026-04-15: Hook moved before early returns to satisfy Rules of Hooks
+  const { t } = useLanguage();
+
   // ═══════════════════════════════════════════════════════════════════
   // EMPTY STATE
   // ═══════════════════════════════════════════════════════════════════
@@ -266,9 +269,6 @@ export default function ServiceProgramView({
       </div>
     );
   }
-
-  // 2026-03-22: i18n hook for slides notice
-  const { t } = useLanguage();
 
   const hasEntityWeeklySlots = adjustedEntitySlots.length > 0;
   const hasCustomSegments = isCustomService && adjustedAllSegments.length > 0;

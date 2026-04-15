@@ -440,6 +440,11 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
     return unsubscribe;
   }, [session?.id, refetchData]);
 
+  // Sort segments by order — must be before any early returns (Rules of Hooks)
+  const sortedSegments = useMemo(() => {
+    return [...(segments || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [segments]);
+
   if (!session) return null;
   if (!currentUser) return null; // Don't render if no user
 
@@ -539,11 +544,6 @@ export default function LiveDirectorPanel({ session, segments, refetchData, curr
       </Card>
     );
   }
-
-  // Sort segments by order
-  const sortedSegments = useMemo(() => {
-    return [...(segments || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [segments]);
 
   // Determine current segment (has actual_start but no actual_end)
   const currentSegmentIndex = sortedSegments.findIndex(

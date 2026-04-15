@@ -74,6 +74,7 @@ const SegmentCard = memo(function SegmentCard({
   dirtyIds,
   onFlushEntity,
   nextSlotName,
+  structuralBusy = false, // 2026-04-15: Disables move/delete during structural saves
 }) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -95,10 +96,10 @@ const SegmentCard = memo(function SegmentCard({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
             <div className="print:hidden flex flex-col gap-0.5">
-              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0} className="h-4 w-5 p-0 hover:bg-blue-100">
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'up')} disabled={index === 0 || structuralBusy} className="h-4 w-5 p-0 hover:bg-blue-100">
                 <ChevronUp className="w-3 h-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'down')} disabled={index === totalSegments - 1} className="h-4 w-5 p-0 hover:bg-blue-100">
+              <Button variant="ghost" size="sm" onClick={() => onMove?.(index, 'down')} disabled={index === totalSegments - 1 || structuralBusy} className="h-4 w-5 p-0 hover:bg-blue-100">
                 <ChevronDown className="w-3 h-3" />
               </Button>
             </div>

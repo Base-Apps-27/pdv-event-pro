@@ -194,6 +194,7 @@ export default memo(function SlotColumn({
             totalSegments={segments.length}
             accentColor={accentColor}
             canEdit={canEdit}
+            structuralBusy={structuralBusy}
             onWrite={onWrite}
             onWriteSongs={onWriteSongs}
             onWriteChild={handleWriteChild}

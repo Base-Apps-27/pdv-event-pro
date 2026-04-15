@@ -272,14 +272,16 @@ const TYPE_RENDERERS = {
 
 export default function ArtsReportSegmentCard({ seg, sessionName }) {
   const types = seg.art_types || [];
-  if (types.length === 0) return null;
 
   const orderedTypes = useMemo(() => {
+    if (types.length === 0) return types;
     if (!seg.arts_type_order || seg.arts_type_order.length === 0) return types;
     const orderMap = {};
     seg.arts_type_order.forEach(o => { orderMap[o.type] = o.order ?? 99; });
     return [...types].sort((a, b) => (orderMap[a] ?? 99) - (orderMap[b] ?? 99));
   }, [types, seg.arts_type_order]);
+
+  if (types.length === 0) return null;
 
   const submittedAt = seg.arts_last_submitted_at
     ? new Date(seg.arts_last_submitted_at).toLocaleString('en-US', {

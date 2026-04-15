@@ -96,6 +96,13 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
     }
   }, [segmentsWithStatus]);
 
+  // Resolve pre-service notes for current session (weekly services)
+  const resolvedPreServiceNote = useMemo(() => {
+    if (!preServiceNotes || !selectedSession) return null;
+    // Dynamic lookup: selectedSession is the slot name (e.g. "9:30am", "6:00pm")
+    return preServiceNotes[selectedSession] || null;
+  }, [preServiceNotes, selectedSession]);
+
   if (filtered.length === 0) {
     return (
       <div className="text-center py-12 text-gray-400 text-sm">
@@ -103,13 +110,6 @@ export default function MyProgramTimeline({ segments, sessionFilter, department,
       </div>
     );
   }
-
-  // Resolve pre-service notes for current session (weekly services)
-  const resolvedPreServiceNote = useMemo(() => {
-    if (!preServiceNotes || !selectedSession) return null;
-    // Dynamic lookup: selectedSession is the slot name (e.g. "9:30am", "6:00pm")
-    return preServiceNotes[selectedSession] || null;
-  }, [preServiceNotes, selectedSession]);
 
   return (
     <div className="relative pt-4">

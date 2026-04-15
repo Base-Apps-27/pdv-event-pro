@@ -23,15 +23,15 @@ export default function SessionPicker({ sessions, value, onChange, showAll = fal
   const scrollRef = useRef(null);
   const activeRef = useRef(null);
 
-  // Don't render if 0 or 1 session (and no "All" mode)
-  if (!sessions || (sessions.length <= 1 && !showAll)) return null;
-
   // Auto-scroll active pill into view on mount / change
   useEffect(() => {
     if (activeRef.current && scrollRef.current) {
       activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [value]);
+
+  // Don't render if 0 or 1 session (and no "All" mode)
+  if (!sessions || (sessions.length <= 1 && !showAll)) return null;
 
   // Determine if a session is in the past (all segments ended)
   // We use session.endMinutes if available; otherwise never mark as past.
