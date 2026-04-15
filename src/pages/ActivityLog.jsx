@@ -232,6 +232,10 @@ export default function ActivityLog() {
     return result;
   }, [logs, filterEntityType, filterActionType, filterUser, search]);
 
+  // 2026-04-15: Resolve usernames from User entity at read time.
+  // MUST be called before any early returns (Rules of Hooks).
+  const { resolveName } = useUserNameResolver();
+
   if (userLoading) return null;
 
   if (!isAdmin) {
@@ -245,9 +249,6 @@ export default function ActivityLog() {
       </div>
     );
   }
-
-  // 2026-04-15: Resolve usernames from User entity at read time
-  const { resolveName } = useUserNameResolver();
 
   const entityTypes = Object.keys(ENTITY_LABELS);
 
