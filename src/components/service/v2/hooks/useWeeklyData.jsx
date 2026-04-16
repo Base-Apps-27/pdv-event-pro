@@ -143,12 +143,20 @@ export function useWeeklyData(serviceId) {
         console.warn(`[useWeeklyData] ${orphanCount} orphaned segments (no matching session_id) for service ${serviceId}`);
       }
 
-      // Sort by order
+      // Sort by order with created_date tiebreaker (2026-04-16)
       Object.values(segmentsBySession).forEach(arr =>
-        arr.sort((a, b) => (a.order || 0) - (b.order || 0))
+        arr.sort((a, b) => {
+          const od = (a.order || 0) - (b.order || 0);
+          if (od !== 0) return od;
+          return (a.created_date || '').localeCompare(b.created_date || '');
+        })
       );
       Object.values(childSegments).forEach(arr =>
-        arr.sort((a, b) => (a.order || 0) - (b.order || 0))
+        arr.sort((a, b) => {
+          const od = (a.order || 0) - (b.order || 0);
+          if (od !== 0) return od;
+          return (a.created_date || '').localeCompare(b.created_date || '');
+        })
       );
 
       // Build PSD map

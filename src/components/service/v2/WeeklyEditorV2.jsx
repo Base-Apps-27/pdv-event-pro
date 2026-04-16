@@ -200,6 +200,7 @@ export default function WeeklyEditorV2({
         segmentsBySession,
         childSegments,
         psdBySession,
+        songsBySegment,
       });
       if (!pdfData) { toast.error(t('weekly.toast.noDataForPdf'), { id: toastId }); return; }
       const pdf = await generateWeeklyProgramPDF(pdfData);
@@ -243,6 +244,7 @@ export default function WeeklyEditorV2({
         segmentsBySession,
         childSegments,
         psdBySession,
+        songsBySegment,
       });
 
       const pdf = await generateAnnouncementsPDF(allForPrint, pdfData || { date });

@@ -71,8 +71,13 @@ function computeSegmentTimes(segments, sessions) {
     segsBySession[sid].push(seg);
   });
 
+  // 2026-04-16: Sort by order with created_date tiebreaker for duplicates
   Object.values(segsBySession).forEach(arr =>
-    arr.sort((a, b) => (a.order || 0) - (b.order || 0))
+    arr.sort((a, b) => {
+      const orderDiff = (a.order || 0) - (b.order || 0);
+      if (orderDiff !== 0) return orderDiff;
+      return (a.created_date || '').localeCompare(b.created_date || '');
+    })
   );
 
   const computedTimes = {};
@@ -280,18 +285,21 @@ Deno.serve(async (req) => {
         );
 
         segments = allSegments
-          .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
-          .map(seg => ({
-            ...seg,
-            date: sessionDateMap.get(seg.session_id) || null,
-            _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id]),
-          }))
-          .sort((a, b) => {
-            const aIdx = orderMap.get(a.session_id) ?? 999;
-            const bIdx = orderMap.get(b.session_id) ?? 999;
-            if (aIdx !== bIdx) return aIdx - bIdx;
-            return (a.order || 0) - (b.order || 0);
-          });
+        .filter(seg => seg.show_in_general !== false && !seg.parent_segment_id)
+        .map(seg => ({
+          ...seg,
+          date: sessionDateMap.get(seg.session_id) || null,
+          _resolved_sub_assignments: resolveChildrenAsSubAssignments(childByParent[seg.id]),
+        }))
+        .sort((a, b) => {
+          const aIdx = orderMap.get(a.session_id) ?? 999;
+          const bIdx = orderMap.get(b.session_id) ?? 999;
+          if (aIdx !== bIdx) return aIdx - bIdx;
+          // 2026-04-16: created_date tiebreaker for duplicate orders
+          const orderDiff = (a.order || 0) - (b.order || 0);
+          if (orderDiff !== 0) return orderDiff;
+          return (a.created_date || '').localeCompare(b.created_date || '');
+        });
 
         segments = computeSegmentTimes(segments, sessions);
 
@@ -406,7 +414,10 @@ Deno.serve(async (req) => {
               const aIdx = sessionsMap.get(a.session_id) ?? 999;
               const bIdx = sessionsMap.get(b.session_id) ?? 999;
               if (aIdx !== bIdx) return aIdx - bIdx;
-              return (a.order || 0) - (b.order || 0);
+              // 2026-04-16: created_date tiebreaker for duplicate orders
+              const orderDiff = (a.order || 0) - (b.order || 0);
+              if (orderDiff !== 0) return orderDiff;
+              return (a.created_date || '').localeCompare(b.created_date || '');
             });
 
           segments = computeSegmentTimes(segments, sessions);

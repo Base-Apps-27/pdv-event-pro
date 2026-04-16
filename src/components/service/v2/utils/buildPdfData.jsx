@@ -24,7 +24,8 @@ import { normalizeSegmentType } from "@/components/utils/segmentTypeMap";
  */
 import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 
-export function buildPdfData({ existingService, sessions, segmentsBySession, childSegments, psdBySession }) {
+// 2026-04-16: Added songsBySegment param so PDF can access SegmentSong data
+export function buildPdfData({ existingService, sessions, segmentsBySession, childSegments, psdBySession, songsBySegment }) {
   if (!existingService || !sessions || sessions.length === 0) return null;
 
   const slotNames = sessions.map(s => s.name);
@@ -60,7 +61,11 @@ export function buildPdfData({ existingService, sessions, segmentsBySession, chi
 
     // Segments → legacy format
     const segments = segmentsBySession[session.id] || [];
-    result[slotName] = segments.map(seg => {
+    result[slotName] = segments.map(rawSeg => {
+      // 2026-04-16: Attach _songs from songsBySegment map so getNormalizedSongs can find them
+      const seg = songsBySegment?.[rawSeg.id]?.length > 0
+        ? { ...rawSeg, _songs: songsBySegment[rawSeg.id] }
+        : rawSeg;
       const type = normalizeSegmentType(seg.segment_type);
       const children = childSegments?.[seg.id] || [];
 
@@ -118,18 +123,8 @@ export function buildPdfData({ existingService, sessions, segmentsBySession, chi
         }
       });
 
-      // Songs
-      const songs = [];
-      for (let i = 1; i <= 6; i++) {
-        const title = seg[`song_${i}_title`];
-        if (title) {
-          songs.push({
-            title,
-            lead: seg[`song_${i}_lead`] || '',
-            key: seg[`song_${i}_key`] || '',
-          });
-        }
-      }
+      // 2026-04-16: Songs — use getNormalizedSongs (SegmentSong entity → flat field fallback)
+      const songs = getNormalizedSongs(seg);
 
       // Actions from segment_actions field or linked SegmentAction entities
       const actions = seg.actions || seg.segment_actions || [];

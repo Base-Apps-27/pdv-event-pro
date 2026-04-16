@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import DesktopSidebar from "@/components/nav/DesktopSidebar";
 import MobileNav from "@/components/nav/MobileNav";
+import useSegmentHealing from "@/components/utils/useSegmentHealing";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import "./globals.css"; // Ensure brand utilities (.brand-gradient, etc.) load on all pages
 
@@ -99,6 +100,11 @@ function LayoutContentInner({ children }) {
         sessionStorage.removeItem(migrationKey); // Allow retry next nav
       });
   }, [user]);
+
+  // 2026-04-16: ONE-TIME MIGRATION — Fix duplicate segment orders and null times.
+  // Auto-runs on first admin login. Triggers cache rebuild after fixing.
+  // CLEANUP: Remove after confirming all sessions are fixed.
+  useSegmentHealing(user);
 
   // Permission-based redirects for authenticated users (2026-02-16 simplified)
   // Waterfall: Dashboard > Live View > MyProgram (universal).
