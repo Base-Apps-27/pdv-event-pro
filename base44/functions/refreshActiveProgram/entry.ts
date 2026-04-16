@@ -162,8 +162,11 @@ Deno.serve(async (req) => {
     // Selector window: only today and future services appear in the dropdown.
     // Services are single-day, so there's no reason to show yesterday's.
     // (Events keep a -7 day window because they can span multiple days.)
+    // 2026-04-16: Include both weekly and one_off services. Accept active + null status.
+    // Exclude soft-deleted (deleted_at), blueprints, and archived.
     const selectorServices = allServices.filter(s => {
-      if (s.status !== 'active') return false;
+      if (s.status === 'blueprint' || s.status === 'archived' || s.status === 'deleted') return false;
+      if (s.deleted_at) return false; // soft-deleted
       if (!s.date || s.origin === 'blueprint') return false;
       const sDate = new Date(s.date);
       const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
@@ -179,11 +182,8 @@ Deno.serve(async (req) => {
     });
 
     // Auto-detect: services within the next 7 days are candidates (matches selector window)
-    const relevantServices = selectorServices.filter(s => {
-      const sDate = new Date(s.date);
-      const diffDays = (sDate - today) / (1000 * 60 * 60 * 24);
-      return diffDays >= 0 && diffDays <= 7;
-    });
+    // Already filtered by selectorServices (includes both weekly + one_off, excludes deleted/blueprint)
+    const relevantServices = selectorServices;
 
     const selectorOptions = { events: selectorEvents, services: selectorServices };
 
