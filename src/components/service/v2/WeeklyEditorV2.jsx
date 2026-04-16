@@ -210,7 +210,7 @@ export default function WeeklyEditorV2({
       console.error(error);
       toast.error(t('weekly.toast.pdfError') + error.message, { id: toastId });
     }
-  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date]);
+  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, songsBySegment, date]);
 
   const handleDownloadAnnouncementsPDF = useCallback(async () => {
     const toastId = toast.loading(t('weekly.toast.generatingAnnouncements'));
@@ -254,7 +254,7 @@ export default function WeeklyEditorV2({
       console.error(error);
       toast.error(t('weekly.toast.pdfError') + error.message, { id: toastId });
     }
-  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, date, t]);
+  }, [existingService, sessions, segmentsBySession, childSegments, psdBySession, songsBySegment, date, t]);
 
   // ── Verse parser handler ──
   const handleOpenVerseParser = useCallback((segmentId) => {
