@@ -61,6 +61,19 @@ export function safeParseTimeSlot(timeSlot) {
   const d = new Date(); d.setHours(0, 0, 0, 0); return d;
 }
 
+/**
+ * Convert 24-hour "HH:MM" to 12-hour "h:mm AM/PM" for PDF display.
+ * 2026-04-18: Centralised helper — custom service PDF was showing raw 24h times.
+ */
+export function toTime12(hhmm) {
+  if (!hhmm || typeof hhmm !== 'string') return '';
+  const [h, m] = hhmm.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = (h % 12) || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 export function parseHtmlToPdfMake(html, globalScale = 1) {
   if (!html || typeof html !== 'string') return '';
 

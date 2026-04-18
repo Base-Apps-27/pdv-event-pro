@@ -10,7 +10,7 @@
 
 import pdfMake from 'pdfmake/build/pdfmake';
 import { getLogoDataUrl } from './pdfLogoData';
-import { BRAND, formatDate } from './pdfUtils';
+import { BRAND, formatDate, toTime12 } from './pdfUtils';
 
 /**
  * Estimate optimal scale based on content density
@@ -92,8 +92,9 @@ export function buildSegments(segments, bodyFontScale = 1, titleFontScale = 1) {
 
      // Weekly Service style: Time + Title + Type Tag + Duration
      const titleParts = [];
+     // 2026-04-18: Convert 24h start_time to 12h for PDF display
      if (seg.start_time) {
-       titleParts.push({ text: seg.start_time, bold: true, color: BRAND.BLACK, fontSize: 10 * globalScale });
+       titleParts.push({ text: toTime12(seg.start_time), bold: true, color: BRAND.BLACK, fontSize: 10 * globalScale });
        titleParts.push({ text: '  ', fontSize: 10 * globalScale });
      }
 
