@@ -36,11 +36,39 @@ export default function CustomServicesManager() {
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const services = await base44.entities.Service.filter({ status: 'active' }, '-date');
-      return services.filter(s =>
+      const filtered = services.filter(s =>
         s.service_type === 'one_off' ||
         // Legacy fallback: has segments array but no service_type set
         (!s.service_type && s.segments && s.segments.length > 0)
       );
+      // 2026-04-18: V2 entity-first services store segments as Segment entities
+      // linked via Session, NOT in the embedded service.segments[] array.
+      // Fetch real segment counts from Sessions → Segments for accurate display.
+      if (filtered.length > 0) {
+        const serviceIds = filtered.map(s => s.id);
+        const allSessions = await base44.entities.Session.filter(
+          { service_id: { $in: serviceIds } }
+        );
+        if (allSessions.length > 0) {
+          const sessionIds = allSessions.map(s => s.id);
+          const allSegments = await base44.entities.Segment.filter(
+            { session_id: { $in: sessionIds } }
+          );
+          // Build service_id → segment count map
+          const sessionToService = new Map(allSessions.map(s => [s.id, s.service_id]));
+          const countMap = {};
+          for (const seg of allSegments) {
+            if (seg.parent_segment_id) continue; // Skip child segments
+            const svcId = sessionToService.get(seg.session_id);
+            if (svcId) countMap[svcId] = (countMap[svcId] || 0) + 1;
+          }
+          // Attach _segmentCount to each service for display
+          for (const svc of filtered) {
+            svc._segmentCount = countMap[svc.id] || 0;
+          }
+        }
+      }
+      return filtered;
     },
   });
 
@@ -221,7 +249,8 @@ export default function CustomServicesManager() {
                     </Badge>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500">
-                        {service.segments?.length || 0} {t('common.segments')}
+                        {/* 2026-04-18: Use _segmentCount (from entity query) over embedded segments[] */}
+                        {service._segmentCount ?? service.segments?.length ?? 0} {t('common.segments')}
                       </span>
                       {hasPermission(user, 'delete_services') && (
                         <button
@@ -292,19 +321,20 @@ export default function CustomServicesManager() {
                          {t('custom.completed')}
                         </Badge>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">
-                            {service.segments?.length || 0} {t('common.segments')}
-                          </span>
-                          {hasPermission(user, 'delete_services') && (
-                            <button
-                              onClick={(e) => handleDeleteClick(e, service)}
-                              className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                              title={t('common.delete')}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
+                           <span className="text-xs text-gray-500">
+                             {/* 2026-04-18: Use _segmentCount (from entity query) over embedded segments[] */}
+                             {service._segmentCount ?? service.segments?.length ?? 0} {t('common.segments')}
+                           </span>
+                           {hasPermission(user, 'delete_services') && (
+                             <button
+                               onClick={(e) => handleDeleteClick(e, service)}
+                               className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                               title={t('common.delete')}
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </button>
+                           )}
+                         </div>
                       </div>
                       <CardTitle className="text-xl text-gray-900">{service.name}</CardTitle>
                       </CardHeader>
