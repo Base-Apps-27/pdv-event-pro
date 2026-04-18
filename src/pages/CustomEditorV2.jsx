@@ -60,6 +60,7 @@ import VerseParserDialog from "@/components/service/VerseParserDialog";
 // PDF
 import { generateServiceProgramPDFWithAutoFit } from "@/components/service/generateProgramPDFWithAutoFit";
 import { generateAnnouncementsPDF } from "@/components/service/generateAnnouncementsPDF";
+import { getNormalizedSongs } from "@/components/utils/segmentDataUtils";
 
 
 export default function CustomEditorV2() {
@@ -236,15 +237,32 @@ export default function CustomEditorV2() {
     if (!existingService) return;
     const toastId = toast.loading(en ? 'Generating PDF...' : 'Generando PDF del Programa...');
     try {
+      // 2026-04-18: Fixed songs + data bridge for custom service PDF.
+      // Previously hardcoded songs: [] — now uses getNormalizedSongs with SegmentSong entities.
+      // data object now properly maps fields for the PDF renderer (leader, preacher, presenter, notes).
       const pdfServiceData = {
         ...existingService,
-        segments: segments.map(seg => ({
-          ...seg,
-          type: seg.segment_type,
-          duration: seg.duration_min,
-          songs: [],
-          data: seg,
-        })),
+        segments: segments.map(seg => {
+          // Attach _songs from songsBySegment so getNormalizedSongs can find SegmentSong entities
+          const enrichedSeg = songsBySegment?.[seg.id]?.length > 0
+            ? { ...seg, _songs: songsBySegment[seg.id] }
+            : seg;
+          const songs = getNormalizedSongs(enrichedSeg);
+          return {
+            ...seg,
+            type: seg.segment_type,
+            duration: seg.duration_min,
+            songs,
+            data: {
+              ...seg,
+              leader: seg.presenter || '',
+              preacher: seg.presenter || '',
+              presenter: seg.presenter || '',
+              translator: seg.translator_name || '',
+              songs,
+            },
+          };
+        }),
       };
       const result = await generateServiceProgramPDFWithAutoFit(pdfServiceData);
       // result.pdf is a Blob — need pdfmake doc for .print(). Rebuild doc for print.
@@ -263,7 +281,7 @@ export default function CustomEditorV2() {
       console.error('[PDF]', err);
       toast.error('Error: ' + err.message, { id: toastId });
     }
-  }, [existingService, segments, en]);
+  }, [existingService, segments, songsBySegment, en]);
 
   // ── Announcements PDF handler (Phase 2) ──
   const handlePrintAnnouncements = useCallback(async () => {
