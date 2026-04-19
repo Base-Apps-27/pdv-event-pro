@@ -68,8 +68,11 @@ Deno.serve(async (req) => {
         for (const schedule of schedules) {
             let dayServices = [];
             try {
+                // 2026-04-19: Added service_type:'weekly' filter to exclude one_off services.
+                // One-off services (e.g. RECIBIMIENTO DE ENCUENTRO) share the same day_of_week
+                // and could shadow the actual weekly service when they have the same date.
                 dayServices = await base44.asServiceRole.entities.Service.filter(
-                    { day_of_week: schedule.day_of_week, status: 'active' }, '-date', 10
+                    { day_of_week: schedule.day_of_week, status: 'active', service_type: 'weekly' }, '-date', 10
                 );
             } catch (e) {
                 console.warn(`[getWeeklyFormData] Service fetch for ${schedule.day_of_week} failed:`, e.message);
@@ -80,7 +83,6 @@ Deno.serve(async (req) => {
             const upcoming = dayServices
                 .filter(s => s.date >= todayETStr && s.date <= weekAheadStr && !processedServiceIds.has(s.id))
                 .sort((a, b) => a.date.localeCompare(b.date));
-
             if (upcoming.length === 0) continue;
             const service = upcoming[0];
             processedServiceIds.add(service.id);
