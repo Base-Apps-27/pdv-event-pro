@@ -255,9 +255,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Backward compat: primary program (used for program_snapshot, program_id, etc.)
-    let targetProgram = targetPrograms[0]?.program || null;
-    let isEvent = targetPrograms[0]?.isEvent || false;
+    // NOTE: targetProgram/isEvent are set AFTER programsArray sort (see below).
+    // They used to be set here from unsorted targetPrograms[0], which caused
+    // the backward-compat fields (program_id, program_name) to point to the
+    // wrong program when multiple services exist on the same day.
+    // BUG FIX (2026-04-19): Moved assignment after sort at line ~316.
+    let targetProgram = null;
+    let isEvent = false;
 
     console.log(`[refreshActiveProgram] Detected ${targetPrograms.length} program(s) for ${todayStr}`);
 
@@ -299,21 +303,49 @@ Deno.serve(async (req) => {
           }
         }
 
+        // 2026-04-19: Fall back to Service.time field when no session has a
+        // planned_start_time. One-off services (e.g. "RECIBIMIENTO DE ENCUENTRO")
+        // store their time on the Service entity itself (e.g. "17:00") and the
+        // session may not have planned_start_time set by the snapshot builder.
+        const fallbackTime = (!firstStart && !tp.isEvent && tp.program.time) 
+          ? tp.program.time 
+          : '';
+        
         programsArray.push({
           program_type: tp.isEvent ? 'event' : 'service',
           program_id: tp.program.id,
           program_name: tp.program.name || '',
           program_snapshot: snapshot,
-          first_session_start_time: firstStart || '',
+          first_session_start_time: firstStart || fallbackTime,
           last_session_end_time: lastEnd || '',
         });
       }
 
-      // Sort by first_session_start_time so earliest program is index 0
-      programsArray.sort((a, b) => (a.first_session_start_time || '').localeCompare(b.first_session_start_time || ''));
+      // Sort by first_session_start_time so earliest program is index 0.
+      // IMPORTANT: Empty strings sort before real times ('' < '09:30').
+      // Use 'ZZ:ZZ' as sentinel for missing times so they sort LAST, not first.
+      // This prevents one_off services without session times from hijacking index 0.
+      programsArray.sort((a, b) => 
+        (a.first_session_start_time || 'ZZ:ZZ').localeCompare(b.first_session_start_time || 'ZZ:ZZ')
+      );
 
       // Primary snapshot = first program (backward compat for program_snapshot field)
       programSnapshot = programsArray[0]?.program_snapshot || null;
+
+      // BUG FIX (2026-04-19): Set backward-compat targetProgram AFTER sort,
+      // so program_id/program_name always match the first (earliest) program.
+      // Previously set from unsorted targetPrograms[0], causing mismatch when
+      // a later service (e.g. 5pm) was listed before the morning service.
+      if (programsArray.length > 0) {
+        const primary = programsArray[0];
+        targetProgram = targetPrograms.find(tp => 
+          tp.program.id === primary.program_id
+        )?.program || targetPrograms[0]?.program || null;
+        isEvent = primary.program_type === 'event';
+      } else {
+        targetProgram = targetPrograms[0]?.program || null;
+        isEvent = targetPrograms[0]?.isEvent || false;
+      }
 
     } catch (snapshotErr) {
       // Release the lock immediately so subsequent triggers can retry
