@@ -9,7 +9,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import DesktopSidebar from "@/components/nav/DesktopSidebar";
 import MobileNav from "@/components/nav/MobileNav";
-import useSegmentHealing from "@/components/utils/useSegmentHealing";
+// 2026-04-19: useSegmentHealing import removed — auto-trigger disabled to reduce rate limit pressure.
+// import useSegmentHealing from "@/components/utils/useSegmentHealing";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import "./globals.css"; // Ensure brand utilities (.brand-gradient, etc.) load on all pages
 
@@ -77,34 +78,15 @@ function LayoutContentInner({ children }) {
     }
   }, [loading, user, isPublicPage]);
 
-  // 2026-04-15: ONE-TIME MIGRATION — Fix ~30 users with null app_role.
-  // Runs automatically on first admin login. Idempotent (no-op if already fixed).
-  // CLEANUP: Remove this useEffect + the fixNullAppRoles function after confirming fix.
-  useEffect(() => {
-    if (!user || user.role !== 'admin') return;
-    const migrationKey = 'fixNullAppRoles_v1_done';
-    if (sessionStorage.getItem(migrationKey)) return; // Only once per session
-    sessionStorage.setItem(migrationKey, 'pending');
-    base44.functions.invoke('fixNullAppRoles', {})
-      .then(res => {
-        const fixed = res?.data?.fixed ?? 0;
-        if (fixed > 0) {
-          console.log(`[Layout] fixNullAppRoles migration: fixed ${fixed} users`);
-        } else {
-          console.log('[Layout] fixNullAppRoles migration: no users needed fixing');
-        }
-        sessionStorage.setItem(migrationKey, 'done');
-      })
-      .catch(err => {
-        console.error('[Layout] fixNullAppRoles migration failed:', err.message);
-        sessionStorage.removeItem(migrationKey); // Allow retry next nav
-      });
-  }, [user]);
+  // 2026-04-19: fixNullAppRoles migration REMOVED from Layout.
+  // Migration confirmed complete (no users with null app_role found).
+  // Was consuming 2+ API calls per admin session, contributing to rate limit pressure.
+  // Function still exists in functions/fixNullAppRoles for manual re-run if needed.
 
-  // 2026-04-16: ONE-TIME MIGRATION — Fix duplicate segment orders and null times.
-  // Auto-runs on first admin login. Triggers cache rebuild after fixing.
-  // CLEANUP: Remove after confirming all sessions are fixed.
-  useSegmentHealing(user);
+  // 2026-04-19: useSegmentHealing auto-trigger REMOVED from Layout.
+  // Healing confirmed complete (147 segments fixed across 53 sessions).
+  // Was generating 300+ API calls per admin session, contributing to rate limit pressure.
+  // Hook still exists for manual re-run via DevTools DataHealingPanel if needed.
 
   // Permission-based redirects for authenticated users (2026-02-16 simplified)
   // Waterfall: Dashboard > Live View > MyProgram (universal).

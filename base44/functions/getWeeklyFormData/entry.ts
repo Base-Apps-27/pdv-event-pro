@@ -68,12 +68,15 @@ Deno.serve(async (req) => {
         for (const schedule of schedules) {
             let dayServices = [];
             try {
-                // 2026-04-19: Added service_type:'weekly' filter to exclude one_off services.
-                // One-off services (e.g. RECIBIMIENTO DE ENCUENTRO) share the same day_of_week
-                // and could shadow the actual weekly service when they have the same date.
+                // 2026-04-19: Exclude one_off services that share the same day_of_week.
+                // Can't filter service_type='weekly' directly because legacy services
+                // created before service_type field was added have null for this field.
+                // Instead: fetch all active services for the day, then filter out one_off in JS.
                 dayServices = await base44.asServiceRole.entities.Service.filter(
-                    { day_of_week: schedule.day_of_week, status: 'active', service_type: 'weekly' }, '-date', 10
+                    { day_of_week: schedule.day_of_week, status: 'active' }, '-date', 10
                 );
+                // Exclude explicitly-tagged one_off services; keep weekly + null (legacy)
+                dayServices = dayServices.filter(s => s.service_type !== 'one_off');
             } catch (e) {
                 console.warn(`[getWeeklyFormData] Service fetch for ${schedule.day_of_week} failed:`, e.message);
                 continue;
