@@ -930,6 +930,12 @@ export const en = {
   'users.roleBadge.Viewer': 'Viewer',
   'users.roleBadge.LiveManager': 'Live Manager',
 
+  // ── Cache Refresh (2026-04-19) ──
+  'dashboard.refreshCache': 'Refresh Cache',
+  'dashboard.refreshCache.refreshing': 'Refreshing...',
+  'dashboard.refreshCache.success': 'Cache refreshed successfully',
+  'dashboard.refreshCache.error': 'Cache refresh failed',
+
   // ── Data Healing (2026-04-15) ──
   'nav.dataHealing': 'Data Healing',
   'heal.title': 'Data Healing',

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/utils/i18n.jsx";
-import { Calendar, Clock, FileText, Plus, ArrowRight, Bell } from "lucide-react";
+import { Calendar, Clock, FileText, Plus, ArrowRight, Bell, RefreshCw } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -130,19 +131,44 @@ export default function Dashboard() {
         )}
 
         {/* Live Program — compact secondary link. Red when a program is active. (2026-03-02) */}
-        <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-            isLive
-              ? 'bg-red-50 border border-red-300 hover:bg-red-100'
-              : 'bg-white border border-gray-200 hover:bg-gray-50'
-          }`}
-          onClick={() => navigate(createPageUrl('PublicProgramView'))}
-        >
-          <Bell className={`w-4 h-4 shrink-0 ${isLive ? 'text-red-500' : 'text-gray-500'}`} />
-          {isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />}
-          <span className={`text-sm font-medium ${isLive ? 'text-red-700' : 'text-gray-700'}`}>{t('dashboard.liveProgram.title')}</span>
-          <span className={`text-xs hidden sm:inline ${isLive ? 'text-red-400' : 'text-gray-400'}`}>— {t('dashboard.liveProgram.subtitle')}</span>
-          <ArrowRight className={`w-3.5 h-3.5 ml-auto shrink-0 ${isLive ? 'text-red-400' : 'text-gray-400'}`} />
+        <div className="flex items-center gap-2">
+          <div
+            className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+              isLive
+                ? 'bg-red-50 border border-red-300 hover:bg-red-100'
+                : 'bg-white border border-gray-200 hover:bg-gray-50'
+            }`}
+            onClick={() => navigate(createPageUrl('PublicProgramView'))}
+          >
+            <Bell className={`w-4 h-4 shrink-0 ${isLive ? 'text-red-500' : 'text-gray-500'}`} />
+            {isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />}
+            <span className={`text-sm font-medium ${isLive ? 'text-red-700' : 'text-gray-700'}`}>{t('dashboard.liveProgram.title')}</span>
+            <span className={`text-xs hidden sm:inline ${isLive ? 'text-red-400' : 'text-gray-400'}`}>— {t('dashboard.liveProgram.subtitle')}</span>
+            <ArrowRight className={`w-3.5 h-3.5 ml-auto shrink-0 ${isLive ? 'text-red-400' : 'text-gray-400'}`} />
+          </div>
+          {/* 2026-04-19: Manual cache refresh for admins */}
+          {currentUser?.role === 'admin' && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={refreshing}
+              className="shrink-0 gap-1.5 text-xs"
+              onClick={async () => {
+                setRefreshing(true);
+                try {
+                  await base44.functions.invoke('refreshActiveProgram', { trigger: 'manual' });
+                  alert(t('dashboard.refreshCache.success'));
+                } catch (err) {
+                  alert(t('dashboard.refreshCache.error'));
+                } finally {
+                  setRefreshing(false);
+                }
+              }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{refreshing ? t('dashboard.refreshCache.refreshing') : t('dashboard.refreshCache')}</span>
+            </Button>
+          )}
         </div>
 
         {/* Quick Actions - 3 Shortcuts */}

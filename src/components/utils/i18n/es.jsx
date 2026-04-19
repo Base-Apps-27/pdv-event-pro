@@ -930,6 +930,12 @@ export const es = {
   'users.roleBadge.Viewer': 'Visualizador',
   'users.roleBadge.LiveManager': 'Gerente en Vivo',
 
+  // ── Cache Refresh (2026-04-19) ──
+  'dashboard.refreshCache': 'Actualizar Caché',
+  'dashboard.refreshCache.refreshing': 'Actualizando...',
+  'dashboard.refreshCache.success': 'Caché actualizado correctamente',
+  'dashboard.refreshCache.error': 'Error al actualizar el caché',
+
   // ── Data Healing (2026-04-15) ──
   'nav.dataHealing': 'Sanación de Datos',
   'heal.title': 'Sanación de Datos',
