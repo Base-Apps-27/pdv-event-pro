@@ -80,51 +80,54 @@ function computeSegmentTimes(segments, sessions) {
     })
   );
 
-  // 2026-04-19: FIX — Always chain times from session start, never let stale stored
-  // start_time override the running clock. Previous logic read seg.start_time and jumped
-  // the clock to it, causing phantom gaps when segments had stale times from before a
-  // reorder or duration change. Now matches timeCascade.js (frontend) behavior exactly:
-  // each segment's start = previous segment's end (or session start for first).
+  // 2026-04-19: REVERTED force-cascade approach — it broke custom services that
+  // set start_time deliberately at creation time. Those stored times are authoritative.
+  // The cascade is only used to FILL IN missing times (null start_time/end_time).
+  // If a segment has a stored start_time, it is trusted and the running clock advances
+  // from that point (not from the previous segment's computed end).
+  // The original "phantom gap" issue should be fixed at write-time (editor/creation
+  // functions) by keeping stored times in sync, not by overriding at read-time.
   const computedTimes = {};
   Object.entries(segsBySession).forEach(([sid, segs]) => {
     const session = sessionMap[sid] || {};
     const baseTime = session.planned_start_time || null;
-    if (!baseTime) {
-      // No session start time — can't compute, leave as-is
-      segs.forEach(seg => {
-        computedTimes[seg.id] = { start_time: seg.start_time || null, end_time: seg.end_time || null };
-      });
-      return;
+    let curH = 0, curM = 0;
+    if (baseTime) {
+      const [h, m] = baseTime.split(':').map(Number);
+      curH = h; curM = m;
     }
 
-    const [baseH, baseM] = baseTime.split(':').map(Number);
-    let currentMinutes = baseH * 60 + baseM;
-
     segs.forEach(seg => {
-      const h = Math.floor(currentMinutes / 60) % 24;
-      const m = currentMinutes % 60;
-      const segStart = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      let segStart = seg.start_time || null;
+      if (!segStart && baseTime) {
+        segStart = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
+      // If segment has a stored start_time, advance running clock to it
+      if (seg.start_time) {
+        const [h, m] = seg.start_time.split(':').map(Number);
+        curH = h; curM = m;
+      }
 
       const dur = seg.duration_min || 0;
-      currentMinutes += dur;
+      const d = new Date(2000, 0, 1, curH, curM + dur);
+      curH = d.getHours(); curM = d.getMinutes();
 
-      const eh = Math.floor(currentMinutes / 60) % 24;
-      const em = currentMinutes % 60;
-      const segEnd = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+      let segEnd = seg.end_time || null;
+      if (!segEnd && baseTime) {
+        segEnd = `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+      }
 
       computedTimes[seg.id] = { start_time: segStart, end_time: segEnd };
     });
   });
 
-  // 2026-04-19: Always apply computed times — they are the source of truth for display.
-  // Stored times on Segment entities may be stale from before a reorder or duration edit.
   return segments.map(seg => {
     const times = computedTimes[seg.id];
     if (!times) return seg;
     return {
       ...seg,
-      start_time: times.start_time,
-      end_time: times.end_time,
+      start_time: seg.start_time || times.start_time || null,
+      end_time: seg.end_time || times.end_time || null,
     };
   });
 }
