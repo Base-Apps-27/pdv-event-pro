@@ -60,15 +60,19 @@ Deno.serve(async (req) => {
 
         // ── URL FIELD VALIDATION (2026-03-03: parity with submitArtsSegment SEC-6) ──
         // Only http/https schemes allowed. Blocks javascript:, data:, file: injection.
+        // 2026-04-19: Handles both string and array inputs (frontend sends arrays).
         const URL_FIELDS_TO_CHECK = { presentation_url, notes_url };
         for (const [fieldName, val] of Object.entries(URL_FIELDS_TO_CHECK)) {
-            if (val && typeof val === 'string' && val.trim() !== '') {
-                const trimmed = val.trim().toLowerCase();
-                if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-                    return Response.json(
-                        { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
-                        { status: 400, headers: corsHeaders }
-                    );
+            const urls = Array.isArray(val) ? val : (val ? [val] : []);
+            for (const u of urls) {
+                if (u && typeof u === 'string' && u.trim() !== '') {
+                    const trimmed = u.trim().toLowerCase();
+                    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                        return Response.json(
+                            { error: `Invalid URL in field "${fieldName}". Only http/https URLs are allowed.` },
+                            { status: 400, headers: corsHeaders }
+                        );
+                    }
                 }
             }
         }
@@ -156,13 +160,18 @@ Deno.serve(async (req) => {
         // Mark for pending processing, no inline LLM
         console.log("[SUBMIT] Marking submission as pending — async processing will follow");
 
+        // 2026-04-19: presentation_url and notes_url MUST be arrays per Segment schema.
+        // Frontend sends arrays; coerce falsy values to empty arrays (not strings).
+        const safePresUrl = Array.isArray(presentation_url) ? presentation_url : (presentation_url ? [presentation_url] : []);
+        const safeNotesUrl = Array.isArray(notes_url) ? notes_url : (notes_url ? [notes_url] : []);
+
         const commonFields = {
             // Mark as pending — processNewSubmissionVersion will process asynchronously
             parsed_verse_data: parsedData,
             submission_status: 'pending',
             scripture_references: scriptureReferences,
-            presentation_url: presentation_url || "",
-            notes_url: notes_url || "",
+            presentation_url: safePresUrl,
+            notes_url: safeNotesUrl,
             content_is_slides_only: !!content_is_slides_only,
             projection_notes: projectionNotes,
             ...(title?.trim() ? { message_title: title.trim() } : {}),
@@ -228,8 +237,8 @@ Deno.serve(async (req) => {
             resolved_segment_entity_id: String(targetSegmentEntity.id),
             content: content,
             title: title || "",
-            presentation_url: presentation_url || "",
-            notes_url: notes_url || "",
+            presentation_url: safePresUrl,
+            notes_url: safeNotesUrl,
             content_is_slides_only: !!content_is_slides_only,
             parsed_data_snapshot: parsedData,
             submitted_at: new Date().toISOString(),
@@ -257,8 +266,8 @@ Deno.serve(async (req) => {
                 ...(resolvedMirrorEntityId ? { resolved_segment_entity_id: resolvedMirrorEntityId } : {}),
                 content: content,
                 title: title || "",
-                presentation_url: presentation_url || "",
-                notes_url: notes_url || "",
+                presentation_url: safePresUrl,
+                notes_url: safeNotesUrl,
                 content_is_slides_only: !!content_is_slides_only,
                 parsed_data_snapshot: parsedData,
                 submitted_at: new Date().toISOString(),
